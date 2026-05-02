@@ -1,0 +1,12 @@
+[
+  {
+    "nama": "Admin",
+    "email": "admin@example.com",
+    "pw": "admin123"
+  },
+  {
+    "nama": "Administrator",
+    "email": "administrator@example.com",
+    "pw": "admin123"
+  }
+]

@@ -1,0 +1,337 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import toast from 'react-hot-toast'
+import Table from '@/components/ui/Table'
+import Modal from '@/components/ui/Modal'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
+import { StatusBadge } from '@/components/ui/Badges'
+import { formatDate, formatCurrency, STATUS_LABELS } from '@/lib/utils'
+import { canAccessOsis, canAccessMpk } from '@/lib/auth-shared'
+import {
+  Building2, Plus, Pencil, Trash2, Loader2, Save, Calendar,
+  ClipboardList, CheckCircle2, XCircle, Clock, Heart, Banknote, Contact
+} from 'lucide-react'
+import { format } from 'date-fns'
+
+interface Anggota { id: number; nis: string | null; nama: string; kelas: string | null; jabatan: string | null }
+interface AbsensiOrg { id: number; organisasi_type: string; anggota_osis?: Anggota; anggota_mpk?: Anggota; tanggal: string; status: string; uang_kas: number; keterangan: string | null }
+interface BulkRow { anggota_id: number; nama: string; jabatan: string | null; status: string; uang_kas: number; keterangan: string }
+
+const STATUS_OPTIONS = [
+  { value: 'hadir', label: 'Hadir', icon: CheckCircle2, color: 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100' },
+  { value: 'tidak_hadir', label: 'Tidak', icon: XCircle, color: 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100' },
+  { value: 'izin', label: 'Izin', icon: Clock, color: 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100' },
+  { value: 'sakit', label: 'Sakit', icon: Heart, color: 'bg-sky-50 text-sky-700 border-sky-300 hover:bg-sky-100' },
+]
+
+interface Props {
+  user: { id: number; nama: string; email: string; role: string }
+  defaultOrg: 'osis' | 'mpk' | ''
+}
+
+const PAGE_SIZE = 15
+
+export default function OrganisasiClient({ user, defaultOrg }: Props) {
+  const [activeOrg, setActiveOrg] = useState<'osis' | 'mpk'>(defaultOrg || (canAccessOsis(user.role) ? 'osis' : 'mpk'))
+  const [subTab, setSubTab] = useState<'anggota' | 'absensi'>('anggota')
+
+  // Anggota state
+  const [anggota, setAnggota] = useState<Anggota[]>([])
+  const [loadingAnggota, setLoadingAnggota] = useState(true)
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editTarget, setEditTarget] = useState<Anggota | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Anggota | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [fNama, setFNama] = useState('')
+  const [fNis, setFNis] = useState('')
+  const [fKelas, setFKelas] = useState('')
+  const [fJabatan, setFJabatan] = useState('')
+
+  // Absensi state
+  const [bulkDate, setBulkDate] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [bulkRows, setBulkRows] = useState<BulkRow[]>([])
+  const [loadingBulk, setLoadingBulk] = useState(false)
+  const [savingAbsensi, setSavingAbsensi] = useState(false)
+  const [riwayat, setRiwayat] = useState<AbsensiOrg[]>([])
+  const [loadingRiwayat, setLoadingRiwayat] = useState(false)
+  const [absensiMode, setAbsensiMode] = useState<'input' | 'riwayat'>('input')
+  const [filterTanggal, setFilterTanggal] = useState(format(new Date(), 'yyyy-MM-dd'))
+
+  const canOsis = canAccessOsis(user.role)
+  const canMpk = canAccessMpk(user.role)
+
+  const loadAnggota = useCallback(async () => {
+    setLoadingAnggota(true)
+    const res = await fetch(`/api/organisasi?tipe=${activeOrg}&page=${page}&limit=${PAGE_SIZE}`)
+    const json = await res.json()
+    setAnggota(json.data || [])
+    setTotal(json.total || 0)
+    setTotalPages(json.totalPages || 1)
+    setLoadingAnggota(false)
+  }, [activeOrg, page])
+
+  useEffect(() => { if (subTab === 'anggota') loadAnggota() }, [subTab, loadAnggota])
+  useEffect(() => { setPage(1) }, [activeOrg])
+
+  const loadBulk = useCallback(async () => {
+    setLoadingBulk(true)
+    const anggRes = await fetch(`/api/organisasi?tipe=${activeOrg}&limit=100`)
+    const anggJson = await anggRes.json()
+    const anggList: Anggota[] = anggJson.data || []
+
+    const absRes = await fetch(`/api/organisasi/absensi?organisasi=${activeOrg}&tanggal=${bulkDate}&limit=100`)
+    const absJson = await absRes.json()
+    const existing: AbsensiOrg[] = absJson.data || []
+
+    const rows: BulkRow[] = anggList.map(a => {
+      const ex = existing.find(e =>
+        activeOrg === 'osis' ? e.anggota_osis?.id === a.id : e.anggota_mpk?.id === a.id
+      )
+      return { anggota_id: a.id, nama: a.nama, jabatan: a.jabatan, status: ex?.status || 'hadir', uang_kas: ex?.uang_kas || 0, keterangan: ex?.keterangan || '' }
+    })
+    setBulkRows(rows)
+    setLoadingBulk(false)
+  }, [activeOrg, bulkDate])
+
+  const loadRiwayat = useCallback(async () => {
+    setLoadingRiwayat(true)
+    const res = await fetch(`/api/organisasi/absensi?organisasi=${activeOrg}&tanggal=${filterTanggal}&limit=50`)
+    const json = await res.json()
+    setRiwayat(json.data || [])
+    setLoadingRiwayat(false)
+  }, [activeOrg, filterTanggal])
+
+  useEffect(() => {
+    if (subTab === 'absensi') {
+      if (absensiMode === 'input') loadBulk()
+      else loadRiwayat()
+    }
+  }, [subTab, absensiMode, loadBulk, loadRiwayat])
+
+  function openAdd() { setEditTarget(null); setFNama(''); setFNis(''); setFKelas(''); setFJabatan(''); setModalOpen(true) }
+  function openEdit(a: Anggota) { setEditTarget(a); setFNama(a.nama); setFNis(a.nis || ''); setFKelas(a.kelas || ''); setFJabatan(a.jabatan || ''); setModalOpen(true) }
+
+  async function handleSave() {
+    if (!fNama.trim()) { toast.error('Nama wajib diisi'); return }
+    setSaving(true)
+    const body = { nama: fNama.trim(), nis: fNis || undefined, kelas: fKelas || undefined, jabatan: fJabatan || undefined, tipe: activeOrg }
+    const res = await fetch('/api/organisasi', {
+      method: editTarget ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editTarget ? { id: editTarget.id, ...body } : body)
+    })
+    const json = await res.json()
+    if (!res.ok) { toast.error(json.error || 'Gagal'); setSaving(false); return }
+    toast.success(editTarget ? 'Data diperbarui' : 'Anggota ditambahkan')
+    setSaving(false); setModalOpen(false); loadAnggota()
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return
+    setDeleting(true)
+    const res = await fetch(`/api/organisasi?id=${deleteTarget.id}&tipe=${activeOrg}`, { method: 'DELETE' })
+    const json = await res.json()
+    if (!res.ok) { toast.error(json.error || 'Gagal'); setDeleting(false); return }
+    toast.success('Anggota dihapus')
+    setDeleting(false); setDeleteTarget(null); loadAnggota()
+  }
+
+  function updateRow(i: number, field: keyof BulkRow, value: string | number) {
+    setBulkRows(prev => prev.map((r, j) => j === i ? { ...r, [field]: value } : r))
+  }
+  function setAllStatus(s: string) { setBulkRows(prev => prev.map(r => ({ ...r, status: s }))) }
+
+  async function handleSaveAbsensi() {
+    if (!bulkRows.length) return
+    setSavingAbsensi(true)
+    const res = await fetch('/api/organisasi/absensi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ organisasi: activeOrg, tanggal: bulkDate, rows: bulkRows.map(r => ({ anggota_id: r.anggota_id, status: r.status, uang_kas: r.uang_kas, keterangan: r.keterangan || undefined })) })
+    })
+    const json = await res.json()
+    if (!res.ok) { toast.error(json.error || 'Gagal'); setSavingAbsensi(false); return }
+    toast.success(`Absensi ${activeOrg.toUpperCase()} tersimpan!`)
+    setSavingAbsensi(false)
+  }
+
+  const orgLabel = activeOrg === 'osis' ? 'OSIS' : 'MPK'
+  const orgBgClass = activeOrg === 'osis' ? 'bg-violet-50 border-violet-100 text-violet-700' : 'bg-orange-50 border-orange-100 text-orange-700'
+  const hadirCount = bulkRows.filter(r => r.status === 'hadir').length
+  const totalKasBulk = bulkRows.reduce((s, r) => s + r.uang_kas, 0)
+
+  const anggotaCols = [
+    { key: 'no', label: 'No', render: (a: Anggota) => <span className="text-slate-400 font-mono text-xs">{anggota.indexOf(a) + 1 + (page-1)*PAGE_SIZE}</span> },
+    { key: 'nis', label: 'NIS', render: (a: Anggota) => <span className="font-mono text-xs text-slate-400">{a.nis || '-'}</span> },
+    { key: 'nama', label: 'Nama', render: (a: Anggota) => <span className="font-semibold text-slate-800">{a.nama}</span> },
+    { key: 'kelas', label: 'Kelas', render: (a: Anggota) => <span className="text-xs text-slate-500">{a.kelas || '-'}</span> },
+    { key: 'jabatan', label: 'Jabatan', render: (a: Anggota) => <span className="text-xs font-medium text-slate-600">{a.jabatan || '-'}</span> },
+    { key: 'actions', label: '', render: (a: Anggota) => (
+      <div className="flex gap-1">
+        <button onClick={() => openEdit(a)} className="btn-icon text-indigo-400 hover:bg-indigo-50"><Pencil className="w-3.5 h-3.5" /></button>
+        <button onClick={() => setDeleteTarget(a)} className="btn-icon text-red-400 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /></button>
+      </div>
+    )},
+  ]
+
+  return (
+    <div className="space-y-5">
+      {/* Header + org switcher */}
+      <div className="page-header">
+        <div className="flex-1">
+          <div className="flex items-center gap-2.5">
+            <Building2 className="w-5 h-5 text-indigo-500" />
+            <h2 className="page-title">{orgLabel}</h2>
+            <span className={`badge border ${orgBgClass}`}>{orgLabel}</span>
+          </div>
+          <p className="page-sub mt-0.5">Manajemen anggota dan absensi {orgLabel}</p>
+        </div>
+        {/* Org switcher */}
+        <div className="flex gap-2">
+          {canOsis && <button onClick={() => setActiveOrg('osis')} className={activeOrg === 'osis' ? 'btn-primary' : 'btn-secondary'}>OSIS</button>}
+          {canMpk && <button onClick={() => setActiveOrg('mpk')} className={activeOrg === 'mpk' ? 'btn-primary' : 'btn-secondary'}>MPK</button>}
+        </div>
+      </div>
+
+      {/* Sub tabs */}
+      <div className="flex gap-1 border-b border-slate-200">
+        {[{ key: 'anggota', label: 'Anggota', icon: Building2 }, { key: 'absensi', label: 'Absensi & Kas', icon: ClipboardList }].map(t => (
+          <button key={t.key} onClick={() => setSubTab(t.key as 'anggota' | 'absensi')}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors -mb-px ${
+              subTab === t.key ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}>
+            <t.icon className="w-4 h-4" />{t.label}
+          </button>
+        ))}
+      </div>
+
+      {subTab === 'anggota' ? (
+        <div className="space-y-4">
+          <div className="flex justify-end">
+            <button onClick={openAdd} className="btn-primary"><Plus className="w-4 h-4" />Tambah Anggota</button>
+          </div>
+          <Table columns={anggotaCols} data={anggota} loading={loadingAnggota}
+            emptyMessage={`Belum ada anggota ${orgLabel}`} page={page} totalPages={totalPages} total={total} onPageChange={setPage} rowKey={(a: Anggota) => a.id} />
+
+          <Modal open={modalOpen} title={editTarget ? `Edit Anggota ${orgLabel}` : `Tambah Anggota ${orgLabel}`}
+            onClose={() => setModalOpen(false)} size="md"
+            footer={<div className="flex gap-2 justify-end"><button onClick={() => setModalOpen(false)} className="btn-secondary">Batal</button><button onClick={handleSave} disabled={saving} className="btn-primary">{saving ? <><Loader2 className="w-4 h-4 animate-spin"/>Simpan...</> : 'Simpan'}</button></div>}>
+            <div className="space-y-4">
+              <div className="form-group"><label className="label">Nama Lengkap *</label><input value={fNama} onChange={e => setFNama(e.target.value)} placeholder="Nama lengkap" className="input" autoFocus /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="form-group"><label className="label">NIS</label><input value={fNis} onChange={e => setFNis(e.target.value)} placeholder="Opsional" className="input" /></div>
+                <div className="form-group"><label className="label">Kelas</label><input value={fKelas} onChange={e => setFKelas(e.target.value)} placeholder="Cth: XII IPA" className="input" /></div>
+              </div>
+              <div className="form-group"><label className="label">Jabatan</label><input value={fJabatan} onChange={e => setFJabatan(e.target.value)} placeholder={`Cth: Ketua ${orgLabel}`} className="input" /></div>
+            </div>
+          </Modal>
+
+          <ConfirmDialog open={!!deleteTarget} title={`Hapus Anggota ${orgLabel}?`}
+            message={`"${deleteTarget?.nama}" akan dihapus beserta semua riwayat absensinya.`}
+            loading={deleting} onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            <button onClick={() => setAbsensiMode('input')} className={absensiMode === 'input' ? 'btn-primary btn-sm' : 'btn-secondary btn-sm'}><Save className="w-3.5 h-3.5" />Input</button>
+            <button onClick={() => setAbsensiMode('riwayat')} className={absensiMode === 'riwayat' ? 'btn-primary btn-sm' : 'btn-secondary btn-sm'}><ClipboardList className="w-3.5 h-3.5" />Riwayat</button>
+          </div>
+
+          {absensiMode === 'input' ? (
+            <div className="space-y-3">
+              <div className="card p-4 flex gap-3">
+                <div className="relative flex-1"><Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><input type="date" value={bulkDate} onChange={e => setBulkDate(e.target.value)} className="input pl-10" /></div>
+              </div>
+              {loadingBulk ? (
+                <div className="card p-16 flex items-center justify-center gap-3 text-slate-400"><Loader2 className="w-5 h-5 animate-spin"/><span className="text-sm">Memuat...</span></div>
+              ) : bulkRows.length === 0 ? (
+                <div className="card p-16 text-center text-slate-400 text-sm">Belum ada anggota {orgLabel}</div>
+              ) : (
+                <div className="card overflow-hidden">
+                  <div className={`px-5 py-3 border-b flex items-center justify-between flex-wrap gap-2 ${orgBgClass.replace('text-', 'border-')}`} style={{background: activeOrg==='osis'?'#f5f3ff':'#fff7ed', borderColor: activeOrg==='osis'?'#ede9fe':'#fed7aa'}}>
+                    <span className="text-sm font-bold">{orgLabel} — {formatDate(bulkDate)}</span>
+                    <div className="flex gap-1 flex-wrap">
+                      <span className="text-xs text-slate-500 self-center">Tandai semua:</span>
+                      {STATUS_OPTIONS.map(s => <button key={s.value} onClick={() => setAllStatus(s.value)} className={`text-xs font-semibold px-2 py-1 rounded-lg border ${s.color}`}>{s.label}</button>)}
+                    </div>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead><tr className="bg-slate-50 border-b border-slate-200"><th className="th">#</th><th className="th">Nama</th><th className="th">Jabatan</th><th className="th w-48">Status</th><th className="th w-32">Kas (Rp)</th><th className="th w-36">Keterangan</th></tr></thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {bulkRows.map((row, i) => (
+                          <tr key={row.anggota_id} className="hover:bg-slate-50/60">
+                            <td className="td text-slate-400 font-mono text-xs">{i+1}</td>
+                            <td className="td font-semibold text-slate-800 text-sm">{row.nama}</td>
+                            <td className="td text-xs text-slate-500">{row.jabatan || '-'}</td>
+                            <td className="td">
+                              <div className="flex gap-1">
+                                {STATUS_OPTIONS.map(s => { const Icon=s.icon; return (
+                                  <button key={s.value} onClick={() => updateRow(i,'status',s.value)} title={s.label}
+                                    className={`flex items-center gap-1 px-1.5 py-1 rounded-lg border text-xs font-semibold transition-all ${row.status===s.value?s.color+' ring-1 ring-current':'border-slate-200 text-slate-300 hover:border-slate-300'}`}>
+                                    <Icon className="w-3 h-3"/><span className="hidden sm:inline">{s.label}</span>
+                                  </button>
+                                )})}
+                              </div>
+                            </td>
+                            <td className="td"><div className="relative"><Banknote className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400"/><input type="number" min={0} step={500} value={row.uang_kas} onChange={e => updateRow(i,'uang_kas',parseInt(e.target.value)||0)} className="input pl-7 py-1.5 font-mono text-sm" placeholder="0"/></div></td>
+                            <td className="td"><input type="text" value={row.keterangan} onChange={e => updateRow(i,'keterangan',e.target.value)} className="input py-1.5 text-xs" placeholder="Opsional..."/></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="px-5 py-3 bg-slate-50 border-t flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex gap-4 text-xs font-semibold">
+                      <span className="text-green-600">✓ Hadir: {hadirCount}</span>
+                      <span className="text-slate-500">Total: {bulkRows.length}</span>
+                      <span className="text-amber-600">Kas: {formatCurrency(totalKasBulk)}</span>
+                    </div>
+                    <button onClick={handleSaveAbsensi} disabled={savingAbsensi} className="btn-primary">
+                      {savingAbsensi ? <><Loader2 className="w-4 h-4 animate-spin"/>Menyimpan...</> : <><Save className="w-4 h-4"/>Simpan Absensi</>}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="card p-4 flex gap-3"><div className="relative flex-1"><Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/><input type="date" value={filterTanggal} onChange={e => setFilterTanggal(e.target.value)} className="input pl-10"/></div></div>
+              {loadingRiwayat ? (
+                <div className="card p-16 flex items-center justify-center gap-3 text-slate-400"><Loader2 className="w-5 h-5 animate-spin"/><span className="text-sm">Memuat...</span></div>
+              ) : riwayat.length === 0 ? (
+                <div className="card p-16 text-center text-slate-400 text-sm">Tidak ada data absensi</div>
+              ) : (
+                <div className="card overflow-hidden overflow-x-auto">
+                  <table className="w-full">
+                    <thead><tr className="bg-slate-50 border-b border-slate-200"><th className="th">Nama</th><th className="th">Jabatan</th><th className="th">Tanggal</th><th className="th">Status</th><th className="th">Uang Kas</th><th className="th">Keterangan</th></tr></thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {riwayat.map(a => {
+                        const angg = activeOrg === 'osis' ? a.anggota_osis : a.anggota_mpk
+                        return (
+                          <tr key={a.id} className="hover:bg-slate-50">
+                            <td className="td font-semibold text-slate-800">{angg?.nama || '-'}</td>
+                            <td className="td text-xs text-slate-500">{angg?.jabatan || '-'}</td>
+                            <td className="td text-xs font-mono text-slate-500">{formatDate(a.tanggal)}</td>
+                            <td className="td"><StatusBadge status={a.status}/></td>
+                            <td className="td font-mono text-sm font-semibold text-green-600">{a.uang_kas > 0 ? formatCurrency(a.uang_kas) : '-'}</td>
+                            <td className="td text-xs text-slate-400">{a.keterangan || '-'}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}

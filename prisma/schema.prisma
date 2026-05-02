@@ -1,0 +1,195 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum Role {
+  administrator
+  admin_programming
+  admin_english
+  admin_osis_mpk
+}
+
+enum OrganisasiType {
+  programming
+  english
+  osis
+  mpk
+}
+
+enum StatusAbsensi {
+  hadir
+  tidak_hadir
+  izin
+  sakit
+}
+
+enum AksiLog {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+}
+
+// ============================================================
+// TABLE: users
+// ============================================================
+model User {
+  id         Int      @id @default(autoincrement())
+  nama       String   @db.VarChar(100)
+  email      String   @unique @db.VarChar(150)
+  password   String   @db.VarChar(255)
+  role       Role
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  absensi_dibuat  Absensi[]       @relation("AbsensiCreatedBy")
+  absensi_diubah  Absensi[]       @relation("AbsensiUpdatedBy")
+  siswa_dibuat    Siswa[]         @relation("SiswaCreatedBy")
+  log_aktivitas   LogAktivitas[]
+
+  @@map("users")
+}
+
+// ============================================================
+// TABLE: siswa (untuk ekskul)
+// ============================================================
+model Siswa {
+  id          Int            @id @default(autoincrement())
+  nis         String?        @db.VarChar(20)
+  nama        String         @db.VarChar(100)
+  kelas       String?        @db.VarChar(20)
+  ekskul      OrganisasiType
+  created_at  DateTime       @default(now())
+  updated_at  DateTime       @updatedAt
+  created_by  Int
+  creator     User           @relation("SiswaCreatedBy", fields: [created_by], references: [id])
+
+  // Relations
+  absensi     Absensi[]
+
+  @@index([ekskul])
+  @@map("siswa")
+}
+
+// ============================================================
+// TABLE: absensi (untuk ekskul: programming & english)
+// ============================================================
+model Absensi {
+  id           Int           @id @default(autoincrement())
+  siswa_id     Int
+  tanggal      DateTime      @db.Date
+  status       StatusAbsensi @default(hadir)
+  uang_kas     Int           @default(0)
+  keterangan   String?       @db.VarChar(200)
+  created_by   Int
+  updated_by   Int?
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @updatedAt
+
+  // Relations
+  siswa        Siswa         @relation(fields: [siswa_id], references: [id], onDelete: Cascade)
+  creator      User          @relation("AbsensiCreatedBy", fields: [created_by], references: [id])
+  updater      User?         @relation("AbsensiUpdatedBy", fields: [updated_by], references: [id])
+
+  @@unique([siswa_id, tanggal])
+  @@index([tanggal])
+  @@index([siswa_id])
+  @@map("absensi")
+}
+
+// ============================================================
+// TABLE: anggota_osis (OSIS - dipisah dari MPK)
+// ============================================================
+model AnggotaOsis {
+  id         Int      @id @default(autoincrement())
+  nis        String?  @db.VarChar(20)
+  nama       String   @db.VarChar(100)
+  kelas      String?  @db.VarChar(20)
+  jabatan    String?  @db.VarChar(100)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  absensi    AbsensiOrganisasi[]
+
+  @@map("anggota_osis")
+}
+
+// ============================================================
+// TABLE: anggota_mpk (MPK - dipisah dari OSIS)
+// ============================================================
+model AnggotaMpk {
+  id         Int      @id @default(autoincrement())
+  nis        String?  @db.VarChar(20)
+  nama       String   @db.VarChar(100)
+  kelas      String?  @db.VarChar(20)
+  jabatan    String?  @db.VarChar(100)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  absensi    AbsensiOrganisasi[]
+
+  @@map("anggota_mpk")
+}
+
+// ============================================================
+// TABLE: absensi_organisasi (untuk OSIS & MPK)
+// Polymorphic: organisasi_type menentukan OSIS atau MPK
+// ============================================================
+model AbsensiOrganisasi {
+  id               Int            @id @default(autoincrement())
+  organisasi_type  OrganisasiType // 'osis' atau 'mpk'
+  anggota_osis_id  Int?
+  anggota_mpk_id   Int?
+  tanggal          DateTime       @db.Date
+  status           StatusAbsensi  @default(hadir)
+  uang_kas         Int            @default(0)
+  keterangan       String?        @db.VarChar(200)
+  created_by       Int
+  updated_by       Int?
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @updatedAt
+
+  // Relations
+  anggota_osis     AnggotaOsis?   @relation(fields: [anggota_osis_id], references: [id], onDelete: Cascade)
+  anggota_mpk      AnggotaMpk?    @relation(fields: [anggota_mpk_id], references: [id], onDelete: Cascade)
+
+  @@index([tanggal])
+  @@index([organisasi_type])
+  @@map("absensi_organisasi")
+}
+
+// ============================================================
+// TABLE: log_aktivitas (audit trail)
+// ============================================================
+model LogAktivitas {
+  id            Int      @id @default(autoincrement())
+  user_id       Int
+  user_nama     String   @db.VarChar(100)
+  aksi          AksiLog
+  tabel         String   @db.VarChar(50)
+  record_id     String?  @db.VarChar(50)
+  deskripsi     String   @db.Text
+  data_lama     Json?
+  data_baru     Json?
+  ip_address    String?  @db.VarChar(45)
+  created_at    DateTime @default(now())
+
+  // Relations
+  user          User     @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+  @@index([tabel])
+  @@index([created_at])
+  @@map("log_aktivitas")
+}
