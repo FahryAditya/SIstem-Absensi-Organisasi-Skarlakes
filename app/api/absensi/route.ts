@@ -81,24 +81,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Akses ditolak untuk ekskul English' }, { status: 403 })
   }
 
-  // Fetch existing to compare
-  const existing = await prisma.absensi.findMany({
-    where: { siswa_id: { in: siswaIds }, tanggal: tanggalDate }
-  })
-
-  // Upsert all
+  // Upsert all via database lock (safe from race condition)
   const results = await Promise.all(rows.map(async (row) => {
-    const ex = existing.find(e => e.siswa_id === row.siswa_id)
-    if (ex) {
-      return prisma.absensi.update({
-        where: { id: ex.id },
-        data: { status: row.status, uang_kas: row.uang_kas, keterangan: row.keterangan, updated_by: ctx.userId }
-      })
-    } else {
-      return prisma.absensi.create({
-        data: { siswa_id: row.siswa_id, tanggal: tanggalDate, status: row.status, uang_kas: row.uang_kas, keterangan: row.keterangan, created_by: ctx.userId }
-      })
-    }
+    return prisma.absensi.upsert({
+      where: {
+        siswa_id_tanggal: {
+          siswa_id: row.siswa_id,
+          tanggal: tanggalDate
+        }
+      },
+      update: {
+        status: row.status,
+        uang_kas: row.uang_kas,
+        keterangan: row.keterangan,
+        updated_by: ctx.userId
+      },
+      create: {
+        siswa_id: row.siswa_id,
+        tanggal: tanggalDate,
+        status: row.status,
+        uang_kas: row.uang_kas,
+        keterangan: row.keterangan,
+        created_by: ctx.userId
+      }
+    })
   }))
 
   // Log

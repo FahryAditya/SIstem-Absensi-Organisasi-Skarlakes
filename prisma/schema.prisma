@@ -166,6 +166,8 @@ model AbsensiOrganisasi {
   anggota_osis     AnggotaOsis?   @relation(fields: [anggota_osis_id], references: [id], onDelete: Cascade)
   anggota_mpk      AnggotaMpk?    @relation(fields: [anggota_mpk_id], references: [id], onDelete: Cascade)
 
+  @@unique([anggota_osis_id, tanggal])
+  @@unique([anggota_mpk_id, tanggal])
   @@index([tanggal])
   @@index([organisasi_type])
   @@map("absensi_organisasi")

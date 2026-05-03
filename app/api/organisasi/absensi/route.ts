@@ -77,23 +77,8 @@ export async function POST(req: NextRequest) {
   const tanggalDate = new Date(tanggal)
   const anggotaIds = rows.map(r => r.anggota_id)
 
-  // Get existing
-  const existing = await prisma.absensiOrganisasi.findMany({
-    where: {
-      organisasi_type: organisasi,
-      tanggal: tanggalDate,
-      ...(organisasi === 'osis'
-        ? { anggota_osis_id: { in: anggotaIds } }
-        : { anggota_mpk_id: { in: anggotaIds } }),
-    }
-  })
-
-  // Upsert
+  // Upsert all via manual resilient upsert (safe from race condition)
   await Promise.all(rows.map(async row => {
-    const ex = existing.find(e =>
-      organisasi === 'osis' ? e.anggota_osis_id === row.anggota_id : e.anggota_mpk_id === row.anggota_id
-    )
-
     const baseData = {
       organisasi_type: organisasi,
       tanggal: tanggalDate,
@@ -102,19 +87,36 @@ export async function POST(req: NextRequest) {
       keterangan: row.keterangan,
     }
 
-    if (ex) {
+    const anggotaKey = organisasi === 'osis' ? 'anggota_osis_id' : 'anggota_mpk_id'
+    const whereData = { [anggotaKey]: row.anggota_id, tanggal: tanggalDate }
+
+    // Manual resilient upsert karena Prisma tidak mendukung .upsert() pada kolom opsional (nullable)
+    let existing = await prisma.absensiOrganisasi.findFirst({ where: whereData })
+
+    if (existing) {
       return prisma.absensiOrganisasi.update({
-        where: { id: ex.id },
+        where: { id: existing.id },
         data: { ...baseData, updated_by: ctx.userId }
       })
     } else {
-      return prisma.absensiOrganisasi.create({
-        data: {
-          ...baseData,
-          ...(organisasi === 'osis' ? { anggota_osis_id: row.anggota_id } : { anggota_mpk_id: row.anggota_id }),
-          created_by: ctx.userId,
+      try {
+        return await prisma.absensiOrganisasi.create({
+          data: { ...baseData, [anggotaKey]: row.anggota_id, created_by: ctx.userId }
+        })
+      } catch (error: any) {
+        if (error.code === 'P2002') {
+          // Tabrakan (Race Condition) terdeteksi dan digagalkan oleh Database (Unique Constraint)!
+          // Kita ambil ulang data yang baru saja terbuat dan lakukan update.
+          existing = await prisma.absensiOrganisasi.findFirst({ where: whereData })
+          if (existing) {
+            return prisma.absensiOrganisasi.update({
+              where: { id: existing.id },
+              data: { ...baseData, updated_by: ctx.userId }
+            })
+          }
         }
-      })
+        throw error
+      }
     }
   }))
 
