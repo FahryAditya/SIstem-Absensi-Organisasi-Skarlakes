@@ -135,12 +135,17 @@ export async function GET(req: NextRequest) {
     return { bulan: format(m, 'MMM'), total: ekskulTotal + orgTotal - pengeluaranTotal }
   })
 
+  const totalPemasukan = [...kasEkskulBulanan, ...kasOrgBulanan].reduce((s, a) => s + ((a as any).uang_kas || 0), 0)
+  const totalPengeluaran = (pengeluaranBulanan as any[]).reduce((s, a) => s + (a.nominal || 0), 0)
+
   return NextResponse.json({
     totalSiswa,
     totalOsis,
     totalMpk,
     hadirHariIni: hadirEkskulHariIni + hadirOrganisasiHariIni,
-    totalKas: [...kasEkskulBulanan, ...kasOrgBulanan].reduce((s, a) => s + ((a as any).uang_kas || 0), 0) - (pengeluaranBulanan as any[]).reduce((s, a) => s + (a.nominal || 0), 0),
+    totalPemasukan,
+    totalPengeluaran,
+    totalKas: totalPemasukan - totalPengeluaran,
     kehadiranMingguan,
     kasPerBulan,
     recentLog,

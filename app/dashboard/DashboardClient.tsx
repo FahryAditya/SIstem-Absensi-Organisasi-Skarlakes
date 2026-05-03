@@ -5,7 +5,9 @@ import toast from 'react-hot-toast'
 import * as XLSX from 'xlsx'
 import { formatCurrency, formatDate, formatDateTime, ORG_LABELS, OrgType } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
-import { Users, CheckCircle2, Wallet, TrendingUp, Activity, Loader2, Clock, PlusCircle, UploadCloud } from 'lucide-react'
+import {
+  Users, CheckCircle2, Wallet, UserPlus, LogOut, Clock, CalendarDays, PlusCircle, LayoutList, HandCoins, Loader2, UploadCloud, TrendingUp, Activity
+} from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, Legend, AreaChart, Area
@@ -20,6 +22,8 @@ interface Stats {
   totalOsis: number
   totalMpk: number
   hadirHariIni: number
+  totalPemasukan: number
+  totalPengeluaran: number
   totalKas: number
   kehadiranMingguan: { day: string; hadir: number; tidak_hadir: number }[]
   kasPerBulan: { bulan: string; total: number }[]
@@ -165,11 +169,25 @@ export default function DashboardClient({ user }: Props) {
       color: 'bg-green-50 text-green-600',
     },
     {
-      label: 'Total Uang Kas',
+      label: 'Sisa Saldo Kas',
       value: formatCurrency(stats?.totalKas ?? 0),
       isCurrency: true,
       icon: Wallet,
       color: 'bg-amber-50 text-amber-600',
+    },
+    {
+      label: 'Total Pemasukan Kas',
+      value: formatCurrency(stats?.totalPemasukan ?? 0),
+      isCurrency: true,
+      icon: PlusCircle,
+      color: 'bg-emerald-50 text-emerald-600',
+    },
+    {
+      label: 'Total Pengeluaran Kas',
+      value: formatCurrency(stats?.totalPengeluaran ?? 0),
+      isCurrency: true,
+      icon: HandCoins,
+      color: 'bg-red-50 text-red-600',
     },
   ].filter(Boolean) as { label: string; value: number | string; suffix?: string; isCurrency?: boolean; icon: React.ElementType; color: string }[]
 
