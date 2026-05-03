@@ -97,3 +97,43 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Terjadi kesalahan server saat menyimpan pengeluaran' }, { status: 500 })
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const ctx = getCtx(req)
+    const { searchParams } = new URL(req.url)
+    const id = parseInt(searchParams.get('id') || '0')
+
+    if (!id) return NextResponse.json({ error: 'ID tidak valid' }, { status: 400 })
+
+    const expense = await (prisma as any).pengeluaranKas.findUnique({
+      where: { id }
+    })
+
+    if (!expense) return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
+
+    const accessible = getAccessibleOrgs(ctx.userRole)
+    if (!accessible.includes(expense.organisasi_type)) {
+      return NextResponse.json({ error: 'Akses ditolak untuk unit ini' }, { status: 403 })
+    }
+
+    await (prisma as any).pengeluaranKas.delete({
+      where: { id }
+    })
+
+    await createLog({
+      userId: ctx.userId,
+      userNama: ctx.userNama,
+      aksi: 'DELETE',
+      tabel: 'pengeluaran_kas',
+      recordId: id.toString(),
+      deskripsi: `${ctx.userNama} MENGHAPUS/MEMBATALKAN pengeluaran kas ${expense.organisasi_type.toUpperCase()} sebesar Rp ${expense.nominal.toLocaleString('id-ID')}. Ket: ${expense.keterangan}`,
+      ipAddress: getIp(req),
+    })
+
+    return NextResponse.json({ success: true, message: 'Transaksi pengeluaran berhasil dibatalkan/dihapus' })
+  } catch (e: any) {
+    console.error('[PENGELUARAN DELETE ERROR]', e)
+    return NextResponse.json({ error: 'Terjadi kesalahan server saat menghapus pengeluaran' }, { status: 500 })
+  }
+}

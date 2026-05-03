@@ -115,6 +115,30 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // --- NEW LOGIC FOR PENGELUARAN KAS ---
+  const pengeluaran = await (prisma as any).pengeluaranKas.findMany({
+    where: {
+      organisasi_type: { in: filter as any[] },
+      ...(startDate && endDate ? { tanggal: { gte: new Date(startDate), lte: new Date(endDate) } } : {})
+    },
+    include: { creator: { select: { nama: true } } },
+    orderBy: { tanggal: 'desc' }
+  })
+
+  if (pengeluaran.length > 0) {
+    const rows = pengeluaran.map((p: any, i: number) => ({
+      'No': i + 1,
+      'Tanggal': p.tanggal.toISOString().split('T')[0],
+      'Unit': ORG_LABELS[p.organisasi_type as keyof typeof ORG_LABELS] || p.organisasi_type,
+      'Keterangan': p.keterangan,
+      'Nominal': p.nominal,
+      'Ditarik Oleh': p.creator?.nama || '-'
+    }))
+    const ws = XLSX.utils.json_to_sheet(rows, { header: ['No', 'Tanggal', 'Unit', 'Keterangan', 'Nominal', 'Ditarik Oleh'] })
+    ws['!cols'] = [5, 12, 16, 40, 15, 20].map(w => ({ wch: w }))
+    XLSX.utils.book_append_sheet(wb, ws, 'Pengeluaran Kas')
+  }
+
   // Final check: if no sheets were added, add a default one
   if (wb.SheetNames.length === 0) {
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Tidak ada data yang tersedia untuk filter ini']]), 'Info')

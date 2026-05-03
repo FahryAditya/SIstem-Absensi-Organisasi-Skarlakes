@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { HandCoins, Search, Filter, Loader2, Plus, X } from 'lucide-react'
+import { HandCoins, Search, Filter, Loader2, Plus, X, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatCurrency, formatDateTime, ORG_LABELS, OrgType } from '@/lib/utils'
 
@@ -57,6 +57,20 @@ export default function PengeluaranClient({ user }: Props) {
     setTxKet('')
     setTxOrg(activeOrg || orgs[0] || '')
     setModalOpen(true)
+  }
+
+  async function handleDelete(id: number) {
+    if (!confirm('Yakin ingin membatalkan dan menghapus transaksi ini? Saldo akan dikembalikan.')) return
+    
+    try {
+      const res = await fetch(`/api/pengeluaran?id=${id}`, { method: 'DELETE' })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error)
+      toast.success(json.message || 'Transaksi dihapus')
+      fetchData()
+    } catch (err: any) {
+      toast.error(err.message)
+    }
   }
 
   async function handleTransaction(e: React.FormEvent) {
@@ -130,12 +144,13 @@ export default function PengeluaranClient({ user }: Props) {
           <table className="table">
             <thead>
               <tr>
-                <th className="w-16">No</th>
+                <th className="w-12">No</th>
                 <th className="min-w-[150px]">Tanggal & Waktu</th>
                 <th className="min-w-[120px]">Unit</th>
                 <th className="min-w-[200px]">Keterangan</th>
                 <th className="min-w-[150px]">Ditarik Oleh</th>
                 <th className="text-right min-w-[120px]">Nominal</th>
+                <th className="w-16 text-center">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -148,7 +163,7 @@ export default function PengeluaranClient({ user }: Props) {
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="h-32 text-center text-slate-400">
+                  <td colSpan={7} className="h-32 text-center text-slate-400">
                     Belum ada riwayat pengeluaran kas.
                   </td>
                 </tr>
@@ -166,6 +181,11 @@ export default function PengeluaranClient({ user }: Props) {
                     <td className="text-slate-600 text-sm">{item.creator_nama}</td>
                     <td className="text-right font-mono font-bold text-red-600 bg-red-50/30">
                       - {formatCurrency(item.nominal)}
+                    </td>
+                    <td className="text-center">
+                      <button onClick={() => handleDelete(item.id)} className="p-1.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg tooltip-trigger" title="Hapus Transaksi">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))
