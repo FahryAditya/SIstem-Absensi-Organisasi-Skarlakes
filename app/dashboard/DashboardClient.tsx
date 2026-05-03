@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import toast from 'react-hot-toast'
+import * as XLSX from 'xlsx'
 import { formatCurrency, formatDate, formatDateTime, ORG_LABELS, OrgType } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
-import { Users, CheckCircle2, Wallet, TrendingUp, Activity, Loader2, Clock } from 'lucide-react'
+import { Users, CheckCircle2, Wallet, TrendingUp, Activity, Loader2, Clock, PlusCircle, UploadCloud } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, Legend, AreaChart, Area
@@ -38,12 +40,90 @@ export default function DashboardClient({ user }: Props) {
   const [loading, setLoading] = useState(true)
   const [now] = useState(new Date())
 
+  // Quick Add State
+  const [quickOrg, setQuickOrg] = useState<string>('')
+  const [quickName, setQuickName] = useState('')
+  const [quickClass, setQuickClass] = useState('')
+  const [quickJabatan, setQuickJabatan] = useState('')
+  const [quickLoading, setQuickLoading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const orgs = stats?.orgs || []
+
   useEffect(() => {
-    fetch('/api/dashboard')
-      .then(r => r.json())
-      .then(d => { setStats(d); setLoading(false) })
-      .catch(() => setLoading(false))
+    if (orgs.length > 0 && !quickOrg) setQuickOrg(orgs[0])
+  }, [orgs, quickOrg])
+
+  async function fetchStats() {
+    try {
+      const res = await fetch('/api/dashboard')
+      const d = await res.json()
+      setStats(d)
+    } catch {}
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    fetchStats()
   }, [])
+
+  async function handleQuickAdd(e: React.FormEvent) {
+    e.preventDefault()
+    if (!quickName || !quickOrg) return toast.error('Nama wajib diisi')
+    setQuickLoading(true)
+    try {
+      const data = [{ nama: quickName, kelas: quickClass, jabatan: quickJabatan }]
+      const res = await fetch('/api/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ org: quickOrg, data })
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error)
+      toast.success('Anggota berhasil ditambahkan')
+      setQuickName(''); setQuickClass(''); setQuickJabatan('')
+      fetchStats()
+    } catch (e: any) {
+      toast.error(e.message)
+    }
+    setQuickLoading(false)
+  }
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !quickOrg) return
+    setQuickLoading(true)
+    try {
+      const data = await file.arrayBuffer()
+      const workbook = XLSX.read(data, { type: 'array' })
+      const firstSheetName = workbook.SheetNames[0]
+      const worksheet = workbook.Sheets[firstSheetName]
+      const json = XLSX.utils.sheet_to_json<any>(worksheet)
+      
+      const mappedData = json.map(row => ({
+        nama: row.Nama || row.nama || row.Name || row.name || '',
+        kelas: row.Kelas || row.kelas || row.Class || row.class || '',
+        nis: row.NIS || row.nis || '',
+        jabatan: row.Jabatan || row.jabatan || '',
+      })).filter(item => item.nama) // Filter out empty rows
+
+      if (mappedData.length === 0) throw new Error('Format kolom tidak sesuai atau file kosong. Pastikan ada kolom "Nama".')
+
+      const res = await fetch('/api/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ org: quickOrg, data: mappedData })
+      })
+      const apiJson = await res.json()
+      if (!res.ok) throw new Error(apiJson.error)
+      toast.success(`Berhasil import ${apiJson.count} data`)
+      fetchStats()
+    } catch (err: any) {
+      toast.error(err.message)
+    }
+    if (fileInputRef.current) fileInputRef.current.value = ''
+    setQuickLoading(false)
+  }
 
   const greetingHour = now.getHours()
   const greeting = greetingHour < 11 ? 'Selamat pagi' : greetingHour < 15 ? 'Selamat siang' : greetingHour < 18 ? 'Selamat sore' : 'Selamat malam'
@@ -54,8 +134,6 @@ export default function DashboardClient({ user }: Props) {
       <span className="text-sm">Memuat dashboard...</span>
     </div>
   )
-
-  const orgs = stats?.orgs || []
 
   const statCards = [
     orgs.some(o => ['programming', 'english'].includes(o)) && {
@@ -142,6 +220,79 @@ export default function DashboardClient({ user }: Props) {
           </div>
         ))}
       </div>
+
+      {/* Quick Add & Import Section */}
+      {orgs.length > 0 && (
+        <div className="card p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <PlusCircle className="w-5 h-5 text-indigo-500" />
+            <h3 className="text-base font-bold text-slate-800">Quick Add / Import Anggota</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Quick Add Form */}
+            <form onSubmit={handleQuickAdd} className="space-y-3">
+              <div className="form-group">
+                <label className="label">Unit / Organisasi Tujuan</label>
+                <select value={quickOrg} onChange={e => setQuickOrg(e.target.value)} className="input bg-slate-50">
+                  {orgs.map(o => (
+                    <option key={o} value={o}>{ORG_LABELS[o as OrgType]}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="label">Nama Lengkap</label>
+                <input type="text" value={quickName} onChange={e => setQuickName(e.target.value)} className="input" placeholder="Misal: Budi Santoso" required />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="form-group">
+                  <label className="label">Kelas</label>
+                  <input type="text" value={quickClass} onChange={e => setQuickClass(e.target.value)} className="input" placeholder="X MIPA 1" />
+                </div>
+                {(quickOrg === 'osis' || quickOrg === 'mpk') && (
+                  <div className="form-group">
+                    <label className="label">Jabatan</label>
+                    <input type="text" value={quickJabatan} onChange={e => setQuickJabatan(e.target.value)} className="input" placeholder="Anggota" />
+                  </div>
+                )}
+              </div>
+              <button type="submit" disabled={quickLoading} className="btn-primary w-full justify-center">
+                {quickLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Tambahkan'}
+              </button>
+            </form>
+
+            {/* Bulk Import */}
+            <div className="flex flex-col justify-center space-y-4 border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-6">
+              <div>
+                <h4 className="text-sm font-bold text-slate-700 mb-1">Import Massal (CSV/Excel)</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Upload file <b>.xlsx</b> atau <b>.csv</b>. Pastikan baris pertama memiliki header: <br/>
+                  <code className="text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded">Nama</code>, <code className="text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded">Kelas</code>, <code className="text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded">NIS</code>{(quickOrg === 'osis' || quickOrg === 'mpk') && <>, <code className="text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded">Jabatan</code></>}.
+                </p>
+              </div>
+              <input
+                type="file"
+                accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                className="hidden"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+              />
+              <button 
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={quickLoading}
+                className="btn-secondary w-full justify-center py-3 border-dashed border-2 bg-slate-50 hover:bg-slate-100"
+              >
+                {quickLoading ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Memproses...</>
+                ) : (
+                  <><UploadCloud className="w-5 h-5 text-slate-400" /> Pilih File Excel/CSV</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
