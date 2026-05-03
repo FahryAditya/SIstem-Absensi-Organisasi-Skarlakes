@@ -19,6 +19,7 @@ export default function Topbar({ user, pageTitle, onMenuClick }: TopbarProps) {
 
   async function handleLogout() {
     setLoggingOut(true)
+    sessionStorage.removeItem('welcome_shown')
     await fetch('/api/auth/logout', { method: 'POST' })
     toast.success('Berhasil logout')
     router.push('/login')
@@ -38,9 +39,13 @@ export default function Topbar({ user, pageTitle, onMenuClick }: TopbarProps) {
           onClick={() => setOpen(!open)}
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
         >
-          <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-black">
-            {user.nama.charAt(0).toUpperCase()}
-          </div>
+          {user.role === 'administrator' ? (
+            <img src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" alt="Profile" className="w-7 h-7 rounded-full object-cover shadow-sm border border-slate-200" />
+          ) : (
+            <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-black">
+              {user.nama.charAt(0).toUpperCase()}
+            </div>
+          )}
           <div className="hidden sm:block text-left">
             <div className="text-xs font-bold text-slate-800 leading-tight">{user.nama}</div>
             <div className="text-[10px] text-slate-400">{ROLE_LABELS[user.role] || user.role}</div>
