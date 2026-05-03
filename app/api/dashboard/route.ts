@@ -32,6 +32,7 @@ export async function GET(req: NextRequest) {
     absensiMingguEkskul,
     kasEkskulBulanan,
     kasOrgBulanan,
+    pengeluaranBulanan,
     recentLog,
   ] = await Promise.all([
     // Total siswa ekskul
@@ -88,6 +89,15 @@ export async function GET(req: NextRequest) {
       select: { tanggal: true, uang_kas: true }
     }) : Promise.resolve([]),
 
+    // Pengeluaran kas 6 bulan
+    orgs.length ? (prisma as any).pengeluaranKas.findMany({
+      where: {
+        tanggal: { gte: subMonths(startOfMonth(today), 5) },
+        ...(userRole !== 'administrator' ? { organisasi_type: { in: orgs as any[] } } : {})
+      },
+      select: { tanggal: true, nominal: true }
+    }) : Promise.resolve([]),
+
     // Recent log (administrator only)
     userRole === 'administrator' ? prisma.logAktivitas.findMany({
       orderBy: { created_at: 'desc' },
@@ -115,11 +125,14 @@ export async function GET(req: NextRequest) {
     const mStr = format(m, 'yyyy-MM')
     const ekskulTotal = (kasEkskulBulanan as { tanggal: Date; uang_kas: number }[])
       .filter(a => format(a.tanggal, 'yyyy-MM') === mStr)
-      .reduce((s, a) => s + a.uang_kas, 0)
+      .reduce((s, a) => s + (a.uang_kas || 0), 0)
     const orgTotal = (kasOrgBulanan as { tanggal: Date; uang_kas: number }[])
       .filter(a => format(a.tanggal, 'yyyy-MM') === mStr)
-      .reduce((s, a) => s + a.uang_kas, 0)
-    return { bulan: format(m, 'MMM'), total: ekskulTotal + orgTotal }
+      .reduce((s, a) => s + (a.uang_kas || 0), 0)
+    const pengeluaranTotal = (pengeluaranBulanan as { tanggal: Date; nominal: number }[])
+      .filter(a => format(a.tanggal, 'yyyy-MM') === mStr)
+      .reduce((s, a) => s + (a.nominal || 0), 0)
+    return { bulan: format(m, 'MMM'), total: ekskulTotal + orgTotal - pengeluaranTotal }
   })
 
   return NextResponse.json({
@@ -127,7 +140,7 @@ export async function GET(req: NextRequest) {
     totalOsis,
     totalMpk,
     hadirHariIni: hadirEkskulHariIni + hadirOrganisasiHariIni,
-    totalKas: [...kasEkskulBulanan, ...kasOrgBulanan].reduce((s, a) => s + (a as { uang_kas: number }).uang_kas, 0),
+    totalKas: [...kasEkskulBulanan, ...kasOrgBulanan].reduce((s, a) => s + ((a as any).uang_kas || 0), 0) - (pengeluaranBulanan as any[]).reduce((s, a) => s + (a.nominal || 0), 0),
     kehadiranMingguan,
     kasPerBulan,
     recentLog,

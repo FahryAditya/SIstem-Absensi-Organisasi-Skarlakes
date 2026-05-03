@@ -58,6 +58,7 @@ model User {
   absensi_diubah  Absensi[]       @relation("AbsensiUpdatedBy")
   siswa_dibuat    Siswa[]         @relation("SiswaCreatedBy")
   log_aktivitas   LogAktivitas[]
+  pengeluaran_kas PengeluaranKas[]
 
   @@map("users")
 }
@@ -193,4 +194,24 @@ model LogAktivitas {
   @@index([tabel])
   @@index([created_at])
   @@map("log_aktivitas")
+}
+
+// ============================================================
+// TABLE: pengeluaran_kas (tarik kas organisasi)
+// ============================================================
+model PengeluaranKas {
+  id              Int            @id @default(autoincrement())
+  organisasi_type OrganisasiType
+  nominal         Int
+  keterangan      String         @db.VarChar(255)
+  tanggal         DateTime       @default(now())
+  created_by      Int
+  created_at      DateTime       @default(now())
+
+  // Relations
+  creator         User           @relation(fields: [created_by], references: [id])
+
+  @@index([organisasi_type])
+  @@index([tanggal])
+  @@map("pengeluaran_kas")
 }
