@@ -27,36 +27,8 @@ async function main() {
     }
   }
 
-  // 2. Daftar user bawaan (hardcoded)
-  const defaultUsers = [
-    {
-      nama: 'Fahry Aditya',
-      email: 'Fahryadityaadmin@gmail.com',
-      password: 'AdministratorFahry',
-      role: 'administrator' as const,
-    },
-    {
-      nama: 'Admin Programming 1',
-      email: 'programmingakarlakes1@gmail.com',
-      password: 'pgskarlakes1',
-      role: 'admin_programming' as const,
-    },
-    {
-      nama: 'Admin English Club 1',
-      email: 'Englishclubskarla1@gmail.com',
-      password: 'EnglishSkarla1',
-      role: 'admin_english' as const,
-    },
-    {
-      nama: 'Admin OSIS & MPK 1',
-      email: 'osismpkskarlakes1@gmail.com',
-      password: 'osismpk1',
-      role: 'admin_osis_mpk' as const,
-    },
-  ]
-
-  // Gabungkan semua user (JSON + Default)
-  const allUsers = [...jsonUsers, ...defaultUsers]
+  // Gabungkan semua user (Hanya dari JSON)
+  const allUsers = [...jsonUsers]
 
   for (const u of allUsers) {
     const existing = await prisma.user.findUnique({ where: { email: u.email } })
