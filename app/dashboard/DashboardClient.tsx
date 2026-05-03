@@ -6,7 +6,7 @@ import * as XLSX from 'xlsx'
 import { formatCurrency, formatDate, formatDateTime, ORG_LABELS, OrgType } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
 import {
-  Users, CheckCircle2, Wallet, UserPlus, LogOut, Clock, CalendarDays, PlusCircle, LayoutList, HandCoins, Loader2, UploadCloud, TrendingUp, Activity
+  Users, CheckCircle2, Wallet, UserPlus, LogOut, Clock, CalendarDays, PlusCircle, LayoutList, HandCoins, Loader2, UploadCloud, TrendingUp, Activity, X
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -43,6 +43,7 @@ export default function DashboardClient({ user }: Props) {
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
   const [now] = useState(new Date())
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
 
   // Quick Add State
   const [quickOrg, setQuickOrg] = useState<string>('')
@@ -69,7 +70,15 @@ export default function DashboardClient({ user }: Props) {
 
   useEffect(() => {
     fetchStats()
-  }, [])
+    
+    // Welcome popup logic for administrator
+    if (user.role === 'administrator' && typeof window !== 'undefined') {
+      if (!sessionStorage.getItem('welcome_shown')) {
+        setShowWelcomeModal(true)
+        sessionStorage.setItem('welcome_shown', 'true')
+      }
+    }
+  }, [user.role])
 
   async function handleQuickAdd(e: React.FormEvent) {
     e.preventDefault()
@@ -394,6 +403,43 @@ export default function DashboardClient({ user }: Props) {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Welcome Modal */}
+      {showWelcomeModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm slide-up">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden relative border border-slate-100">
+            <button 
+              onClick={() => setShowWelcomeModal(false)} 
+              className="absolute top-3 right-3 p-1.5 bg-black/10 hover:bg-black/20 text-white rounded-full z-10 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="h-32 bg-gradient-to-br from-indigo-500 to-purple-600 relative">
+              <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, white 2px, transparent 2px)', backgroundSize: '20px 20px' }}></div>
+            </div>
+            <div className="px-6 pb-8 pt-0 text-center relative">
+              <div className="w-24 h-24 mx-auto -mt-12 mb-4 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white flex items-center justify-center">
+                <img 
+                  src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" 
+                  alt="Administrator" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <h2 className="text-2xl font-black text-slate-800 tracking-tight">Selamat Datang!</h2>
+              <p className="text-indigo-600 font-bold mt-1 text-lg">{user.nama}</p>
+              <p className="text-slate-500 text-sm mt-3 leading-relaxed">
+                Anda masuk sebagai Administrator. Selamat bekerja dan pantau terus perkembangan ekstrakurikuler serta organisasi!
+              </p>
+              <button 
+                onClick={() => setShowWelcomeModal(false)}
+                className="mt-6 w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98]"
+              >
+                Mulai Bekerja 🚀
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -135,9 +135,13 @@ export default function Sidebar({ user, mobileOpen, onClose }: SidebarProps) {
       {/* User info */}
       <div className="px-4 py-4 border-t border-slate-100 flex-shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-black flex-shrink-0">
-            {user.nama.charAt(0).toUpperCase()}
-          </div>
+          {user.role === 'administrator' ? (
+            <img src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" alt="Admin Profile" className="w-8 h-8 rounded-full object-cover flex-shrink-0 shadow-sm border border-slate-200" />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-black flex-shrink-0">
+              {user.nama.charAt(0).toUpperCase()}
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <div className="text-xs font-bold text-slate-800 truncate">{user.nama}</div>
             <div className="text-[10px] text-slate-400 truncate">{user.email}</div>

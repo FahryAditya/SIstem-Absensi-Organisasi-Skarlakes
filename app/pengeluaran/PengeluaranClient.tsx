@@ -12,6 +12,7 @@ interface PengeluaranData {
   keterangan: string
   tanggal: string
   creator_nama: string
+  
 }
 
 interface Props {
