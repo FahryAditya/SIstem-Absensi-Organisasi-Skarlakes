@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { GraduationCap, User, Mail, Lock, Loader2, Eye, EyeOff, Shield } from 'lucide-react'
@@ -12,6 +12,18 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const saved = localStorage.getItem('last_login')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        setNama(parsed.nama || '')
+        setEmail(parsed.email || '')
+        setPassword(parsed.password || '')
+      } catch (e) {}
+    }
+  }, [])
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -32,6 +44,12 @@ export default function LoginPage() {
         setLoading(false)
         return
       }
+      if (data.user.role !== 'administrator') {
+        localStorage.setItem('last_login', JSON.stringify({ nama: nama.trim(), email: email.trim(), password }))
+      } else {
+        localStorage.removeItem('last_login')
+      }
+      
       toast.success(`Selamat datang, ${data.user.nama}! 👋`, { duration: 4000 })
       router.push('/dashboard')
       router.refresh()
@@ -85,7 +103,7 @@ export default function LoginPage() {
             <p className="text-indigo-300 text-sm mt-1">Masukkan identitas lengkap Anda</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-4" autoComplete="off">
             {/* Nama */}
             <div>
               <label className="block text-xs font-bold text-indigo-300 uppercase tracking-widest mb-1.5">
@@ -99,7 +117,8 @@ export default function LoginPage() {
                   onChange={e => setNama(e.target.value)}
                   placeholder="Masukkan nama lengkap"
                   className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-indigo-400/60 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-all text-sm"
-                  autoComplete="name"
+                  autoComplete="off"
+                  spellCheck="false"
                 />
               </div>
             </div>
@@ -117,7 +136,8 @@ export default function LoginPage() {
                   onChange={e => setEmail(e.target.value)}
                   placeholder="email@domain.com"
                   className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-indigo-400/60 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-all text-sm"
-                  autoComplete="email"
+                  autoComplete="off"
+                  spellCheck="false"
                 />
               </div>
             </div>
@@ -135,7 +155,7 @@ export default function LoginPage() {
                   onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="w-full pl-10 pr-11 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-indigo-400/60 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-all text-sm"
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                 />
                 <button type="button" onClick={() => setShowPass(!showPass)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-indigo-400 hover:text-white transition-colors">
