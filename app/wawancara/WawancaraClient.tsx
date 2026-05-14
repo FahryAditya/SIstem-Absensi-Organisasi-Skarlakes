@@ -7,8 +7,8 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { formatDateTime } from '@/lib/utils'
 import { isAdministrator } from '@/lib/auth-shared'
 import {
-  CalendarClock, CheckCircle2, Clock, Download, Loader2, MessageSquareText,
-  Play, Plus, QrCode, Save, Send, ShieldCheck, SquarePen, Users, XCircle
+  CalendarClock, CheckCircle2, Clock, Download, Loader2, Lock, MessageSquareText,
+  Play, Plus, QrCode, RefreshCcw, Save, Send, ShieldCheck, SquarePen, Users, XCircle
 } from 'lucide-react'
 
 type Org = 'osis' | 'mpk'
@@ -578,8 +578,18 @@ export default function WawancaraClient({ user }: Props) {
                         </td>
                         <td className="td">
                           {(q as any).sesiStatus === 'ACTIVE' ? (
-                            <div className="flex gap-1 justify-end">
-                              {q.status === 'WAWANCARA' && <span className="text-xs font-semibold text-red-600 px-2 py-1">Sedang dikunci</span>}
+                            <div className="flex gap-1 justify-end items-center">
+                              {q.status === 'WAWANCARA' && (
+                                <div className="flex gap-1 items-center">
+                                  <span className="text-xs font-semibold text-red-600 px-2 py-1 flex items-center gap-1"><Lock className="w-3 h-3" /> Dikunci</span>
+                                  {admin && (
+                                    <>
+                                      <button onClick={() => setQueueStatus(q.id, 'MENUNGGU')} className="btn-secondary btn-sm px-2" title="Kembalikan ke antrian"><RefreshCcw className="w-3.5 h-3.5" /></button>
+                                      <button onClick={() => openResult(q)} className="btn-primary btn-sm"><SquarePen className="w-3.5 h-3.5" />Lanjutkan</button>
+                                    </>
+                                  )}
+                                </div>
+                              )}
                               {q.status === 'SELESAI_WAWANCARA' && ['SAH', 'SAH_DICURIGAI'].includes(q.status_validasi) && <button onClick={() => openResult(q)} className="btn-secondary btn-sm"><SquarePen className="w-3.5 h-3.5" />Lihat/Edit</button>}
                               {admin && q.hasil_wawancara && q.hasil_wawancara.hasil === 'TIDAK_LOLOS' && <button onClick={() => openOverride(q)} className="btn-secondary btn-sm text-amber-700"><ShieldCheck className="w-3.5 h-3.5" />Override</button>}
                             </div>
