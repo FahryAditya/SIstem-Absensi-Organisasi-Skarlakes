@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
 import {
   LayoutDashboard, Users, ClipboardList, Building2, UserCog,
-  Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode
+  Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode, UserX
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -56,12 +56,13 @@ function getNavItems(role: string) {
     { href: '/export', label: 'Export Data', icon: Download },
   ]
 
-  if (role === 'administrator') {
-    toolLinks.unshift({ href: '/admin', label: 'Kelola User', icon: UserCog })
-    toolLinks.push({ href: '/qr-code', label: 'QR Code Wawancara', icon: QrCode })
-    toolLinks.push({ href: '/log', label: 'Log Aktivitas', icon: ScrollText })
-    toolLinks.push({ href: '/api/admin/backup', label: 'Backup SQL', icon: Database, target: '_blank' } as any)
-  }
+   if (role === 'administrator') {
+     toolLinks.unshift({ href: '/admin', label: 'Kelola User', icon: UserCog })
+     toolLinks.push({ href: '/qr-code', label: 'QR Code Wawancara', icon: QrCode })
+     toolLinks.push({ href: '/hapus-peserta', label: 'Hapus Peserta Wawancara', icon: UserX })
+     toolLinks.push({ href: '/log', label: 'Log Aktivitas', icon: ScrollText })
+     toolLinks.push({ href: '/api/admin/backup', label: 'Backup SQL', icon: Database, target: '_blank' } as any)
+   }
 
   items.push({ section: 'Tools', links: toolLinks })
   return items
