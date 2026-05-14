@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
 import {
@@ -16,7 +15,7 @@ interface SidebarProps {
   onClose?: () => void
 }
 
-function getNavItems(role: string, wawancaraVisible: boolean) {
+function getNavItems(role: string) {
   const items = [
     { section: 'Utama', links: [
       { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -44,12 +43,10 @@ function getNavItems(role: string, wawancaraVisible: boolean) {
     orgLinks.push({ href: '/organisasi?org=osis', label: 'OSIS', icon: Building2 })
     orgLinks.push({ href: '/organisasi?org=mpk', label: 'MPK', icon: Building2 })
     
-    const isWawancaraActive = role === 'administrator' || wawancaraVisible
     orgLinks.push({ 
-      href: isWawancaraActive ? '/wawancara' : '#', 
+      href: '/wawancara',
       label: 'Wawancara OSIS & MPK', 
       icon: MessagesSquare,
-      status: !isWawancaraActive ? 'nonaktif' : undefined
     } as any)
     
     items.push({ section: 'Organisasi', links: orgLinks })
@@ -87,29 +84,7 @@ function RoleBadge({ role }: { role: string }) {
 
 export default function Sidebar({ user, mobileOpen, onClose }: SidebarProps) {
   const pathname = usePathname()
-  const [wawancaraVisible, setWawancaraVisible] = useState(user.role === 'administrator')
-  const navItems = getNavItems(user.role, wawancaraVisible)
-
-  useEffect(() => {
-    if (user.role !== 'admin_osis_mpk') return
-    let alive = true
-    async function checkActiveInterview() {
-      if (document.visibilityState !== 'visible') return
-      const res = await fetch('/api/wawancara?activeOnly=1')
-      const json = await res.json().catch(() => ({}))
-      if (alive) setWawancaraVisible((json.data || []).length > 0)
-    }
-    checkActiveInterview()
-    const id = setInterval(checkActiveInterview, 60_000)
-    document.addEventListener('visibilitychange', checkActiveInterview)
-    window.addEventListener('focus', checkActiveInterview)
-    return () => {
-      alive = false
-      clearInterval(id)
-      document.removeEventListener('visibilitychange', checkActiveInterview)
-      window.removeEventListener('focus', checkActiveInterview)
-    }
-  }, [user.role])
+  const navItems = getNavItems(user.role)
 
   const isActive = (href: string) => {
     const base = href.split('?')[0]

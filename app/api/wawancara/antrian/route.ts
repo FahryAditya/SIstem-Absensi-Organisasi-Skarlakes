@@ -63,7 +63,8 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
 
   const qr = await prisma.qrWawancara.findUnique({ where: { token: parsed.data.token }, include: { sesi: true } })
-  if (!qr || !qr.aktif || qr.valid_until < new Date()) {
+  const now = new Date()
+  if (!qr || !qr.aktif || qr.valid_from > now || qr.valid_until < now) {
     return NextResponse.json({ error: 'QR tidak aktif atau sudah expired' }, { status: 400 })
   }
 
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest) {
   const outsideRadius = jarak > SCHOOL_RADIUS_M
   const foreignIp = !!ipInfo.country && ipInfo.country.toLowerCase() !== 'indonesia'
   const proxy = ipInfo.proxy
-  const ipStatus = proxy && foreignIp ? 'VPN_LUAR_NEGERI' : proxy ? 'VPN_INDONESIA' : ipInfo.country ? 'NORMAL' : 'TIDAK_DIKETAHUI'
+  const ipStatus = foreignIp ? 'VPN_LUAR_NEGERI' : proxy ? 'VPN_INDONESIA' : ipInfo.country ? 'NORMAL' : 'TIDAK_DIKETAHUI'
   const statusValidasi = outsideRadius ? 'TIDAK_SAH' : ipStatus === 'VPN_LUAR_NEGERI' ? 'DITOLAK_VPN' : ipStatus === 'VPN_INDONESIA' ? 'SAH_DICURIGAI' : 'SAH'
   const alasan = outsideRadius
     ? `Jarak ${Math.round(jarak)}m dari sekolah`

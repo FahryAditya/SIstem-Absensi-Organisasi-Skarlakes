@@ -22,7 +22,8 @@ export async function GET(req: NextRequest) {
         },
       },
     })
-    if (!qr || !qr.aktif || qr.valid_until < new Date() || qr.sesi.status !== 'ACTIVE') {
+    const now = new Date()
+    if (!qr || !qr.aktif || qr.valid_from > now || qr.valid_until < now || qr.sesi.status !== 'ACTIVE') {
       return NextResponse.json({ error: 'QR tidak aktif atau sudah expired' }, { status: 404 })
     }
     return NextResponse.json({ data: { ...qr.sesi, qr: { id: qr.id, token: qr.token, valid_until: qr.valid_until } } })

@@ -71,6 +71,7 @@ export async function GET(req: NextRequest) {
   const activeOnly = searchParams.get('activeOnly') === '1'
   const hasil = searchParams.get('hasil') || ''
   const kelas = searchParams.get('kelas') || ''
+  const validasi = searchParams.get('validasi') || ''
   const refresh = searchParams.get('refresh') === '1'
 
   await processScheduledSessions()
@@ -80,7 +81,7 @@ export async function GET(req: NextRequest) {
   }
 
   const orgs = org && org !== 'all' ? [org] : ['osis', 'mpk'].filter((o) => canAccessInterview(ctx.userRole, o))
-  const cacheKey = JSON.stringify({ role: ctx.userRole, orgs, activeOnly, hasil, kelas })
+  const cacheKey = JSON.stringify({ role: ctx.userRole, orgs, activeOnly, hasil, kelas, validasi })
   const cached = getCache.get(cacheKey)
   if (!refresh && cached && cached.expiresAt > Date.now()) {
     return NextResponse.json(cached.payload)
@@ -109,7 +110,7 @@ export async function GET(req: NextRequest) {
       creator: { select: { nama: true } },
       antrian: {
         where: {
-          status_validasi: { in: ['SAH', 'SAH_DICURIGAI'] },
+          ...(validasi ? { status_validasi: validasi as any } : {}),
           ...(kelas ? { kelas: { contains: kelas } } : {}),
           ...(hasil ? { hasil_wawancara: { hasil: hasil as any } } : {}),
         },
@@ -164,7 +165,7 @@ export async function POST(req: NextRequest) {
 
   const session = await prisma.sesiWawancara.create({
     data: {
-      organisasi_type: 'osis',
+      organisasi_type: parsed.data.organisasi_type || 'osis',
       jadwal_mulai: mulai,
       jadwal_selesai: selesai,
       status,
