@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { Wallet, Search, Filter, Loader2, Plus, Minus, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatCurrency, ORG_LABELS, OrgType } from '@/lib/utils'
+import { motion } from 'framer-motion'
+import { SkeletonRow } from '@/components/Skeleton'
 
 interface KasData {
   id: number
@@ -200,12 +202,13 @@ export default function KasClient({ user }: Props) {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={6} className="h-32 text-center text-slate-400">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-                    Memuat data kas...
-                  </td>
-                </tr>
+                <>
+                  <SkeletonRow />
+                  <SkeletonRow />
+                  <SkeletonRow />
+                  <SkeletonRow />
+                  <SkeletonRow />
+                </>
               ) : data.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="h-32 text-center text-slate-400">
@@ -214,7 +217,13 @@ export default function KasClient({ user }: Props) {
                 </tr>
               ) : (
                 data.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                  <motion.tr 
+                    key={item.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.05, duration: 0.3 }}
+                    className="hover:bg-slate-50/80 transition-colors duration-200"
+                  >
                     <td className="font-medium text-slate-500">{idx + 1}</td>
                     <td className="font-bold text-slate-800 whitespace-nowrap">{item.nama}</td>
                     <td className="text-slate-500 whitespace-nowrap">{item.kelas}</td>
@@ -226,15 +235,15 @@ export default function KasClient({ user }: Props) {
                     </td>
                     <td className="whitespace-nowrap">
                       <div className="flex items-center justify-center gap-1.5">
-                        <button onClick={() => openModal(item, 'setor')} className="p-1.5 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg tooltip-trigger" title="Setor / Tambah Kas">
+                        <button onClick={() => openModal(item, 'setor')} className="p-1.5 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg tooltip-trigger active:scale-90 transition-transform" title="Setor / Tambah Kas">
                           <Plus className="w-4 h-4" />
                         </button>
-                        <button onClick={() => openModal(item, 'tarik')} className="p-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg tooltip-trigger" title="Tarik / Kurangi Kas">
+                        <button onClick={() => openModal(item, 'tarik')} className="p-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg tooltip-trigger active:scale-90 transition-transform" title="Tarik / Kurangi Kas">
                           <Minus className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))
               )}
             </tbody>
@@ -243,16 +252,28 @@ export default function KasClient({ user }: Props) {
       </div>
 
       {/* Modal Transaksi */}
-      {modalOpen && selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm slide-up">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-            <div className={`p-4 border-b flex items-center justify-between text-white ${txType === 'setor' ? 'bg-green-600' : 'bg-red-600'}`}>
-              <h3 className="font-bold flex items-center gap-2">
-                {txType === 'setor' ? <Plus className="w-5 h-5" /> : <Minus className="w-5 h-5" />}
-                {txType === 'setor' ? 'Setor Kas Manual' : 'Tarik / Kurangi Kas'}
-              </h3>
-              <button onClick={() => setModalOpen(false)} className="p-1 hover:bg-white/20 rounded-lg"><X className="w-5 h-5" /></button>
-            </div>
+      <AnimatePresence>
+        {modalOpen && selectedItem && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+            >
+              <div className={`p-4 border-b flex items-center justify-between text-white ${txType === 'setor' ? 'bg-green-600' : 'bg-red-600'}`}>
+                <h3 className="font-bold flex items-center gap-2">
+                  {txType === 'setor' ? <Plus className="w-5 h-5" /> : <Minus className="w-5 h-5" />}
+                  {txType === 'setor' ? 'Setor Kas Manual' : 'Tarik / Kurangi Kas'}
+                </h3>
+                <button onClick={() => setModalOpen(false)} className="p-1 hover:bg-white/20 rounded-lg"><X className="w-5 h-5" /></button>
+              </div>
             
             <form onSubmit={handleTransaction} className="p-5 space-y-4">
               <div className="p-3 bg-slate-50 rounded-lg border text-sm">
@@ -297,9 +318,10 @@ export default function KasClient({ user }: Props) {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
