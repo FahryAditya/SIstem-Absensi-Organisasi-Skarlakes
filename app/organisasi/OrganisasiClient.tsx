@@ -52,7 +52,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
   const [fNis, setFNis] = useState('')
   const [fTingkat, setFTingkat] = useState('')
   const [fJurusan, setFJurusan] = useState('')
-  const [fJabatan, setFJabatan] = useState('')
+  const [fJabatan, setFJabatan] = useState('Anggota')
 
   // Absensi state
   const [bulkDate, setBulkDate] = useState(format(new Date(), 'yyyy-MM-dd'))
@@ -111,7 +111,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
     }
   }, [subTab, absensiMode, loadBulk, loadRiwayat])
 
-  function openAdd() { setEditTarget(null); setFNama(''); setFNis(''); setFTingkat(''); setFJurusan(''); setFJabatan(''); setModalOpen(true) }
+  function openAdd() { setEditTarget(null); setFNama(''); setFNis(''); setFTingkat(''); setFJurusan(''); setFJabatan('Anggota'); setModalOpen(true) }
   function openEdit(a: Anggota) { 
     setEditTarget(a); setFNama(a.nama); setFNis(a.nis || ''); 
     const kls = a.kelas || '';
@@ -119,7 +119,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
     const t = ['X', 'XI', 'XII'].includes(parts[0]) ? parts[0] : '';
     setFTingkat(t);
     setFJurusan(t ? parts.slice(1).join(' ') : kls);
-    setFJabatan(a.jabatan || ''); setModalOpen(true) 
+    setFJabatan(a.jabatan || 'Anggota'); setModalOpen(true) 
   }
 
   async function handleSave() {
@@ -292,7 +292,18 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
                   </select>
                 </div>
               </div>
-              <div className="form-group"><label className="label">Jabatan</label><input value={fJabatan} onChange={e => setFJabatan(e.target.value)} placeholder={`Cth: Ketua ${orgLabel}`} className="input" /></div>
+              <div className="form-group">
+                <label className="label">Jabatan</label>
+                <select value={fJabatan} onChange={e => setFJabatan(e.target.value)} className="input cursor-pointer font-medium text-slate-700">
+                  <option value="Anggota">Anggota</option>
+                  <option value="Ketua">Ketua</option>
+                  <option value="Wakil">Wakil</option>
+                  <option value="Sekertaris 1">Sekertaris 1</option>
+                  <option value="Sekertaris 2">Sekertaris 2</option>
+                  <option value="Bendahara 1">Bendahara 1</option>
+                  <option value="Bendahara 2">Bendahara 2</option>
+                </select>
+              </div>
             </div>
           </Modal>
 
