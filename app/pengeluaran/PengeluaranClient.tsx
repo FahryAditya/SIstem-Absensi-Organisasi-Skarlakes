@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { HandCoins, Search, Filter, Loader2, Plus, X, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatCurrency, formatDateTime, ORG_LABELS, OrgType } from '@/lib/utils'
+import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 
 interface PengeluaranData {
   id: number
@@ -37,8 +38,7 @@ export default function PengeluaranClient({ user }: Props) {
     if (activeOrg) url += `org=${activeOrg}`
 
     setLoading(true)
-    fetch(url)
-      .then(res => res.json())
+    fetchJsonCachedUrl<{ data?: PengeluaranData[]; orgs?: string[]; activeOrg?: string }>(url)
       .then(json => {
         setData(json.data || [])
         setOrgs(json.orgs || [])
@@ -68,6 +68,7 @@ export default function PengeluaranClient({ user }: Props) {
       const json = await res.json()
       if (!res.ok) throw new Error(json.error)
       toast.success(json.message || 'Transaksi dihapus')
+      clearJsonCache()
       fetchData()
     } catch (err: any) {
       toast.error(err.message)
@@ -97,6 +98,7 @@ export default function PengeluaranClient({ user }: Props) {
       
       toast.success(json.message || 'Pengeluaran berhasil dicatat')
       setModalOpen(false)
+      clearJsonCache()
       fetchData()
     } catch (err: any) {
       toast.error(err.message)

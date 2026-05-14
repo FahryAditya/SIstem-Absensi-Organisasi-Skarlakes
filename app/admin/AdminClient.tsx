@@ -8,6 +8,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { RoleBadge } from '@/components/ui/Badges'
 import { formatDateTime } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
+import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import { UserCog, Plus, Pencil, Trash2, Loader2, Shield, Mail, User, Lock, Eye, EyeOff, AlertTriangle, Database } from 'lucide-react'
 
 interface UserData { id: number; nama: string; email: string; role: string; created_at: string }
@@ -30,8 +31,7 @@ export default function AdminClient({ user }: Props) {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const res = await fetch('/api/users')
-    const json = await res.json()
+    const json = await fetchJsonCachedUrl<{ data?: UserData[] }>('/api/users')
     setUsers(json.data || [])
     setLoading(false)
   }, [])
@@ -66,6 +66,7 @@ export default function AdminClient({ user }: Props) {
     const json = await res.json()
     if (!res.ok) { toast.error(json.error || 'Gagal menyimpan'); setSaving(false); return }
     toast.success(editTarget ? 'User diperbarui' : 'User berhasil dibuat')
+    clearJsonCache()
     setSaving(false); setModalOpen(false); load()
   }
 
@@ -76,6 +77,7 @@ export default function AdminClient({ user }: Props) {
     const json = await res.json()
     if (!res.ok) { toast.error(json.error || 'Gagal menghapus'); setDeleting(false); return }
     toast.success('User dihapus')
+    clearJsonCache()
     setDeleting(false); setDeleteTarget(null); load()
   }
 

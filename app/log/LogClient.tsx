@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { formatDateTime } from '@/lib/utils'
+import { fetchJsonCachedUrl } from '@/lib/client-cache'
 import { ScrollText, Search, Filter, ChevronDown, ChevronRight, Loader2, Eye } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 
@@ -49,8 +50,7 @@ export default function LogClient() {
       ...(filterAksi && { aksi: filterAksi }),
       ...(filterTabel && { tabel: filterTabel }),
     })
-    const res = await fetch(`/api/log?${params}`)
-    const json = await res.json()
+    const json = await fetchJsonCachedUrl<{ data?: LogEntry[]; total?: number; totalPages?: number }>(`/api/log?${params}`)
     setLogs(json.data || [])
     setTotal(json.total || 0)
     setTotalPages(json.totalPages || 1)

@@ -6,6 +6,7 @@ import Modal from '@/components/ui/Modal'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { formatDateTime } from '@/lib/utils'
 import { isAdministrator } from '@/lib/auth-shared'
+import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import {
   CalendarClock, CheckCircle2, Clock, Download, Loader2, Lock, MessageSquareText,
   Play, Plus, QrCode, RefreshCcw, Save, Send, ShieldCheck, SquarePen, Users, XCircle
@@ -175,8 +176,7 @@ export default function WawancaraClient({ user }: Props) {
       ...(kelasFilter && { kelas: kelasFilter }),
       ...(force && { refresh: '1' }),
     })
-    const res = await fetch(`/api/wawancara?${params}`)
-    const json = await res.json()
+    const json = await fetchJsonCachedUrl<{ data?: InterviewSession[] }>(`/api/wawancara?${params}`, { force, ttlMs: SESSION_POLL_MS })
     setSessions(json.data || [])
     loadedOnce.current = true
     setLoading(false)
@@ -229,13 +229,10 @@ export default function WawancaraClient({ user }: Props) {
       sesiId: activeSession.id.toString(),
       ...(lastId && { sinceId: lastId.toString() }),
     })
-    const res = await fetch(`/api/wawancara/chat?${params}`)
-    const json = await res.json().catch(() => ({}))
-    if (res.ok) {
-      const incoming = json.data || []
-      if (incoming.length) chatLastId.current = incoming[incoming.length - 1].id
-      setChats((prev) => lastId ? [...prev, ...incoming] : incoming)
-    }
+    const json = await fetchJsonCachedUrl<{ data?: ChatMessage[] }>(`/api/wawancara/chat?${params}`, { ttlMs: CHAT_POLL_MS }).catch(() => ({ data: [] }))
+    const incoming = json.data || []
+    if (incoming.length) chatLastId.current = incoming[incoming.length - 1].id
+    setChats((prev) => lastId ? [...prev, ...incoming] : incoming)
   }, [activeSession])
 
   useEffect(() => {
@@ -311,6 +308,7 @@ export default function WawancaraClient({ user }: Props) {
       return
     }
     toast.success(editingSessionId ? 'Jadwal wawancara diubah' : (json.data.status === 'ACTIVE' ? 'Wawancara aktif' : 'Jadwal wawancara dibuat'))
+    clearJsonCache()
     setSaving(false)
     setSessionModal(false)
     load(true)
@@ -326,6 +324,7 @@ export default function WawancaraClient({ user }: Props) {
     const json = await res.json()
     if (!res.ok) toast.error(json.error || 'Gagal mengubah sesi')
     else toast.success(action === 'activate' ? 'Sesi diaktifkan' : action === 'finish' ? 'Hasil difinalisasi dan data dikunci' : 'Sesi dibatalkan')
+    clearJsonCache()
     setSaving(false)
     setConfirmAction(null)
     load(true)
@@ -340,9 +339,11 @@ export default function WawancaraClient({ user }: Props) {
     const json = await res.json()
     if (!res.ok) {
       toast.error(json.error || 'Gagal mengubah status antrian')
+      clearJsonCache()
       load(true)
       return false
     }
+    clearJsonCache()
     load(true)
     return true
   }
@@ -376,6 +377,7 @@ export default function WawancaraClient({ user }: Props) {
       return
     }
     toast.success('Hasil wawancara tersimpan')
+    clearJsonCache()
     setSaving(false)
     setResultModal(false)
     load(true)
@@ -397,6 +399,7 @@ export default function WawancaraClient({ user }: Props) {
     const json = await res.json().catch(() => ({}))
     if (!res.ok) toast.error(json.error || 'Gagal mengirim chat')
     else {
+      clearJsonCache()
       chatLastId.current = json.data.id
       setChats((prev) => [...prev, json.data])
     }
@@ -416,6 +419,7 @@ export default function WawancaraClient({ user }: Props) {
     else {
       toast.success('Hasil berhasil dioverride menjadi Lolos')
       setOverrideModal(false)
+      clearJsonCache()
       load(true)
     }
     setSaving(false)

@@ -1,13 +1,16 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
 import toast from 'react-hot-toast'
+import { clearJsonCache, fetchJsonCached, seedJsonCache } from '@/lib/client-cache'
 import { formatDateTime } from '@/lib/utils'
 import { CheckCircle2, Download, Loader2, Plus, QrCode, ShieldCheck, TriangleAlert, Trash2, Save, X } from 'lucide-react'
 
 const Modal = dynamic(() => import('@/components/ui/Modal'))
 const ConfirmDialog = dynamic(() => import('@/components/ui/ConfirmDialog'))
+const QR_CACHE_KEY = 'wawancara:qr'
+const QR_CACHE_TTL = 60_000
 
 interface QrItem {
   id: number
@@ -24,6 +27,10 @@ interface QrItem {
 interface QrCodeClientProps {
   baseUrl: string
   initialItems: QrItem[]
+}
+
+interface QrListResponse {
+  data: QrItem[]
 }
 
 export default function QrCodeClient({ baseUrl, initialItems }: QrCodeClientProps) {
@@ -47,12 +54,19 @@ export default function QrCodeClient({ baseUrl, initialItems }: QrCodeClientProp
 
   const load = useCallback(async () => {
     setLoading(true)
-    const res = await fetch('/api/wawancara/qr')
-    const json = await res.json()
-    if (!res.ok) toast.error(json.error || 'Gagal memuat QR')
-    else setItems(json.data || [])
-    setLoading(false)
+    try {
+      const json = await fetchJsonCached<QrListResponse>(QR_CACHE_KEY, '/api/wawancara/qr', { ttlMs: QR_CACHE_TTL })
+      setItems(json.data || [])
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Gagal memuat QR')
+    } finally {
+      setLoading(false)
+    }
   }, [])
+
+  useEffect(() => {
+    seedJsonCache<QrListResponse>(QR_CACHE_KEY, { data: initialItems }, QR_CACHE_TTL)
+  }, [initialItems])
 
   function datetimeLocalValue(date: Date) {
     const d = new Date(date)
@@ -84,6 +98,7 @@ export default function QrCodeClient({ baseUrl, initialItems }: QrCodeClientProp
     else {
       toast.success('QR baru berhasil dibuat')
       setCreateModal(false)
+      clearJsonCache(QR_CACHE_KEY)
       load()
     }
     setCreating(false)
@@ -98,6 +113,7 @@ export default function QrCodeClient({ baseUrl, initialItems }: QrCodeClientProp
       setDeleteId(null)
       setSelectedDeleteId(null)
       setDeleteMode(false)
+      clearJsonCache(QR_CACHE_KEY)
       load()
     }
   }

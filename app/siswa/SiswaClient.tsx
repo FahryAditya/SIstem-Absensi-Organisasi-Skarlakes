@@ -8,6 +8,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { OrgBadge } from '@/components/ui/Badges'
 import { formatDate } from '@/lib/utils'
 import { canAccessProgramming, canAccessEnglish } from '@/lib/auth-shared'
+import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import { Plus, Search, Pencil, Trash2, Users, Loader2, Filter, Contact } from 'lucide-react'
 
 interface Siswa {
@@ -58,8 +59,7 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
       ...(search && { search }),
       ...(orgFilter && { ekskul: orgFilter }),
     })
-    const res = await fetch(`/api/siswa?${params}`)
-    const json = await res.json()
+    const json = await fetchJsonCachedUrl<{ data?: Siswa[]; total?: number; totalPages?: number }>(`/api/siswa?${params}`)
     setData(json.data || [])
     setTotal(json.total || 0)
     setTotalPages(json.totalPages || 1)
@@ -102,6 +102,7 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
     const json = await res.json()
     if (!res.ok) { toast.error(json.error || 'Gagal menyimpan'); setSaving(false); return }
     toast.success(editTarget ? 'Data siswa diperbarui' : 'Siswa berhasil ditambahkan')
+    clearJsonCache()
     setSaving(false); setModalOpen(false); load()
   }
 
@@ -112,6 +113,7 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
     const json = await res.json()
     if (!res.ok) { toast.error(json.error || 'Gagal menghapus'); setDeleting(false); return }
     toast.success('Siswa dihapus')
+    clearJsonCache()
     setDeleting(false); setDeleteTarget(null); load()
   }
 
@@ -122,6 +124,7 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
     const json = await res.json()
     if (!res.ok) { toast.error(json.error || 'Gagal menghapus'); setBulkDeleting(false); return }
     toast.success(`${selectedIds.length} data siswa dihapus`)
+    clearJsonCache()
     setBulkDeleting(false); setBulkDeleteConfirmOpen(false); setSelectedIds([]); load()
   }
 

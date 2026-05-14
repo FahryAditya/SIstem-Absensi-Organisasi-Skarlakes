@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import { Loader2, MessageSquareText, Send, UserRoundCheck } from 'lucide-react'
 
 interface Props {
@@ -30,10 +31,12 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
     async function load() {
       setLoading(true)
       const params = token ? `token=${encodeURIComponent(token)}` : `sesi=${sesiId}`
-      const res = await fetch(`/api/wawancara/public?${params}`)
-      const json = await res.json()
-      if (!res.ok) toast.error(json.error || 'Sesi tidak tersedia')
-      else setSession(json.data)
+      try {
+        const json = await fetchJsonCachedUrl<{ data?: PublicSession }>(`/api/wawancara/public?${params}`)
+        setSession(json.data || null)
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Sesi tidak tersedia')
+      }
       setLoading(false)
     }
     load()
@@ -84,6 +87,7 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
     }
     setQueueNumber(json.data.nomor_antrian)
     toast.success(json.data.status_validasi === 'SAH_DICURIGAI' ? 'Masuk antrian dengan flag verifikasi' : 'Berhasil masuk antrian')
+    clearJsonCache()
     setSaving(false)
   }
 

@@ -6,6 +6,7 @@ import Table from '@/components/ui/Table'
 import { StatusBadge, OrgBadge } from '@/components/ui/Badges'
 import { formatDate, formatCurrency, STATUS_LABELS } from '@/lib/utils'
 import { canAccessProgramming, canAccessEnglish } from '@/lib/auth-shared'
+import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import { ClipboardList, Save, Calendar, Filter, Loader2, CheckCircle2, XCircle, Clock, Heart, Banknote, Users, ChevronDown } from 'lucide-react'
 import { format } from 'date-fns'
 
@@ -53,13 +54,11 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
   const loadBulkSiswa = useCallback(async () => {
     setLoadingBulk(true)
     // Fetch siswa
-    const siswaRes = await fetch(`/api/siswa?ekskul=${bulkOrg}&limit=100`)
-    const siswaJson = await siswaRes.json()
+    const siswaJson = await fetchJsonCachedUrl<{ data?: Siswa[] }>(`/api/siswa?ekskul=${bulkOrg}&limit=100`)
     const siswaList: Siswa[] = siswaJson.data || []
 
     // Fetch existing absensi for that date
-    const absRes = await fetch(`/api/absensi?tanggal=${bulkDate}&ekskul=${bulkOrg}&limit=100`)
-    const absJson = await absRes.json()
+    const absJson = await fetchJsonCachedUrl<{ data?: AbsensiRecord[] }>(`/api/absensi?tanggal=${bulkDate}&ekskul=${bulkOrg}&limit=100`)
     const existing: AbsensiRecord[] = absJson.data || []
 
     const rows: AbsensiRow[] = siswaList.map(s => {
@@ -85,8 +84,7 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
       ...(filterTanggal && { tanggal: filterTanggal }),
       ...(filterOrg && { ekskul: filterOrg }),
     })
-    const res = await fetch(`/api/absensi?${params}`)
-    const json = await res.json()
+    const json = await fetchJsonCachedUrl<{ data?: AbsensiRecord[]; total?: number; totalPages?: number }>(`/api/absensi?${params}`)
     setRiwayat(json.data || [])
     setTotal(json.total || 0)
     setTotalPages(json.totalPages || 1)
@@ -118,6 +116,7 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
     const json = await res.json()
     if (!res.ok) { toast.error(json.error || 'Gagal menyimpan'); setSaving(false); return }
     toast.success(`✅ Absensi ${bulkRows.length} siswa tersimpan!`, { duration: 4000 })
+    clearJsonCache()
     setSaving(false)
   }
 

@@ -8,6 +8,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { StatusBadge } from '@/components/ui/Badges'
 import { formatDate, formatCurrency, STATUS_LABELS } from '@/lib/utils'
 import { canAccessOsis, canAccessMpk } from '@/lib/auth-shared'
+import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import {
   Building2, Plus, Pencil, Trash2, Loader2, Save, Calendar,
   ClipboardList, CheckCircle2, XCircle, Clock, Heart, Banknote, Contact
@@ -67,8 +68,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
 
   const loadAnggota = useCallback(async () => {
     setLoadingAnggota(true)
-    const res = await fetch(`/api/organisasi?tipe=${activeOrg}&page=${page}&limit=${PAGE_SIZE}`)
-    const json = await res.json()
+    const json = await fetchJsonCachedUrl<{ data?: Anggota[]; total?: number; totalPages?: number }>(`/api/organisasi?tipe=${activeOrg}&page=${page}&limit=${PAGE_SIZE}`)
     setAnggota(json.data || [])
     setTotal(json.total || 0)
     setTotalPages(json.totalPages || 1)
@@ -80,12 +80,10 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
 
   const loadBulk = useCallback(async () => {
     setLoadingBulk(true)
-    const anggRes = await fetch(`/api/organisasi?tipe=${activeOrg}&limit=100`)
-    const anggJson = await anggRes.json()
+    const anggJson = await fetchJsonCachedUrl<{ data?: Anggota[] }>(`/api/organisasi?tipe=${activeOrg}&limit=100`)
     const anggList: Anggota[] = anggJson.data || []
 
-    const absRes = await fetch(`/api/organisasi/absensi?organisasi=${activeOrg}&tanggal=${bulkDate}&limit=100`)
-    const absJson = await absRes.json()
+    const absJson = await fetchJsonCachedUrl<{ data?: AbsensiOrg[] }>(`/api/organisasi/absensi?organisasi=${activeOrg}&tanggal=${bulkDate}&limit=100`)
     const existing: AbsensiOrg[] = absJson.data || []
 
     const rows: BulkRow[] = anggList.map(a => {
@@ -100,8 +98,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
 
   const loadRiwayat = useCallback(async () => {
     setLoadingRiwayat(true)
-    const res = await fetch(`/api/organisasi/absensi?organisasi=${activeOrg}&tanggal=${filterTanggal}&limit=50`)
-    const json = await res.json()
+    const json = await fetchJsonCachedUrl<{ data?: AbsensiOrg[] }>(`/api/organisasi/absensi?organisasi=${activeOrg}&tanggal=${filterTanggal}&limit=50`)
     setRiwayat(json.data || [])
     setLoadingRiwayat(false)
   }, [activeOrg, filterTanggal])
@@ -128,6 +125,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
     const json = await res.json()
     if (!res.ok) { toast.error(json.error || 'Gagal'); setSaving(false); return }
     toast.success(editTarget ? 'Data diperbarui' : 'Anggota ditambahkan')
+    clearJsonCache()
     setSaving(false); setModalOpen(false); loadAnggota()
   }
 
@@ -138,6 +136,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
     const json = await res.json()
     if (!res.ok) { toast.error(json.error || 'Gagal'); setDeleting(false); return }
     toast.success('Anggota dihapus')
+    clearJsonCache()
     setDeleting(false); setDeleteTarget(null); loadAnggota()
   }
 
@@ -157,6 +156,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
     const json = await res.json()
     if (!res.ok) { toast.error(json.error || 'Gagal'); setSavingAbsensi(false); return }
     toast.success(`Absensi ${activeOrg.toUpperCase()} tersimpan!`)
+    clearJsonCache()
     setSavingAbsensi(false)
   }
 

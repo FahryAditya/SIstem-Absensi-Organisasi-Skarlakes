@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import * as XLSX from 'xlsx'
 import { formatCurrency, formatDate, formatDateTime, ORG_LABELS, OrgType } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
+import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import TextType from '@/components/TextType'
 import {
   Users, CheckCircle2, Wallet, UserPlus, LogOut, Clock, CalendarDays, PlusCircle, LayoutList, HandCoins, Loader2, UploadCloud, TrendingUp, Activity, X
@@ -63,8 +64,7 @@ export default function DashboardClient({ user }: Props) {
 
   async function fetchStats() {
     try {
-      const res = await fetch('/api/dashboard')
-      const d = await res.json()
+      const d = await fetchJsonCachedUrl<Stats>('/api/dashboard')
       setStats(d)
     } catch {}
     setLoading(false)
@@ -97,6 +97,7 @@ export default function DashboardClient({ user }: Props) {
       if (!res.ok) throw new Error(json.error)
       toast.success('Anggota berhasil ditambahkan')
       setQuickName(''); setQuickClass(''); setQuickJabatan('')
+      clearJsonCache()
       fetchStats()
     } catch (e: any) {
       toast.error(e.message)
@@ -132,6 +133,7 @@ export default function DashboardClient({ user }: Props) {
       const apiJson = await res.json()
       if (!res.ok) throw new Error(apiJson.error)
       toast.success(`Berhasil import ${apiJson.count} data`)
+      clearJsonCache()
       fetchStats()
     } catch (err: any) {
       toast.error(err.message)
