@@ -79,9 +79,15 @@ const statusStyle: Record<SessionStatus, string> = {
 }
 
 const queueLabel: Record<QueueStatus, string> = {
-  MENUNGGU: 'Menunggu',
-  WAWANCARA: 'Wawancara',
+  MENUNGGU: 'Belum diwawancarai',
+  WAWANCARA: 'Sedang diwawancarai',
   SELESAI_WAWANCARA: 'Selesai',
+}
+
+const queueStyle: Record<QueueStatus, string> = {
+  MENUNGGU: 'bg-green-50 border-green-200 text-green-700',
+  WAWANCARA: 'bg-red-50 border-red-200 text-red-700',
+  SELESAI_WAWANCARA: 'bg-slate-100 border-slate-200 text-slate-600',
 }
 
 const resultLabel = {
@@ -331,8 +337,19 @@ export default function WawancaraClient({ user }: Props) {
       body: JSON.stringify({ id, status }),
     })
     const json = await res.json()
-    if (!res.ok) toast.error(json.error || 'Gagal mengubah status antrian')
-    else load(true)
+    if (!res.ok) {
+      toast.error(json.error || 'Gagal mengubah status antrian')
+      load(true)
+      return false
+    }
+    load(true)
+    return true
+  }
+
+  async function startInterview(q: QueueItem) {
+    const ok = await setQueueStatus(q.id, 'WAWANCARA')
+    if (!ok) return
+    openResult({ ...q, status: 'WAWANCARA' })
   }
 
   async function saveResult() {
@@ -527,7 +544,7 @@ export default function WawancaraClient({ user }: Props) {
                         <td className="td font-mono text-slate-400">#{q.nomor_antrian}</td>
                         <td className="td"><div className="font-bold text-slate-800">{q.nama}</div><div className="text-xs text-slate-500">{q.kelas}</div></td>
                         <td className="td"><span className="badge bg-white border border-slate-200 text-slate-600">{orgLabelMap[(q as any).sesiOrg as Org] || 'OSIS & MPK'}</span></td>
-                        <td className="td"><span className="badge bg-slate-50 border border-slate-200 text-slate-600">{queueLabel[q.status]}</span></td>
+                        <td className="td"><span className={`badge border ${queueStyle[q.status]}`}>{queueLabel[q.status]}</span></td>
                         <td className="td">
                           <div className="space-y-1">
                             <span className={`badge border ${validationStyle[q.status_validasi]}`}>{validationLabel[q.status_validasi]}</span>
@@ -546,8 +563,9 @@ export default function WawancaraClient({ user }: Props) {
                         <td className="td">
                           {(q as any).sesiStatus === 'ACTIVE' ? (
                             <div className="flex gap-1 justify-end">
-                              {['SAH', 'SAH_DICURIGAI'].includes(q.status_validasi) && q.status === 'MENUNGGU' && <button onClick={() => setQueueStatus(q.id, 'WAWANCARA')} className="btn-secondary btn-sm"><Clock className="w-3.5 h-3.5" />Panggil</button>}
-                              {['SAH', 'SAH_DICURIGAI'].includes(q.status_validasi) && <button onClick={() => openResult(q)} className="btn-primary btn-sm"><SquarePen className="w-3.5 h-3.5" />Nilai</button>}
+                              {['SAH', 'SAH_DICURIGAI'].includes(q.status_validasi) && q.status === 'MENUNGGU' && <button onClick={() => startInterview(q)} className="btn-primary btn-sm"><MessageSquareText className="w-3.5 h-3.5" />Wawancarai</button>}
+                              {q.status === 'WAWANCARA' && <span className="text-xs font-semibold text-red-600 px-2 py-1">Sedang dikunci</span>}
+                              {q.status === 'SELESAI_WAWANCARA' && ['SAH', 'SAH_DICURIGAI'].includes(q.status_validasi) && <button onClick={() => openResult(q)} className="btn-secondary btn-sm"><SquarePen className="w-3.5 h-3.5" />Lihat/Edit</button>}
                               {admin && q.hasil_wawancara && q.hasil_wawancara.hasil === 'TIDAK_LOLOS' && <button onClick={() => openOverride(q)} className="btn-secondary btn-sm text-amber-700"><ShieldCheck className="w-3.5 h-3.5" />Override</button>}
                             </div>
                           ) : <span className="text-xs text-slate-400">Terkunci</span>}

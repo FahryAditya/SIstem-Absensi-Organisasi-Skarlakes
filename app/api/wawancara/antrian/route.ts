@@ -179,6 +179,12 @@ export async function PATCH(req: NextRequest) {
   if (existing.sesi.status !== 'ACTIVE') {
     return NextResponse.json({ error: 'Sesi tidak aktif atau sudah terkunci' }, { status: 400 })
   }
+  if (status === 'WAWANCARA' && existing.status !== 'MENUNGGU') {
+    return NextResponse.json({ error: 'Peserta ini sedang/sudah diwawancarai admin lain' }, { status: 409 })
+  }
+  if (status === 'MENUNGGU' && existing.status === 'SELESAI_WAWANCARA') {
+    return NextResponse.json({ error: 'Peserta yang sudah selesai tidak bisa dikembalikan ke antrian' }, { status: 400 })
+  }
 
   const data = await prisma.antrianWawancara.update({ where: { id }, data: { status } })
   return NextResponse.json({ data })
