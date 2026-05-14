@@ -542,7 +542,20 @@ export default function WawancaraClient({ user }: Props) {
                       return (
                       <tr key={q.id} className="hover:bg-slate-50">
                         <td className="td font-mono text-slate-400">#{q.nomor_antrian}</td>
-                        <td className="td"><div className="font-bold text-slate-800">{q.nama}</div><div className="text-xs text-slate-500">{q.kelas}</div></td>
+                        <td className="td">
+                          <div className="flex items-start justify-between gap-3 min-w-72">
+                            <div>
+                              <div className="font-bold text-slate-800">{q.nama}</div>
+                              <div className="text-xs text-slate-500">{q.kelas}</div>
+                            </div>
+                            {(q as any).sesiStatus === 'ACTIVE' && ['SAH', 'SAH_DICURIGAI'].includes(q.status_validasi) && q.status === 'MENUNGGU' && (
+                              <button onClick={() => startInterview(q)} className="btn-primary btn-sm whitespace-nowrap">
+                                <MessageSquareText className="w-3.5 h-3.5" />
+                                Wawancarai {q.nama}
+                              </button>
+                            )}
+                          </div>
+                        </td>
                         <td className="td"><span className="badge bg-white border border-slate-200 text-slate-600">{orgLabelMap[(q as any).sesiOrg as Org] || 'OSIS & MPK'}</span></td>
                         <td className="td"><span className={`badge border ${queueStyle[q.status]}`}>{queueLabel[q.status]}</span></td>
                         <td className="td">
@@ -563,7 +576,6 @@ export default function WawancaraClient({ user }: Props) {
                         <td className="td">
                           {(q as any).sesiStatus === 'ACTIVE' ? (
                             <div className="flex gap-1 justify-end">
-                              {['SAH', 'SAH_DICURIGAI'].includes(q.status_validasi) && q.status === 'MENUNGGU' && <button onClick={() => startInterview(q)} className="btn-primary btn-sm"><MessageSquareText className="w-3.5 h-3.5" />Wawancarai</button>}
                               {q.status === 'WAWANCARA' && <span className="text-xs font-semibold text-red-600 px-2 py-1">Sedang dikunci</span>}
                               {q.status === 'SELESAI_WAWANCARA' && ['SAH', 'SAH_DICURIGAI'].includes(q.status_validasi) && <button onClick={() => openResult(q)} className="btn-secondary btn-sm"><SquarePen className="w-3.5 h-3.5" />Lihat/Edit</button>}
                               {admin && q.hasil_wawancara && q.hasil_wawancara.hasil === 'TIDAK_LOLOS' && <button onClick={() => openOverride(q)} className="btn-secondary btn-sm text-amber-700"><ShieldCheck className="w-3.5 h-3.5" />Override</button>}
