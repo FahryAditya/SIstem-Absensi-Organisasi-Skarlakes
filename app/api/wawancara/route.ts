@@ -31,12 +31,14 @@ function canAccessInterview(role: string, org: string) {
   return false
 }
 
-async function activateDueSessions() {
+async function processScheduledSessions() {
   const checkedAt = Date.now()
   if (checkedAt - lastAutoActivationCheck < AUTO_ACTIVATION_INTERVAL_MS) return
   lastAutoActivationCheck = checkedAt
 
   const now = new Date()
+  
+  // Activate scheduled sessions
   await prisma.sesiWawancara.updateMany({
     where: {
       status: 'SCHEDULED',
@@ -44,6 +46,15 @@ async function activateDueSessions() {
       OR: [{ jadwal_selesai: null }, { jadwal_selesai: { gt: now } }],
     },
     data: { status: 'ACTIVE' },
+  })
+  
+  // Auto finish expired active sessions
+  await prisma.sesiWawancara.updateMany({
+    where: {
+      status: 'ACTIVE',
+      jadwal_selesai: { not: null, lte: now },
+    },
+    data: { status: 'SELESAI', finalized_at: now, locked_at: now },
   })
 }
 
@@ -62,7 +73,7 @@ export async function GET(req: NextRequest) {
   const kelas = searchParams.get('kelas') || ''
   const refresh = searchParams.get('refresh') === '1'
 
-  await activateDueSessions()
+  await processScheduledSessions()
 
   if (org && org !== 'all' && !canAccessInterview(ctx.userRole, org)) {
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })

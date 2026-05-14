@@ -113,6 +113,7 @@ export default function WawancaraClient({ user }: Props) {
   const [fCatatan, setFCatatan] = useState('')
   const [overrideTarget, setOverrideTarget] = useState<QueueItem | null>(null)
   const [overrideReason, setOverrideReason] = useState('')
+  const [currentTime, setCurrentTime] = useState(new Date())
   const loadedOnce = useRef(false)
   const chatLastId = useRef(0)
 
@@ -139,6 +140,12 @@ export default function WawancaraClient({ user }: Props) {
   }, [org, hasilFilter, kelasFilter])
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
   useEffect(() => {
     const tick = () => {
       if (document.visibilityState === 'visible') load()
@@ -353,7 +360,11 @@ export default function WawancaraClient({ user }: Props) {
           </div>
           <p className="page-sub mt-0.5">Kontrol sesi, antrian digital, dan penilaian kandidat.</p>
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-3 flex-wrap items-center">
+          <div className="font-mono text-xl font-black text-indigo-600 bg-indigo-50 border border-indigo-200 px-4 py-1.5 rounded-xl shadow-sm tracking-widest flex items-center gap-2" suppressHydrationWarning>
+            <Clock className="w-4 h-4 text-indigo-400" />
+            {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+          </div>
           {admin && <button onClick={openCreate} className="btn-primary"><Plus className="w-4 h-4" />Buat/Aktifkan</button>}
         </div>
       </div>
