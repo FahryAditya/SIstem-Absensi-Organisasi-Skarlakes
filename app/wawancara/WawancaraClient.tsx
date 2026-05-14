@@ -141,6 +141,7 @@ export default function WawancaraClient({ user }: Props) {
   const [overrideModal, setOverrideModal] = useState(false)
   const [editingSessionId, setEditingSessionId] = useState<number | null>(null)
   const [confirmAction, setConfirmAction] = useState<{ id: number; action: 'finish' | 'cancel'; title: string; message: string } | null>(null)
+  const [interviewConfirm, setInterviewConfirm] = useState<QueueItem | null>(null)
   const [targetQueue, setTargetQueue] = useState<QueueItem | null>(null)
   const [saving, setSaving] = useState(false)
   const [fMulai, setFMulai] = useState('')
@@ -347,9 +348,11 @@ export default function WawancaraClient({ user }: Props) {
   }
 
   async function startInterview(q: QueueItem) {
+    setSaving(true)
     const ok = await setQueueStatus(q.id, 'WAWANCARA')
-    if (!ok) return
-    openResult({ ...q, status: 'WAWANCARA' })
+    setSaving(false)
+    setInterviewConfirm(null)
+    if (ok) openResult({ ...q, status: 'WAWANCARA' })
   }
 
   async function saveResult() {
@@ -549,9 +552,9 @@ export default function WawancaraClient({ user }: Props) {
                               <div className="text-xs text-slate-500">{q.kelas}</div>
                             </div>
                             {(q as any).sesiStatus === 'ACTIVE' && ['SAH', 'SAH_DICURIGAI'].includes(q.status_validasi) && q.status === 'MENUNGGU' && (
-                              <button onClick={() => startInterview(q)} className="btn-primary btn-sm whitespace-nowrap">
+                              <button onClick={() => setInterviewConfirm(q)} className="btn-primary btn-sm whitespace-nowrap">
                                 <MessageSquareText className="w-3.5 h-3.5" />
-                                Wawancarai {q.nama}
+                                Wawancarai Peserta
                               </button>
                             )}
                           </div>
@@ -678,6 +681,14 @@ export default function WawancaraClient({ user }: Props) {
       <ConfirmDialog open={!!confirmAction} title={confirmAction?.title || ''} message={confirmAction?.message || ''} loading={saving}
         onCancel={() => setConfirmAction(null)}
         onConfirm={() => confirmAction && updateSession(confirmAction.id, confirmAction.action)}
+      />
+
+      <ConfirmDialog open={!!interviewConfirm} title="Wawancarai peserta?" message={interviewConfirm ? `Apakah anda ingin mewawancarai peserta ini? (${interviewConfirm.nama})` : ''} loading={saving}
+        confirmLabel="Ya"
+        cancelLabel="Tidak"
+        confirmClass="btn-primary"
+        onCancel={() => setInterviewConfirm(null)}
+        onConfirm={() => interviewConfirm && startInterview(interviewConfirm)}
       />
     </div>
   )

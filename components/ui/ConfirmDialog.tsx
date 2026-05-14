@@ -7,6 +7,7 @@ interface ConfirmDialogProps {
   title: string
   message: string
   confirmLabel?: string
+  cancelLabel?: string
   confirmClass?: string
   loading?: boolean
   onConfirm: () => void
@@ -14,7 +15,7 @@ interface ConfirmDialogProps {
 }
 
 export default function ConfirmDialog({
-  open, title, message, confirmLabel = 'Hapus', confirmClass = 'btn-danger',
+  open, title, message, confirmLabel = 'Hapus', cancelLabel = 'Batal', confirmClass = 'btn-danger',
   loading, onConfirm, onCancel
 }: ConfirmDialogProps) {
   if (!open) return null
@@ -32,7 +33,7 @@ export default function ConfirmDialog({
           </div>
         </div>
         <div className="flex gap-2 mt-5 justify-end">
-          <button onClick={onCancel} disabled={loading} className="btn-secondary btn-sm">Batal</button>
+          <button onClick={onCancel} disabled={loading} className="btn-secondary btn-sm">{cancelLabel}</button>
           <button onClick={onConfirm} disabled={loading} className={`${confirmClass} btn-sm`}>
             {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : confirmLabel}
           </button>
