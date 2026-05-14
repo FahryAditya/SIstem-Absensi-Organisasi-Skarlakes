@@ -62,15 +62,18 @@ export async function POST(req: NextRequest) {
     data: { aktif: false },
   })
 
+  let body: any = {}
+  try { body = await req.json() } catch {}
+  
   const now = new Date()
-  const validUntil = new Date(now)
-  validUntil.setDate(validUntil.getDate() + 3)
+  const validFrom = body.valid_from ? new Date(body.valid_from) : now
+  const validUntil = body.valid_until ? new Date(body.valid_until) : new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000)
 
   const qr = await prisma.qrWawancara.create({
     data: {
       sesi_id: activeSession.id,
       token: crypto.randomBytes(24).toString('hex'),
-      valid_from: now,
+      valid_from: validFrom,
       valid_until: validUntil,
       created_by: ctx.userId,
     },
@@ -88,4 +91,33 @@ export async function POST(req: NextRequest) {
   })
 
   return NextResponse.json({ data: qr }, { status: 201 })
+}
+
+export async function DELETE(req: NextRequest) {
+  const ctx = getCtx(req)
+  if (!isAdministrator(ctx.userRole)) {
+    return NextResponse.json({ error: 'Hanya Administrator yang dapat menghapus QR' }, { status: 403 })
+  }
+
+  const { searchParams } = new URL(req.url)
+  const id = parseInt(searchParams.get('id') || '0')
+  if (!id) return NextResponse.json({ error: 'ID QR wajib diisi' }, { status: 400 })
+
+  const qr = await prisma.qrWawancara.findUnique({ where: { id } })
+  if (!qr) return NextResponse.json({ error: 'QR tidak ditemukan' }, { status: 404 })
+
+  await prisma.qrWawancara.delete({ where: { id } })
+
+  await createLog({
+    userId: ctx.userId,
+    userNama: ctx.userNama,
+    aksi: 'DELETE',
+    tabel: 'qr_wawancara',
+    recordId: id,
+    deskripsi: `${ctx.userNama} menghapus QR absensi wawancara ID ${id}`,
+    dataLama: qr as any,
+    ipAddress: getIp(req),
+  })
+
+  return NextResponse.json({ success: true })
 }

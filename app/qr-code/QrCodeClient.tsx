@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { formatDateTime } from '@/lib/utils'
-import { Download, Loader2, Plus, QrCode, ShieldCheck, TriangleAlert } from 'lucide-react'
+import { Download, Loader2, Plus, QrCode, ShieldCheck, TriangleAlert, Trash2, Save } from 'lucide-react'
+import Modal from '@/components/ui/Modal'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 
 interface QrItem {
   id: number
@@ -21,6 +23,10 @@ export default function QrCodeClient() {
   const [items, setItems] = useState<QrItem[]>([])
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
+  const [createModal, setCreateModal] = useState(false)
+  const [fMulai, setFMulai] = useState('')
+  const [fSelesai, setFSelesai] = useState('')
+  const [deleteId, setDeleteId] = useState<number | null>(null)
 
   const activeQr = items.find((item) => item.aktif)
   const activeUrl = useMemo(() => {
@@ -40,16 +46,50 @@ export default function QrCodeClient() {
 
   useEffect(() => { load() }, [load])
 
+  function datetimeLocalValue(date: Date) {
+    const d = new Date(date)
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
+    return d.toISOString().slice(0, 16)
+  }
+
+  function openCreateQr() {
+    const now = new Date()
+    const until = new Date(now)
+    until.setDate(until.getDate() + 3)
+    setFMulai(datetimeLocalValue(now))
+    setFSelesai(datetimeLocalValue(until))
+    setCreateModal(true)
+  }
+
   async function createQr() {
     setCreating(true)
-    const res = await fetch('/api/wawancara/qr', { method: 'POST' })
+    const res = await fetch('/api/wawancara/qr', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        valid_from: fMulai ? new Date(fMulai).toISOString() : undefined,
+        valid_until: fSelesai ? new Date(fSelesai).toISOString() : undefined,
+      }),
+    })
     const json = await res.json()
     if (!res.ok) toast.error(json.error || 'Gagal membuat QR')
     else {
       toast.success('QR baru berhasil dibuat')
+      setCreateModal(false)
       load()
     }
     setCreating(false)
+  }
+
+  async function deleteQr(id: number) {
+    const res = await fetch(`/api/wawancara/qr?id=${id}`, { method: 'DELETE' })
+    const json = await res.json()
+    if (!res.ok) toast.error(json.error || 'Gagal menghapus QR')
+    else {
+      toast.success('QR berhasil dihapus')
+      setDeleteId(null)
+      load()
+    }
   }
 
   async function downloadQr() {
@@ -77,7 +117,7 @@ export default function QrCodeClient() {
             </div>
             <p className="page-sub mt-0.5">Generate QR token unik yang valid 3 hari untuk gerbang absensi digital.</p>
           </div>
-          <button onClick={createQr} disabled={creating} className="btn-primary">
+          <button onClick={openCreateQr} disabled={creating} className="btn-primary">
             {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
             Buat QR Baru
           </button>
@@ -140,15 +180,38 @@ export default function QrCodeClient() {
             ) : items.map((item) => (
               <div key={item.id} className="p-4">
                 <div className="flex items-center justify-between gap-2">
-                  <span className={item.aktif ? 'badge bg-green-50 text-green-700 border border-green-200' : 'badge bg-slate-100 text-slate-500 border border-slate-200'}>{item.aktif ? 'Aktif' : 'Nonaktif'}</span>
-                  <span className="text-xs text-slate-400">#{item.id}</span>
+                  <div className="flex items-center gap-2">
+                    <span className={item.aktif ? 'badge bg-green-50 text-green-700 border border-green-200' : 'badge bg-slate-100 text-slate-500 border border-slate-200'}>{item.aktif ? 'Aktif' : 'Nonaktif'}</span>
+                    <span className="text-xs text-slate-400">#{item.id}</span>
+                  </div>
+                  {!item.aktif && (
+                    <button onClick={() => setDeleteId(item.id)} className="btn-icon text-red-500 hover:bg-red-50">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
-                <div className="text-xs text-slate-500 mt-2">Expired: {formatDateTime(item.valid_until)}</div>
+                <div className="text-xs text-slate-500 mt-2">Berlaku: {formatDateTime(item.valid_from)} - {formatDateTime(item.valid_until)}</div>
               </div>
             ))}
           </div>
         </div>
       </div>
+
+      <Modal open={createModal} title="Buat QR Code Baru" onClose={() => setCreateModal(false)} size="md"
+        footer={<div className="flex justify-end gap-2"><button onClick={() => setCreateModal(false)} className="btn-secondary">Batal</button><button onClick={createQr} disabled={creating} className="btn-primary">{creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}Buat QR</button></div>}>
+        <div className="space-y-4">
+          <div className="text-sm text-slate-600 leading-relaxed mb-4">
+            Membuat QR baru akan menonaktifkan QR sebelumnya. Atur rentang waktu QR ini dapat di-scan oleh siswa.
+          </div>
+          <div className="form-group"><label className="label">Mulai Berlaku</label><input type="datetime-local" value={fMulai} onChange={(e) => setFMulai(e.target.value)} className="input" /></div>
+          <div className="form-group"><label className="label">Berakhir Pada</label><input type="datetime-local" value={fSelesai} onChange={(e) => setFSelesai(e.target.value)} className="input" /></div>
+        </div>
+      </Modal>
+
+      <ConfirmDialog open={!!deleteId} title="Hapus QR Code?" message="QR Code ini akan dihapus permanen. Aksi ini tidak dapat dibatalkan."
+        onCancel={() => setDeleteId(null)}
+        onConfirm={() => deleteId && deleteQr(deleteId)}
+      />
     </div>
   )
 }

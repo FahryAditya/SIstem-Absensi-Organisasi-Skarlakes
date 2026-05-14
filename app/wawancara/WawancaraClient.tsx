@@ -116,6 +116,8 @@ export default function WawancaraClient({ user }: Props) {
   const [currentTime, setCurrentTime] = useState(new Date())
   const loadedOnce = useRef(false)
   const chatLastId = useRef(0)
+  const warned10 = useRef<number | null>(null)
+  const warned5 = useRef<number | null>(null)
 
   const admin = isAdministrator(user.role)
 
@@ -162,6 +164,23 @@ export default function WawancaraClient({ user }: Props) {
 
   const activeSession = sessions.find((s) => s.status === 'ACTIVE')
   const selectedSession = activeSession || sessions[0]
+
+  useEffect(() => {
+    if (selectedSession?.status === 'ACTIVE' && selectedSession.jadwal_selesai) {
+      const msLeft = new Date(selectedSession.jadwal_selesai).getTime() - currentTime.getTime()
+      if (msLeft > 0) {
+        if (msLeft <= 10 * 60 * 1000 && msLeft > 9.9 * 60 * 1000 && warned10.current !== selectedSession.id) {
+          toast('Peringatan: 10 menit lagi sesi wawancara akan berakhir!', { icon: '⏳', duration: 8000 })
+          warned10.current = selectedSession.id
+        }
+        if (msLeft <= 5 * 60 * 1000 && msLeft > 4.9 * 60 * 1000 && warned5.current !== selectedSession.id) {
+          toast('Peringatan: 5 menit lagi sesi wawancara selesai!', { icon: '⚠️', duration: 8000 })
+          warned5.current = selectedSession.id
+        }
+      }
+    }
+  }, [currentTime, selectedSession])
+
   const loadChat = useCallback(async () => {
     if (!activeSession) { setChats([]); return }
     const lastId = chatLastId.current
@@ -381,8 +400,24 @@ export default function WawancaraClient({ user }: Props) {
           <div className="card overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
               <div>
-                <div className="text-sm font-bold text-slate-800">Antrian Kandidat</div>
-                <div className="text-xs text-slate-500">
+                <div className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                  Antrian Kandidat
+                  {selectedSession?.status === 'ACTIVE' && selectedSession.jadwal_selesai && (
+                    <span className="badge bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1 font-mono">
+                      <Clock className="w-3 h-3" />
+                      Sisa: {
+                        (() => {
+                          const ms = new Date(selectedSession.jadwal_selesai).getTime() - currentTime.getTime()
+                          if (ms <= 0) return 'Habis'
+                          const ts = Math.floor(ms / 1000)
+                          const h = Math.floor(ts / 3600), m = Math.floor((ts % 3600) / 60), s = ts % 60
+                          return h > 0 ? `${h}j ${m}m ${s}d` : `${m}m ${s}d`
+                        })()
+                      }
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs text-slate-500 mt-1">
                   {selectedSession ? `${formatDateTime(selectedSession.jadwal_mulai)} - ${selectedSession.jadwal_selesai ? formatDateTime(selectedSession.jadwal_selesai) : 'selesai manual'}` : 'Belum ada sesi aktif atau terjadwal'}
                 </div>
               </div>

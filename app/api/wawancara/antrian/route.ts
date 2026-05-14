@@ -24,8 +24,8 @@ const enqueueSchema = z.object({
   longitude: z.number(),
 })
 
-const SCHOOL_LAT = parseFloat(process.env.SCHOOL_LAT || process.env.NEXT_PUBLIC_SCHOOL_LAT || '-5.147665')
-const SCHOOL_LNG = parseFloat(process.env.SCHOOL_LNG || process.env.NEXT_PUBLIC_SCHOOL_LNG || '119.432732')
+const SCHOOL_LAT = parseFloat(process.env.SCHOOL_LAT || process.env.NEXT_PUBLIC_SCHOOL_LAT || '-1.251278')
+const SCHOOL_LNG = parseFloat(process.env.SCHOOL_LNG || process.env.NEXT_PUBLIC_SCHOOL_LNG || '116.838333')
 const SCHOOL_RADIUS_M = parseFloat(process.env.SCHOOL_RADIUS_M || process.env.NEXT_PUBLIC_SCHOOL_RADIUS_M || '50')
 
 function getIp(req: NextRequest) {
