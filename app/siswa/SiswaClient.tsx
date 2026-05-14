@@ -7,7 +7,7 @@ import Modal from '@/components/ui/Modal'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { OrgBadge } from '@/components/ui/Badges'
 import { formatDate } from '@/lib/utils'
-import { canAccessProgramming, canAccessEnglish } from '@/lib/auth-shared'
+import { canManageSiswaData } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import { Plus, Search, Pencil, Trash2, Users, Loader2, Filter, Contact } from 'lucide-react'
 
@@ -50,8 +50,7 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
   const [fJurusan, setFJurusan] = useState('')
   const [fEkskul, setFEkskul] = useState<'programming' | 'english'>('programming')
 
-  const canProg = canAccessProgramming(user.role)
-  const canEng = canAccessEnglish(user.role)
+  const canUseEkskulDropdown = canManageSiswaData(user.role)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -84,7 +83,7 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
   function openAdd() {
     setEditTarget(null)
     setFNama(''); setFNis(''); setFTingkat(''); setFJurusan('')
-    setFEkskul(defaultOrg || (canProg ? 'programming' : 'english'))
+    setFEkskul(defaultOrg || 'programming')
     setModalOpen(true)
   }
 
@@ -200,7 +199,7 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Cari nama atau NIS siswa..." className="input pl-10" />
         </div>
-        {canProg && canEng && (
+        {canUseEkskulDropdown && (
           <div className="relative sm:w-44">
             <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <select value={orgFilter} onChange={e => setOrgFilter(e.target.value)} className="input pl-10 appearance-none">
@@ -310,9 +309,9 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
           <div className="form-group">
             <label className="label">Ekstrakurikuler</label>
             <select value={fEkskul} onChange={e => setFEkskul(e.target.value as 'programming' | 'english')}
-              disabled={!canProg || !canEng} className="input cursor-pointer font-medium text-slate-700">
-              {canProg && <option value="programming">Programming</option>}
-              {canEng && <option value="english">English Club</option>}
+              disabled={!canUseEkskulDropdown} className="input cursor-pointer font-medium text-slate-700">
+              <option value="programming">Programming</option>
+              <option value="english">English Club</option>
             </select>
           </div>
         </div>

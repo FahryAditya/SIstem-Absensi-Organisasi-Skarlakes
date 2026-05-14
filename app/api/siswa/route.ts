@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
-import { canAccessEnglish, canAccessProgramming, getAccessibleOrgs } from '@/lib/auth'
+import { canManageSiswaData, canManageSiswaEkskul } from '@/lib/auth'
 import { z } from 'zod'
 
 function getCtx(req: NextRequest) {
@@ -13,8 +13,14 @@ function getCtx(req: NextRequest) {
 }
 
 const schema = z.object({
-  nis: z.string().nullable().optional(),
-  nama: z.string().min(1, 'Nama wajib diisi'),
+  nis: z.string().nullable().optional().refine(
+    (val) => !val || /^\d+$/.test(val),
+    'NIS hanya boleh berisi angka'
+  ),
+  nama: z.string().min(1, 'Nama wajib diisi').regex(
+    /^[a-zA-Z\s.'']*$/,
+    'Nama hanya boleh berisi huruf'
+  ),
   kelas: z.string().nullable().optional(),
   ekskul: z.enum(['programming', 'english']),
 })
@@ -28,8 +34,8 @@ export async function GET(req: NextRequest) {
   const limit = parseInt(searchParams.get('limit') || '10')
 
   // Role check
-  const accessible = getAccessibleOrgs(userRole).filter(o => o === 'programming' || o === 'english')
-  let ekskulFilter: ('programming' | 'english')[] = accessible as ('programming' | 'english')[]
+  const accessible: ('programming' | 'english')[] = canManageSiswaData(userRole) ? ['programming', 'english'] : []
+  let ekskulFilter: ('programming' | 'english')[] = accessible
   if (ekskul && accessible.includes(ekskul)) ekskulFilter = [ekskul]
 
   const where = {
@@ -57,9 +63,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
 
   const { ekskul } = parsed.data
-  if (ekskul === 'programming' && !canAccessProgramming(ctx.userRole))
-    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
-  if (ekskul === 'english' && !canAccessEnglish(ctx.userRole))
+  if (!canManageSiswaEkskul(ctx.userRole, ekskul))
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
 
   const siswa = await prisma.siswa.create({
@@ -86,13 +90,13 @@ export async function PUT(req: NextRequest) {
   const existing = await prisma.siswa.findUnique({ where: { id } })
   if (!existing) return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
 
-  if (existing.ekskul === 'programming' && !canAccessProgramming(ctx.userRole))
-    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
-  if (existing.ekskul === 'english' && !canAccessEnglish(ctx.userRole))
+  if (!canManageSiswaEkskul(ctx.userRole, existing.ekskul))
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
 
   const parsed = schema.safeParse({ ...existing, ...rest })
   if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
+  if (!canManageSiswaEkskul(ctx.userRole, parsed.data.ekskul))
+    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
 
   const updated = await prisma.siswa.update({ where: { id }, data: parsed.data })
 
@@ -129,9 +133,7 @@ export async function DELETE(req: NextRequest) {
   if (existingRecords.length === 0) return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
 
   for (const existing of existingRecords) {
-    if (existing.ekskul === 'programming' && !canAccessProgramming(ctx.userRole))
-      return NextResponse.json({ error: `Akses ditolak untuk data ${existing.nama}` }, { status: 403 })
-    if (existing.ekskul === 'english' && !canAccessEnglish(ctx.userRole))
+    if (!canManageSiswaEkskul(ctx.userRole, existing.ekskul))
       return NextResponse.json({ error: `Akses ditolak untuk data ${existing.nama}` }, { status: 403 })
   }
 

@@ -13,8 +13,8 @@ function getCtx(req: NextRequest) {
 }
 
 const anggotaSchema = z.object({
-  nis: z.string().nullable().optional(),
-  nama: z.string().min(1, 'Nama wajib diisi'),
+  nis: z.string().nullable().optional().refine(val => !val || /^\d+$/.test(val), { message: 'NIS hanya boleh berisi angka' }),
+  nama: z.string().min(1, 'Nama wajib diisi').regex(/^[a-zA-Z\s.'\']*$/, 'Nama hanya boleh berisi huruf'),
   kelas: z.string().nullable().optional(),
   jabatan: z.string().nullable().optional(),
   tipe: z.enum(['osis', 'mpk']),
@@ -96,7 +96,10 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   const ctx = getCtx(req)
   const body = await req.json()
-  const { id, tipe, ...data } = body
+  const { id, ...rest } = body
+  const parsed = anggotaSchema.safeParse(rest)
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
+  const { tipe, ...data } = parsed.data
   if (!id || !tipe) return NextResponse.json({ error: 'ID dan tipe required' }, { status: 400 })
 
   if (tipe === 'osis' && !canAccessOsis(ctx.userRole))

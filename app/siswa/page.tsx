@@ -1,5 +1,5 @@
 import { getServerUser } from '@/lib/server-utils'
-import { canAccessProgramming, canAccessEnglish } from '@/lib/auth'
+import { canManageSiswaData } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import SiswaClient from './SiswaClient'
@@ -9,9 +9,7 @@ export default async function SiswaPage({ searchParams }: { searchParams: { org?
   const org = (searchParams.org || '') as 'programming' | 'english' | ''
 
   // Access control
-  if (org === 'programming' && !canAccessProgramming(user.role)) redirect('/dashboard')
-  if (org === 'english' && !canAccessEnglish(user.role)) redirect('/dashboard')
-  if (!org && !canAccessProgramming(user.role) && !canAccessEnglish(user.role)) redirect('/dashboard')
+  if ((org === 'programming' || org === 'english' || !org) && !canManageSiswaData(user.role)) redirect('/dashboard')
 
   const title = org === 'programming' ? 'Siswa Programming'
     : org === 'english' ? 'Siswa English Club'

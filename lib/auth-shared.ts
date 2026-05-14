@@ -30,6 +30,17 @@ export function canAccessMpk(role: string) {
   return role === 'administrator' || role === 'admin_osis_mpk'
 }
 
+export function canManageSiswaData(role: string) {
+  return role === 'administrator'
+    || role === 'admin_programming'
+    || role === 'admin_english'
+    || role === 'admin_osis_mpk'
+}
+
+export function canManageSiswaEkskul(role: string, ekskul: string) {
+  return canManageSiswaData(role) && (ekskul === 'programming' || ekskul === 'english')
+}
+
 export function isAdministrator(role: string) {
   return role === 'administrator'
 }

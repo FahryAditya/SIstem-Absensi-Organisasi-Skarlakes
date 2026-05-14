@@ -50,7 +50,8 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
   const [deleting, setDeleting] = useState(false)
   const [fNama, setFNama] = useState('')
   const [fNis, setFNis] = useState('')
-  const [fKelas, setFKelas] = useState('')
+  const [fTingkat, setFTingkat] = useState('')
+  const [fJurusan, setFJurusan] = useState('')
   const [fJabatan, setFJabatan] = useState('')
 
   // Absensi state
@@ -110,13 +111,22 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
     }
   }, [subTab, absensiMode, loadBulk, loadRiwayat])
 
-  function openAdd() { setEditTarget(null); setFNama(''); setFNis(''); setFKelas(''); setFJabatan(''); setModalOpen(true) }
-  function openEdit(a: Anggota) { setEditTarget(a); setFNama(a.nama); setFNis(a.nis || ''); setFKelas(a.kelas || ''); setFJabatan(a.jabatan || ''); setModalOpen(true) }
+  function openAdd() { setEditTarget(null); setFNama(''); setFNis(''); setFTingkat(''); setFJurusan(''); setFJabatan(''); setModalOpen(true) }
+  function openEdit(a: Anggota) { 
+    setEditTarget(a); setFNama(a.nama); setFNis(a.nis || ''); 
+    const kls = a.kelas || '';
+    const parts = kls.split(' ');
+    const t = ['X', 'XI', 'XII'].includes(parts[0]) ? parts[0] : '';
+    setFTingkat(t);
+    setFJurusan(t ? parts.slice(1).join(' ') : kls);
+    setFJabatan(a.jabatan || ''); setModalOpen(true) 
+  }
 
   async function handleSave() {
     if (!fNama.trim()) { toast.error('Nama wajib diisi'); return }
     setSaving(true)
-    const body = { nama: fNama.trim(), nis: fNis || undefined, kelas: fKelas || undefined, jabatan: fJabatan || undefined, tipe: activeOrg }
+    const finalKelas = `${fTingkat} ${fJurusan}`.trim()
+    const body = { nama: fNama.trim(), nis: fNis || undefined, kelas: finalKelas || undefined, jabatan: fJabatan || undefined, tipe: activeOrg }
     const res = await fetch('/api/organisasi', {
       method: editTarget ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -222,10 +232,65 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
             onClose={() => setModalOpen(false)} size="md"
             footer={<div className="flex gap-2 justify-end"><button onClick={() => setModalOpen(false)} className="btn-secondary">Batal</button><button onClick={handleSave} disabled={saving} className="btn-primary">{saving ? <><Loader2 className="w-4 h-4 animate-spin"/>Simpan...</> : 'Simpan'}</button></div>}>
             <div className="space-y-4">
-              <div className="form-group"><label className="label">Nama Lengkap *</label><input value={fNama} onChange={e => setFNama(e.target.value)} placeholder="Nama lengkap" className="input" autoFocus /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="form-group"><label className="label">NIS</label><input value={fNis} onChange={e => setFNis(e.target.value)} placeholder="Opsional" className="input" /></div>
-                <div className="form-group"><label className="label">Kelas</label><input value={fKelas} onChange={e => setFKelas(e.target.value)} placeholder="Cth: XII IPA" className="input" /></div>
+              <div className="form-group">
+                <label className="label">Nama Lengkap *</label>
+                <input 
+                  value={fNama} 
+                  onChange={e => {
+                    const val = e.target.value
+                    if (val && !/^[a-zA-Z\s.']*$/.test(val)) {
+                      toast.error('Nama hanya boleh berisi huruf', { id: 'nama-error' })
+                      return
+                    }
+                    setFNama(val)
+                  }} 
+                  placeholder="Nama lengkap anggota (Hanya Huruf)" 
+                  className="input" 
+                  autoFocus 
+                />
+              </div>
+              <div className="form-group">
+                <label className="label">NIS</label>
+                <div className="relative">
+                  <Contact className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input 
+                    value={fNis} 
+                    onChange={e => {
+                      const val = e.target.value
+                      if (val && !/^\d*$/.test(val)) {
+                        toast.error('NIS hanya boleh berisi angka', { id: 'nis-error' })
+                        return
+                      }
+                      setFNis(val)
+                    }} 
+                    placeholder="Opsional (Hanya Angka)" 
+                    className="input pl-9 font-mono" 
+                    inputMode="numeric"
+                  />
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="label">Tingkat & Kejuruan</label>
+                <div className="flex gap-3">
+                  <select value={fTingkat} onChange={e => setFTingkat(e.target.value)} className="input sm:w-32 w-28 cursor-pointer font-medium text-slate-700">
+                    <option value="" disabled>Tingkat</option>
+                    <option value="X">Kelas X</option>
+                    <option value="XI">Kelas XI</option>
+                    <option value="XII">Kelas XII</option>
+                  </select>
+                  <select value={fJurusan} onChange={e => setFJurusan(e.target.value)} className="input flex-1 cursor-pointer font-medium text-slate-700">
+                    <option value="" disabled>Pilih Kejuruan...</option>
+                    <option value="AKL">AKL</option>
+                    <option value="MPLB 1">MPLB 1</option>
+                    <option value="MPLB 2">MPLB 2</option>
+                    <option value="PPLG">PPLG</option>
+                    <option value="DKV">DKV</option>
+                    <option value="TJKT">TJKT</option>
+                    <option value="AKC">AKC</option>
+                    <option value="FKK">FKK</option>
+                    <option value="FARMASI">FARMASI</option>
+                  </select>
+                </div>
               </div>
               <div className="form-group"><label className="label">Jabatan</label><input value={fJabatan} onChange={e => setFJabatan(e.target.value)} placeholder={`Cth: Ketua ${orgLabel}`} className="input" /></div>
             </div>
