@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { formatDateTime } from '@/lib/utils'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
-import { UserX, Trash2, Loader2, Search, Filter, Clock } from 'lucide-react'
+import { UserX, Trash2, Loader2, Search, Filter, Clock, ArrowLeft } from 'lucide-react'
 
 interface HasilWawancara {
   id: number
@@ -196,6 +196,9 @@ export default function HapusPesertaClient({ user }: Props) {
           <p className="page-sub mt-0.5">Hapus peserta dari antrian sesi wawancara OSIS & MPK</p>
         </div>
         <div className="flex gap-2">
+          <button onClick={() => window.location.href = '/wawancara'} className="btn-secondary">
+            <ArrowLeft className="w-4 h-4" /> Kembali
+          </button>
           {selectedIds.length > 0 && (
             <button onClick={() => setBulkDeleteConfirmOpen(true)} className="btn-secondary text-red-600 border-red-200 hover:bg-red-50">
               <Trash2 className="w-4 h-4" /> Hapus Terpilih ({selectedIds.length})
