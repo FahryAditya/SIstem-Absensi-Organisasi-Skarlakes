@@ -1,171 +1,369 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAccessibleOrgs, ROLE_LABELS } from '@/lib/auth-shared'
-import { ORG_LABELS, STATUS_LABELS, formatDate, formatCurrency } from '@/lib/utils'
+import { ORG_LABELS, STATUS_LABELS, formatCurrency, formatDate } from '@/lib/utils'
+import { createLog, getIp } from '@/lib/log'
 import * as XLSX from 'xlsx'
+
+type Org = 'programming' | 'english' | 'osis' | 'mpk'
+type ExportType = 'admin' | 'absensi' | 'kas' | 'kehadiran' | 'absensi_kehadiran' | 'semua' | 'siswa' | 'absensi_ekskul' | 'absensi_organisasi' | 'rekap_siswa'
+
+const EXPORT_LABELS: Record<string, string> = {
+  admin: 'Data Admin',
+  absensi: 'Absensi',
+  kas: 'Kas',
+  kehadiran: 'Kehadiran',
+  absensi_kehadiran: 'Absensi + Kehadiran',
+  semua: 'Semua Data',
+  siswa: 'Data Anggota',
+  absensi_ekskul: 'Absensi',
+  absensi_organisasi: 'Absensi',
+  rekap_siswa: 'Kehadiran',
+}
 
 function getCtx(req: NextRequest) {
   return {
     userId: parseInt(req.headers.get('x-user-id') || '0'),
+    userNama: req.headers.get('x-user-nama') || '',
     userRole: req.headers.get('x-user-role') || '',
   }
 }
 
-export async function GET(req: NextRequest) {
-  const { userRole } = getCtx(req)
-  const { searchParams } = new URL(req.url)
-  const tipe = searchParams.get('tipe') || 'absensi'
-  const org = searchParams.get('org') || ''
-  const startDate = searchParams.get('start') || ''
-  const endDate = searchParams.get('end') || ''
+function parseDateRange(startDate: string, endDate: string) {
+  if (!startDate || !endDate) return null
+  const start = new Date(`${startDate}T00:00:00`)
+  const end = new Date(`${endDate}T23:59:59`)
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null
+  if (start > end) return null
+  return { start, end }
+}
 
-  const wb = XLSX.utils.book_new()
-  const accessible = getAccessibleOrgs(userRole)
-  const filter = org && accessible.includes(org) ? [org] : accessible
+function safeSheetName(name: string) {
+  return name.replace(/[\\/?*[\]:]/g, ' ').slice(0, 31)
+}
 
-  if (tipe === 'admin') {
-    if (userRole !== 'administrator') {
-      return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 403, headers: { 'Content-Type': 'application/json' } })
-    }
-    const data = await prisma.user.findMany({ orderBy: { nama: 'asc' } })
-    const rows = data.map((u) => ({
-      'Nama': u.nama,
-      'Email': u.email,
-      'Role': ROLE_LABELS[u.role as keyof typeof ROLE_LABELS] || u.role,
-      'Password': u.password
-    }))
-    const ws = XLSX.utils.json_to_sheet(rows, { header: ['Nama', 'Email', 'Role', 'Password'] })
-    ws['!cols'] = [30, 30, 25, 45].map(w => ({ wch: w }))
-    XLSX.utils.book_append_sheet(wb, ws, 'Daftar Admin')
+function appendJsonSheet(wb: XLSX.WorkBook, rows: Record<string, unknown>[], name: string, widths: number[]) {
+  const ws = XLSX.utils.json_to_sheet(rows.length ? rows : [{ Info: 'Tidak ada data untuk filter ini' }])
+  ws['!cols'] = widths.map(w => ({ wch: w }))
+  XLSX.utils.book_append_sheet(wb, ws, safeSheetName(name))
+}
 
-  } else if (tipe === 'siswa') {
-    for (const o of filter) {
-      if (o === 'programming' || o === 'english') {
-        const data = await prisma.siswa.findMany({
-          where: { ekskul: o },
-          orderBy: { nama: 'asc' }
-        })
-        const rows = data.map((s, i) => ({
-          'No': i + 1, 'NIS': s.nis || '-', 'Nama': s.nama, 'Kelas': s.kelas || '-', 'Ekstrakurikuler': ORG_LABELS[s.ekskul as keyof typeof ORG_LABELS], 'Tanggal Daftar': formatDate(s.created_at),
-        }))
-        const ws = XLSX.utils.json_to_sheet(rows, { header: ['No', 'NIS', 'Nama', 'Kelas', 'Ekstrakurikuler', 'Tanggal Daftar'] })
-        ws['!cols'] = [5,12,30,12,18,16].map(w => ({ wch: w }))
-        XLSX.utils.book_append_sheet(wb, ws, ORG_LABELS[o as keyof typeof ORG_LABELS])
-      } else {
-        const data = o === 'osis' 
-          ? await prisma.anggotaOsis.findMany({ orderBy: { nama: 'asc' } })
-          : await prisma.anggotaMpk.findMany({ orderBy: { nama: 'asc' } })
-        const rows = data.map((a, i) => ({
-          'No': i + 1, 'NIS': a.nis || '-', 'Nama': a.nama, 'Kelas': a.kelas || '-', 'Jabatan': a.jabatan || '-',
-        }))
-        const ws = XLSX.utils.json_to_sheet(rows, { header: ['No', 'NIS', 'Nama', 'Kelas', 'Jabatan'] })
-        ws['!cols'] = [5,12,28,12,20].map(w => ({ wch: w }))
-        XLSX.utils.book_append_sheet(wb, ws, o.toUpperCase())
-      }
-    }
+function dateWhere(range: { start: Date; end: Date }) {
+  return { tanggal: { gte: range.start, lte: range.end } }
+}
 
-  } else if (tipe === 'absensi_ekskul' || tipe === 'absensi_organisasi') {
-    for (const o of filter) {
-      if (o === 'programming' || o === 'english') {
-        const data = await prisma.absensi.findMany({
-          where: { siswa: { ekskul: o }, ...(startDate && endDate ? { tanggal: { gte: new Date(startDate), lte: new Date(endDate) } } : {}) },
-          include: { siswa: true, creator: { select: { nama: true } } },
-          orderBy: [{ tanggal: 'desc' }, { siswa: { nama: 'asc' } }]
-        })
-        const rows = data.map((a, i) => ({
-          'No': i + 1, 'Nama': a.siswa.nama, 'Kelas': a.siswa.kelas || '-', 'Ekskul': ORG_LABELS[a.siswa.ekskul as keyof typeof ORG_LABELS], 'Tanggal': formatDate(a.tanggal), 'Status': STATUS_LABELS[a.status], 'Uang Kas': a.uang_kas, 'Keterangan': a.keterangan || '-', 'Di-input oleh': a.creator.nama,
-        }))
-        const ws = XLSX.utils.json_to_sheet(rows, { header: ['No', 'Nama', 'Kelas', 'Ekskul', 'Tanggal', 'Status', 'Uang Kas', 'Keterangan', 'Di-input oleh'] })
-        ws['!cols'] = [5,28,10,16,14,14,12,20,20].map(w => ({ wch: w }))
-        XLSX.utils.book_append_sheet(wb, ws, ORG_LABELS[o as keyof typeof ORG_LABELS])
-      } else {
-        const data = await prisma.absensiOrganisasi.findMany({
-          where: { organisasi_type: o as any, ...(startDate && endDate ? { tanggal: { gte: new Date(startDate), lte: new Date(endDate) } } : {}) },
-          include: { anggota_osis: true, anggota_mpk: true },
-          orderBy: { tanggal: 'desc' }
-        })
-        const rows = data.map((a, i) => {
-          const anggota = o === 'osis' ? a.anggota_osis : a.anggota_mpk
-          return { 'No': i + 1, 'Nama': anggota?.nama || '-', 'Jabatan': anggota?.jabatan || '-', 'Tanggal': formatDate(a.tanggal), 'Status': STATUS_LABELS[a.status], 'Uang Kas': a.uang_kas, 'Keterangan': a.keterangan || '-' }
-        })
-        const ws = XLSX.utils.json_to_sheet(rows, { header: ['No', 'Nama', 'Jabatan', 'Tanggal', 'Status', 'Uang Kas', 'Keterangan'] })
-        ws['!cols'] = [5,28,20,14,14,12,20].map(w => ({ wch: w }))
-        XLSX.utils.book_append_sheet(wb, ws, o.toUpperCase())
-      }
-    }
+function memberWhere(kelas: string, nama: string) {
+  return {
+    ...(kelas ? { kelas } : {}),
+    ...(nama ? { nama: { contains: nama } } : {}),
+  }
+}
 
-  } else if (tipe === 'rekap_siswa') {
-    for (const o of filter) {
-      if (o === 'programming' || o === 'english') {
-        const siswaList = await prisma.siswa.findMany({ where: { ekskul: o }, orderBy: { nama: 'asc' } })
-        const ids = siswaList.map(s => s.id)
-        const absAll = await prisma.absensi.findMany({ where: { siswa_id: { in: ids }, ...(startDate && endDate ? { tanggal: { gte: new Date(startDate), lte: new Date(endDate) } } : {}) } })
-        const rows = siswaList.map((s, i) => {
-          const abs = absAll.filter(a => a.siswa_id === s.id)
-          const absMeetings = abs.filter(a => a.status !== ('kas_saja' as any))
-          const hadir = absMeetings.filter(a => a.status === 'hadir').length
-          return {
-            'No': i + 1, 'Nama': s.nama, 'Kelas': s.kelas || '-', 'Ekskul': ORG_LABELS[s.ekskul as keyof typeof ORG_LABELS], 'Total Pertemuan': absMeetings.length, 'Hadir': hadir, 'Tidak Hadir': absMeetings.filter(a => a.status === 'tidak_hadir').length, 'Izin': absMeetings.filter(a => a.status === 'izin').length, 'Sakit': absMeetings.filter(a => a.status === 'sakit').length, '% Kehadiran': absMeetings.length ? `${Math.round(hadir/absMeetings.length*100)}%` : '0%', 'Total Kas': abs.reduce((s, a) => s + (a.uang_kas || 0), 0),
-          }
+async function buildAbsensiRows(orgs: Org[], range: { start: Date; end: Date }, kelas: string, nama: string) {
+  const rows: Record<string, unknown>[] = []
+
+  for (const org of orgs) {
+    if (org === 'programming' || org === 'english') {
+      const data = await prisma.absensi.findMany({
+        where: { ...dateWhere(range), siswa: { ekskul: org, ...memberWhere(kelas, nama) } },
+        include: { siswa: true, creator: { select: { nama: true } } },
+        orderBy: [{ tanggal: 'asc' }, { siswa: { nama: 'asc' } }],
+      })
+      data.forEach((a) => rows.push({
+        No: rows.length + 1,
+        Tanggal: formatDate(a.tanggal),
+        Ekskul: ORG_LABELS[a.siswa.ekskul as Org],
+        Nama: a.siswa.nama,
+        Kelas: a.siswa.kelas || '-',
+        Status: STATUS_LABELS[a.status] || a.status,
+        Keterangan: a.keterangan || '-',
+        'Di-input oleh': a.creator.nama,
+      }))
+    } else {
+      const data = await prisma.absensiOrganisasi.findMany({
+        where: {
+          organisasi_type: org,
+          ...dateWhere(range),
+          ...(org === 'osis'
+            ? { anggota_osis: memberWhere(kelas, nama) }
+            : { anggota_mpk: memberWhere(kelas, nama) }),
+        },
+        include: { anggota_osis: true, anggota_mpk: true },
+        orderBy: { tanggal: 'asc' },
+      })
+      data.forEach((a) => {
+        const anggota = org === 'osis' ? a.anggota_osis : a.anggota_mpk
+        rows.push({
+          No: rows.length + 1,
+          Tanggal: formatDate(a.tanggal),
+          Ekskul: ORG_LABELS[org],
+          Nama: anggota?.nama || '-',
+          Kelas: anggota?.kelas || '-',
+          Status: STATUS_LABELS[a.status] || a.status,
+          Keterangan: a.keterangan || '-',
+          Jabatan: anggota?.jabatan || '-',
         })
-        const ws = XLSX.utils.json_to_sheet(rows, { header: ['No', 'Nama', 'Kelas', 'Ekskul', 'Total Pertemuan', 'Hadir', 'Tidak Hadir', 'Izin', 'Sakit', '% Kehadiran', 'Total Kas'] })
-        ws['!cols'] = [5,28,10,16,14,10,12,10,10,12,12].map(w => ({ wch: w }))
-        XLSX.utils.book_append_sheet(wb, ws, ORG_LABELS[o as keyof typeof ORG_LABELS])
-      } else {
-        const anggotaList = o === 'osis' ? await prisma.anggotaOsis.findMany({ orderBy: { nama: 'asc' } }) : await prisma.anggotaMpk.findMany({ orderBy: { nama: 'asc' } })
-        const ids = anggotaList.map(a => a.id)
-        const absAll = await prisma.absensiOrganisasi.findMany({ where: { organisasi_type: o as any, ...(o === 'osis' ? { anggota_osis_id: { in: ids } } : { anggota_mpk_id: { in: ids } }), ...(startDate && endDate ? { tanggal: { gte: new Date(startDate), lte: new Date(endDate) } } : {}) } })
-        const rows = anggotaList.map((a, i) => {
-          const abs = absAll.filter(x => o === 'osis' ? x.anggota_osis_id === a.id : x.anggota_mpk_id === a.id)
-          const absMeetings = abs.filter(x => x.status !== ('kas_saja' as any))
-          const hadir = absMeetings.filter(x => x.status === 'hadir').length
-          return {
-            'No': i + 1, 'Nama': a.nama, 'Jabatan': a.jabatan || '-', 'Total Pertemuan': absMeetings.length, 'Hadir': hadir, 'Tidak Hadir': absMeetings.filter(x => x.status === 'tidak_hadir').length, 'Izin': absMeetings.filter(x => x.status === 'izin').length, 'Sakit': absMeetings.filter(x => x.status === 'sakit').length, '% Kehadiran': absMeetings.length ? `${Math.round(hadir/absMeetings.length*100)}%` : '0%', 'Total Kas': abs.reduce((s, x) => s + (x.uang_kas || 0), 0),
-          }
-        })
-        const ws = XLSX.utils.json_to_sheet(rows, { header: ['No', 'Nama', 'Jabatan', 'Total Pertemuan', 'Hadir', 'Tidak Hadir', 'Izin', 'Sakit', '% Kehadiran', 'Total Kas'] })
-        ws['!cols'] = [5,28,20,14,10,12,10,10,12,12].map(w => ({ wch: w }))
-        XLSX.utils.book_append_sheet(wb, ws, o.toUpperCase())
-      }
+      })
     }
   }
 
-  // --- NEW LOGIC FOR PENGELUARAN KAS ---
-  const pengeluaran = await (prisma as any).pengeluaranKas.findMany({
-    where: {
-      organisasi_type: { in: filter as any[] },
-      ...(startDate && endDate ? { tanggal: { gte: new Date(startDate), lte: new Date(endDate) } } : {})
-    },
+  return rows
+}
+
+async function buildKasRows(orgs: Org[], range: { start: Date; end: Date }, kelas: string, nama: string) {
+  const rows: Record<string, unknown>[] = []
+
+  for (const org of orgs) {
+    if (org === 'programming' || org === 'english') {
+      const data = await prisma.absensi.findMany({
+        where: { ...dateWhere(range), uang_kas: { not: 0 }, siswa: { ekskul: org, ...memberWhere(kelas, nama) } },
+        include: { siswa: true, creator: { select: { nama: true } } },
+        orderBy: [{ tanggal: 'asc' }, { siswa: { nama: 'asc' } }],
+      })
+      data.forEach((a) => rows.push({
+        No: rows.length + 1,
+        Tanggal: formatDate(a.tanggal),
+        Ekskul: ORG_LABELS[org],
+        Nama: a.siswa.nama,
+        Kelas: a.siswa.kelas || '-',
+        Jenis: a.uang_kas >= 0 ? 'Pemasukan' : 'Pengeluaran',
+        Nominal: formatCurrency(a.uang_kas),
+        Keterangan: a.keterangan || 'Setor uang kas',
+        Petugas: a.creator.nama,
+      }))
+    } else {
+      const data = await prisma.absensiOrganisasi.findMany({
+        where: {
+          organisasi_type: org,
+          ...dateWhere(range),
+          uang_kas: { not: 0 },
+          ...(org === 'osis'
+            ? { anggota_osis: memberWhere(kelas, nama) }
+            : { anggota_mpk: memberWhere(kelas, nama) }),
+        },
+        include: { anggota_osis: true, anggota_mpk: true },
+        orderBy: { tanggal: 'asc' },
+      })
+      data.forEach((a) => {
+        const anggota = org === 'osis' ? a.anggota_osis : a.anggota_mpk
+        rows.push({
+          No: rows.length + 1,
+          Tanggal: formatDate(a.tanggal),
+          Ekskul: ORG_LABELS[org],
+          Nama: anggota?.nama || '-',
+          Kelas: anggota?.kelas || '-',
+          Jenis: a.uang_kas >= 0 ? 'Pemasukan' : 'Pengeluaran',
+          Nominal: formatCurrency(a.uang_kas),
+          Keterangan: a.keterangan || 'Setor uang kas',
+          Petugas: '-',
+        })
+      })
+    }
+  }
+
+  const pengeluaran = await prisma.pengeluaranKas.findMany({
+    where: { organisasi_type: { in: orgs }, ...dateWhere(range) },
     include: { creator: { select: { nama: true } } },
-    orderBy: { tanggal: 'desc' }
+    orderBy: { tanggal: 'asc' },
   })
 
-  if (pengeluaran.length > 0) {
-    const rows = pengeluaran.map((p: any, i: number) => ({
-      'No': i + 1,
-      'Tanggal': p.tanggal.toISOString().split('T')[0],
-      'Unit': ORG_LABELS[p.organisasi_type as keyof typeof ORG_LABELS] || p.organisasi_type,
-      'Keterangan': p.keterangan,
-      'Nominal': p.nominal,
-      'Ditarik Oleh': p.creator?.nama || '-'
-    }))
-    const ws = XLSX.utils.json_to_sheet(rows, { header: ['No', 'Tanggal', 'Unit', 'Keterangan', 'Nominal', 'Ditarik Oleh'] })
-    ws['!cols'] = [5, 12, 16, 40, 15, 20].map(w => ({ wch: w }))
-    XLSX.utils.book_append_sheet(wb, ws, 'Pengeluaran Kas')
+  pengeluaran.forEach((p) => rows.push({
+    No: rows.length + 1,
+    Tanggal: formatDate(p.tanggal),
+    Ekskul: ORG_LABELS[p.organisasi_type as Org],
+    Nama: '-',
+    Kelas: '-',
+    Jenis: 'Pengeluaran',
+    Nominal: formatCurrency(p.nominal),
+    Keterangan: p.keterangan,
+    Petugas: p.creator.nama,
+  }))
+
+  return rows
+}
+
+async function buildKehadiranRows(orgs: Org[], range: { start: Date; end: Date }, kelas: string, nama: string) {
+  const rows: Record<string, unknown>[] = []
+
+  for (const org of orgs) {
+    if (org === 'programming' || org === 'english') {
+      const members = await prisma.siswa.findMany({
+        where: { ekskul: org, ...memberWhere(kelas, nama) },
+        include: { absensi: { where: dateWhere(range) } },
+        orderBy: { nama: 'asc' },
+      })
+      members.forEach((s) => {
+        const meetings = s.absensi.filter(a => a.status !== 'kas_saja')
+        const hadir = meetings.filter(a => a.status === 'hadir').length
+        rows.push({
+          No: rows.length + 1,
+          Ekskul: ORG_LABELS[org],
+          Nama: s.nama,
+          Kelas: s.kelas || '-',
+          'Total Pertemuan': meetings.length,
+          Hadir: hadir,
+          'Tidak Hadir': meetings.filter(a => a.status === 'tidak_hadir').length,
+          Izin: meetings.filter(a => a.status === 'izin').length,
+          Sakit: meetings.filter(a => a.status === 'sakit').length,
+          'Persentase Kehadiran': meetings.length ? `${Math.round((hadir / meetings.length) * 100)}%` : '0%',
+        })
+      })
+    } else {
+      const members = org === 'osis'
+        ? await prisma.anggotaOsis.findMany({
+            where: memberWhere(kelas, nama),
+            include: { absensi: { where: { organisasi_type: org, ...dateWhere(range) } } },
+            orderBy: { nama: 'asc' },
+          })
+        : await prisma.anggotaMpk.findMany({
+            where: memberWhere(kelas, nama),
+            include: { absensi: { where: { organisasi_type: org, ...dateWhere(range) } } },
+            orderBy: { nama: 'asc' },
+          })
+
+      members.forEach((a) => {
+        const meetings = a.absensi.filter(x => x.status !== 'kas_saja')
+        const hadir = meetings.filter(x => x.status === 'hadir').length
+        rows.push({
+          No: rows.length + 1,
+          Ekskul: ORG_LABELS[org],
+          Nama: a.nama,
+          Kelas: a.kelas || '-',
+          Jabatan: a.jabatan || '-',
+          'Total Pertemuan': meetings.length,
+          Hadir: hadir,
+          'Tidak Hadir': meetings.filter(x => x.status === 'tidak_hadir').length,
+          Izin: meetings.filter(x => x.status === 'izin').length,
+          Sakit: meetings.filter(x => x.status === 'sakit').length,
+          'Persentase Kehadiran': meetings.length ? `${Math.round((hadir / meetings.length) * 100)}%` : '0%',
+        })
+      })
+    }
   }
 
-  // Final check: if no sheets were added, add a default one
-  if (wb.SheetNames.length === 0) {
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Tidak ada data yang tersedia untuk filter ini']]), 'Info')
+  return rows
+}
+
+async function buildMemberRows(orgs: Org[], kelas: string, nama: string) {
+  const rows: Record<string, unknown>[] = []
+
+  for (const org of orgs) {
+    if (org === 'programming' || org === 'english') {
+      const data = await prisma.siswa.findMany({ where: { ekskul: org, ...memberWhere(kelas, nama) }, orderBy: { nama: 'asc' } })
+      data.forEach((s) => rows.push({
+        No: rows.length + 1,
+        NIS: s.nis || '-',
+        Nama: s.nama,
+        Kelas: s.kelas || '-',
+        Ekskul: ORG_LABELS[org],
+        'Tanggal Daftar': formatDate(s.created_at),
+      }))
+    } else {
+      const data = org === 'osis'
+        ? await prisma.anggotaOsis.findMany({ where: memberWhere(kelas, nama), orderBy: { nama: 'asc' } })
+        : await prisma.anggotaMpk.findMany({ where: memberWhere(kelas, nama), orderBy: { nama: 'asc' } })
+      data.forEach((a) => rows.push({
+        No: rows.length + 1,
+        NIS: a.nis || '-',
+        Nama: a.nama,
+        Kelas: a.kelas || '-',
+        Ekskul: ORG_LABELS[org],
+        Jabatan: a.jabatan || '-',
+        'Tanggal Daftar': formatDate(a.created_at),
+      }))
+    }
   }
+
+  return rows
+}
+
+export async function GET(req: NextRequest) {
+  const ctx = getCtx(req)
+  const { searchParams } = new URL(req.url)
+  const rawType = (searchParams.get('tipe') || 'absensi') as ExportType
+  const tipe: ExportType = rawType === 'absensi_ekskul' || rawType === 'absensi_organisasi' ? 'absensi'
+    : rawType === 'rekap_siswa' ? 'kehadiran'
+    : rawType
+  const org = searchParams.get('org') || ''
+  const kelas = searchParams.get('kelas') || ''
+  const nama = searchParams.get('nama') || ''
+  const startDate = searchParams.get('start') || ''
+  const endDate = searchParams.get('end') || ''
+  const accessible = getAccessibleOrgs(ctx.userRole) as Org[]
+
+  if (tipe === 'admin') {
+    if (ctx.userRole !== 'administrator') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
+    const wb = XLSX.utils.book_new()
+    const data = await prisma.user.findMany({ orderBy: { nama: 'asc' } })
+    appendJsonSheet(wb, data.map((u) => ({
+      Nama: u.nama,
+      Email: u.email,
+      Role: ROLE_LABELS[u.role] || u.role,
+      Password: u.password,
+    })), 'Daftar Admin', [30, 30, 25, 45])
+    const output = XLSX.write(wb, { type: 'array', bookType: 'xlsx' })
+    return new NextResponse(output, {
+      headers: {
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': `attachment; filename="export_admin_${new Date().toISOString().split('T')[0]}.xlsx"`,
+        'Cache-Control': 'no-store',
+      },
+    })
+  }
+
+  const range = parseDateRange(startDate, endDate)
+  if (!range) {
+    return NextResponse.json({ error: 'Filter tanggal mulai dan akhir wajib diisi dengan benar' }, { status: 400 })
+  }
+
+  const selectedOrgs = org ? [org as Org] : accessible
+  if (selectedOrgs.length === 0 || selectedOrgs.some(o => !accessible.includes(o))) {
+    return NextResponse.json({ error: 'Akses export untuk ekskul ini ditolak' }, { status: 403 })
+  }
+
+  if (!['absensi', 'kas', 'kehadiran', 'absensi_kehadiran', 'semua', 'siswa'].includes(tipe)) {
+    return NextResponse.json({ error: 'Jenis export tidak valid' }, { status: 400 })
+  }
+
+  const wb = XLSX.utils.book_new()
+  const addAbsensi = tipe === 'absensi' || tipe === 'absensi_kehadiran' || tipe === 'semua'
+  const addKas = tipe === 'kas' || tipe === 'semua'
+  const addKehadiran = tipe === 'kehadiran' || tipe === 'absensi_kehadiran' || tipe === 'semua'
+  const addSiswa = tipe === 'siswa'
+
+  if (addAbsensi) {
+    appendJsonSheet(wb, await buildAbsensiRows(selectedOrgs, range, kelas, nama), 'Absensi', [5, 16, 18, 30, 14, 16, 24, 22, 18])
+  }
+  if (addKas) {
+    appendJsonSheet(wb, await buildKasRows(selectedOrgs, range, kelas, nama), 'Kas', [5, 16, 18, 30, 14, 14, 16, 34, 22])
+  }
+  if (addKehadiran) {
+    appendJsonSheet(wb, await buildKehadiranRows(selectedOrgs, range, kelas, nama), 'Kehadiran', [5, 18, 30, 14, 18, 16, 10, 14, 10, 10, 18])
+  }
+  if (addSiswa) {
+    appendJsonSheet(wb, await buildMemberRows(selectedOrgs, kelas, nama), 'Anggota', [5, 14, 30, 14, 18, 22, 18])
+  }
+
+  await createLog({
+    userId: ctx.userId,
+    userNama: ctx.userNama,
+    aksi: 'CREATE',
+    tabel: 'export',
+    deskripsi: `${ctx.userNama} export ${EXPORT_LABELS[tipe] || tipe} untuk ${selectedOrgs.map(o => ORG_LABELS[o]).join(', ')} periode ${startDate} s/d ${endDate}${kelas ? `, kelas ${kelas}` : ''}${nama ? `, nama "${nama}"` : ''}`,
+    dataBaru: { tipe, orgs: selectedOrgs, startDate, endDate, kelas, nama },
+    ipAddress: getIp(req),
+  })
 
   const output = XLSX.write(wb, { type: 'array', bookType: 'xlsx' })
-  const filename = `export_${tipe}_${new Date().toISOString().split('T')[0]}.xlsx`
+  const filename = `export_${tipe}_${selectedOrgs.join('-')}_${new Date().toISOString().split('T')[0]}.xlsx`
 
   return new NextResponse(output, {
     headers: {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition': `attachment; filename="${filename}"`,
-    }
+      'Cache-Control': 'no-store',
+    },
   })
 }
