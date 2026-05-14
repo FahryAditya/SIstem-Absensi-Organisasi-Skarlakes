@@ -9,7 +9,7 @@ import { isAdministrator } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import {
   CalendarClock, CheckCircle2, Clock, Download, Loader2, Lock, MessageSquareText,
-  Play, Plus, QrCode, RefreshCcw, Save, Send, ShieldCheck, SquarePen, Users, XCircle
+  Play, Plus, QrCode, RefreshCcw, Save, Send, ShieldCheck, SquarePen, Users, XCircle, UserX
 } from 'lucide-react'
 
 type Org = 'osis' | 'mpk'
@@ -505,6 +505,7 @@ export default function WawancaraClient({ user }: Props) {
                 <div className="flex gap-2">
                   {admin && selectedSession.status === 'SCHEDULED' && <button onClick={() => updateSession(selectedSession.id, 'activate')} className="btn-secondary btn-sm"><Play className="w-3.5 h-3.5" />Aktifkan</button>}
                   {admin && ['SCHEDULED', 'ACTIVE'].includes(selectedSession.status) && <button onClick={() => openEdit(selectedSession)} className="btn-secondary btn-sm text-indigo-600"><SquarePen className="w-3.5 h-3.5" />Edit Jadwal</button>}
+                  {admin && <button onClick={() => window.location.href = '/hapus-peserta'} className="btn-secondary btn-sm text-red-600"><UserX className="w-3.5 h-3.5" />Hapus Peserta</button>}
                   {admin && selectedSession.status === 'ACTIVE' && <button onClick={() => setConfirmAction({ id: selectedSession.id, action: 'finish', title: 'Finalisasi hasil?', message: 'Setelah finalisasi, semua data wawancara akan terkunci permanen.' })} className="btn-primary btn-sm"><CheckCircle2 className="w-3.5 h-3.5" />Finalisasi</button>}
                   {admin && ['SCHEDULED', 'ACTIVE'].includes(selectedSession.status) && <button onClick={() => setConfirmAction({ id: selectedSession.id, action: 'cancel', title: 'Batalkan sesi?', message: 'Sesi dibatalkan dan tidak bisa diedit lagi. Buat jadwal baru jika diperlukan.' })} className="btn-secondary btn-sm text-red-600"><XCircle className="w-3.5 h-3.5" />Batal</button>}
                   <button onClick={() => downloadExport(selectedSession.id)} className="btn-secondary btn-sm"><Download className="w-3.5 h-3.5" />Excel</button>
