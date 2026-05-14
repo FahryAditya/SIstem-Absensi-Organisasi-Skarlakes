@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
 import {
   LayoutDashboard, Users, ClipboardList, Building2, UserCog,
-  Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database
+  Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -15,7 +16,7 @@ interface SidebarProps {
   onClose?: () => void
 }
 
-function getNavItems(role: string) {
+function getNavItems(role: string, wawancaraVisible: boolean) {
   const items = [
     { section: 'Utama', links: [
       { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -42,6 +43,9 @@ function getNavItems(role: string) {
   if (role === 'administrator' || role === 'admin_osis_mpk') {
     orgLinks.push({ href: '/organisasi?org=osis', label: 'OSIS', icon: Building2 })
     orgLinks.push({ href: '/organisasi?org=mpk', label: 'MPK', icon: Building2 })
+    if (role === 'administrator' || wawancaraVisible) {
+      orgLinks.push({ href: '/wawancara', label: 'Wawancara OSIS & MPK', icon: MessagesSquare })
+    }
     items.push({ section: 'Organisasi', links: orgLinks })
   }
 
@@ -51,6 +55,7 @@ function getNavItems(role: string) {
 
   if (role === 'administrator') {
     toolLinks.unshift({ href: '/admin', label: 'Kelola User', icon: UserCog })
+    toolLinks.push({ href: '/qr-code', label: 'QR Code Wawancara', icon: QrCode })
     toolLinks.push({ href: '/log', label: 'Log Aktivitas', icon: ScrollText })
     toolLinks.push({ href: '/api/admin/backup', label: 'Backup SQL', icon: Database, target: '_blank' } as any)
   }
@@ -76,7 +81,29 @@ function RoleBadge({ role }: { role: string }) {
 
 export default function Sidebar({ user, mobileOpen, onClose }: SidebarProps) {
   const pathname = usePathname()
-  const navItems = getNavItems(user.role)
+  const [wawancaraVisible, setWawancaraVisible] = useState(user.role === 'administrator')
+  const navItems = getNavItems(user.role, wawancaraVisible)
+
+  useEffect(() => {
+    if (user.role !== 'admin_osis_mpk') return
+    let alive = true
+    async function checkActiveInterview() {
+      if (document.visibilityState !== 'visible') return
+      const res = await fetch('/api/wawancara?activeOnly=1')
+      const json = await res.json().catch(() => ({}))
+      if (alive) setWawancaraVisible((json.data || []).length > 0)
+    }
+    checkActiveInterview()
+    const id = setInterval(checkActiveInterview, 60_000)
+    document.addEventListener('visibilitychange', checkActiveInterview)
+    window.addEventListener('focus', checkActiveInterview)
+    return () => {
+      alive = false
+      clearInterval(id)
+      document.removeEventListener('visibilitychange', checkActiveInterview)
+      window.removeEventListener('focus', checkActiveInterview)
+    }
+  }, [user.role])
 
   const isActive = (href: string) => {
     const base = href.split('?')[0]

@@ -41,6 +41,46 @@ enum AksiLog {
   LOGOUT
 }
 
+enum StatusWawancara {
+  SCHEDULED
+  ACTIVE
+  SELESAI
+  DIBATALKAN
+}
+
+enum StatusAntrian {
+  MENUNGGU
+  WAWANCARA
+  SELESAI_WAWANCARA
+}
+
+enum StatusValidasiScan {
+  SAH
+  SAH_DICURIGAI
+  DITOLAK_VPN
+  TIDAK_SAH
+}
+
+enum StatusIpScan {
+  NORMAL
+  VPN_INDONESIA
+  VPN_LUAR_NEGERI
+  TIDAK_DIKETAHUI
+}
+
+enum HasilWawancara {
+  DITERIMA
+  DITOLAK
+  DIPERTIMBANGKAN
+  LOLOS
+  TIDAK_LOLOS
+}
+
+enum KeteranganWawancara {
+  AKTIF
+  KURANG_AKTIF
+}
+
 // ============================================================
 // TABLE: users
 // ============================================================
@@ -59,6 +99,11 @@ model User {
   siswa_dibuat    Siswa[]         @relation("SiswaCreatedBy")
   log_aktivitas   LogAktivitas[]
   pengeluaran_kas PengeluaranKas[]
+  sesi_wawancara  SesiWawancara[]
+  qr_wawancara    QrWawancara[]
+  penilaian_wawancara HasilWawancaraTable[] @relation("WawancaraAssessedBy")
+  override_wawancara HasilWawancaraTable[] @relation("WawancaraOverriddenBy")
+  chat_wawancara ChatWawancara[]
 
   @@map("users")
 }
@@ -216,4 +261,132 @@ model PengeluaranKas {
   @@index([organisasi_type])
   @@index([tanggal])
   @@map("pengeluaran_kas")
+}
+
+// ============================================================
+// TABLE: sesi_wawancara (kontrol dari Super Admin)
+// ============================================================
+model SesiWawancara {
+  id              Int             @id @default(autoincrement())
+  organisasi_type OrganisasiType  // osis atau mpk
+  status          StatusWawancara @default(SCHEDULED)
+  jadwal_mulai    DateTime?
+  jadwal_selesai  DateTime?
+  finalized_at    DateTime?
+  locked_at       DateTime?
+  created_by      Int
+  created_at      DateTime        @default(now())
+  updated_at      DateTime        @updatedAt
+
+  // Relations
+  creator         User               @relation(fields: [created_by], references: [id])
+  antrian         AntrianWawancara[]
+  chat            ChatWawancara[]
+  qr_codes        QrWawancara[]
+
+  @@index([organisasi_type])
+  @@index([status])
+  @@map("sesi_wawancara")
+}
+
+// ============================================================
+// TABLE: antrian_wawancara (peserta scan QR)
+// ============================================================
+model AntrianWawancara {
+  id              Int            @id @default(autoincrement())
+  sesi_id         Int
+  qr_id           Int?
+  nama            String         @db.VarChar(100)
+  kelas           String         @db.VarChar(20)
+  nomor_antrian   Int
+  status          StatusAntrian  @default(MENUNGGU)
+  scan_token      String?        @db.VarChar(80)
+  ip_address      String?        @db.VarChar(45)
+  ip_country      String?        @db.VarChar(80)
+  ip_isp          String?        @db.VarChar(150)
+  ip_status       StatusIpScan   @default(TIDAK_DIKETAHUI)
+  gps_lat         Float?
+  gps_lng         Float?
+  jarak_meter     Float?
+  status_validasi StatusValidasiScan @default(SAH)
+  alasan_validasi String?        @db.VarChar(255)
+  user_agent      String?        @db.VarChar(255)
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+
+  // Relations
+  sesi            SesiWawancara   @relation(fields: [sesi_id], references: [id], onDelete: Cascade)
+  qr              QrWawancara?    @relation(fields: [qr_id], references: [id])
+  hasil_wawancara HasilWawancaraTable?
+
+  @@unique([sesi_id, nomor_antrian])
+  @@index([qr_id])
+  @@index([status_validasi])
+  @@index([scan_token])
+  @@map("antrian_wawancara")
+}
+
+// ============================================================
+// TABLE: qr_wawancara (token QR absensi wawancara)
+// ============================================================
+model QrWawancara {
+  id          Int      @id @default(autoincrement())
+  sesi_id     Int
+  token       String   @unique @db.VarChar(80)
+  aktif       Boolean  @default(true)
+  valid_from  DateTime @default(now())
+  valid_until DateTime
+  created_by  Int
+  created_at  DateTime @default(now())
+
+  sesi        SesiWawancara @relation(fields: [sesi_id], references: [id], onDelete: Cascade)
+  creator     User          @relation(fields: [created_by], references: [id])
+  antrian     AntrianWawancara[]
+
+  @@index([sesi_id])
+  @@index([valid_until])
+  @@map("qr_wawancara")
+}
+
+// ============================================================
+// TABLE: hasil_wawancara (penilaian)
+// ============================================================
+model HasilWawancaraTable {
+  id             Int            @id @default(autoincrement())
+  antrian_id     Int            @unique
+  interviewer_id Int
+  override_by    Int?
+  keterangan     KeteranganWawancara
+  hasil          HasilWawancara
+  persentase     Float
+  catatan        String?        @db.Text
+  override_alasan String?       @db.Text
+  override_at    DateTime?
+  created_at     DateTime       @default(now())
+  updated_at     DateTime       @updatedAt
+
+  // Relations
+  antrian        AntrianWawancara @relation(fields: [antrian_id], references: [id], onDelete: Cascade)
+  interviewer    User             @relation("WawancaraAssessedBy", fields: [interviewer_id], references: [id])
+  overrider      User?            @relation("WawancaraOverriddenBy", fields: [override_by], references: [id])
+
+  @@map("hasil_wawancara")
+}
+
+// ============================================================
+// TABLE: chat_wawancara (live chat internal saat sesi aktif)
+// ============================================================
+model ChatWawancara {
+  id         Int      @id @default(autoincrement())
+  sesi_id    Int
+  sender_id  Int
+  pesan      String   @db.Text
+  created_at DateTime @default(now())
+
+  sesi       SesiWawancara @relation(fields: [sesi_id], references: [id], onDelete: Cascade)
+  sender     User          @relation(fields: [sender_id], references: [id])
+
+  @@index([sesi_id])
+  @@index([created_at])
+  @@map("chat_wawancara")
 }
