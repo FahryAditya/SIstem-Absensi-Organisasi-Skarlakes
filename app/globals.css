@@ -9,38 +9,38 @@
   html { -webkit-font-smoothing: antialiased; }
   
   :root {
-    /* Default Indigo RGB values */
-    --color-primary-50: 238 242 255;
-    --color-primary-100: 224 231 255;
-    --color-primary-200: 199 210 254;
-    --color-primary-300: 165 180 252;
-    --color-primary-400: 129 140 248;
-    --color-primary-500: 99 102 241;
-    --color-primary-600: 79 70 229;
-    --color-primary-700: 67 56 202;
-    --color-primary-800: 55 48 163;
-    --color-primary-900: 49 46 129;
-    --color-primary-950: 30 27 75;
+    /* Casa Chromatica Purple/Lilac Palette */
+    --color-primary-50: 245 242 248;
+    --color-primary-100: 218 212 223; /* Silver Wisteria */
+    --color-primary-200: 215 197 216; /* Plum Blossom */
+    --color-primary-300: 200 183 208; 
+    --color-primary-400: 186 170 200; /* Iris Mist */
+    --color-primary-500: 161 141 171;
+    --color-primary-600: 136 112 142; /* Dusky Lilac */
+    --color-primary-700: 107 88 112;
+    --color-primary-800: 78 65 90;
+    --color-primary-900: 49 42 68;    /* Midnight Orchid */
+    --color-primary-950: 30 25 45;
 
     /* Backgrounds */
-    --color-bg-50: 248 250 252; /* slate-50 */
+    --color-bg-50: 252 250 253; 
   }
 
   .theme-admin {
-    /* Administrator Theme Colors: Premium Palette */
-    --color-primary-50: 242 248 255; /* Soft Icy Blue */
-    --color-primary-100: 171 210 250; /* Icy Blue */
-    --color-primary-200: 144 178 252;
-    --color-primary-300: 118 146 255; /* Cornflower Blue */
-    --color-primary-400: 89 113 197;
-    --color-primary-500: 61 81 140; /* Dusk Blue */
-    --color-primary-600: 27 44 193;  /* Persian Blue */
-    --color-primary-700: 20 33 145;
-    --color-primary-800: 14 27 104;
-    --color-primary-900: 9 21 64; /* Deep Navy */
-    --color-primary-950: 5 11 32;
+    /* Administrator Theme Colors: Deep Lilac */
+    --color-primary-50: 242 238 245;
+    --color-primary-100: 218 212 223;
+    --color-primary-200: 215 197 216;
+    --color-primary-300: 186 170 200;
+    --color-primary-400: 161 141 171;
+    --color-primary-500: 136 112 142;
+    --color-primary-600: 107 88 112;
+    --color-primary-700: 78 65 90;
+    --color-primary-800: 49 42 68;
+    --color-primary-900: 35 29 50;
+    --color-primary-950: 20 16 30;
 
-    --color-bg-50: 246 250 253; /* F6FAFD background */
+    --color-bg-50: 248 245 250;
   }
 
   body { @apply bg-slate-50 text-slate-800 font-sans; }

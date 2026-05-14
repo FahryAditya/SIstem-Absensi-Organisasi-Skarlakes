@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Wallet, Search, Filter, Loader2, Plus, Minus, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatCurrency, ORG_LABELS, OrgType } from '@/lib/utils'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { SkeletonRow } from '@/components/Skeleton'
 
 interface KasData {
