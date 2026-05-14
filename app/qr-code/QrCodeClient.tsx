@@ -1,11 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import dynamic from 'next/dynamic'
 import toast from 'react-hot-toast'
 import { formatDateTime } from '@/lib/utils'
-import { Download, Loader2, Plus, QrCode, ShieldCheck, TriangleAlert, Trash2, Save } from 'lucide-react'
-import Modal from '@/components/ui/Modal'
-import ConfirmDialog from '@/components/ui/ConfirmDialog'
+import { CheckCircle2, Download, Loader2, Plus, QrCode, ShieldCheck, TriangleAlert, Trash2, Save, X } from 'lucide-react'
+
+const Modal = dynamic(() => import('@/components/ui/Modal'))
+const ConfirmDialog = dynamic(() => import('@/components/ui/ConfirmDialog'))
 
 interface QrItem {
   id: number
@@ -19,20 +21,28 @@ interface QrItem {
   _count: { antrian: number }
 }
 
-export default function QrCodeClient() {
-  const [items, setItems] = useState<QrItem[]>([])
-  const [loading, setLoading] = useState(true)
+interface QrCodeClientProps {
+  baseUrl: string
+  initialItems: QrItem[]
+}
+
+export default function QrCodeClient({ baseUrl, initialItems }: QrCodeClientProps) {
+  const [items, setItems] = useState<QrItem[]>(initialItems)
+  const [loading, setLoading] = useState(false)
   const [creating, setCreating] = useState(false)
   const [createModal, setCreateModal] = useState(false)
   const [fMulai, setFMulai] = useState('')
   const [fSelesai, setFSelesai] = useState('')
   const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [deleteMode, setDeleteMode] = useState(false)
+  const [selectedDeleteId, setSelectedDeleteId] = useState<number | null>(null)
 
   const activeQr = items.find((item) => item.aktif)
   const activeUrl = useMemo(() => {
-    if (typeof window === 'undefined' || !activeQr) return ''
-    return `${window.location.origin}/wawancara/scan?token=${activeQr.token}`
-  }, [activeQr])
+    if (!activeQr) return ''
+    const origin = baseUrl || (typeof window === 'undefined' ? '' : window.location.origin)
+    return origin ? `${origin}/wawancara/scan?token=${activeQr.token}` : ''
+  }, [activeQr, baseUrl])
   const qrImage = activeUrl ? `https://quickchart.io/qr?size=360&text=${encodeURIComponent(activeUrl)}` : ''
 
   const load = useCallback(async () => {
@@ -43,8 +53,6 @@ export default function QrCodeClient() {
     else setItems(json.data || [])
     setLoading(false)
   }, [])
-
-  useEffect(() => { load() }, [load])
 
   function datetimeLocalValue(date: Date) {
     const d = new Date(date)
@@ -88,6 +96,8 @@ export default function QrCodeClient() {
     else {
       toast.success('QR berhasil dihapus')
       setDeleteId(null)
+      setSelectedDeleteId(null)
+      setDeleteMode(false)
       load()
     }
   }
@@ -131,7 +141,7 @@ export default function QrCodeClient() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-[380px_1fr] gap-6 items-start">
               <div className="rounded-xl border border-slate-200 bg-white p-4">
-                <img src={qrImage} alt="QR absensi wawancara" className="w-full aspect-square object-contain" />
+                <img src={qrImage} alt="QR absensi wawancara" width={360} height={360} decoding="async" fetchPriority="high" className="w-full aspect-square object-contain" />
               </div>
               <div className="space-y-4">
                 <div>
@@ -173,27 +183,67 @@ export default function QrCodeClient() {
         </div>
 
         <div className="card overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100 text-sm font-bold text-slate-800">Riwayat QR</div>
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3">
+            <div className="text-sm font-bold text-slate-800">Riwayat QR</div>
+            {items.length > 0 && (
+              <button
+                onClick={() => {
+                  setDeleteMode((value) => !value)
+                  setSelectedDeleteId(null)
+                }}
+                className={deleteMode ? 'btn-secondary btn-sm text-slate-600' : 'btn-secondary btn-sm text-red-600'}
+              >
+                {deleteMode ? <X className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
+                {deleteMode ? 'Batal Pilih' : 'Pilih QR'}
+              </button>
+            )}
+          </div>
           <div className="divide-y divide-slate-100">
             {items.length === 0 ? (
               <div className="p-5 text-sm text-slate-400">Belum ada riwayat.</div>
             ) : items.map((item) => (
-              <div key={item.id} className="p-4">
+              <div key={item.id} className={`p-4 ${deleteMode && selectedDeleteId === item.id ? 'bg-red-50/50' : ''}`}>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
+                    {deleteMode && (
+                      <button
+                        onClick={() => !item.aktif && setSelectedDeleteId(item.id)}
+                        disabled={item.aktif}
+                        className={`w-7 h-7 rounded-full border flex items-center justify-center transition ${
+                          selectedDeleteId === item.id
+                            ? 'bg-red-600 border-red-600 text-white'
+                            : item.aktif
+                              ? 'bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed'
+                              : 'bg-white border-slate-300 text-transparent hover:border-red-300 hover:bg-red-50'
+                        }`}
+                        title={item.aktif ? 'QR aktif tidak bisa dipilih untuk dihapus' : 'Pilih QR ini'}
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                      </button>
+                    )}
                     <span className={item.aktif ? 'badge bg-green-50 text-green-700 border border-green-200' : 'badge bg-slate-100 text-slate-500 border border-slate-200'}>{item.aktif ? 'Aktif' : 'Nonaktif'}</span>
                     <span className="text-xs text-slate-400">#{item.id}</span>
                   </div>
-                  {!item.aktif && (
+                  {!deleteMode && !item.aktif && (
                     <button onClick={() => setDeleteId(item.id)} className="btn-icon text-red-500 hover:bg-red-50">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   )}
                 </div>
                 <div className="text-xs text-slate-500 mt-2">Berlaku: {formatDateTime(item.valid_from)} - {formatDateTime(item.valid_until)}</div>
+                {deleteMode && item.aktif && <div className="text-xs text-slate-400 mt-1">QR aktif tidak bisa dipilih untuk dihapus.</div>}
               </div>
             ))}
           </div>
+          {deleteMode && (
+            <div className="px-5 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-2">
+              <button onClick={() => { setDeleteMode(false); setSelectedDeleteId(null) }} className="btn-secondary btn-sm">Batal</button>
+              <button onClick={() => selectedDeleteId && setDeleteId(selectedDeleteId)} disabled={!selectedDeleteId} className="btn-danger btn-sm">
+                <Trash2 className="w-3.5 h-3.5" />
+                Hapus QR Terpilih
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
