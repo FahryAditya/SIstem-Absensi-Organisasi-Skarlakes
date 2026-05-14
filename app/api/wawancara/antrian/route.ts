@@ -189,3 +189,27 @@ export async function PATCH(req: NextRequest) {
   const data = await prisma.antrianWawancara.update({ where: { id }, data: { status } })
   return NextResponse.json({ data })
 }
+
+export async function DELETE(req: NextRequest) {
+  const ctx = getCtx(req)
+  if (ctx.userRole !== 'administrator') {
+    return NextResponse.json({ error: 'Akses ditolak. Hanya administrator.' }, { status: 403 })
+  }
+
+  const url = new URL(req.url)
+  const idsParam = url.searchParams.get('ids')
+  if (!idsParam) {
+    return NextResponse.json({ error: 'Parameter ids tidak ditemukan' }, { status: 400 })
+  }
+
+  const ids = idsParam.split(',').map(id => parseInt(id)).filter(id => !isNaN(id))
+  if (ids.length === 0) {
+    return NextResponse.json({ error: 'Daftar ID tidak valid' }, { status: 400 })
+  }
+
+  const result = await prisma.antrianWawancara.deleteMany({
+    where: { id: { in: ids } },
+  })
+
+  return NextResponse.json({ success: true, count: result.count })
+}

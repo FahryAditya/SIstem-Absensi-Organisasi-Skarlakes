@@ -66,6 +66,10 @@ export default function HapusPesertaClient({ user }: Props) {
   const [searchQuery, setSearchQuery] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<AntrianItem | null>(null)
+  
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [bulkDeleting, setBulkDeleting] = useState(false)
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -136,9 +140,48 @@ export default function HapusPesertaClient({ user }: Props) {
   }
 
   function canDelete(item: AntrianItem): boolean {
-    if (!['SCHEDULED', 'ACTIVE'].includes(item.sesi_status)) return false
     if (item.status === 'WAWANCARA') return false
     return true
+  }
+
+  async function handleBulkDelete() {
+    if (selectedIds.length === 0) return
+    setBulkDeleting(true)
+    try {
+      const res = await fetch(`/api/wawancara/antrian?ids=${selectedIds.join(',')}`, {
+        method: 'DELETE',
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        throw new Error(json.error || 'Gagal menghapus peserta terpilih')
+      }
+      toast.success(`${selectedIds.length} peserta berhasil dihapus`)
+      clearJsonCache()
+      setSelectedIds([])
+      setBulkDeleteConfirmOpen(false)
+      load()
+    } catch (error: any) {
+      toast.error(error.message)
+    } finally {
+      setBulkDeleting(false)
+    }
+  }
+
+  function toggleSelectAll() {
+    const deletableFiltered = filtered.filter(canDelete)
+    if (selectedIds.length === deletableFiltered.length && deletableFiltered.length > 0) {
+      setSelectedIds([])
+    } else {
+      setSelectedIds(deletableFiltered.map(item => item.id))
+    }
+  }
+
+  function toggleSelect(id: number) {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter(x => x !== id))
+    } else {
+      setSelectedIds([...selectedIds, id])
+    }
   }
 
   return (
@@ -151,6 +194,13 @@ export default function HapusPesertaClient({ user }: Props) {
             <h2 className="page-title">Hapus Peserta Wawancara</h2>
           </div>
           <p className="page-sub mt-0.5">Hapus peserta dari antrian sesi wawancara OSIS & MPK</p>
+        </div>
+        <div className="flex gap-2">
+          {selectedIds.length > 0 && (
+            <button onClick={() => setBulkDeleteConfirmOpen(true)} className="btn-secondary text-red-600 border-red-200 hover:bg-red-50">
+              <Trash2 className="w-4 h-4" /> Hapus Terpilih ({selectedIds.length})
+            </button>
+          )}
         </div>
       </div>
 
@@ -222,6 +272,15 @@ export default function HapusPesertaClient({ user }: Props) {
             <table className="w-full">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
+                  <th className="th text-xs w-10">
+                    <input 
+                      type="checkbox" 
+                      className="rounded border-slate-300" 
+                      checked={selectedIds.length > 0 && selectedIds.length === filtered.filter(canDelete).length}
+                      onChange={toggleSelectAll}
+                      disabled={filtered.filter(canDelete).length === 0}
+                    />
+                  </th>
                   <th className="th text-xs">No</th>
                   <th className="th text-xs">Kandidat</th>
                   <th className="th text-xs">Kelas</th>
@@ -238,6 +297,18 @@ export default function HapusPesertaClient({ user }: Props) {
                   const deletable = canDelete(item)
                   return (
                     <tr key={item.id} className="hover:bg-slate-50">
+                      <td className="td">
+                        {deletable ? (
+                          <input 
+                            type="checkbox" 
+                            className="rounded border-slate-300"
+                            checked={selectedIds.includes(item.id)}
+                            onChange={() => toggleSelect(item.id)}
+                          />
+                        ) : (
+                          <input type="checkbox" disabled className="rounded border-slate-200 opacity-50" />
+                        )}
+                      </td>
                       <td className="td font-mono text-slate-400 text-xs">#{item.nomor_antrian}</td>
                       <td className="td">
                         <div>
@@ -292,9 +363,7 @@ export default function HapusPesertaClient({ user }: Props) {
                           </button>
                         ) : (
                           <span className="text-xs text-slate-400 italic">
-                            {item.sesi_status !== 'SCHEDULED' && item.sesi_status !== 'ACTIVE'
-                              ? 'Sesi terkunci'
-                              : item.status === 'WAWANCARA'
+                            {item.status === 'WAWANCARA'
                               ? 'Sedang diwawancarai'
                               : 'Tidak dapat dihapus'}
                           </span>
@@ -324,6 +393,18 @@ export default function HapusPesertaClient({ user }: Props) {
         confirmClass="bg-red-600 hover:bg-red-700 text-white"
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <ConfirmDialog
+        open={bulkDeleteConfirmOpen}
+        title="Hapus Peserta Terpilih?"
+        message={`Sebanyak <strong>${selectedIds.length}</strong> peserta akan dihapus permanen dari antrian wawancara beserta hasil wawancaranya. Tindakan ini tidak dapat dibatalkan.`}
+        loading={bulkDeleting}
+        confirmLabel="Ya, Hapus Semua"
+        cancelLabel="Batal"
+        confirmClass="bg-red-600 hover:bg-red-700 text-white"
+        onConfirm={handleBulkDelete}
+        onCancel={() => setBulkDeleteConfirmOpen(false)}
       />
     </div>
   )

@@ -35,9 +35,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   }
 
   // Validation: session must be modifiable (SCHEDULED or ACTIVE)
-  if (!['SCHEDULED', 'ACTIVE'].includes(antrian.sesi.status)) {
-    return NextResponse.json({ error: 'Sesi wawancara sudah terkunci (SELESAI/DIBATALKAN). Tidak dapat menghapus peserta.' }, { status: 400 })
-  }
+  // Removed this check because Administrator is allowed to delete participants from locked sessions
 
   // Validation: cannot delete participant currently being interviewed
   if (antrian.status === 'WAWANCARA') {
