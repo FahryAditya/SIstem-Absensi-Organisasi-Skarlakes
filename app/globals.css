@@ -55,7 +55,7 @@
 @layer components {
   /* Buttons */
   .btn { @apply inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95; }
-  .btn-primary { @apply btn bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-500/20 hover:shadow-md hover:shadow-indigo-500/30 hover:-translate-y-0.5; }
+  .btn-primary { @apply btn bg-[#5317A6] text-white hover:bg-[#3d117a] shadow-sm shadow-[#5317A6]/20 hover:shadow-md hover:shadow-[#5317A6]/30 hover:-translate-y-0.5; }
   .btn-secondary { @apply btn bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 hover:shadow-sm hover:-translate-y-0.5; }
   .btn-danger { @apply btn bg-red-600 text-white hover:bg-red-700 shadow-sm shadow-red-500/20 hover:shadow-md hover:shadow-red-500/30 hover:-translate-y-0.5; }
   .btn-ghost { @apply btn bg-transparent text-slate-600 hover:bg-slate-100 px-2.5 py-1.5; }
@@ -96,7 +96,7 @@
 
   /* Misc */
   .page-header { @apply flex flex-col sm:flex-row sm:items-center gap-3 mb-5; }
-  .page-title { @apply text-xl font-bold text-slate-800 tracking-tight; }
+  .page-title { @apply text-xl font-bold text-[#010440] tracking-tight; }
   .page-sub { @apply text-sm text-slate-500; }
   .divider { @apply border-t border-slate-100; }
   .empty-state { @apply flex flex-col items-center gap-3 py-16 text-slate-400; }

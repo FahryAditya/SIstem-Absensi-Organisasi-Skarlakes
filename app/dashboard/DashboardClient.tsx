@@ -429,8 +429,8 @@ export default function DashboardClient({ user }: Props) {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <h2 className="text-2xl font-black text-slate-800 tracking-tight">Selamat Datang!</h2>
-              <p className="text-indigo-600 font-bold mt-1 text-lg">{user.nama}</p>
+              <h2 className="text-2xl font-black text-[#010440] tracking-tight">Selamat Datang!</h2>
+              <p className="text-[#5317A6] font-bold mt-1 text-lg">{user.nama}</p>
               <p className="text-slate-500 text-sm mt-3 leading-relaxed">
                 Anda masuk sebagai Administrator. Selamat bekerja dan pantau terus perkembangan ekstrakurikuler serta organisasi!
               </p>
