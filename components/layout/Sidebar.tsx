@@ -43,9 +43,15 @@ function getNavItems(role: string, wawancaraVisible: boolean) {
   if (role === 'administrator' || role === 'admin_osis_mpk') {
     orgLinks.push({ href: '/organisasi?org=osis', label: 'OSIS', icon: Building2 })
     orgLinks.push({ href: '/organisasi?org=mpk', label: 'MPK', icon: Building2 })
-    if (role === 'administrator' || wawancaraVisible) {
-      orgLinks.push({ href: '/wawancara', label: 'Wawancara OSIS & MPK', icon: MessagesSquare })
-    }
+    
+    const isWawancaraActive = role === 'administrator' || wawancaraVisible
+    orgLinks.push({ 
+      href: isWawancaraActive ? '/wawancara' : '#', 
+      label: 'Wawancara OSIS & MPK', 
+      icon: MessagesSquare,
+      status: !isWawancaraActive ? 'nonaktif' : undefined
+    } as any)
+    
     items.push({ section: 'Organisasi', links: orgLinks })
   }
 
@@ -142,17 +148,29 @@ export default function Sidebar({ user, mobileOpen, onClose }: SidebarProps) {
             <div className="nav-section">{section.section}</div>
             {section.links.map(link => {
               const Icon = link.icon
-              const active = isActive(link.href)
+              const isNonaktif = (link as any).status === 'nonaktif'
+              const active = !isNonaktif && isActive(link.href)
               return (
                 <Link
-                  key={link.href}
+                  key={link.label}
                   href={link.href}
-                  onClick={onClose}
+                  onClick={(e) => {
+                    if (isNonaktif) {
+                      e.preventDefault()
+                    } else if (onClose) {
+                      onClose()
+                    }
+                  }}
                   target={(link as any).target}
-                  className={cn('nav-link', active && 'nav-link-active')}
+                  className={cn(
+                    'nav-link', 
+                    active && 'nav-link-active',
+                    isNonaktif && 'opacity-60 cursor-not-allowed hover:bg-transparent'
+                  )}
                 >
-                  <Icon className="w-4 h-4 flex-shrink-0" />
-                  <span className="flex-1 truncate text-[13px]">{link.label}</span>
+                  <Icon className={cn("w-4 h-4 flex-shrink-0", isNonaktif && "text-red-500")} />
+                  <span className={cn("flex-1 truncate text-[13px]", isNonaktif && "text-red-500 font-medium")}>{link.label}</span>
+                  {isNonaktif && <span className="text-[9px] font-bold bg-red-100 text-red-600 px-1.5 py-0.5 rounded">NONAKTIF</span>}
                   {active && <ChevronRight className="w-3 h-3 opacity-40" />}
                 </Link>
               )
