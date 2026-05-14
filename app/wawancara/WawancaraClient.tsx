@@ -502,7 +502,7 @@ export default function WawancaraClient({ user }: Props) {
                 </div>
               </div>
               {selectedSession && (
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {admin && selectedSession.status === 'SCHEDULED' && <button onClick={() => updateSession(selectedSession.id, 'activate')} className="btn-secondary btn-sm"><Play className="w-3.5 h-3.5" />Aktifkan</button>}
                   {admin && ['SCHEDULED', 'ACTIVE'].includes(selectedSession.status) && <button onClick={() => openEdit(selectedSession)} className="btn-secondary btn-sm text-indigo-600"><SquarePen className="w-3.5 h-3.5" />Edit Jadwal</button>}
                   {admin && <button onClick={() => window.location.href = '/hapus-peserta'} className="btn-secondary btn-sm text-red-600"><UserX className="w-3.5 h-3.5" />Hapus Peserta</button>}

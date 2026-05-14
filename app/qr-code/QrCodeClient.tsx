@@ -223,16 +223,13 @@ export default function QrCodeClient({ baseUrl, initialItems }: QrCodeClientProp
                   <div className="flex items-center gap-2">
                     {deleteMode && (
                       <button
-                        onClick={() => !item.aktif && setSelectedDeleteId(item.id)}
-                        disabled={item.aktif}
+                        onClick={() => setSelectedDeleteId(item.id)}
                         className={`w-7 h-7 rounded-full border flex items-center justify-center transition ${
                           selectedDeleteId === item.id
                             ? 'bg-red-600 border-red-600 text-white'
-                            : item.aktif
-                              ? 'bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed'
-                              : 'bg-white border-slate-300 text-transparent hover:border-red-300 hover:bg-red-50'
+                            : 'bg-white border-slate-300 text-transparent hover:border-red-300 hover:bg-red-50'
                         }`}
-                        title={item.aktif ? 'QR aktif tidak bisa dipilih untuk dihapus' : 'Pilih QR ini'}
+                        title="Pilih QR ini"
                       >
                         <CheckCircle2 className="w-4 h-4" />
                       </button>
@@ -240,14 +237,13 @@ export default function QrCodeClient({ baseUrl, initialItems }: QrCodeClientProp
                     <span className={item.aktif ? 'badge bg-green-50 text-green-700 border border-green-200' : 'badge bg-slate-100 text-slate-500 border border-slate-200'}>{item.aktif ? 'Aktif' : 'Nonaktif'}</span>
                     <span className="text-xs text-slate-400">#{item.id}</span>
                   </div>
-                  {!deleteMode && !item.aktif && (
+                  {!deleteMode && (
                     <button onClick={() => setDeleteId(item.id)} className="btn-icon text-red-500 hover:bg-red-50">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   )}
                 </div>
                 <div className="text-xs text-slate-500 mt-2">Berlaku: {formatDateTime(item.valid_from)} - {formatDateTime(item.valid_until)}</div>
-                {deleteMode && item.aktif && <div className="text-xs text-slate-400 mt-1">QR aktif tidak bisa dipilih untuk dihapus.</div>}
               </div>
             ))}
           </div>
