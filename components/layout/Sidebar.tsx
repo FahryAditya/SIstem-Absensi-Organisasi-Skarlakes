@@ -69,13 +69,13 @@ function getNavItems(role: string) {
 
 function RoleBadge({ role }: { role: string }) {
   const colors: Record<string, string> = {
-    administrator: 'bg-amber-50 border-amber-200 text-amber-700',
-    admin_programming: 'bg-emerald-50 border-emerald-200 text-emerald-700',
-    admin_english: 'bg-blue-50 border-blue-200 text-blue-700',
-    admin_osis_mpk: 'bg-violet-50 border-violet-200 text-violet-700',
+    administrator: 'bg-[#052659] border-[#5482B4]/30 text-white',
+    admin_programming: 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-[#C2E8FF]',
+    admin_english: 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-[#C2E8FF]',
+    admin_osis_mpk: 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-[#C2E8FF]',
   }
   return (
-    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold ${colors[role] || 'bg-slate-50 border-slate-200 text-slate-600'}`}>
+    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold ${colors[role] || 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-[#C2E8FF]'}`}>
       <div className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
       {ROLE_LABELS[role] || role}
     </div>
@@ -94,14 +94,14 @@ export default function Sidebar({ user, mobileOpen, onClose }: SidebarProps) {
   const content = (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Logo */}
-      <div className="px-4 py-5 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
+      <div className="px-4 py-5 border-b border-[#5482B4]/15 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
+          <div className="w-9 h-9 bg-[#052659] rounded-xl flex items-center justify-center shadow-sm shadow-[#052659]/30">
             <GraduationCap className="w-5 h-5 text-white" />
           </div>
           <div>
-            <div className="text-sm font-black text-slate-800 tracking-tight">Sistem Ekstrakurikuler Sekolah</div>
-            <div className="text-[10px] text-slate-400 font-medium">v1.5</div>
+            <div className="text-sm font-black text-white tracking-tight">Sistem Ekstrakurikuler Sekolah</div>
+            <div className="text-[10px] text-[#7EA0C5] font-medium">v1.5</div>
           </div>
         </div>
         {onClose && (
@@ -112,7 +112,7 @@ export default function Sidebar({ user, mobileOpen, onClose }: SidebarProps) {
       </div>
 
       {/* Role badge */}
-      <div className="px-4 py-3 border-b border-slate-100 flex-shrink-0">
+      <div className="px-4 py-3 border-b border-[#5482B4]/15 flex-shrink-0">
         <RoleBadge role={user.role} />
       </div>
 
@@ -155,18 +155,18 @@ export default function Sidebar({ user, mobileOpen, onClose }: SidebarProps) {
       </nav>
 
       {/* User info */}
-      <div className="px-4 py-4 border-t border-slate-100 flex-shrink-0">
+      <div className="px-4 py-4 border-t border-[#5482B4]/15 flex-shrink-0">
         <div className="flex items-center gap-2.5">
           {user.role === 'administrator' ? (
-            <img src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" alt="Admin Profile" className="w-8 h-8 rounded-full object-cover flex-shrink-0 shadow-sm border border-slate-200" />
+            <img src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" alt="Admin Profile" className="w-8 h-8 rounded-full object-cover flex-shrink-0 shadow-sm border border-[#5482B4]/30" />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-black flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-[#052659] flex items-center justify-center text-white text-xs font-black flex-shrink-0">
               {user.nama.charAt(0).toUpperCase()}
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <div className="text-xs font-bold text-slate-800 truncate">{user.nama}</div>
-            <div className="text-[10px] text-slate-400 truncate">{user.email}</div>
+            <div className="text-xs font-bold text-white truncate">{user.nama}</div>
+            <div className="text-[10px] text-[#7EA0C5] truncate">{user.email}</div>
           </div>
         </div>
       </div>
@@ -175,13 +175,13 @@ export default function Sidebar({ user, mobileOpen, onClose }: SidebarProps) {
 
   return (
     <>
-      <aside className="hidden lg:flex flex-col w-60 bg-white border-r border-slate-200 h-screen sticky top-0 shadow-sm">
+      <aside className="hidden lg:flex flex-col w-60 bg-[#011025] border-r border-[#5482B4]/15 h-screen sticky top-0 shadow-sm">
         {content}
       </aside>
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-          <aside className="relative w-64 bg-white h-full shadow-2xl slide-up">
+          <aside className="relative w-64 bg-[#011025] h-full shadow-2xl slide-up">
             {content}
           </aside>
         </div>

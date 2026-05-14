@@ -158,21 +158,21 @@ export default function DashboardClient({ user }: Props) {
       value: stats?.totalSiswa ?? 0,
       suffix: 'siswa',
       icon: Users,
-      color: 'bg-indigo-50 text-indigo-600',
+      color: 'bg-[rgba(84,130,180,0.12)] text-[#5482B4]',
     },
     orgs.includes('osis') && {
       label: 'Anggota OSIS',
       value: stats?.totalOsis ?? 0,
       suffix: 'anggota',
       icon: Users,
-      color: 'bg-violet-50 text-violet-600',
+      color: 'bg-[rgba(84,130,180,0.12)] text-[#5482B4]',
     },
     orgs.includes('mpk') && {
       label: 'Anggota MPK',
       value: stats?.totalMpk ?? 0,
       suffix: 'anggota',
       icon: Users,
-      color: 'bg-orange-50 text-orange-600',
+      color: 'bg-[rgba(84,130,180,0.12)] text-[#5482B4]',
     },
     {
       label: 'Hadir Hari Ini',
@@ -186,14 +186,14 @@ export default function DashboardClient({ user }: Props) {
       value: formatCurrency(stats?.totalKas ?? 0),
       isCurrency: true,
       icon: Wallet,
-      color: 'bg-amber-50 text-amber-600',
+      color: 'bg-[rgba(84,130,180,0.12)] text-[#5482B4]',
     },
     {
       label: 'Total Pemasukan Kas',
       value: formatCurrency(stats?.totalPemasukan ?? 0),
       isCurrency: true,
       icon: PlusCircle,
-      color: 'bg-emerald-50 text-emerald-600',
+      color: 'bg-[rgba(84,130,180,0.12)] text-[#5482B4]',
     },
     {
       label: 'Total Pengeluaran Kas',
@@ -207,12 +207,12 @@ export default function DashboardClient({ user }: Props) {
   return (
     <div className="space-y-6 max-w-7xl">
       {/* Welcome banner */}
-      <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-2xl p-6 text-white relative overflow-hidden">
+      <div className="bg-gradient-to-r from-[#052659] to-[#5482B4] rounded-2xl p-6 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-full opacity-10"
           style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
         <div className="relative">
           <div className="block w-full">
-            <TextType as="p" text={`${greeting}, 👋`} className="text-indigo-200 text-sm font-medium" typingSpeed={40} loop={false} showCursor={false} />
+            <TextType as="p" text={`${greeting}, 👋`} className="text-[#C2E8FF] text-sm font-medium" typingSpeed={40} loop={false} showCursor={false} />
           </div>
           <div className="block w-full">
             <TextType as="h2" text={user.nama} className="text-2xl font-black mt-0.5" typingSpeed={60} initialDelay={600} loop={false} cursorClassName="text-white opacity-70" />
@@ -221,7 +221,7 @@ export default function DashboardClient({ user }: Props) {
             <span className="text-xs font-semibold bg-white/20 px-2.5 py-1 rounded-full">
               {ROLE_LABELS[user.role] || user.role}
             </span>
-            <span className="text-xs text-indigo-300 flex items-center gap-1">
+            <span className="text-xs text-[#C2E8FF] flex items-center gap-1">
               <Clock className="w-3 h-3" />
               {formatDate(now, 'EEEE, dd MMMM yyyy')}
             </span>
@@ -246,11 +246,11 @@ export default function DashboardClient({ user }: Props) {
               <s.icon className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs text-slate-500 font-semibold leading-tight">{s.label}</div>
-              <div className="text-xl font-black text-slate-800 mt-1 font-mono leading-none">
+              <div className="text-xs text-[#7EA0C5] font-semibold leading-tight">{s.label}</div>
+              <div className="text-xl font-black text-[#011025] mt-1 font-mono leading-none">
                 {s.isCurrency ? s.value : `${s.value}`}
               </div>
-              {s.suffix && <div className="text-[10px] text-slate-400 mt-0.5">{s.suffix}</div>}
+              {s.suffix && <div className="text-[10px] text-[#7EA0C5] mt-0.5">{s.suffix}</div>}
             </div>
           </div>
         ))}
@@ -260,8 +260,8 @@ export default function DashboardClient({ user }: Props) {
       {orgs.length > 0 && (
         <div className="card p-5">
           <div className="flex items-center gap-2 mb-4">
-            <PlusCircle className="w-5 h-5 text-indigo-500" />
-            <h3 className="text-base font-bold text-slate-800">Quick Add / Import Anggota</h3>
+            <PlusCircle className="w-5 h-5 text-[#5482B4]" />
+            <h3 className="text-base font-bold text-[#011025]">Quick Add / Import Anggota</h3>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -297,12 +297,12 @@ export default function DashboardClient({ user }: Props) {
             </form>
 
             {/* Bulk Import */}
-            <div className="flex flex-col justify-center space-y-4 border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-6">
+            <div className="flex flex-col justify-center space-y-4 border-t md:border-t-0 md:border-l border-[rgba(84,130,180,0.15)] pt-4 md:pt-0 md:pl-6">
               <div>
-                <h4 className="text-sm font-bold text-slate-700 mb-1">Import Massal (CSV/Excel)</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
+                <h4 className="text-sm font-bold text-[#011025] mb-1">Import Massal (CSV/Excel)</h4>
+                <p className="text-xs text-[#7EA0C5] leading-relaxed">
                   Upload file <b>.xlsx</b> atau <b>.csv</b>. Pastikan baris pertama memiliki header: <br/>
-                  <code className="text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded">Nama</code>, <code className="text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded">Kelas</code>, <code className="text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded">NIS</code>{(quickOrg === 'osis' || quickOrg === 'mpk') && <>, <code className="text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded">Jabatan</code></>}.
+                  <code className="text-[#052659] bg-[#C2E8FF] px-1 py-0.5 rounded">Nama</code>, <code className="text-[#052659] bg-[#C2E8FF] px-1 py-0.5 rounded">Kelas</code>, <code className="text-[#052659] bg-[#C2E8FF] px-1 py-0.5 rounded">NIS</code>{(quickOrg === 'osis' || quickOrg === 'mpk') && <>, <code className="text-[#052659] bg-[#C2E8FF] px-1 py-0.5 rounded">Jabatan</code></>}.
                 </p>
               </div>
               <input
@@ -321,7 +321,7 @@ export default function DashboardClient({ user }: Props) {
                 {quickLoading ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Memproses...</>
                 ) : (
-                  <><UploadCloud className="w-5 h-5 text-slate-400" /> Pilih File Excel/CSV</>
+                  <><UploadCloud className="w-5 h-5 text-[#5482B4]" /> Pilih File Excel/CSV</>
                 )}
               </button>
             </div>
@@ -334,8 +334,8 @@ export default function DashboardClient({ user }: Props) {
         {/* Kehadiran mingguan */}
         <div className="card p-5">
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-4 h-4 text-indigo-500" />
-            <h3 className="text-sm font-bold text-slate-700">Kehadiran 7 Hari Terakhir</h3>
+            <TrendingUp className="w-4 h-4 text-[#5482B4]" />
+            <h3 className="text-sm font-bold text-[#011025]">Kehadiran 7 Hari Terakhir</h3>
           </div>
           {stats?.kehadiranMingguan && stats.kehadiranMingguan.some(d => d.hadir + d.tidak_hadir > 0) ? (
             <ResponsiveContainer width="100%" height={200}>
@@ -345,7 +345,7 @@ export default function DashboardClient({ user }: Props) {
                 <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,.08)' }} />
                 <Legend iconType="circle" iconSize={7} wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="hadir" name="Hadir" fill="#6366f1" radius={[3,3,0,0]} />
+                <Bar dataKey="hadir" name="Hadir" fill="#5482B4" radius={[3,3,0,0]} />
                 <Bar dataKey="tidak_hadir" name="Tidak Hadir" fill="#fca5a5" radius={[3,3,0,0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -359,16 +359,16 @@ export default function DashboardClient({ user }: Props) {
         {/* Kas per bulan */}
         <div className="card p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Wallet className="w-4 h-4 text-amber-500" />
-            <h3 className="text-sm font-bold text-slate-700">Uang Kas 6 Bulan Terakhir</h3>
+            <Wallet className="w-4 h-4 text-[#5482B4]" />
+            <h3 className="text-sm font-bold text-[#011025]">Uang Kas 6 Bulan Terakhir</h3>
           </div>
           {stats?.kasPerBulan && stats.kasPerBulan.some(d => d.total > 0) ? (
             <ResponsiveContainer width="100%" height={200}>
               <AreaChart data={stats.kasPerBulan}>
                 <defs>
                   <linearGradient id="kasGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#5482B4" stopOpacity={0.18} />
+                    <stop offset="95%" stopColor="#5482B4" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -377,8 +377,8 @@ export default function DashboardClient({ user }: Props) {
                   tickFormatter={v => v >= 1000 ? `${v/1000}k` : v} />
                 <Tooltip formatter={(v: number) => [formatCurrency(v), 'Total Kas']}
                   contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }} />
-                <Area type="monotone" dataKey="total" stroke="#f59e0b" strokeWidth={2.5}
-                  fill="url(#kasGrad)" dot={{ r: 4, fill: '#f59e0b', strokeWidth: 0 }} />
+                <Area type="monotone" dataKey="total" stroke="#5482B4" strokeWidth={2.5}
+                  fill="url(#kasGrad)" dot={{ r: 4, fill: '#5482B4', strokeWidth: 0 }} />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
@@ -394,10 +394,10 @@ export default function DashboardClient({ user }: Props) {
         <div className="card p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-slate-500" />
-              <h3 className="text-sm font-bold text-slate-700">Aktivitas Terbaru</h3>
+              <Activity className="w-4 h-4 text-[#5482B4]" />
+              <h3 className="text-sm font-bold text-[#011025]">Aktivitas Terbaru</h3>
             </div>
-            <a href="/log" className="text-xs font-semibold text-indigo-600 hover:underline">Lihat semua →</a>
+            <a href="/log" className="text-xs font-semibold text-[#052659] hover:underline">Lihat semua →</a>
           </div>
           <div className="space-y-2">
             {stats.recentLog.map(log => (
@@ -425,7 +425,7 @@ export default function DashboardClient({ user }: Props) {
             >
               <X className="w-5 h-5" />
             </button>
-            <div className="h-32 bg-gradient-to-br from-indigo-500 to-purple-600 relative">
+            <div className="h-32 bg-gradient-to-br from-[#052659] to-[#5482B4] relative">
               <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, white 2px, transparent 2px)', backgroundSize: '20px 20px' }}></div>
             </div>
             <div className="px-6 pb-8 pt-0 text-center relative">
@@ -437,17 +437,17 @@ export default function DashboardClient({ user }: Props) {
                 />
               </div>
               <div className="block w-full">
-                <TextType as="h2" text={`${greeting}, 👋`} className="text-2xl font-black text-[#010440] tracking-tight" typingSpeed={50} loop={false} showCursor={false} />
+                <TextType as="h2" text={`${greeting}, 👋`} className="text-2xl font-black text-[#011025] tracking-tight" typingSpeed={50} loop={false} showCursor={false} />
               </div>
               <div className="block w-full">
-                <TextType as="p" text={user.nama} className="text-[#5317A6] font-bold mt-1 text-lg" typingSpeed={60} initialDelay={800} loop={false} cursorClassName="text-[#5317A6]" />
+                <TextType as="p" text={user.nama} className="text-[#052659] font-bold mt-1 text-lg" typingSpeed={60} initialDelay={800} loop={false} cursorClassName="text-[#052659]" />
               </div>
               <p className="text-slate-500 text-sm mt-3 leading-relaxed">
                 Anda masuk sebagai Administrator. Selamat bekerja dan pantau terus perkembangan ekstrakurikuler serta organisasi!
               </p>
               <button 
                 onClick={() => setShowWelcomeModal(false)}
-                className="mt-6 w-full py-3 px-4 bg-[#5317A6] hover:bg-[#3d117a] text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98]"
+                className="mt-6 w-full py-3 px-4 bg-[#052659] hover:bg-[#011025] text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98]"
               >
                 Mulai Bekerja 🚀
               </button>

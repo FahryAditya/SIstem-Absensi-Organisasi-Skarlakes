@@ -33,15 +33,15 @@ export default function Table<T>({
   const getKey = (item: T, i: number) => rowKey ? rowKey(item) : i
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <div className="overflow-hidden rounded-xl border border-[rgba(84,130,180,0.15)] bg-white">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200">
+            <tr className="bg-[#F4F8FC] border-b border-[rgba(84,130,180,0.15)]">
               {selectable && (
                 <th className="th w-10 text-center px-4">
                   <input type="checkbox" 
-                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    className="w-4 h-4 rounded border-[#5482B4]/30 text-[#052659] focus:ring-[#5482B4] cursor-pointer"
                     checked={data.length > 0 && selectedKeys?.length === data.length}
                     onChange={(e) => {
                       if (onSelectionChange) {
@@ -59,11 +59,11 @@ export default function Table<T>({
           <tbody>
             {loading ? (
               Array.from({ length: 6 }).map((_, i) => (
-                <tr key={i} className="border-b border-slate-100">
+                <tr key={i} className="border-b border-[rgba(84,130,180,0.15)]">
                   {selectable && <td className="td w-10"></td>}
                   {columns.map(col => (
                     <td key={col.key} className="td">
-                      <div className="h-4 bg-slate-200 rounded animate-pulse" style={{ width: `${50 + Math.random() * 40}%` }} />
+                      <div className="h-4 bg-[rgba(84,130,180,0.12)] rounded animate-pulse" style={{ width: `${50 + Math.random() * 40}%` }} />
                     </td>
                   ))}
                 </tr>
@@ -81,11 +81,11 @@ export default function Table<T>({
               data.map((item, i) => {
                 const key = getKey(item, i)
                 return (
-                  <tr key={key} className={cn('tr', selectedKeys?.includes(key) && 'bg-indigo-50/50')}>
+                  <tr key={key} className={cn('tr', selectedKeys?.includes(key) && 'bg-[rgba(84,130,180,0.12)]')}>
                     {selectable && (
                       <td className="td w-10 text-center px-4" onClick={(e) => e.stopPropagation()}>
                         <input type="checkbox"
-                          className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                          className="w-4 h-4 rounded border-[#5482B4]/30 text-[#052659] focus:ring-[#5482B4] cursor-pointer"
                           checked={selectedKeys?.includes(key) || false}
                           onChange={(e) => {
                             if (onSelectionChange && selectedKeys) {
@@ -113,8 +113,8 @@ export default function Table<T>({
 
       {/* Pagination */}
       {(totalPages > 1 || total !== undefined) && onPageChange && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50/50">
-          <span className="text-xs text-slate-500">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-[rgba(84,130,180,0.15)] bg-[#F4F8FC]">
+          <span className="text-xs text-[#7EA0C5]">
             {total !== undefined ? `${total} data` : ''} — Halaman {page} dari {totalPages}
           </span>
           <div className="flex items-center gap-1">
@@ -132,7 +132,7 @@ export default function Table<T>({
                 <button key={p} onClick={() => onPageChange(p)}
                   className={cn(
                     'w-7 h-7 text-xs rounded-lg font-medium transition-colors',
-                    p === page ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-200'
+                    p === page ? 'bg-[#052659] text-white' : 'text-[#7EA0C5] hover:bg-[rgba(126,160,197,0.15)]'
                   )}>
                   {p}
                 </button>
