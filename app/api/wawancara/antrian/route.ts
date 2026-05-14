@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { canAccessMpk, canAccessOsis } from '@/lib/auth'
+import { canAccessMpk, canAccessOsis, getSessionFromRequest } from '@/lib/auth'
 import { z } from 'zod'
 
-function getCtx(req: NextRequest) {
+async function getCtx(req: NextRequest) {
+  const role = req.headers.get('x-user-role')
+  if (role) {
+    return { userRole: role }
+  }
+  const session = await getSessionFromRequest(req)
   return {
-    userRole: req.headers.get('x-user-role') || '',
+    userRole: session?.role || '',
   }
 }
 
@@ -160,7 +165,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const ctx = getCtx(req)
+  const ctx = await getCtx(req)
   const body = await req.json()
   const id = parseInt(body.id || '0')
   const status = body.status as 'MENUNGGU' | 'WAWANCARA' | 'SELESAI_WAWANCARA'
@@ -191,7 +196,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const ctx = getCtx(req)
+  const ctx = await getCtx(req)
   if (ctx.userRole !== 'administrator') {
     return NextResponse.json({ error: 'Akses ditolak. Hanya administrator.' }, { status: 403 })
   }

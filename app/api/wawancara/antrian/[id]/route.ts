@@ -1,20 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { isAdministrator } from '@/lib/auth-shared'
+import { getSessionFromRequest } from '@/lib/auth'
 import { createLog, getIp } from '@/lib/log'
 
 export const dynamic = 'force-dynamic'
 
-function getCtx(req: NextRequest) {
+async function getCtx(req: NextRequest) {
+  const userId = req.headers.get('x-user-id')
+  if (userId) {
+    return {
+      userId: parseInt(userId),
+      userNama: req.headers.get('x-user-nama') || '',
+      userRole: req.headers.get('x-user-role') || '',
+    }
+  }
+  const session = await getSessionFromRequest(req)
   return {
-    userId: parseInt(req.headers.get('x-user-id') || '0'),
-    userNama: req.headers.get('x-user-nama') || '',
-    userRole: req.headers.get('x-user-role') || '',
+    userId: session?.id || 0,
+    userNama: session?.nama || '',
+    userRole: session?.role || '',
   }
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const ctx = getCtx(req)
+  const ctx = await getCtx(req)
 
   if (!isAdministrator(ctx.userRole)) {
     return NextResponse.json({ error: 'Hanya Administrator yang dapat menghapus peserta wawancara' }, { status: 403 })
