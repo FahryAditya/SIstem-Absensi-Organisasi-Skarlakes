@@ -1,12 +1,17 @@
 'use client'
 
-type CacheEntry<T> = {
-  expiresAt: number
-  data?: T
-  promise?: Promise<T>
-}
+import { QueryClient } from '@tanstack/react-query'
 
-const cache = new Map<string, CacheEntry<unknown>>()
+export const clientQueryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+})
 
 interface CachedJsonOptions extends RequestInit {
   ttlMs?: number
@@ -14,29 +19,23 @@ interface CachedJsonOptions extends RequestInit {
 }
 
 export async function fetchJsonCached<T>(key: string, url: string, options: CachedJsonOptions = {}) {
-  const { ttlMs = 30_000, force = false, ...fetchOptions } = options
-  const now = Date.now()
-  const cached = cache.get(key) as CacheEntry<T> | undefined
+  const { ttlMs = 60_000, force = false, ...fetchOptions } = options
+  const queryKey = ['client-json', key]
 
-  if (!force && cached) {
-    if (cached.data !== undefined && cached.expiresAt > now) return cached.data
-    if (cached.promise) return cached.promise
-  }
+  if (force) clientQueryClient.removeQueries({ queryKey, exact: true })
 
-  const promise = fetch(url, fetchOptions).then(async (res) => {
-    const json = await res.json()
-    if (!res.ok) {
-      throw new Error(json?.error || 'Gagal memuat data')
-    }
-    cache.set(key, { data: json, expiresAt: Date.now() + ttlMs })
-    return json as T
-  }).catch((error) => {
-    cache.delete(key)
-    throw error
+  return clientQueryClient.fetchQuery({
+    queryKey,
+    staleTime: ttlMs,
+    queryFn: async () => {
+      const res = await fetch(url, fetchOptions)
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        throw new Error(json?.error || 'Gagal memuat data')
+      }
+      return json as T
+    },
   })
-
-  cache.set(key, { promise, expiresAt: now + ttlMs })
-  return promise
 }
 
 export function fetchJsonCachedUrl<T>(url: string, options: CachedJsonOptions = {}) {
@@ -44,10 +43,11 @@ export function fetchJsonCachedUrl<T>(url: string, options: CachedJsonOptions = 
 }
 
 export function seedJsonCache<T>(key: string, data: T, ttlMs = 30_000) {
-  cache.set(key, { data, expiresAt: Date.now() + ttlMs })
+  clientQueryClient.setQueryData(['client-json', key], data)
+  clientQueryClient.setQueryDefaults(['client-json', key], { staleTime: ttlMs })
 }
 
 export function clearJsonCache(key?: string) {
-  if (key) cache.delete(key)
-  else cache.clear()
+  if (key) clientQueryClient.removeQueries({ queryKey: ['client-json', key], exact: true })
+  else clientQueryClient.removeQueries({ queryKey: ['client-json'] })
 }

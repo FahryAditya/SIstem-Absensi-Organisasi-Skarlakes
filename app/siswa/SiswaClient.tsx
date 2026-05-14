@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import Table from '@/components/ui/Table'
 import Modal from '@/components/ui/Modal'
@@ -24,6 +24,7 @@ const PAGE_SIZE = 15
 
 export default function SiswaClient({ user, defaultOrg }: Props) {
   const [data, setData] = useState<Siswa[]>([])
+  const [allData, setAllData] = useState<Siswa[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [orgFilter, setOrgFilter] = useState<string>(defaultOrg)
@@ -54,21 +55,31 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const params = new URLSearchParams({
-      page: String(page), limit: String(PAGE_SIZE),
-      ...(search && { search }),
-      ...(orgFilter && { ekskul: orgFilter }),
-    })
-    const json = await fetchJsonCachedUrl<{ data?: Siswa[]; total?: number; totalPages?: number }>(`/api/siswa?${params}`)
-    setData(json.data || [])
-    setTotal(json.total || 0)
-    setTotalPages(json.totalPages || 1)
+    const json = await fetchJsonCachedUrl<{ data?: Siswa[] }>('/api/siswa?limit=1000')
+    setAllData(json.data || [])
     setLoading(false)
-  }, [page, search, orgFilter])
+  }, [])
 
   useEffect(() => { load() }, [load])
   useEffect(() => { setPage(1); setSelectedIds([]) }, [search, orgFilter])
   useEffect(() => { setSelectedIds([]) }, [page])
+
+  const filteredData = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return allData.filter((item) => {
+      const matchOrg = !orgFilter || item.ekskul === orgFilter
+      const matchSearch = !q || item.nama.toLowerCase().includes(q) || (item.nis || '').toLowerCase().includes(q)
+      return matchOrg && matchSearch
+    })
+  }, [allData, search, orgFilter])
+
+  useEffect(() => {
+    const pages = Math.max(1, Math.ceil(filteredData.length / PAGE_SIZE))
+    setTotal(filteredData.length)
+    setTotalPages(pages)
+    if (page > pages) setPage(pages)
+    setData(filteredData.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE))
+  }, [filteredData, page])
 
   function openAdd() {
     setEditTarget(null)
