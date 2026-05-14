@@ -424,7 +424,7 @@ export default function DashboardClient({ user }: Props) {
             <div className="px-6 pb-8 pt-0 text-center relative">
               <div className="w-24 h-24 mx-auto -mt-12 mb-4 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white flex items-center justify-center">
                 <img 
-                  src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" 
+                  src="https://uploads.onecompiler.io/43k3cj6jv/44p898awc/WhatsApp%20Image%202026-05-14%20at%2013.14.48%20(1).jpeg" 
                   alt="Administrator" 
                   className="w-full h-full object-cover"
                 />
