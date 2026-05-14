@@ -101,6 +101,7 @@ export default function WawancaraClient({ user }: Props) {
   const [sessionModal, setSessionModal] = useState(false)
   const [resultModal, setResultModal] = useState(false)
   const [overrideModal, setOverrideModal] = useState(false)
+  const [editingSessionId, setEditingSessionId] = useState<number | null>(null)
   const [confirmAction, setConfirmAction] = useState<{ id: number; action: 'finish' | 'cancel'; title: string; message: string } | null>(null)
   const [targetQueue, setTargetQueue] = useState<QueueItem | null>(null)
   const [saving, setSaving] = useState(false)
@@ -191,8 +192,16 @@ export default function WawancaraClient({ user }: Props) {
   }, [loadChat])
 
   function openCreate() {
+    setEditingSessionId(null)
     setFMulai(datetimeLocalValue(new Date().toISOString()))
     setFSelesai('')
+    setSessionModal(true)
+  }
+
+  function openEdit(session: InterviewSession) {
+    setEditingSessionId(session.id)
+    setFMulai(datetimeLocalValue(session.jadwal_mulai))
+    setFSelesai(datetimeLocalValue(session.jadwal_selesai))
     setSessionModal(true)
   }
 
@@ -211,23 +220,27 @@ export default function WawancaraClient({ user }: Props) {
     setResultModal(true)
   }
 
-  async function createSession() {
+  async function saveSession() {
     setSaving(true)
-    const res = await fetch('/api/wawancara', {
-      method: 'POST',
+    const url = '/api/wawancara'
+    const method = editingSessionId ? 'PUT' : 'POST'
+    const body = {
+      ...(editingSessionId && { id: editingSessionId }),
+      jadwal_mulai: fMulai ? new Date(fMulai).toISOString() : null,
+      jadwal_selesai: fSelesai ? new Date(fSelesai).toISOString() : null,
+    }
+    const res = await fetch(url, {
+      method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jadwal_mulai: fMulai ? new Date(fMulai).toISOString() : null,
-        jadwal_selesai: fSelesai ? new Date(fSelesai).toISOString() : null,
-      }),
+      body: JSON.stringify(body),
     })
     const json = await res.json()
     if (!res.ok) {
-      toast.error(json.error || 'Gagal membuat sesi')
+      toast.error(json.error || `Gagal ${editingSessionId ? 'mengubah' : 'membuat'} sesi`)
       setSaving(false)
       return
     }
-    toast.success(json.data.status === 'ACTIVE' ? 'Wawancara aktif' : 'Jadwal wawancara dibuat')
+    toast.success(editingSessionId ? 'Jadwal wawancara diubah' : (json.data.status === 'ACTIVE' ? 'Wawancara aktif' : 'Jadwal wawancara dibuat'))
     setSaving(false)
     setSessionModal(false)
     load(true)
@@ -365,6 +378,7 @@ export default function WawancaraClient({ user }: Props) {
               {selectedSession && (
                 <div className="flex gap-2">
                   {admin && selectedSession.status === 'SCHEDULED' && <button onClick={() => updateSession(selectedSession.id, 'activate')} className="btn-secondary btn-sm"><Play className="w-3.5 h-3.5" />Aktifkan</button>}
+                  {admin && ['SCHEDULED', 'ACTIVE'].includes(selectedSession.status) && <button onClick={() => openEdit(selectedSession)} className="btn-secondary btn-sm text-indigo-600"><SquarePen className="w-3.5 h-3.5" />Edit Jadwal</button>}
                   {admin && selectedSession.status === 'ACTIVE' && <button onClick={() => setConfirmAction({ id: selectedSession.id, action: 'finish', title: 'Finalisasi hasil?', message: 'Setelah finalisasi, semua data wawancara akan terkunci permanen.' })} className="btn-primary btn-sm"><CheckCircle2 className="w-3.5 h-3.5" />Finalisasi</button>}
                   {admin && ['SCHEDULED', 'ACTIVE'].includes(selectedSession.status) && <button onClick={() => setConfirmAction({ id: selectedSession.id, action: 'cancel', title: 'Batalkan sesi?', message: 'Sesi dibatalkan dan tidak bisa diedit lagi. Buat jadwal baru jika diperlukan.' })} className="btn-secondary btn-sm text-red-600"><XCircle className="w-3.5 h-3.5" />Batal</button>}
                   <button onClick={() => downloadExport(selectedSession.id)} className="btn-secondary btn-sm"><Download className="w-3.5 h-3.5" />Excel</button>
@@ -472,8 +486,8 @@ export default function WawancaraClient({ user }: Props) {
         </div>
       </div>
 
-      <Modal open={sessionModal} title="Buat Jadwal Wawancara" onClose={() => setSessionModal(false)} size="md"
-        footer={<div className="flex justify-end gap-2"><button onClick={() => setSessionModal(false)} className="btn-secondary">Batal</button><button onClick={createSession} disabled={saving} className="btn-primary">{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}Simpan</button></div>}>
+      <Modal open={sessionModal} title={editingSessionId ? "Edit Jadwal Wawancara" : "Buat Jadwal Wawancara"} onClose={() => setSessionModal(false)} size="md"
+        footer={<div className="flex justify-end gap-2"><button onClick={() => setSessionModal(false)} className="btn-secondary">Batal</button><button onClick={saveSession} disabled={saving} className="btn-primary">{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}Simpan</button></div>}>
         <div className="space-y-4">
           <div className="form-group"><label className="label">Jam Mulai</label><input type="datetime-local" value={fMulai} onChange={(e) => setFMulai(e.target.value)} className="input" /></div>
           <div className="form-group"><label className="label">Jam Selesai</label><input type="datetime-local" value={fSelesai} onChange={(e) => setFSelesai(e.target.value)} className="input" /></div>
