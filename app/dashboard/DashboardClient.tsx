@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import * as XLSX from 'xlsx'
 import { formatCurrency, formatDate, formatDateTime, ORG_LABELS, OrgType } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
+import TextType from '@/components/TextType'
 import {
   Users, CheckCircle2, Wallet, UserPlus, LogOut, Clock, CalendarDays, PlusCircle, LayoutList, HandCoins, Loader2, UploadCloud, TrendingUp, Activity, X
 } from 'lucide-react'
@@ -208,8 +209,12 @@ export default function DashboardClient({ user }: Props) {
         <div className="absolute top-0 right-0 w-64 h-full opacity-10"
           style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
         <div className="relative">
-          <p className="text-indigo-200 text-sm font-medium">{greeting}, 👋</p>
-          <h2 className="text-2xl font-black mt-0.5">{user.nama}</h2>
+          <div className="block w-full">
+            <TextType as="p" text={`${greeting}, 👋`} className="text-indigo-200 text-sm font-medium" typingSpeed={40} loop={false} showCursor={false} />
+          </div>
+          <div className="block w-full">
+            <TextType as="h2" text={user.nama} className="text-2xl font-black mt-0.5" typingSpeed={60} initialDelay={600} loop={false} cursorClassName="text-white opacity-70" />
+          </div>
           <div className="flex items-center gap-3 mt-2 flex-wrap">
             <span className="text-xs font-semibold bg-white/20 px-2.5 py-1 rounded-full">
               {ROLE_LABELS[user.role] || user.role}
@@ -429,14 +434,18 @@ export default function DashboardClient({ user }: Props) {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <h2 className="text-2xl font-black text-[#010440] tracking-tight">Selamat Datang!</h2>
-              <p className="text-[#5317A6] font-bold mt-1 text-lg">{user.nama}</p>
+              <div className="block w-full">
+                <TextType as="h2" text={`${greeting}, 👋`} className="text-2xl font-black text-[#010440] tracking-tight" typingSpeed={50} loop={false} showCursor={false} />
+              </div>
+              <div className="block w-full">
+                <TextType as="p" text={user.nama} className="text-[#5317A6] font-bold mt-1 text-lg" typingSpeed={60} initialDelay={800} loop={false} cursorClassName="text-[#5317A6]" />
+              </div>
               <p className="text-slate-500 text-sm mt-3 leading-relaxed">
                 Anda masuk sebagai Administrator. Selamat bekerja dan pantau terus perkembangan ekstrakurikuler serta organisasi!
               </p>
               <button 
                 onClick={() => setShowWelcomeModal(false)}
-                className="mt-6 w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98]"
+                className="mt-6 w-full py-3 px-4 bg-[#5317A6] hover:bg-[#3d117a] text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98]"
               >
                 Mulai Bekerja 🚀
               </button>

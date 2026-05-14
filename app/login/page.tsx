@@ -67,7 +67,7 @@ export default function LoginPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#7B4BBF] via-[#5317A6] to-[#7B4BBF] flex items-center justify-center p-4 relative overflow-hidden">
       {/* Decorative background */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/4 -left-32 w-80 h-80 bg-indigo-600/20 rounded-full blur-3xl" />
@@ -82,7 +82,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md relative slide-up">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-2xl shadow-xl shadow-indigo-900/50 mb-4 ring-4 ring-indigo-500/20">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#5317A6] rounded-2xl shadow-xl shadow-[#5317A6]/50 mb-4 ring-4 ring-[#5317A6]/20">
             <GraduationCap className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Sistem Ekstrakurikuler Sekolah</h1>
@@ -165,7 +165,7 @@ export default function LoginPage() {
             </div>
 
             <button type="submit" disabled={loading}
-              className="w-full mt-2 py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-900/40 active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60">
+              className="w-full mt-2 py-3 px-4 bg-[#5317A6] hover:bg-[#3d117a] text-white font-bold rounded-xl transition-all shadow-lg shadow-[#5317A6]/40 active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60">
               {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Memproses...</> : 'Masuk'}
             </button>
           </form>
