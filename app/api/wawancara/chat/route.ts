@@ -15,6 +15,7 @@ function getCtx(req: NextRequest) {
 }
 
 function canAccessInterview(role: string, org: string) {
+  if (role === 'administrator') return true
   if (org === 'osis') return canAccessOsis(role)
   if (org === 'mpk') return canAccessMpk(role)
   return false
