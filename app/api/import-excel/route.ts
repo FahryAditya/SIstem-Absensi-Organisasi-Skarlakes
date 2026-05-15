@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Parse Excel
-    const { XLSX } = await import('xlsx')
+    const XLSX = (await import('xlsx')).default
     const arrayBuffer = await file.arrayBuffer()
     const workbook = XLSX.read(arrayBuffer, { type: 'array' })
     const firstSheet = workbook.SheetNames[0]
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
         nama: String(item.nama).trim(),
         kelas: item.kelas ? String(item.kelas).trim() : '',
         nis: item.nis ? String(item.nis).trim() : '',
-        ekskul: org,
+        ekskul: org as any,
         created_by: ctx.userId,
       }))
 

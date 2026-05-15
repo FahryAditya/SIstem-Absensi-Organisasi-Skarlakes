@@ -61,7 +61,7 @@ export default function ImportClient({ user }: Props) {
 
   const parseExcel = async (f: File) => {
     try {
-      const { XLSX } = await import('xlsx')
+      const XLSX = (await import('xlsx')).default
       const arrayBuffer = await f.arrayBuffer()
       const workbook = XLSX.read(arrayBuffer, { type: 'array' })
       const firstSheet = workbook.SheetNames[0]
