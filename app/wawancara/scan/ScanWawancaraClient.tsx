@@ -22,7 +22,9 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [nama, setNama] = useState('')
-  const [kelas, setKelas] = useState('')
+  const [tingkat, setTingkat] = useState('X')
+  const [jurusan, setJurusan] = useState('AKL 1')
+  const [organisasi, setOrganisasi] = useState<'osis'|'mpk'>('osis')
   const [queueNumber, setQueueNumber] = useState<number | null>(null)
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null)
   const [geoError, setGeoError] = useState('')
@@ -58,8 +60,9 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
   }, [])
 
   async function submit() {
-    if (!nama.trim() || !kelas.trim()) {
-      toast.error('Nama dan kelas wajib diisi')
+    const namaRegex = /^[A-Za-z\s.'-]+$/
+    if (!nama.trim() || !namaRegex.test(nama)) {
+      toast.error('Nama hanya boleh berisi huruf, spasi, titik, dan apostrof')
       return
     }
     if (!coords) {
@@ -67,6 +70,7 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
       return
     }
     setSaving(true)
+    const kelasGabungan = `${tingkat} ${jurusan}`
     const res = await fetch('/api/wawancara/antrian', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -74,7 +78,8 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
         sesi_id: sesiId ? Number(sesiId) : undefined,
         token: token || undefined,
         nama: nama.trim(),
-        kelas: kelas.trim(),
+        kelas: kelasGabungan,
+        organisasi,
         latitude: coords.latitude,
         longitude: coords.longitude,
       }),
@@ -137,9 +142,47 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
               <label className="label">Nama Lengkap *</label>
               <input value={nama} onChange={(e) => setNama(e.target.value)} className="input" placeholder="Isi nama lengkap" autoFocus />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="form-group">
+                <label className="label">Tingkat *</label>
+                <select value={tingkat} onChange={(e) => setTingkat(e.target.value)} className="input">
+                  <option value="X">X</option>
+                  <option value="XI">XI</option>
+                  <option value="XII">XII</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="label">Jurusan *</label>
+                <select value={jurusan} onChange={(e) => setJurusan(e.target.value)} className="input">
+                  <option value="AKL 1">AKL 1</option>
+                  <option value="AKL 2">AKL 2</option>
+                  <option value="BDP 1">BDP 1</option>
+                  <option value="BDP 2">BDP 2</option>
+                  <option value="MPLB 1">MPLB 1</option>
+                  <option value="MPLB 2">MPLB 2</option>
+                  <option value="MPLB 3">MPLB 3</option>
+                  <option value="RPL">RPL</option>
+                  <option value="TKJ 1">TKJ 1</option>
+                  <option value="TKJ 2">TKJ 2</option>
+                </select>
+              </div>
+            </div>
             <div className="form-group">
-              <label className="label">Kelas *</label>
-              <input value={kelas} onChange={(e) => setKelas(e.target.value)} className="input" placeholder="Contoh: X IPA 1" />
+              <label className="label">Pilih Organisasi *</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button 
+                  onClick={() => setOrganisasi('osis')} 
+                  className={`py-3 px-4 rounded-xl border-2 font-bold transition-all text-center ${organisasi === 'osis' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white text-slate-500 hover:border-indigo-200'}`}
+                >
+                  OSIS
+                </button>
+                <button 
+                  onClick={() => setOrganisasi('mpk')} 
+                  className={`py-3 px-4 rounded-xl border-2 font-bold transition-all text-center ${organisasi === 'mpk' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white text-slate-500 hover:border-indigo-200'}`}
+                >
+                  MPK
+                </button>
+              </div>
             </div>
             <button onClick={submit} disabled={saving} className="btn-primary w-full justify-center py-3">
               {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}

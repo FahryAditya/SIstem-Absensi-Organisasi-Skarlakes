@@ -25,6 +25,7 @@ const enqueueSchema = z.object({
   token: z.string().min(1, 'Token QR wajib diisi'),
   nama: z.string().min(1, 'Nama wajib diisi'),
   kelas: z.string().min(1, 'Kelas wajib diisi'),
+  organisasi: z.enum(['osis', 'mpk'], { required_error: 'Pilih organisasi tujuan' }),
   latitude: z.number(),
   longitude: z.number(),
 })
@@ -67,15 +68,19 @@ export async function POST(req: NextRequest) {
   const parsed = enqueueSchema.safeParse(await req.json())
   if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
 
-  const qr = await prisma.qrWawancara.findUnique({ where: { token: parsed.data.token }, include: { sesi: true } })
+  const qr = await prisma.qrWawancara.findUnique({ where: { token: parsed.data.token } })
   const now = new Date()
   if (!qr || !qr.aktif || qr.valid_from > now || qr.valid_until < now) {
     return NextResponse.json({ error: 'QR tidak aktif atau sudah expired' }, { status: 400 })
   }
 
-  const sesi = qr.sesi
-  if (!sesi || sesi.status !== 'ACTIVE') {
-    return NextResponse.json({ error: 'Sesi wawancara tidak aktif' }, { status: 400 })
+  const sesi = await prisma.sesiWawancara.findFirst({
+    where: { status: 'ACTIVE', organisasi_type: parsed.data.organisasi },
+    orderBy: { created_at: 'desc' }
+  })
+  
+  if (!sesi) {
+    return NextResponse.json({ error: `Sesi wawancara ${parsed.data.organisasi.toUpperCase()} tidak aktif` }, { status: 400 })
   }
 
   const nama = parsed.data.nama.trim()

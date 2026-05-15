@@ -23,10 +23,23 @@ export async function GET(req: NextRequest) {
       },
     })
     const now = new Date()
-    if (!qr || !qr.aktif || qr.valid_from > now || qr.valid_until < now || qr.sesi.status !== 'ACTIVE') {
+    if (!qr || !qr.aktif || qr.valid_from > now || qr.valid_until < now) {
       return NextResponse.json({ error: 'QR tidak aktif atau sudah expired' }, { status: 404 })
     }
-    return NextResponse.json({ data: { ...qr.sesi, qr: { id: qr.id, token: qr.token, valid_until: qr.valid_until } } })
+    
+    // Validate if there's any active session at all
+    const activeSessions = await prisma.sesiWawancara.findMany({
+      where: { status: 'ACTIVE' },
+      select: { _count: { select: { antrian: true } } }
+    })
+    
+    if (activeSessions.length === 0) {
+      return NextResponse.json({ error: 'Tidak ada sesi wawancara yang aktif' }, { status: 404 })
+    }
+    
+    const totalAntrian = activeSessions.reduce((acc, curr) => acc + curr._count.antrian, 0)
+    
+    return NextResponse.json({ data: { _count: { antrian: totalAntrian }, qr: { id: qr.id, token: qr.token, valid_until: qr.valid_until } } })
   }
 
   if (!id) return NextResponse.json({ error: 'Sesi tidak valid' }, { status: 400 })
