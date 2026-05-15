@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import { Loader2, MessageSquareText, Send, UserRoundCheck } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 interface Props {
   sesiId: string
@@ -98,10 +99,15 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
 
   return (
     <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden">
-        <div className="p-6 border-b border-slate-100">
+      <motion.div 
+        initial={{ y: 30, opacity: 0 }} 
+        animate={{ y: 0, opacity: 1 }} 
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-md bg-white border border-slate-200/60 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden"
+      >
+        <div className="p-6 border-b border-slate-100/50 bg-white/50 backdrop-blur-sm">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-indigo-600 flex items-center justify-center text-white">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-inner shadow-white/20">
               <MessageSquareText className="w-6 h-6" />
             </div>
             <div>
@@ -129,13 +135,19 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
             <p className="text-sm text-slate-500 mt-4">Tunggu sampai nama Anda dipanggil oleh admin OSIS & MPK.</p>
           </div>
         ) : (
-          <div className="p-6 space-y-4">
-            <div className="rounded-xl bg-indigo-50 border border-indigo-100 p-4">
-              <div className="text-xs font-bold text-indigo-500 uppercase tracking-widest">Sesi Aktif</div>
-              <div className="text-lg font-black text-indigo-900 mt-1">OSIS & MPK</div>
-              <div className="text-xs text-indigo-700 mt-1">Antrian saat ini: {session._count.antrian} peserta</div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 space-y-4">
+            <div className="rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100/60 p-5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-200/40 to-purple-200/40 blur-3xl -mr-10 -mt-10 rounded-full" />
+              <div className="relative">
+                <div className="text-[10px] font-extrabold text-indigo-600 uppercase tracking-widest bg-indigo-100/50 inline-block px-2 py-0.5 rounded-md mb-2">Sesi Aktif</div>
+                <div className="text-xl font-black text-slate-900 mt-1">OSIS & MPK</div>
+                <div className="text-xs font-medium text-slate-500 mt-1 flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  Antrian saat ini: <span className="font-bold text-slate-700">{session._count.antrian}</span> peserta
+                </div>
+              </div>
             </div>
-            <div className={`rounded-xl border p-3 text-xs ${coords ? 'bg-green-50 border-green-200 text-green-700' : 'bg-amber-50 border-amber-200 text-amber-700'}`}>
+            <div className={`rounded-xl border p-3 text-xs flex items-start gap-2 ${coords ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-amber-50 border-amber-100 text-amber-700'}`}>
               {coords ? 'GPS terbaca. Sistem akan validasi jarak dari sekolah saat submit.' : (geoError || 'Membaca lokasi GPS...')}
             </div>
             <div className="form-group">
@@ -172,25 +184,25 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
               <div className="grid grid-cols-2 gap-3">
                 <button 
                   onClick={() => setOrganisasi('osis')} 
-                  className={`py-3 px-4 rounded-xl border-2 font-bold transition-all text-center ${organisasi === 'osis' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white text-slate-500 hover:border-indigo-200'}`}
+                  className={`py-3 px-4 rounded-xl border-2 font-bold transition-all text-center ${organisasi === 'osis' ? 'border-transparent bg-gradient-to-r from-indigo-500 to-blue-500 text-white shadow-md transform scale-[1.02]' : 'border-slate-200 bg-white text-slate-500 hover:border-indigo-200 hover:bg-slate-50'}`}
                 >
                   OSIS
                 </button>
                 <button 
                   onClick={() => setOrganisasi('mpk')} 
-                  className={`py-3 px-4 rounded-xl border-2 font-bold transition-all text-center ${organisasi === 'mpk' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white text-slate-500 hover:border-indigo-200'}`}
+                  className={`py-3 px-4 rounded-xl border-2 font-bold transition-all text-center ${organisasi === 'mpk' ? 'border-transparent bg-gradient-to-r from-indigo-500 to-blue-500 text-white shadow-md transform scale-[1.02]' : 'border-slate-200 bg-white text-slate-500 hover:border-indigo-200 hover:bg-slate-50'}`}
                 >
                   MPK
                 </button>
               </div>
             </div>
-            <button onClick={submit} disabled={saving} className="btn-primary w-full justify-center py-3">
+            <button onClick={submit} disabled={saving} className="btn-primary w-full justify-center py-3.5 bg-gradient-to-r from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700 shadow-lg mt-2">
               {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
               Masuk Antrian
             </button>
-          </div>
+          </motion.div>
         )}
-      </div>
+      </motion.div>
     </main>
   )
 }

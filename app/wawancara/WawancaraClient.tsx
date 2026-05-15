@@ -11,6 +11,7 @@ import {
   CalendarClock, CheckCircle2, Clock, Download, Loader2, Lock, MessageSquareText,
   Play, Plus, QrCode, RefreshCcw, Save, Send, ShieldCheck, SquarePen, Users, XCircle, UserX
 } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 type Org = 'osis' | 'mpk'
 type SessionStatus = 'SCHEDULED' | 'ACTIVE' | 'SELESAI' | 'DIBATALKAN'
@@ -506,7 +507,7 @@ export default function WawancaraClient({ user }: Props) {
                   {admin && selectedSession.status === 'SCHEDULED' && <button onClick={() => updateSession(selectedSession.id, 'activate')} className="btn-secondary btn-sm"><Play className="w-3.5 h-3.5" />Aktifkan</button>}
                   {admin && ['SCHEDULED', 'ACTIVE'].includes(selectedSession.status) && <button onClick={() => openEdit(selectedSession)} className="btn-secondary btn-sm text-indigo-600"><SquarePen className="w-3.5 h-3.5" />Edit Jadwal</button>}
                   {admin && <button onClick={() => window.location.href = '/hapus-peserta'} className="btn-secondary btn-sm text-red-600"><UserX className="w-3.5 h-3.5" />Hapus Peserta</button>}
-                  {admin && selectedSession.status === 'ACTIVE' && <button onClick={() => setConfirmAction({ id: selectedSession.id, action: 'finish', title: 'Finalisasi hasil?', message: 'Setelah finalisasi, semua data wawancara akan terkunci permanen.' })} className="btn-primary btn-sm"><CheckCircle2 className="w-3.5 h-3.5" />Finalisasi</button>}
+                  {admin && selectedSession.status === 'ACTIVE' && <button onClick={() => setConfirmAction({ id: selectedSession.id, action: 'finish', title: 'Finalisasi hasil?', message: 'Setelah finalisasi, semua data wawancara akan terkunci permanen.' })} className="btn-primary btn-sm bg-gradient-to-r from-slate-900 to-slate-800 shadow-md hover:shadow-lg"><CheckCircle2 className="w-3.5 h-3.5" />Finalisasi</button>}
                   {admin && ['SCHEDULED', 'ACTIVE'].includes(selectedSession.status) && <button onClick={() => setConfirmAction({ id: selectedSession.id, action: 'cancel', title: 'Batalkan sesi?', message: 'Sesi dibatalkan dan tidak bisa diedit lagi. Buat jadwal baru jika diperlukan.' })} className="btn-secondary btn-sm text-red-600"><XCircle className="w-3.5 h-3.5" />Batal</button>}
                   <button onClick={() => downloadExport(selectedSession.id)} className="btn-secondary btn-sm"><Download className="w-3.5 h-3.5" />Excel</button>
                 </div>
@@ -545,10 +546,16 @@ export default function WawancaraClient({ user }: Props) {
                 <table className="w-full">
                   <thead><tr className="bg-slate-50 border-b border-slate-200"><th className="th">No</th><th className="th">Kandidat</th><th className="th">Ekskul</th><th className="th">Status</th><th className="th">Validasi</th><th className="th">Hasil</th><th className="th">Persentase</th><th className="th">Catatan</th><th className="th"></th></tr></thead>
                   <tbody className="divide-y divide-slate-100">
-                    {queue.map((q) => {
+                    {queue.map((q, index) => {
                       const notes = noteFor(q)
                       return (
-                      <tr key={q.id} className="hover:bg-slate-50">
+                      <motion.tr 
+                        key={q.id} 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.03, duration: 0.2 }}
+                        className="hover:bg-slate-50/80 transition-colors group"
+                      >
                         <td className="td font-mono text-slate-400">#{q.nomor_antrian}</td>
                         <td className="td">
                           <div className="flex items-start justify-between gap-3 min-w-72">
@@ -600,7 +607,7 @@ export default function WawancaraClient({ user }: Props) {
                             </div>
                           ) : <span className="text-xs text-slate-400">Terkunci</span>}
                         </td>
-                      </tr>
+                      </motion.tr>
                     )})}
                   </tbody>
                 </table>
