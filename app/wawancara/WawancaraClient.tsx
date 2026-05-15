@@ -102,8 +102,8 @@ const resultLabel = {
 }
 
 const orgLabelMap: Record<Org, string> = {
-  osis: 'OSIS',
-  mpk: 'MPK',
+  osis: 'OSIS & MPK',
+  mpk: 'MPK (Legacy)',
 }
 
 const validationLabel: Record<ScanValidation, string> = {
@@ -567,11 +567,9 @@ export default function WawancaraClient({ user }: Props) {
             </div>
 
             <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/60 grid grid-cols-1 sm:grid-cols-4 gap-2">
-              <select value={org} onChange={(e) => setOrg(e.target.value as 'all' | Org)} className="input py-2">
-                <option value="all">Semua Ekskul</option>
-                <option value="osis">OSIS</option>
-                <option value="mpk">MPK</option>
-              </select>
+              <div className="flex items-center px-3 text-xs font-bold text-slate-500 bg-white border border-slate-200 rounded-xl">
+                Organisasi: OSIS & MPK
+              </div>
               <select value={hasilFilter} onChange={(e) => setHasilFilter(e.target.value)} className="input py-2">
                 <option value="">Semua Hasil</option>
                 <option value="LOLOS">Lolos</option>
@@ -734,7 +732,10 @@ export default function WawancaraClient({ user }: Props) {
       <Modal open={sessionModal} title={editingSessionId ? "Edit Jadwal Wawancara" : "Buat Jadwal Wawancara"} onClose={() => setSessionModal(false)} size="md"
         footer={<div className="flex justify-end gap-2"><button onClick={() => setSessionModal(false)} className="btn-secondary">Batal</button><button onClick={saveSession} disabled={saving} className="btn-primary">{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}Simpan</button></div>}>
         <div className="space-y-4">
-          <div className="form-group"><label className="label">Ekskul</label><select value={fOrg} onChange={(e) => setFOrg(e.target.value as Org)} disabled={!!editingSessionId} className="input"><option value="osis">OSIS</option><option value="mpk">MPK</option></select></div>
+          <div className="form-group">
+            <label className="label">Ekskul / Organisasi</label>
+            <div className="input bg-slate-50 font-bold text-indigo-600">OSIS & MPK (Unified Session)</div>
+          </div>
           <div className="form-group"><label className="label">Jam Mulai</label><input type="datetime-local" value={fMulai} onChange={(e) => setFMulai(e.target.value)} className="input" /></div>
           <div className="form-group"><label className="label">Jam Selesai</label><input type="datetime-local" value={fSelesai} onChange={(e) => setFSelesai(e.target.value)} className="input" /></div>
         </div>

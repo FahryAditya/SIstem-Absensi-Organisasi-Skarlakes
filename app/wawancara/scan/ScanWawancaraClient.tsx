@@ -71,7 +71,7 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
       return
     }
     setSaving(true)
-    const kelasGabungan = `${tingkat} ${jurusan}`
+    const kelasGabungan = `[${organisasi.toUpperCase()}] ${tingkat} ${jurusan}`
     const res = await fetch('/api/wawancara/antrian', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

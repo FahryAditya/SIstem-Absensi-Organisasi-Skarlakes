@@ -82,7 +82,10 @@ export async function POST(req: NextRequest) {
   }
 
   const sesi = await prisma.sesiWawancara.findFirst({
-    where: { status: 'ACTIVE', organisasi_type: parsed.data.organisasi },
+    where: { 
+      status: 'ACTIVE', 
+      organisasi_type: 'osis' // All merged sessions now use 'osis' under the hood
+    },
     orderBy: { created_at: 'desc' }
   })
   
