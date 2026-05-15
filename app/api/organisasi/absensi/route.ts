@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
 import { canAccessOsis, canAccessMpk } from '@/lib/auth'
+import { jsonWithPrivateCache } from '@/lib/api-cache'
 import { z } from 'zod'
 
 function getCtx(req: NextRequest) {
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
   const organisasi = searchParams.get('organisasi') as 'osis' | 'mpk' | null
   const tanggal = searchParams.get('tanggal')
   const page = parseInt(searchParams.get('page') || '1')
-  const limit = parseInt(searchParams.get('limit') || '20')
+  const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100)
 
   if (organisasi === 'osis' && !canAccessOsis(userRole))
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
@@ -47,7 +48,7 @@ export async function GET(req: NextRequest) {
     prisma.absensiOrganisasi.count({ where }),
   ])
 
-  return NextResponse.json({ data, total, totalPages: Math.ceil(total / limit) })
+  return jsonWithPrivateCache({ data, total, totalPages: Math.ceil(total / limit) })
 }
 
 const bulkSchema = z.object({

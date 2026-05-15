@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import toast from 'react-hot-toast'
 import Table from '@/components/ui/Table'
 import Modal from '@/components/ui/Modal'
@@ -8,7 +8,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { StatusBadge } from '@/components/ui/Badges'
 import { formatDate, formatCurrency, STATUS_LABELS } from '@/lib/utils'
 import { canAccessOsis, canAccessMpk } from '@/lib/auth-shared'
-import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
+import { clearJsonCachePrefix, fetchJsonCachedUrl, prefetchJsonCachedUrl } from '@/lib/client-cache'
 import {
   Building2, Plus, Pencil, Trash2, Loader2, Save, Calendar,
   ClipboardList, CheckCircle2, XCircle, Clock, Heart, Banknote, Contact
@@ -66,42 +66,71 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
 
   const canOsis = canAccessOsis(user.role)
   const canMpk = canAccessMpk(user.role)
+  const anggotaRequestId = useRef(0)
+  const bulkRequestId = useRef(0)
+  const riwayatRequestId = useRef(0)
 
   const loadAnggota = useCallback(async () => {
+    const requestId = ++anggotaRequestId.current
+    const url = `/api/organisasi?tipe=${activeOrg}&page=${page}&limit=${PAGE_SIZE}`
     setLoadingAnggota(true)
-    const json = await fetchJsonCachedUrl<{ data?: Anggota[]; total?: number; totalPages?: number }>(`/api/organisasi?tipe=${activeOrg}&page=${page}&limit=${PAGE_SIZE}`)
-    setAnggota(json.data || [])
-    setTotal(json.total || 0)
-    setTotalPages(json.totalPages || 1)
-    setLoadingAnggota(false)
+    try {
+      const json = await fetchJsonCachedUrl<{ data?: Anggota[]; total?: number; totalPages?: number }>(url, { ttlMs: 90_000 })
+      if (requestId !== anggotaRequestId.current) return
+      setAnggota(json.data || [])
+      setTotal(json.total || 0)
+      setTotalPages(json.totalPages || 1)
+      if ((json.totalPages || 1) > page) {
+        prefetchJsonCachedUrl(`/api/organisasi?tipe=${activeOrg}&page=${page + 1}&limit=${PAGE_SIZE}`, { ttlMs: 90_000 }).catch(() => {})
+      }
+    } catch (error: any) {
+      if (requestId === anggotaRequestId.current) toast.error(error.message || 'Gagal memuat anggota')
+    } finally {
+      if (requestId === anggotaRequestId.current) setLoadingAnggota(false)
+    }
   }, [activeOrg, page])
 
   useEffect(() => { if (subTab === 'anggota') loadAnggota() }, [subTab, loadAnggota])
   useEffect(() => { setPage(1) }, [activeOrg])
 
   const loadBulk = useCallback(async () => {
+    const requestId = ++bulkRequestId.current
     setLoadingBulk(true)
-    const anggJson = await fetchJsonCachedUrl<{ data?: Anggota[] }>(`/api/organisasi?tipe=${activeOrg}&limit=100`)
-    const anggList: Anggota[] = anggJson.data || []
+    try {
+      const [anggJson, absJson] = await Promise.all([
+        fetchJsonCachedUrl<{ data?: Anggota[] }>(`/api/organisasi?tipe=${activeOrg}&limit=100`, { ttlMs: 90_000 }),
+        fetchJsonCachedUrl<{ data?: AbsensiOrg[] }>(`/api/organisasi/absensi?organisasi=${activeOrg}&tanggal=${bulkDate}&limit=100`, { ttlMs: 30_000 }),
+      ])
+      if (requestId !== bulkRequestId.current) return
+      const anggList: Anggota[] = anggJson.data || []
+      const existing: AbsensiOrg[] = absJson.data || []
 
-    const absJson = await fetchJsonCachedUrl<{ data?: AbsensiOrg[] }>(`/api/organisasi/absensi?organisasi=${activeOrg}&tanggal=${bulkDate}&limit=100`)
-    const existing: AbsensiOrg[] = absJson.data || []
-
-    const rows: BulkRow[] = anggList.map(a => {
-      const ex = existing.find(e =>
-        activeOrg === 'osis' ? e.anggota_osis?.id === a.id : e.anggota_mpk?.id === a.id
-      )
-      return { anggota_id: a.id, nama: a.nama, jabatan: a.jabatan, status: ex?.status || 'hadir', uang_kas: ex?.uang_kas || 0, keterangan: ex?.keterangan || '' }
-    })
-    setBulkRows(rows)
-    setLoadingBulk(false)
+      const rows: BulkRow[] = anggList.map(a => {
+        const ex = existing.find(e =>
+          activeOrg === 'osis' ? e.anggota_osis?.id === a.id : e.anggota_mpk?.id === a.id
+        )
+        return { anggota_id: a.id, nama: a.nama, jabatan: a.jabatan, status: ex?.status || 'hadir', uang_kas: ex?.uang_kas || 0, keterangan: ex?.keterangan || '' }
+      })
+      setBulkRows(rows)
+    } catch (error: any) {
+      if (requestId === bulkRequestId.current) toast.error(error.message || 'Gagal memuat absensi')
+    } finally {
+      if (requestId === bulkRequestId.current) setLoadingBulk(false)
+    }
   }, [activeOrg, bulkDate])
 
   const loadRiwayat = useCallback(async () => {
+    const requestId = ++riwayatRequestId.current
     setLoadingRiwayat(true)
-    const json = await fetchJsonCachedUrl<{ data?: AbsensiOrg[] }>(`/api/organisasi/absensi?organisasi=${activeOrg}&tanggal=${filterTanggal}&limit=50`)
-    setRiwayat(json.data || [])
-    setLoadingRiwayat(false)
+    try {
+      const json = await fetchJsonCachedUrl<{ data?: AbsensiOrg[] }>(`/api/organisasi/absensi?organisasi=${activeOrg}&tanggal=${filterTanggal}&limit=50`, { ttlMs: 30_000 })
+      if (requestId !== riwayatRequestId.current) return
+      setRiwayat(json.data || [])
+    } catch (error: any) {
+      if (requestId === riwayatRequestId.current) toast.error(error.message || 'Gagal memuat riwayat')
+    } finally {
+      if (requestId === riwayatRequestId.current) setLoadingRiwayat(false)
+    }
   }, [activeOrg, filterTanggal])
 
   useEffect(() => {
@@ -135,7 +164,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
     const json = await res.json()
     if (!res.ok) { toast.error(json.error || 'Gagal'); setSaving(false); return }
     toast.success(editTarget ? 'Data diperbarui' : 'Anggota ditambahkan')
-    clearJsonCache()
+    clearJsonCachePrefix('/api/organisasi')
     setSaving(false); setModalOpen(false); loadAnggota()
   }
 
@@ -146,7 +175,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
     const json = await res.json()
     if (!res.ok) { toast.error(json.error || 'Gagal'); setDeleting(false); return }
     toast.success('Anggota dihapus')
-    clearJsonCache()
+    clearJsonCachePrefix('/api/organisasi')
     setDeleting(false); setDeleteTarget(null); loadAnggota()
   }
 
@@ -166,7 +195,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
     const json = await res.json()
     if (!res.ok) { toast.error(json.error || 'Gagal'); setSavingAbsensi(false); return }
     toast.success(`Absensi ${activeOrg.toUpperCase()} tersimpan!`)
-    clearJsonCache()
+    clearJsonCachePrefix('/api/organisasi/absensi')
     setSavingAbsensi(false)
   }
 

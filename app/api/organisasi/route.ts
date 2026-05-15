@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
 import { canAccessOsis, canAccessMpk } from '@/lib/auth'
+import { jsonWithPrivateCache } from '@/lib/api-cache'
 import { z } from 'zod'
 
 function getCtx(req: NextRequest) {
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
   const tipe = searchParams.get('tipe') as 'osis' | 'mpk' | null
   const search = searchParams.get('search') || ''
   const page = parseInt(searchParams.get('page') || '1')
-  const limit = parseInt(searchParams.get('limit') || '10')
+  const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 100)
 
   if (tipe === 'osis' && !canAccessOsis(userRole))
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
@@ -41,7 +42,7 @@ export async function GET(req: NextRequest) {
       prisma.anggotaOsis.findMany({ where: whereSearch, orderBy: { nama: 'asc' }, skip: (page-1)*limit, take: limit }),
       prisma.anggotaOsis.count({ where: whereSearch }),
     ])
-    return NextResponse.json({ data, total, totalPages: Math.ceil(total/limit) })
+    return jsonWithPrivateCache({ data, total, totalPages: Math.ceil(total/limit) })
   }
 
   if (tipe === 'mpk') {
@@ -49,7 +50,7 @@ export async function GET(req: NextRequest) {
       prisma.anggotaMpk.findMany({ where: whereSearch, orderBy: { nama: 'asc' }, skip: (page-1)*limit, take: limit }),
       prisma.anggotaMpk.count({ where: whereSearch }),
     ])
-    return NextResponse.json({ data, total, totalPages: Math.ceil(total/limit) })
+    return jsonWithPrivateCache({ data, total, totalPages: Math.ceil(total/limit) })
   }
 
   // Both (if admin has access to both)
@@ -60,7 +61,7 @@ export async function GET(req: NextRequest) {
   if (canAccessMpk(userRole)) {
     results.mpk = await prisma.anggotaMpk.findMany({ where: whereSearch, orderBy: { nama: 'asc' } })
   }
-  return NextResponse.json(results)
+  return jsonWithPrivateCache(results)
 }
 
 export async function POST(req: NextRequest) {
