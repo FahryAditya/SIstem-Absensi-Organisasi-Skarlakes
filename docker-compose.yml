@@ -1,33 +1,6 @@
 version: '3.8'
 
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: ekskul_mysql
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-ekskul_db}
-      MYSQL_USER: ${MYSQL_USER:-ekskul_user}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-ekskul_pass}
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./docker/mysql-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    command: >
-      --character-set-server=utf8mb4
-      --collation-server=utf8mb4_unicode_ci
-      --default-authentication-plugin=mysql_native_password
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    networks:
-      - ekskul_net
-
   app:
     build:
       context: .
@@ -35,20 +8,15 @@ services:
     container_name: ekskul_app
     restart: unless-stopped
     ports:
-      - "80:3000" # Diarahkan ke port 80 agar sesuai dengan NAT (Public 8080/8443)
+      - "80:3000"
     environment:
-      DATABASE_URL: mysql://${MYSQL_USER:-ekskul_user}:${MYSQL_PASSWORD:-ekskul_pass}@mysql:3306/${MYSQL_DATABASE:-ekskul_db}
-      JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-key-change-in-production-min-32-chars}
+      # Supabase PostgreSQL (cloud) — tidak perlu service DB lokal
+      DATABASE_URL: ${DATABASE_URL}
+      DIRECT_URL: ${DIRECT_URL}
+      JWT_SECRET: ${JWT_SECRET}
       NODE_ENV: production
-    depends_on:
-      mysql:
-        condition: service_healthy
     networks:
       - ekskul_net
-
-volumes:
-  mysql_data:
-    driver: local
 
 networks:
   ekskul_net:

@@ -1,6 +1,6 @@
 # 📖 Panduan Deploy Lengkap — EkskulDash v2 ke Railway
 
-Deploy backend MySQL + aplikasi Next.js ke Railway.app secara gratis (Hobby plan $5/bulan atau Free trial).
+Deploy backend PostgreSQL + aplikasi Next.js ke Railway.app secara gratis (Hobby plan $5/bulan atau Free trial).
 
 ---
 
@@ -17,50 +17,50 @@ Deploy backend MySQL + aplikasi Next.js ke Railway.app secara gratis (Hobby plan
 
 ```
 Railway Project: ekskul-dashboard
-├── Service: MySQL        ← Database utama (Railway managed)
-│     Port: 3306 (internal)
+├── Service: PostgreSQL   ← Database utama (Railway managed)
+│     Port: 5432 (internal)
 │     Database: railway
 │
 └── Service: ekskul-app   ← Next.js app
       Port: 3000
       Domain: xxx.up.railway.app
-      Env: DATABASE_URL → reference ke MySQL service
+      Env: DATABASE_URL → reference ke PostgreSQL service
 ```
 
 ---
 
-## 🚀 BAGIAN 1 — Setup MySQL di Railway
+## 🚀 BAGIAN 1 — Setup PostgreSQL di Railway
 
 ### Step 1.1 — Buat Project Baru
 
 1. Login ke [railway.app](https://railway.app)
 2. Klik **"New Project"**
-3. Pilih **"Deploy MySQL"**
+3. Pilih **"Deploy PostgreSQL"**
 
-![Railway New Project](https://docs.railway.app/images/guides/mysql.png)
+![Railway New Project](https://docs.railway.app/images/guides/postgresql.png)
 
 Railway akan otomatis:
-- Deploy MySQL 8.0
+- Deploy PostgreSQL 15+
 - Buat database `railway`
 - Generate kredensial acak
 
 ### Step 1.2 — Catat Connection Details
 
-Setelah MySQL running:
-1. Klik service **MySQL**
+Setelah PostgreSQL running:
+1. Klik service **PostgreSQL**
 2. Tab **"Variables"** — catat nilai:
-   - `MYSQL_URL` → ini adalah `DATABASE_URL` aplikasi
-   - `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`
-3. Tab **"Connect"** → kamu bisa akses MySQL via:
-   - Railway CLI: `railway connect MySQL`
+   - `DATABASE_URL` → ini adalah `DATABASE_URL` aplikasi
+   - `HOST`, `PORT`, `USER`, `PASSWORD`
+3. Tab **"Connect"** → kamu bisa akses PostgreSQL via:
+   - Railway CLI: `railway connect PostgreSQL`
    - External client (TablePlus, DBeaver) menggunakan Public URL
 
-### Step 1.3 — Inisialisasi Charset (Opsional tapi Disarankan)
+### Step 1.3 — Inisialisasi Timezone (Opsional tapi Disarankan)
 
-Di tab **"Query"** Railway MySQL, jalankan:
+Di tab **"Query"** Railway PostgreSQL, jalankan:
 
 ```sql
-ALTER DATABASE railway CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER DATABASE railway SET timezone TO 'Asia/Jakarta';
 SELECT 'OK' AS status;
 ```
 
@@ -88,7 +88,7 @@ git push -u origin main
 
 ### Step 2.2 — Tambah Service App di Railway
 
-1. Di Railway project yang sama (tempat MySQL), klik **"New Service"**
+1. Di Railway project yang sama (tempat PostgreSQL), klik **"New Service"**
 2. Pilih **"GitHub Repo"**
 3. Pilih repo `ekskul-dashboard`
 4. Railway otomatis detect Next.js
@@ -111,12 +111,12 @@ Di Railway → service `ekskul-app` → tab **"Variables"**, tambahkan:
 
 | Variable | Value |
 |----------|-------|
-| `DATABASE_URL` | `${{MySQL.MYSQL_URL}}` |
+| `DATABASE_URL` | `${{PostgreSQL.DATABASE_URL}}` |
 | `JWT_SECRET` | (lihat cara generate di bawah) |
 | `NODE_ENV` | `production` |
 | `PRISMA_CLI_BINARY_TARGETS` | `linux-musl-openssl-3.0.x` |
 
-> ⚠️ **PENTING**: `${{MySQL.MYSQL_URL}}` adalah **Railway Reference Variable** — Railway akan otomatis mengisi nilai dari service MySQL di project yang sama. Ketik persis seperti itu.
+> ⚠️ **PENTING**: `${{PostgreSQL.DATABASE_URL}}` adalah **Railway Reference Variable** — Railway akan otomatis mengisi nilai dari service PostgreSQL di project yang sama. Ketik persis seperti itu.
 
 #### Generate JWT_SECRET yang Aman
 
@@ -223,9 +223,9 @@ Railway otomatis deploy setiap kali push ke branch `main`. Untuk disable:
 
 ```bash
 # Backup via Railway CLI
-railway connect MySQL
-# Kemudian di dalam MySQL shell:
-mysqldump railway > backup_$(date +%Y%m%d).sql
+railway connect PostgreSQL
+# Kemudian di dalam PostgreSQL shell:
+pg_dump -U railway -h localhost railway > backup_$(date +%Y%m%d).sql
 ```
 
 ---
@@ -235,7 +235,7 @@ mysqldump railway > backup_$(date +%Y%m%d).sql
 | Plan | Harga | Keterangan |
 |------|-------|------------|
 | Free Trial | $0 | $5 credit, cukup untuk testing |
-| Hobby | $5/bulan | 2 services (MySQL + App), 512MB RAM each |
+| Hobby | $5/bulan | 2 services (PostgreSQL + App), 512MB RAM each |
 | Pro | $20/bulan | Resource lebih besar, custom domains |
 
 Untuk EkskulDash sekolah, **Hobby plan ($5/bulan)** sudah lebih dari cukup.
@@ -248,7 +248,7 @@ Untuk EkskulDash sekolah, **Hobby plan ($5/bulan)** sudah lebih dari cukup.
 
 Pastikan `DATABASE_URL` menggunakan Railway reference variable:
 ```
-DATABASE_URL=${{MySQL.MYSQL_URL}}
+DATABASE_URL=${{PostgreSQL.DATABASE_URL}}
 ```
 Bukan nilai hardcoded.
 

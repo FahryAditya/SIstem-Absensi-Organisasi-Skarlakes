@@ -32,7 +32,7 @@ echo "📋 Mengecek Railway session..."
 railway whoami || { echo "❌ Belum login. Jalankan: railway login"; exit 1; }
 
 echo ""
-echo "🔄 Step 1: Push Prisma schema ke MySQL Railway..."
+echo "🔄 Step 1: Push Prisma schema ke PostgreSQL Railway..."
 railway run npx prisma db push --accept-data-loss
 echo "✅ Schema berhasil dipush!"
 

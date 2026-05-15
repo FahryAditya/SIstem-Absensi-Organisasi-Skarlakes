@@ -9,7 +9,7 @@ function escapeSqlValue(value: any): string {
   if (value === null || value === undefined) return 'NULL'
   if (typeof value === 'number' || typeof value === 'boolean') return String(value)
   if (value instanceof Date) {
-    // Format date to MySQL DATETIME format YYYY-MM-DD HH:MM:SS
+    // Format date to PostgreSQL TIMESTAMP format YYYY-MM-DD HH:MM:SS
     const pad = (n: number) => (n < 10 ? '0' + n : n)
     const y = value.getUTCFullYear()
     const m = pad(value.getUTCMonth() + 1)
@@ -36,9 +36,9 @@ function generateInsertQuery(tableName: string, rows: any[]): string {
   if (!rows || rows.length === 0) return ''
 
   const columns = Object.keys(rows[0])
-  const columnsStr = columns.map(c => `\`${c}\``).join(', ')
+const columnsStr = columns.map(c => `"${c}"`).join(', ')
 
-  let sql = `INSERT INTO \`${tableName}\` (${columnsStr}) VALUES\n`
+  let sql = `INSERT INTO "${tableName}" (${columnsStr}) VALUES\n`
 
   const valuesStrs = rows.map(row => {
     const rowValues = columns.map(c => escapeSqlValue(row[c]))

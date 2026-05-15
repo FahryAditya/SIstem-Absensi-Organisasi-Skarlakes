@@ -34,7 +34,7 @@ next-env.d.ts
 prisma/migrations/
 
 # Docker volumes
-mysql_data/
+postgres_data/
 
 .vercel
 .env*.local

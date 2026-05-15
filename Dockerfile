@@ -65,10 +65,7 @@ COPY --from=builder /app/.next/static ./.next/static
 # Copy Prisma (untuk runtime & migration)
 COPY --from=builder /app/prisma ./prisma
 
-# Copy scripts jika ada (optional)
-COPY --from=builder /app/scripts ./scripts
-
-# Entry point script (optional tapi bagus untuk migration auto-run)
+# Copy entrypoint script
 COPY docker/entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
 

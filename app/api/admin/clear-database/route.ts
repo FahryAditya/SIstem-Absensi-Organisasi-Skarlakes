@@ -38,9 +38,9 @@ function escapeSqlValue(value: unknown): string {
 function insertSql(tableName: string, rows: Record<string, unknown>[]) {
   if (!rows.length) return `-- Tabel ${tableName}: kosong\n\n`
   const columns = Object.keys(rows[0])
-  const columnSql = columns.map(c => `\`${c}\``).join(', ')
+  const columnSql = columns.map(c => `"${c}"`).join(', ')
   const valueSql = rows.map(row => `  (${columns.map(c => escapeSqlValue(row[c])).join(', ')})`).join(',\n')
-  return `INSERT INTO \`${tableName}\` (${columnSql}) VALUES\n${valueSql};\n\n`
+  return `INSERT INTO "${tableName}" (${columnSql}) VALUES\n${valueSql};\n\n`
 }
 
 function asRows(rows: unknown[]) {
