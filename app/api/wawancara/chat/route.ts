@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { canAccessMpk, canAccessOsis } from '@/lib/auth'
 import { z } from 'zod'
-import { pusherServer } from '@/lib/pusher'
+import { pusherServer } from '@/lib/pusher-server'
 
 export const dynamic = 'force-dynamic'
 
@@ -82,10 +82,12 @@ export async function POST(req: NextRequest) {
 
   // Trigger Pusher event — robust and works across multiple server instances.
   // This is non-blocking to keep the response fast.
-  try {
-    await pusherServer.trigger(`chat-${parsed.data.sesi_id}`, 'incoming-chat', data)
-  } catch (err) {
-    console.error('Pusher trigger failed:', err)
+  if (pusherServer) {
+    try {
+      await pusherServer.trigger(`chat-${parsed.data.sesi_id}`, 'incoming-chat', data)
+    } catch (err) {
+      console.error('Pusher trigger failed:', err)
+    }
   }
 
   return NextResponse.json({ data }, { status: 201 })

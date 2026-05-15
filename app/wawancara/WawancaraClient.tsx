@@ -12,7 +12,7 @@ import {
   Play, Plus, QrCode, RefreshCcw, Save, Send, ShieldCheck, SquarePen, Users, XCircle, UserX
 } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { pusherClient } from '@/lib/pusher'
+import { pusherClient } from '@/lib/pusher-client'
 
 type Org = 'osis' | 'mpk'
 type SessionStatus = 'SCHEDULED' | 'ACTIVE' | 'SELESAI' | 'DIBATALKAN'
@@ -229,21 +229,18 @@ export default function WawancaraClient({ user }: Props) {
   }, [activeSession?.id])
 
   useEffect(() => {
-    if (!activeSession?.id) return
+    if (!activeSession?.id || !pusherClient) return
     
-    const channel = pusherClient.subscribe(`chat-${activeSession.id}`)
+    const channel = pusherClient!.subscribe(`chat-${activeSession.id}`)
     channel.bind('incoming-chat', (data: ChatMessage) => {
       setChats((prev) => {
-        // Prevent duplicates (e.g. from optimistic update or double broadcast)
         if (prev.some((c) => c.id === data.id)) return prev
-        // Remove optimistic message if it exists (matching by message content and sender for simplicity if ID is unknown)
-        // But better to just check if we have a real ID matching the new one
         return [...prev, data]
       })
     })
 
     return () => {
-      pusherClient.unsubscribe(`chat-${activeSession.id}`)
+      pusherClient!.unsubscribe(`chat-${activeSession.id}`)
     }
   }, [activeSession?.id])
 
