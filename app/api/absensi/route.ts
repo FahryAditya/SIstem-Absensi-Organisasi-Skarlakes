@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const tanggal = searchParams.get('tanggal')
   const ekskul = searchParams.get('ekskul') as 'programming' | 'english' | null
+  const mode = searchParams.get('mode')
   const page = parseInt(searchParams.get('page') || '1')
   const limit = parseInt(searchParams.get('limit') || '20')
 
@@ -27,6 +28,37 @@ export async function GET(req: NextRequest) {
 
   let ekskulFilter = accessible
   if (ekskul && accessible.includes(ekskul)) ekskulFilter = [ekskul]
+
+  // Optimized Input Mode: Combined Siswa + Absensi data
+  if (mode === 'input' && tanggal && ekskul && accessible.includes(ekskul)) {
+    const [siswaList, existingAbsensi] = await Promise.all([
+      prisma.siswa.findMany({
+        where: { ekskul: ekskul as any },
+        select: { id: true, nama: true, kelas: true, ekskul: true },
+        orderBy: { nama: 'asc' }
+      }),
+      prisma.absensi.findMany({
+        where: {
+          tanggal: new Date(tanggal),
+          siswa: { ekskul: ekskul as any }
+        },
+        select: { siswa_id: true, status: true, uang_kas: true, keterangan: true }
+      })
+    ])
+
+    const absMap = Object.fromEntries(existingAbsensi.map(a => [a.siswa_id, a]))
+    const rows = siswaList.map(s => ({
+      siswa_id: s.id,
+      nama: s.nama,
+      kelas: s.kelas,
+      ekskul: s.ekskul,
+      status: absMap[s.id]?.status || 'hadir',
+      uang_kas: absMap[s.id]?.uang_kas || 0,
+      keterangan: absMap[s.id]?.keterangan || '',
+    }))
+
+    return NextResponse.json({ data: rows })
+  }
 
   const where: Record<string, unknown> = {
     siswa: { ekskul: { in: ekskulFilter } },

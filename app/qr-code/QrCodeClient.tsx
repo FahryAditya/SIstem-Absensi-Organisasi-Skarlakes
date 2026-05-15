@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import toast from 'react-hot-toast'
 import { clearJsonCache, fetchJsonCached, seedJsonCache } from '@/lib/client-cache'
 import { formatDateTime } from '@/lib/utils'
@@ -156,9 +157,17 @@ export default function QrCodeClient({ baseUrl, initialItems }: QrCodeClientProp
             <div className="empty-state"><QrCode className="w-12 h-12 opacity-30" /><span>Belum ada QR aktif. Aktifkan wawancara lalu buat QR baru.</span></div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-[380px_1fr] gap-6 items-start">
-              <div className="rounded-xl border border-slate-200 bg-white p-4">
-                <img src={qrImage} alt="QR absensi wawancara" width={360} height={360} decoding="async" fetchPriority="high" className="w-full aspect-square object-contain" />
+              <div className="rounded-xl border border-slate-200 bg-white p-4 relative aspect-square w-full max-w-[360px]">
+                <Image 
+                  src={qrImage} 
+                  alt="QR absensi wawancara" 
+                  fill
+                  unoptimized
+                  priority
+                  className="object-contain p-2" 
+                />
               </div>
+
               <div className="space-y-4">
                 <div>
                   <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">QR Aktif</div>

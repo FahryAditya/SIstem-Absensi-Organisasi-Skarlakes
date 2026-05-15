@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
+import Image from 'next/image'
 import { Menu, LogOut, ChevronDown, Loader2, Contact } from 'lucide-react'
 import { ROLE_LABELS } from '@/lib/auth-shared'
 
@@ -40,7 +41,14 @@ export default function Topbar({ user, pageTitle, onMenuClick }: TopbarProps) {
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-[rgba(126,160,197,0.15)] transition-colors"
         >
           {user.role === 'administrator' ? (
-            <img src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" alt="Profile" className="w-7 h-7 rounded-full object-cover shadow-sm border border-[rgba(84,130,180,0.15)]" />
+            <div className="relative w-7 h-7 rounded-full overflow-hidden shadow-sm border border-[rgba(84,130,180,0.15)]">
+              <Image 
+                src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" 
+                alt="Profile" 
+                fill
+                className="object-cover"
+              />
+            </div>
           ) : (
             <div className="w-7 h-7 rounded-full bg-[#052659] flex items-center justify-center text-white text-xs font-black">
               {user.nama.charAt(0).toUpperCase()}

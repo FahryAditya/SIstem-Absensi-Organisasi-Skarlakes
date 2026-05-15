@@ -106,6 +106,7 @@ model User {
   override_wawancara HasilWawancaraTable[] @relation("WawancaraOverriddenBy")
   chat_wawancara ChatWawancara[]
 
+  @@index([created_at])
   @@map("users")
 }
 
@@ -127,6 +128,9 @@ model Siswa {
   absensi     Absensi[]
 
   @@index([ekskul])
+  @@index([nama])
+  @@index([kelas])
+  @@index([created_at])
   @@map("siswa")
 }
 
@@ -170,6 +174,9 @@ model AnggotaOsis {
 
   absensi    AbsensiOrganisasi[]
 
+  @@index([nama])
+  @@index([kelas])
+  @@index([created_at])
   @@map("anggota_osis")
 }
 
@@ -187,6 +194,9 @@ model AnggotaMpk {
 
   absensi    AbsensiOrganisasi[]
 
+  @@index([nama])
+  @@index([kelas])
+  @@index([created_at])
   @@map("anggota_mpk")
 }
 
@@ -326,6 +336,7 @@ model AntrianWawancara {
   @@index([scan_token])
   @@index([sesi_id, status_validasi, kelas])
   @@index([sesi_id, nama, kelas])
+  @@index([created_at])
   @@map("antrian_wawancara")
 }
 

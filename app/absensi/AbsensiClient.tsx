@@ -50,31 +50,21 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
   const canProg = canAccessProgramming(user.role)
   const canEng = canAccessEnglish(user.role)
 
-  // Load siswa for bulk input
-  const loadBulkSiswa = useCallback(async () => {
+  // Load siswa & absensi for bulk input (Optimized combined call)
+  const loadBulkData = useCallback(async () => {
     setLoadingBulk(true)
-    // Fetch siswa
-    const siswaJson = await fetchJsonCachedUrl<{ data?: Siswa[] }>(`/api/siswa?ekskul=${bulkOrg}&limit=100`)
-    const siswaList: Siswa[] = siswaJson.data || []
-
-    // Fetch existing absensi for that date
-    const absJson = await fetchJsonCachedUrl<{ data?: AbsensiRecord[] }>(`/api/absensi?tanggal=${bulkDate}&ekskul=${bulkOrg}&limit=100`)
-    const existing: AbsensiRecord[] = absJson.data || []
-
-    const rows: AbsensiRow[] = siswaList.map(s => {
-      const ex = existing.find(a => a.siswa?.id === s.id)
-      return {
-        siswa_id: s.id, nama: s.nama, kelas: s.kelas, ekskul: s.ekskul,
-        status: ex?.status || 'hadir',
-        uang_kas: ex?.uang_kas || 0,
-        keterangan: ex?.keterangan || '',
-      }
-    })
-    setBulkRows(rows)
+    try {
+      const json = await fetchJsonCachedUrl<{ data?: AbsensiRow[] }>(
+        `/api/absensi?mode=input&tanggal=${bulkDate}&ekskul=${bulkOrg}`
+      )
+      setBulkRows(json.data || [])
+    } catch (e) {
+      toast.error('Gagal memuat data absensi')
+    }
     setLoadingBulk(false)
   }, [bulkOrg, bulkDate])
 
-  useEffect(() => { if (mode === 'input') loadBulkSiswa() }, [mode, loadBulkSiswa])
+  useEffect(() => { if (mode === 'input') loadBulkData() }, [mode, loadBulkData])
 
   // Load riwayat
   const loadRiwayat = useCallback(async () => {

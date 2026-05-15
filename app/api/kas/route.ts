@@ -15,26 +15,40 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const orgFilter = searchParams.get('org') || ''
     const searchQuery = searchParams.get('search') || ''
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
 
     const accessible = getAccessibleOrgs(userRole)
     const org = (orgFilter && accessible.includes(orgFilter)) ? orgFilter : accessible[0]
 
     if (!org) {
-      return NextResponse.json({ data: [], totalKas: 0, orgs: [] })
+      return NextResponse.json({ data: [], totalKas: 0, orgs: [], total: 0, totalPages: 0 })
     }
 
     let results: any[] = []
-    let totalKasAll = 0
+    let totalItems = 0
+    let totalKasSum = 0
 
-    const searchCondition = searchQuery ? { nama: { contains: searchQuery } } : {}
+    const searchCondition = searchQuery ? { nama: { contains: searchQuery, mode: 'insensitive' as any } } : {}
 
     if (org === 'programming' || org === 'english') {
-      const siswaList = await prisma.siswa.findMany({
-        where: { ekskul: org, ...searchCondition },
-        include: { absensi: { select: { uang_kas: true, updated_at: true } } },
-        orderBy: { nama: 'asc' }
-      })
+      const [siswaList, total, totalKasData] = await Promise.all([
+        prisma.siswa.findMany({
+          where: { ekskul: org, ...searchCondition },
+          include: { absensi: { select: { uang_kas: true, updated_at: true } } },
+          orderBy: { nama: 'asc' },
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        prisma.siswa.count({ where: { ekskul: org, ...searchCondition } }),
+        prisma.absensi.aggregate({
+          where: { siswa: { ekskul: org } },
+          _sum: { uang_kas: true }
+        })
+      ])
 
+      totalItems = total
+      totalKasSum = totalKasData._sum?.uang_kas || 0
       results = siswaList.map(s => {
         let terakhir_bayar = null
         const paidAbsensi = s.absensi.filter((a: any) => a.uang_kas !== 0)
@@ -42,23 +56,32 @@ export async function GET(req: NextRequest) {
           const latest = paidAbsensi.reduce((a: any, b: any) => new Date(a.updated_at) > new Date(b.updated_at) ? a : b)
           terakhir_bayar = latest.updated_at.toISOString()
         }
-        const total = s.absensi.reduce((sum: number, a: any) => sum + (a.uang_kas || 0), 0)
-        totalKasAll += total
         return {
           id: s.id,
           nama: s.nama,
           kelas: s.kelas || '-',
-          total_kas: total,
+          total_kas: s.absensi.reduce((sum: number, a: any) => sum + (a.uang_kas || 0), 0),
           terakhir_bayar
         }
       })
     } else if (org === 'osis') {
-      const anggotaList = await prisma.anggotaOsis.findMany({
-        where: searchCondition,
-        include: { absensi: { select: { uang_kas: true, updated_at: true } } },
-        orderBy: { nama: 'asc' }
-      })
+      const [anggotaList, total, totalKasData] = await Promise.all([
+        prisma.anggotaOsis.findMany({
+          where: searchCondition,
+          include: { absensi: { select: { uang_kas: true, updated_at: true } } },
+          orderBy: { nama: 'asc' },
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        prisma.anggotaOsis.count({ where: searchCondition }),
+        prisma.absensiOrganisasi.aggregate({
+          where: { organisasi_type: 'osis' },
+          _sum: { uang_kas: true }
+        })
+      ])
 
+      totalItems = total
+      totalKasSum = totalKasData._sum?.uang_kas || 0
       results = anggotaList.map(a => {
         let terakhir_bayar = null
         const paidAbsensi = a.absensi.filter((ab: any) => ab.uang_kas !== 0)
@@ -66,23 +89,32 @@ export async function GET(req: NextRequest) {
           const latest = paidAbsensi.reduce((ab1: any, ab2: any) => new Date(ab1.updated_at) > new Date(ab2.updated_at) ? ab1 : ab2)
           terakhir_bayar = latest.updated_at.toISOString()
         }
-        const total = a.absensi.reduce((sum: number, ab: any) => sum + (ab.uang_kas || 0), 0)
-        totalKasAll += total
         return {
           id: a.id,
           nama: a.nama,
           kelas: a.jabatan || '-',
-          total_kas: total,
+          total_kas: a.absensi.reduce((sum: number, ab: any) => sum + (ab.uang_kas || 0), 0),
           terakhir_bayar
         }
       })
     } else if (org === 'mpk') {
-      const anggotaList = await prisma.anggotaMpk.findMany({
-        where: searchCondition,
-        include: { absensi: { select: { uang_kas: true, updated_at: true } } },
-        orderBy: { nama: 'asc' }
-      })
+      const [anggotaList, total, totalKasData] = await Promise.all([
+        prisma.anggotaMpk.findMany({
+          where: searchCondition,
+          include: { absensi: { select: { uang_kas: true, updated_at: true } } },
+          orderBy: { nama: 'asc' },
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        prisma.anggotaMpk.count({ where: searchCondition }),
+        prisma.absensiOrganisasi.aggregate({
+          where: { organisasi_type: 'mpk' },
+          _sum: { uang_kas: true }
+        })
+      ])
 
+      totalItems = total
+      totalKasSum = totalKasData._sum?.uang_kas || 0
       results = anggotaList.map(a => {
         let terakhir_bayar = null
         const paidAbsensi = a.absensi.filter((ab: any) => ab.uang_kas !== 0)
@@ -90,13 +122,11 @@ export async function GET(req: NextRequest) {
           const latest = paidAbsensi.reduce((ab1: any, ab2: any) => new Date(ab1.updated_at) > new Date(ab2.updated_at) ? ab1 : ab2)
           terakhir_bayar = latest.updated_at.toISOString()
         }
-        const total = a.absensi.reduce((sum: number, ab: any) => sum + (ab.uang_kas || 0), 0)
-        totalKasAll += total
         return {
           id: a.id,
           nama: a.nama,
           kelas: a.jabatan || '-',
-          total_kas: total,
+          total_kas: a.absensi.reduce((sum: number, ab: any) => sum + (ab.uang_kas || 0), 0),
           terakhir_bayar
         }
       })
@@ -104,9 +134,11 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       data: results,
-      totalKas: totalKasAll,
+      totalKas: totalKasSum,
       orgs: accessible,
-      activeOrg: org
+      activeOrg: org,
+      total: totalItems,
+      totalPages: Math.ceil(totalItems / limit)
     })
   } catch (e: any) {
     console.error('[KAS ERROR]', e)

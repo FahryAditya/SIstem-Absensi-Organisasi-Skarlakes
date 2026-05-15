@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
+import Image from 'next/image'
 import {
   LayoutDashboard, Users, ClipboardList, Building2, UserCog,
   Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode, UserX
@@ -160,7 +161,14 @@ export default function Sidebar({ user, mobileOpen, onClose }: SidebarProps) {
       <div className="px-4 py-4 border-t border-[#5482B4]/15 flex-shrink-0">
         <div className="flex items-center gap-2.5">
           {user.role === 'administrator' ? (
-            <img src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" alt="Admin Profile" className="w-8 h-8 rounded-full object-cover flex-shrink-0 shadow-sm border border-[#5482B4]/30" />
+            <div className="relative w-8 h-8 rounded-full overflow-hidden shadow-sm border border-[#5482B4]/30">
+              <Image 
+                src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" 
+                alt="Admin Profile" 
+                fill
+                className="object-cover"
+              />
+            </div>
           ) : (
             <div className="w-8 h-8 rounded-full bg-[#052659] flex items-center justify-center text-white text-xs font-black flex-shrink-0">
               {user.nama.charAt(0).toUpperCase()}

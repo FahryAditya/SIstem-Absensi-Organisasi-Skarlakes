@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import { createPortal } from 'react-dom'
 import toast from 'react-hot-toast'
 import * as XLSX from 'xlsx'
@@ -11,16 +13,24 @@ import TextType from '@/components/TextType'
 import {
   Users, CheckCircle2, Wallet, UserPlus, LogOut, Clock, CalendarDays, PlusCircle, LayoutList, HandCoins, Loader2, UploadCloud, TrendingUp, Activity, X
 } from 'lucide-react'
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, Legend, AreaChart, Area
-} from 'recharts'
+
+// Lazy load Recharts for better performance
+const ResponsiveContainer = dynamic(() => import('recharts').then(mod => mod.ResponsiveContainer), { ssr: false })
+const BarChart = dynamic(() => import('recharts').then(mod => mod.BarChart), { ssr: false })
+const Bar = dynamic(() => import('recharts').then(mod => mod.Bar), { ssr: false })
+const XAxis = dynamic(() => import('recharts').then(mod => mod.XAxis), { ssr: false })
+const YAxis = dynamic(() => import('recharts').then(mod => mod.YAxis), { ssr: false })
+const CartesianGrid = dynamic(() => import('recharts').then(mod => mod.CartesianGrid), { ssr: false })
+const Tooltip = dynamic(() => import('recharts').then(mod => mod.Tooltip), { ssr: false })
+const Legend = dynamic(() => import('recharts').then(mod => mod.Legend), { ssr: false })
+const AreaChart = dynamic(() => import('recharts').then(mod => mod.AreaChart), { ssr: false })
+const Area = dynamic(() => import('recharts').then(mod => mod.Area), { ssr: false })
 
 interface Props {
   user: { id: number; nama: string; email: string; role: string }
 }
 
-interface Stats {
+interface StatsData {
   totalSiswa: number
   totalOsis: number
   totalMpk: number
@@ -28,10 +38,16 @@ interface Stats {
   totalPemasukan: number
   totalPengeluaran: number
   totalKas: number
+  orgs: string[]
+}
+
+interface ChartData {
   kehadiranMingguan: { day: string; hadir: number; tidak_hadir: number }[]
   kasPerBulan: { bulan: string; total: number }[]
+}
+
+interface LogData {
   recentLog: { id: number; user_nama: string; deskripsi: string; created_at: string; aksi: string }[]
-  orgs: string[]
 }
 
 const AKSI_COLORS: Record<string, string> = {
@@ -43,8 +59,14 @@ const AKSI_COLORS: Record<string, string> = {
 }
 
 export default function DashboardClient({ user }: Props) {
-  const [stats, setStats] = useState<Stats | null>(null)
+  const [stats, setStats] = useState<StatsData | null>(null)
+  const [charts, setCharts] = useState<ChartData | null>(null)
+  const [logs, setLogs] = useState<LogData | null>(null)
+  
   const [loading, setLoading] = useState(true)
+  const [loadingCharts, setLoadingCharts] = useState(true)
+  const [loadingLogs, setLoadingLogs] = useState(true)
+
   const [now] = useState(new Date())
   const [showWelcomeModal, setShowWelcomeModal] = useState(false)
 
@@ -62,16 +84,36 @@ export default function DashboardClient({ user }: Props) {
     if (orgs.length > 0 && !quickOrg) setQuickOrg(orgs[0])
   }, [orgs, quickOrg])
 
-  async function fetchStats() {
+  async function fetchDashboardData() {
+    setLoading(true)
+    // 1. Fetch Stats (Priority)
     try {
-      const d = await fetchJsonCachedUrl<Stats>('/api/dashboard')
+      const d = await fetchJsonCachedUrl<StatsData>('/api/dashboard?part=stats')
       setStats(d)
     } catch {}
     setLoading(false)
+
+    // 2. Fetch Charts
+    setLoadingCharts(true)
+    try {
+      const c = await fetchJsonCachedUrl<ChartData>('/api/dashboard?part=charts')
+      setCharts(c)
+    } catch {}
+    setLoadingCharts(false)
+
+    // 3. Fetch Logs (if admin)
+    if (user.role === 'administrator') {
+      setLoadingLogs(true)
+      try {
+        const l = await fetchJsonCachedUrl<LogData>('/api/dashboard?part=logs')
+        setLogs(l)
+      } catch {}
+      setLoadingLogs(false)
+    }
   }
 
   useEffect(() => {
-    fetchStats()
+    fetchDashboardData()
     
     // Welcome popup logic for administrator
     if (user.role === 'administrator' && typeof window !== 'undefined') {
@@ -98,7 +140,7 @@ export default function DashboardClient({ user }: Props) {
       toast.success('Anggota berhasil ditambahkan')
       setQuickName(''); setQuickClass(''); setQuickJabatan('')
       clearJsonCache()
-      fetchStats()
+      fetchDashboardData()
     } catch (e: any) {
       toast.error(e.message)
     }
@@ -145,7 +187,7 @@ export default function DashboardClient({ user }: Props) {
       if (!res.ok) throw new Error(apiJson.error)
       toast.success(`Berhasil import ${apiJson.count} data`)
       clearJsonCache()
-      fetchStats()
+      fetchDashboardData()
     } catch (err: any) {
       toast.error(err.message)
     }
@@ -156,64 +198,64 @@ export default function DashboardClient({ user }: Props) {
   const greetingHour = now.getHours()
   const greeting = greetingHour < 11 ? 'Selamat pagi' : greetingHour < 15 ? 'Selamat siang' : greetingHour < 18 ? 'Selamat sore' : 'Selamat malam'
 
-  if (loading) return (
+  if (loading && !stats) return (
     <div className="flex items-center justify-center h-64 gap-3 text-slate-400">
       <Loader2 className="w-5 h-5 animate-spin" />
       <span className="text-sm">Memuat dashboard...</span>
     </div>
   )
 
-  const statCards = [
+  const statCards = stats ? [
     orgs.some(o => ['programming', 'english'].includes(o)) && {
       label: 'Total Siswa Ekskul',
-      value: stats?.totalSiswa ?? 0,
+      value: stats.totalSiswa,
       suffix: 'siswa',
       icon: Users,
       color: 'bg-[rgba(84,130,180,0.12)] text-[#5482B4]',
     },
     orgs.includes('osis') && {
       label: 'Anggota OSIS',
-      value: stats?.totalOsis ?? 0,
+      value: stats.totalOsis,
       suffix: 'anggota',
       icon: Users,
       color: 'bg-[rgba(84,130,180,0.12)] text-[#5482B4]',
     },
     orgs.includes('mpk') && {
       label: 'Anggota MPK',
-      value: stats?.totalMpk ?? 0,
+      value: stats.totalMpk,
       suffix: 'anggota',
       icon: Users,
       color: 'bg-[rgba(84,130,180,0.12)] text-[#5482B4]',
     },
     {
       label: 'Hadir Hari Ini',
-      value: stats?.hadirHariIni ?? 0,
+      value: stats.hadirHariIni,
       suffix: 'orang',
       icon: CheckCircle2,
       color: 'bg-green-50 text-green-600',
     },
     {
       label: 'Sisa Saldo Kas',
-      value: formatCurrency(stats?.totalKas ?? 0),
+      value: formatCurrency(stats.totalKas),
       isCurrency: true,
       icon: Wallet,
       color: 'bg-[rgba(84,130,180,0.12)] text-[#5482B4]',
     },
     {
       label: 'Total Pemasukan Kas',
-      value: formatCurrency(stats?.totalPemasukan ?? 0),
+      value: formatCurrency(stats.totalPemasukan),
       isCurrency: true,
       icon: PlusCircle,
       color: 'bg-[rgba(84,130,180,0.12)] text-[#5482B4]',
     },
     {
       label: 'Total Pengeluaran Kas',
-      value: formatCurrency(stats?.totalPengeluaran ?? 0),
+      value: formatCurrency(stats.totalPengeluaran),
       isCurrency: true,
       icon: HandCoins,
       color: 'bg-red-50 text-red-600',
     },
-  ].filter(Boolean) as { label: string; value: number | string; suffix?: string; isCurrency?: boolean; icon: React.ElementType; color: string }[]
+  ].filter(Boolean) as { label: string; value: number | string; suffix?: string; isCurrency?: boolean; icon: React.ElementType; color: string }[] : []
 
   return (
     <div className="space-y-6 max-w-7xl">
@@ -343,14 +385,18 @@ export default function DashboardClient({ user }: Props) {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Kehadiran mingguan */}
-        <div className="card p-5">
+        <div className="card p-5 min-h-[280px]">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="w-4 h-4 text-[#5482B4]" />
             <h3 className="text-sm font-bold text-[#011025]">Kehadiran 7 Hari Terakhir</h3>
           </div>
-          {stats?.kehadiranMingguan && stats.kehadiranMingguan.some(d => d.hadir + d.tidak_hadir > 0) ? (
+          {loadingCharts ? (
+            <div className="h-48 flex items-center justify-center text-sm text-slate-400 gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" /> Memuat grafik...
+            </div>
+          ) : charts?.kehadiranMingguan && charts.kehadiranMingguan.some(d => d.hadir + d.tidak_hadir > 0) ? (
             <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={stats.kehadiranMingguan} barSize={14} barGap={3}>
+              <BarChart data={charts.kehadiranMingguan} barSize={14} barGap={3}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                 <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
@@ -368,14 +414,18 @@ export default function DashboardClient({ user }: Props) {
         </div>
 
         {/* Kas per bulan */}
-        <div className="card p-5">
+        <div className="card p-5 min-h-[280px]">
           <div className="flex items-center gap-2 mb-4">
             <Wallet className="w-4 h-4 text-[#5482B4]" />
             <h3 className="text-sm font-bold text-[#011025]">Uang Kas 6 Bulan Terakhir</h3>
           </div>
-          {stats?.kasPerBulan && stats.kasPerBulan.some(d => d.total > 0) ? (
+          {loadingCharts ? (
+            <div className="h-48 flex items-center justify-center text-sm text-slate-400 gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" /> Memuat grafik...
+            </div>
+          ) : charts?.kasPerBulan && charts.kasPerBulan.some(d => d.total > 0) ? (
             <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={stats.kasPerBulan}>
+              <AreaChart data={charts.kasPerBulan}>
                 <defs>
                   <linearGradient id="kasGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#5482B4" stopOpacity={0.18} />
@@ -401,8 +451,8 @@ export default function DashboardClient({ user }: Props) {
       </div>
 
       {/* Recent activity log (administrator only) */}
-      {user.role === 'administrator' && stats?.recentLog && stats.recentLog.length > 0 && (
-        <div className="card p-5">
+      {user.role === 'administrator' && (
+        <div className="card p-5 min-h-[150px]">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Activity className="w-4 h-4 text-[#5482B4]" />
@@ -410,19 +460,29 @@ export default function DashboardClient({ user }: Props) {
             </div>
             <a href="/log" className="text-xs font-semibold text-[#052659] hover:underline">Lihat semua →</a>
           </div>
-          <div className="space-y-2">
-            {stats.recentLog.map(log => (
-              <div key={log.id} className="flex items-start gap-3 py-2.5 px-3 rounded-lg hover:bg-slate-50 transition-colors">
-                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${AKSI_COLORS[log.aksi] || 'text-slate-600 bg-slate-100'}`}>
-                  {log.aksi}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-slate-700 leading-snug truncate">{log.deskripsi}</p>
-                  <span className="text-xs text-slate-400">{formatDateTime(log.created_at)}</span>
+          {loadingLogs ? (
+            <div className="py-8 flex items-center justify-center text-sm text-slate-400 gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" /> Memuat aktivitas...
+            </div>
+          ) : logs?.recentLog && logs.recentLog.length > 0 ? (
+            <div className="space-y-2">
+              {logs.recentLog.map(log => (
+                <div key={log.id} className="flex items-start gap-3 py-2.5 px-3 rounded-lg hover:bg-slate-50 transition-colors">
+                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${AKSI_COLORS[log.aksi] || 'text-slate-600 bg-slate-100'}`}>
+                    {log.aksi}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-slate-700 leading-snug truncate">{log.deskripsi}</p>
+                    <span className="text-xs text-slate-400">{formatDateTime(log.created_at)}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-sm text-slate-400">
+              Tidak ada aktivitas terbaru
+            </div>
+          )}
         </div>
       )}
 
@@ -440,11 +500,12 @@ export default function DashboardClient({ user }: Props) {
               <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, white 2px, transparent 2px)', backgroundSize: '20px 20px' }}></div>
             </div>
             <div className="px-6 pb-8 pt-0 text-center relative">
-              <div className="w-24 h-24 mx-auto -mt-12 mb-4 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white flex items-center justify-center">
-                <img 
+              <div className="w-24 h-24 mx-auto -mt-12 mb-4 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white flex items-center justify-center relative">
+                <Image 
                   src="https://uploads.onecompiler.io/43k3cj6jv/44p898awc/WhatsApp%20Image%202026-05-14%20at%2013.14.48%20(1).jpeg" 
                   alt="Administrator" 
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               </div>
               <div className="block w-full">

@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Wallet, Search, Filter, Loader2, Plus, Minus, X } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Wallet, Search, Filter, Loader2, Plus, Minus, X, ChevronRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatCurrency, ORG_LABELS, OrgType } from '@/lib/utils'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
+import { useDebounce } from '@/lib/hooks'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SkeletonRow } from '@/components/Skeleton'
 
@@ -20,30 +21,19 @@ interface Props {
   user: { id: number; nama: string; email: string; role: string }
 }
 
+const PAGE_SIZE = 20
+
 export default function KasClient({ user }: Props) {
   const [data, setData] = useState<KasData[]>([])
-  const [allData, setAllData] = useState<KasData[]>([])
-
-  const formatTerakhirBayar = (isoDate: string | null | undefined) => {
-    if (!isoDate) return '-'
-    const d = new Date(isoDate)
-    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
-    
-    const hari = days[d.getDay()]
-    const tanggalNum = d.getDate()
-    const bulan = months[d.getMonth()]
-    const tahun = d.getFullYear()
-    const jam = d.getHours().toString().padStart(2, '0')
-    const menit = d.getMinutes().toString().padStart(2, '0')
-    
-    return `${jam}:${menit} ${hari}, ${tanggalNum} ${bulan} ${tahun}`
-  }
   const [totalKas, setTotalKas] = useState(0)
   const [orgs, setOrgs] = useState<string[]>([])
   const [activeOrg, setActiveOrg] = useState<string>('')
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search, 500)
   const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
 
   // Transaction Modal State
   const [modalOpen, setModalOpen] = useState(false)
@@ -53,48 +43,49 @@ export default function KasClient({ user }: Props) {
   const [txKet, setTxKet] = useState('')
   const [txLoading, setTxLoading] = useState(false)
 
-  const fetchData = () => {
-    let url = `/api/kas`
-    if (activeOrg) url += `?org=${activeOrg}`
+  const fetchData = useCallback(() => {
+    let url = `/api/kas?page=${page}&limit=${PAGE_SIZE}`
+    if (activeOrg) url += `&org=${activeOrg}`
+    if (debouncedSearch) url += `&search=${debouncedSearch}`
 
     setLoading(true)
-    fetchJsonCachedUrl<{ data?: KasData[]; totalKas?: number; orgs?: string[]; activeOrg?: string }>(url)
+    fetchJsonCachedUrl<{ 
+      data?: KasData[]; 
+      totalKas?: number; 
+      orgs?: string[]; 
+      activeOrg?: string;
+      total?: number;
+      totalPages?: number;
+    }>(url)
       .then(json => {
-        setAllData(json.data || [])
+        setData(json.data || [])
         setTotalKas(json.totalKas || 0)
         setOrgs(json.orgs || [])
+        setTotalItems(json.total || 0)
+        setTotalPages(json.totalPages || 1)
         if (!activeOrg && json.activeOrg) setActiveOrg(json.activeOrg)
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }
+  }, [page, activeOrg, debouncedSearch])
 
   useEffect(() => {
     fetchData()
-  }, [activeOrg])
+  }, [fetchData])
 
   useEffect(() => {
-    if (!search) {
-      setData(allData)
-      return
-    }
-    const lowerSearch = search.toLowerCase()
-    const filtered = allData.filter(item => 
-      item.nama.toLowerCase().includes(lowerSearch) || 
-      (item.kelas || '').toLowerCase().includes(lowerSearch)
-    )
-    setData(filtered)
-  }, [search, allData])
+    setPage(1)
+  }, [activeOrg, debouncedSearch])
 
-  function openModal(item: KasData, type: 'setor' | 'tarik') {
+  const openModal = useCallback((item: KasData, type: 'setor' | 'tarik') => {
     setSelectedItem(item)
     setTxType(type)
     setTxNominal('')
     setTxKet('')
     setModalOpen(true)
-  }
+  }, [])
 
-  async function handleTransaction(e: React.FormEvent) {
+  const handleTransaction = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedItem || !txNominal) return
     
@@ -129,7 +120,23 @@ export default function KasClient({ user }: Props) {
       toast.error(err.message)
     }
     setTxLoading(false)
-  }
+  }, [selectedItem, txNominal, txType, txKet, activeOrg, fetchData])
+
+  const formatTerakhirBayar = useCallback((isoDate: string | null | undefined) => {
+    if (!isoDate) return '-'
+    const d = new Date(isoDate)
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+    
+    const hari = days[d.getDay()]
+    const tanggalNum = d.getDate()
+    const bulan = months[d.getMonth()]
+    const tahun = d.getFullYear()
+    const jam = d.getHours().toString().padStart(2, '0')
+    const menit = d.getMinutes().toString().padStart(2, '0')
+    
+    return `${jam}:${menit} ${hari}, ${tanggalNum} ${bulan} ${tahun}`
+  }, [])
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -225,7 +232,7 @@ export default function KasClient({ user }: Props) {
                     transition={{ delay: idx * 0.05, duration: 0.3 }}
                     className="hover:bg-slate-50/80 transition-colors duration-200"
                   >
-                    <td className="font-medium text-slate-500">{idx + 1}</td>
+                    <td className="font-medium text-slate-500">{(page - 1) * PAGE_SIZE + idx + 1}</td>
                     <td className="font-bold text-slate-800 whitespace-nowrap">{item.nama}</td>
                     <td className="text-slate-500 whitespace-nowrap">{item.kelas}</td>
                     <td className="text-right font-mono font-bold text-emerald-600 bg-emerald-50/30 whitespace-nowrap">
@@ -250,6 +257,53 @@ export default function KasClient({ user }: Props) {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {!loading && totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 bg-slate-50/50 border-t">
+            <span className="text-xs text-slate-500">
+              Menampilkan {data.length} dari {totalItems} anggota — Halaman {page} dari {totalPages}
+            </span>
+            <div className="flex items-center gap-1">
+              <button 
+                onClick={() => setPage(p => Math.max(1, p - 1))} 
+                disabled={page <= 1} 
+                className="p-1.5 rounded-lg border bg-white hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight className="w-4 h-4 rotate-180" />
+              </button>
+              <div className="flex items-center gap-1 px-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pNum = page - 2 + i
+                  if (page <= 2) pNum = i + 1
+                  if (page >= totalPages - 1) pNum = totalPages - 4 + i
+                  if (pNum < 1 || pNum > totalPages) return null
+                  
+                  return (
+                    <button
+                      key={pNum}
+                      onClick={() => setPage(pNum)}
+                      className={`w-8 h-8 text-xs font-bold rounded-lg transition-all ${
+                        page === pNum 
+                        ? 'bg-amber-500 text-white shadow-md shadow-amber-200' 
+                        : 'text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      {pNum}
+                    </button>
+                  )
+                })}
+              </div>
+              <button 
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
+                disabled={page >= totalPages} 
+                className="p-1.5 rounded-lg border bg-white hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal Transaksi */}

@@ -1,3 +1,4 @@
+import React, { memo } from 'react'
 import { cn } from '@/lib/utils'
 import { ChevronLeft, ChevronRight, Inbox, Loader2 } from 'lucide-react'
 
@@ -25,12 +26,50 @@ interface TableProps<T> {
   onSelectionChange?: (keys: (string | number)[]) => void
 }
 
+const TableRow = memo(function TableRow<T>({ 
+  item, columns, selectable, isSelected, onSelect, itemKey 
+}: { 
+  item: T, 
+  columns: Column<T>[], 
+  selectable?: boolean, 
+  isSelected?: boolean, 
+  onSelect?: (checked: boolean, key: string | number) => void,
+  itemKey: string | number
+}) {
+  return (
+    <tr className={cn('tr', isSelected && 'bg-[rgba(84,130,180,0.12)]')}>
+      {selectable && (
+        <td className="td w-10 text-center px-4" onClick={(e) => e.stopPropagation()}>
+          <input type="checkbox"
+            className="w-4 h-4 rounded border-[#5482B4]/30 text-[#052659] focus:ring-[#5482B4] cursor-pointer"
+            checked={isSelected || false}
+            onChange={(e) => onSelect?.(e.target.checked, itemKey)}
+          />
+        </td>
+      )}
+      {columns.map(col => (
+        <td key={col.key} className={cn('td', col.className)}>
+          {col.render ? col.render(item) : String((item as Record<string, unknown>)[col.key] ?? '')}
+        </td>
+      ))}
+    </tr>
+  )
+})
+
 export default function Table<T>({
   columns, data, loading, emptyMessage = 'Belum ada data',
   emptyIcon, page = 1, totalPages = 1, total, onPageChange, rowKey,
   selectable, selectedKeys, onSelectionChange
 }: TableProps<T>) {
   const getKey = (item: T, i: number) => rowKey ? rowKey(item) : i
+
+  const handleSelect = (checked: boolean, key: string | number) => {
+    if (onSelectionChange && selectedKeys) {
+      onSelectionChange(
+        checked ? [...selectedKeys, key] : selectedKeys.filter(k => k !== key)
+      )
+    }
+  }
 
   return (
     <div className="overflow-hidden rounded-xl border border-[rgba(84,130,180,0.15)] bg-white">
@@ -81,29 +120,15 @@ export default function Table<T>({
               data.map((item, i) => {
                 const key = getKey(item, i)
                 return (
-                  <tr key={key} className={cn('tr', selectedKeys?.includes(key) && 'bg-[rgba(84,130,180,0.12)]')}>
-                    {selectable && (
-                      <td className="td w-10 text-center px-4" onClick={(e) => e.stopPropagation()}>
-                        <input type="checkbox"
-                          className="w-4 h-4 rounded border-[#5482B4]/30 text-[#052659] focus:ring-[#5482B4] cursor-pointer"
-                          checked={selectedKeys?.includes(key) || false}
-                          onChange={(e) => {
-                            if (onSelectionChange && selectedKeys) {
-                              const checked = e.target.checked
-                              onSelectionChange(
-                                checked ? [...selectedKeys, key] : selectedKeys.filter(k => k !== key)
-                              )
-                            }
-                          }}
-                        />
-                      </td>
-                    )}
-                    {columns.map(col => (
-                      <td key={col.key} className={cn('td', col.className)}>
-                        {col.render ? col.render(item) : String((item as Record<string, unknown>)[col.key] ?? '')}
-                      </td>
-                    ))}
-                  </tr>
+                  <TableRow 
+                    key={key}
+                    item={item}
+                    itemKey={key}
+                    columns={columns}
+                    selectable={selectable}
+                    isSelected={selectedKeys?.includes(key)}
+                    onSelect={handleSelect}
+                  />
                 )
               })
             )}

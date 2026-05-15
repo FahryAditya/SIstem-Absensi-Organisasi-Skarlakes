@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { formatDateTime } from '@/lib/utils'
 import { fetchJsonCachedUrl } from '@/lib/client-cache'
+import { useDebounce } from '@/lib/hooks'
 import { ScrollText, Search, Filter, ChevronDown, ChevronRight, Loader2, Eye } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 
@@ -35,6 +36,7 @@ export default function LogClient() {
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search, 500)
   const [filterAksi, setFilterAksi] = useState('')
   const [filterTabel, setFilterTabel] = useState('')
   const [page, setPage] = useState(1)
@@ -46,7 +48,7 @@ export default function LogClient() {
     setLoading(true)
     const params = new URLSearchParams({
       page: String(page), limit: String(PAGE_SIZE),
-      ...(search && { search }),
+      ...(debouncedSearch && { search: debouncedSearch }),
       ...(filterAksi && { aksi: filterAksi }),
       ...(filterTabel && { tabel: filterTabel }),
     })
@@ -55,10 +57,14 @@ export default function LogClient() {
     setTotal(json.total || 0)
     setTotalPages(json.totalPages || 1)
     setLoading(false)
-  }, [page, search, filterAksi, filterTabel])
+  }, [page, debouncedSearch, filterAksi, filterTabel])
 
   useEffect(() => { load() }, [load])
-  useEffect(() => { setPage(1) }, [search, filterAksi, filterTabel])
+  
+  // Reset page when search or filters change
+  useEffect(() => { 
+    setPage(1) 
+  }, [debouncedSearch, filterAksi, filterTabel])
 
   const tabelOptions = ['users', 'siswa', 'absensi', 'anggota_osis', 'anggota_mpk', 'absensi_osis', 'absensi_mpk']
 

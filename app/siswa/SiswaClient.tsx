@@ -9,6 +9,7 @@ import { OrgBadge } from '@/components/ui/Badges'
 import { formatDate } from '@/lib/utils'
 import { canManageSiswaData } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
+import { useDebounce } from '@/lib/hooks'
 import { Plus, Search, Pencil, Trash2, Users, Loader2, Filter, Contact } from 'lucide-react'
 
 interface Siswa {
@@ -24,9 +25,9 @@ const PAGE_SIZE = 15
 
 export default function SiswaClient({ user, defaultOrg }: Props) {
   const [data, setData] = useState<Siswa[]>([])
-  const [allData, setAllData] = useState<Siswa[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search, 500)
   const [orgFilter, setOrgFilter] = useState<string>(defaultOrg)
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
@@ -54,40 +55,41 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const json = await fetchJsonCachedUrl<{ data?: Siswa[] }>('/api/siswa?limit=1000')
-    setAllData(json.data || [])
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(PAGE_SIZE),
+      ...(debouncedSearch && { search: debouncedSearch }),
+      ...(orgFilter && { ekskul: orgFilter }),
+    })
+    
+    try {
+      const json = await fetchJsonCachedUrl<{ data?: Siswa[]; total?: number; totalPages?: number }>(`/api/siswa?${params}`)
+      setData(json.data || [])
+      setTotal(json.total || 0)
+      setTotalPages(json.totalPages || 1)
+    } catch (e) {
+      toast.error('Gagal memuat data siswa')
+    }
     setLoading(false)
-  }, [])
+  }, [page, debouncedSearch, orgFilter])
 
   useEffect(() => { load() }, [load])
-  useEffect(() => { setPage(1); setSelectedIds([]) }, [search, orgFilter])
+  
+  useEffect(() => { 
+    setPage(1)
+    setSelectedIds([]) 
+  }, [debouncedSearch, orgFilter])
+  
   useEffect(() => { setSelectedIds([]) }, [page])
 
-  const filteredData = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    return allData.filter((item) => {
-      const matchOrg = !orgFilter || item.ekskul === orgFilter
-      const matchSearch = !q || item.nama.toLowerCase().includes(q) || (item.nis || '').toLowerCase().includes(q)
-      return matchOrg && matchSearch
-    })
-  }, [allData, search, orgFilter])
-
-  useEffect(() => {
-    const pages = Math.max(1, Math.ceil(filteredData.length / PAGE_SIZE))
-    setTotal(filteredData.length)
-    setTotalPages(pages)
-    if (page > pages) setPage(pages)
-    setData(filteredData.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE))
-  }, [filteredData, page])
-
-  function openAdd() {
+  const openAdd = useCallback(() => {
     setEditTarget(null)
     setFNama(''); setFNis(''); setFTingkat(''); setFJurusan('')
     setFEkskul(defaultOrg || 'programming')
     setModalOpen(true)
-  }
+  }, [defaultOrg])
 
-  function openEdit(s: Siswa) {
+  const openEdit = useCallback((s: Siswa) => {
     setEditTarget(s)
     setFNama(s.nama); setFNis(s.nis || '')
     const kls = s.kelas || ''
@@ -97,9 +99,9 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
     setFJurusan(t ? parts.slice(1).join(' ') : kls)
     setFEkskul(s.ekskul as 'programming' | 'english')
     setModalOpen(true)
-  }
+  }, [])
 
-  async function handleSave() {
+  const handleSave = useCallback(async () => {
     if (!fNama.trim()) { toast.error('Nama wajib diisi'); return }
     setSaving(true)
     const finalKelas = `${fTingkat} ${fJurusan}`.trim()
@@ -114,9 +116,9 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
     toast.success(editTarget ? 'Data siswa diperbarui' : 'Siswa berhasil ditambahkan')
     clearJsonCache()
     setSaving(false); setModalOpen(false); load()
-  }
+  }, [fNama, fNis, fTingkat, fJurusan, fEkskul, editTarget, load])
 
-  async function handleDelete() {
+  const handleDelete = useCallback(async () => {
     if (!deleteTarget) return
     setDeleting(true)
     const res = await fetch(`/api/siswa?id=${deleteTarget.id}`, { method: 'DELETE' })
@@ -125,9 +127,9 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
     toast.success('Siswa dihapus')
     clearJsonCache()
     setDeleting(false); setDeleteTarget(null); load()
-  }
+  }, [deleteTarget, load])
 
-  async function handleBulkDelete() {
+  const handleBulkDelete = useCallback(async () => {
     if (selectedIds.length === 0) return
     setBulkDeleting(true)
     const res = await fetch(`/api/siswa?ids=${selectedIds.join(',')}`, { method: 'DELETE' })
@@ -136,11 +138,13 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
     toast.success(`${selectedIds.length} data siswa dihapus`)
     clearJsonCache()
     setBulkDeleting(false); setBulkDeleteConfirmOpen(false); setSelectedIds([]); load()
-  }
+  }, [selectedIds, load])
 
-
-  const columns = [
-    { key: 'no', label: 'No', render: (_: Siswa, i?: number) => <span className="text-slate-400 font-mono text-xs">{(page - 1) * PAGE_SIZE + (i ?? 0) + 1}</span> },
+  const columns = useMemo(() => [
+    { key: 'no', label: 'No', render: (s: Siswa) => {
+      const idx = data.indexOf(s)
+      return <span className="text-slate-400 font-mono text-xs">{(page - 1) * PAGE_SIZE + idx + 1}</span>
+    }},
     { key: 'nis', label: 'NIS', render: (s: Siswa) => <span className="font-mono text-xs text-slate-500">{s.nis || '-'}</span> },
     { key: 'nama', label: 'Nama Siswa', render: (s: Siswa) => <span className="font-semibold text-slate-800">{s.nama}</span> },
     { key: 'kelas', label: 'Kelas', render: (s: Siswa) => <span className="text-slate-500 text-xs">{s.kelas || '-'}</span> },
@@ -155,18 +159,7 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
         </div>
       )
     },
-  ]
-
-  // Override render to pass index
-  const columnsWithIndex = columns.map(col => ({
-    ...col,
-    render: col.key === 'no'
-      ? (item: Siswa) => {
-          const idx = data.indexOf(item)
-          return <span className="text-slate-400 font-mono text-xs">{(page - 1) * PAGE_SIZE + idx + 1}</span>
-        }
-      : col.render
-  }))
+  ], [data, page, openEdit])
 
   return (
     <div className="space-y-5">
@@ -213,7 +206,7 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
 
       {/* Table */}
       <Table
-        columns={columnsWithIndex as Parameters<typeof Table>[0]['columns']}
+        columns={columns as Parameters<typeof Table>[0]['columns']}
         data={data}
         loading={loading}
         emptyMessage="Belum ada siswa terdaftar"
