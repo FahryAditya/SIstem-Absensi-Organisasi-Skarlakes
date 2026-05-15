@@ -206,7 +206,7 @@ export default function ExportClient({ user }: Props) {
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-6 pt-6">
         <div className="card p-5">
           <div className="flex items-center gap-2.5 mb-3">
             <FileSpreadsheet className="w-5 h-5 text-indigo-500" />
