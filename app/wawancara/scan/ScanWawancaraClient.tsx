@@ -24,7 +24,7 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
   const [saving, setSaving] = useState(false)
   const [nama, setNama] = useState('')
   const [tingkat, setTingkat] = useState('X')
-  const [jurusan, setJurusan] = useState('AKL 1')
+  const [jurusan, setJurusan] = useState('AKL')
   const [organisasi, setOrganisasi] = useState<'osis'|'mpk'>('osis')
   const [queueNumber, setQueueNumber] = useState<number | null>(null)
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null)
@@ -166,16 +166,23 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
               <div className="form-group">
                 <label className="label">Jurusan *</label>
                 <select value={jurusan} onChange={(e) => setJurusan(e.target.value)} className="input">
-                  <option value="AKL 1">AKL 1</option>
-                  <option value="AKL 2">AKL 2</option>
-                  <option value="BDP 1">BDP 1</option>
-                  <option value="BDP 2">BDP 2</option>
-                  <option value="MPLB 1">MPLB 1</option>
-                  <option value="MPLB 2">MPLB 2</option>
-                  <option value="MPLB 3">MPLB 3</option>
-                  <option value="RPL">RPL</option>
-                  <option value="TKJ 1">TKJ 1</option>
-                  <option value="TKJ 2">TKJ 2</option>
+                  <optgroup label="SMK Airlangga (Skarla)">
+                    <option value="AKL">AKL</option>
+                    <option value="PPLG">PPLG</option>
+                    <option value="DKV">DKV</option>
+                    <option value="MPLB 1">MPLB 1</option>
+                    <option value="MPLB 2">MPLB 2</option>
+                    <option value="TJKT 1">TJKT 1</option>
+                    <option value="TJKT 2">TJKT 2</option>
+                  </optgroup>
+                  <optgroup label="SMK Kesehatan (Skakes)">
+                    <option value="Kesehatan 1">Kesehatan 1</option>
+                    <option value="Kesehatan 2">Kesehatan 2</option>
+                    <option value="Kesehatan 3">Kesehatan 3</option>
+                    <option value="Kesehatan 4">Kesehatan 4</option>
+                    <option value="Kesehatan 5">Kesehatan 5</option>
+                    <option value="Kesehatan 6">Kesehatan 6</option>
+                  </optgroup>
                 </select>
               </div>
             </div>
