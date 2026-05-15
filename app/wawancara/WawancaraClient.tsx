@@ -229,20 +229,50 @@ export default function WawancaraClient({ user }: Props) {
   }, [activeSession?.id])
 
   useEffect(() => {
-    if (!activeSession?.id || !pusherClient) return
+    if (!activeSession?.id) return
     
-    const channel = pusherClient!.subscribe(`chat-${activeSession.id}`)
-    channel.bind('incoming-chat', (data: ChatMessage) => {
-      setChats((prev) => {
-        if (prev.some((c) => c.id === data.id)) return prev
-        return [...prev, data]
+    // CASE 1: Pusher is configured - use real-time
+    if (pusherClient) {
+      console.log('Using Pusher for chat...')
+      const channel = pusherClient.subscribe(`chat-${activeSession.id}`)
+      channel.bind('incoming-chat', (data: ChatMessage) => {
+        setChats((prev) => {
+          if (prev.some((c) => c.id === data.id)) return prev
+          return [...prev, data]
+        })
       })
-    })
+      return () => {
+        pusherClient!.unsubscribe(`chat-${activeSession.id}`)
+      }
+    } 
+    
+    // CASE 2: Pusher missing - fallback to polling
+    console.warn('Pusher not configured, falling back to polling...')
+    const pollId = setInterval(async () => {
+      const realChats = chats.filter(c => c.id > 0)
+      const lastId = realChats.length > 0 ? Math.max(...realChats.map(c => c.id)) : 0
+      
+      const params = new URLSearchParams({
+        sesiId: activeSession.id.toString(),
+        ...(lastId > 0 && { sinceId: lastId.toString() }),
+      })
+      
+      try {
+        const res = await fetch(`/api/wawancara/chat?${params}`)
+        const json = await res.json()
+        if (json.data?.length) {
+          setChats(prev => {
+            const newMsgs = json.data.filter((m: ChatMessage) => !prev.some(p => p.id === m.id))
+            return [...prev, ...newMsgs]
+          })
+        }
+      } catch (e) {
+        console.error('Polling error:', e)
+      }
+    }, 4000)
 
-    return () => {
-      pusherClient!.unsubscribe(`chat-${activeSession.id}`)
-    }
-  }, [activeSession?.id])
+    return () => clearInterval(pollId)
+  }, [activeSession?.id, !!pusherClient, chats.length])
 
   function openCreate() {
     setEditingSessionId(null)
@@ -380,6 +410,8 @@ export default function WawancaraClient({ user }: Props) {
     if (!activeSession || !chatText.trim()) return
     const message = chatText.trim()
     
+    console.log('Sending chat to session:', activeSession.id)
+    
     // Optimistic UI: Add message immediately
     const tempId = -Date.now()
     const optimisticMsg: ChatMessage = {
@@ -392,20 +424,29 @@ export default function WawancaraClient({ user }: Props) {
     setChats((prev) => [...prev, optimisticMsg])
     setChatText('')
 
-    const res = await fetch('/api/wawancara/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sesi_id: activeSession.id, pesan: message }),
-    })
-    const json = await res.json().catch(() => ({}))
-    
-    if (!res.ok) {
-      toast.error(json.error || 'Gagal mengirim chat')
-      // Remove optimistic message on error
+    try {
+      const res = await fetch('/api/wawancara/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sesi_id: activeSession.id, pesan: message }),
+      })
+      
+      const json = await res.json().catch(() => ({}))
+      
+      if (!res.ok) {
+        console.error('Chat API error:', res.status, json.error)
+        toast.error(json.error || 'Gagal mengirim chat')
+        // Remove optimistic message on error
+        setChats((prev) => prev.filter(c => c.id !== tempId))
+      } else {
+        console.log('Chat sent successfully, updating message ID')
+        // Replace optimistic message with real one from server
+        setChats((prev) => prev.map(c => c.id === tempId ? json.data : c))
+      }
+    } catch (err) {
+      console.error('Chat network error:', err)
+      toast.error('Gagal mengirim pesan (Kesalahan Jaringan)')
       setChats((prev) => prev.filter(c => c.id !== tempId))
-    } else {
-      // Replace optimistic message with real one from server
-      setChats((prev) => prev.map(c => c.id === tempId ? json.data : c))
     }
   }
 
