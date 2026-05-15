@@ -52,9 +52,10 @@ function getNavItems(role: string) {
     items.push({ section: 'Organisasi', links: orgLinks })
   }
 
-  const toolLinks = [
-    { href: '/export', label: 'Export Data', icon: Download },
-  ]
+const toolLinks = [
+     { href: '/import', label: 'Import Excel', icon: Download },
+     { href: '/export', label: 'Export Data', icon: Download },
+   ]
 
    if (role === 'administrator') {
      toolLinks.unshift({ href: '/admin', label: 'Kelola User', icon: UserCog })
