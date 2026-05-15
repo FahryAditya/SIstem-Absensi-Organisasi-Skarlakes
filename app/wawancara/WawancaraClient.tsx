@@ -9,7 +9,8 @@ import { isAdministrator } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import {
   CalendarClock, CheckCircle2, Clock, Download, Loader2, Lock, MessageSquareText,
-  Play, Plus, QrCode, RefreshCcw, Save, Send, ShieldCheck, SquarePen, Users, XCircle, UserX
+  Play, Plus, QrCode, RefreshCcw, Save, Send, ShieldCheck, SquarePen, Users, XCircle, UserX,
+  Bell
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { pusherClient } from '@/lib/pusher-client'
@@ -137,6 +138,7 @@ export default function WawancaraClient({ user }: Props) {
   const [kelasDraft, setKelasDraft] = useState('')
   const [chats, setChats] = useState<ChatMessage[]>([])
   const [chatText, setChatText] = useState('')
+  const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [sessionModal, setSessionModal] = useState(false)
   const [resultModal, setResultModal] = useState(false)
@@ -238,6 +240,7 @@ export default function WawancaraClient({ user }: Props) {
       channel.bind('incoming-chat', (data: ChatMessage) => {
         setChats((prev) => {
           if (prev.some((c) => c.id === data.id)) return prev
+          if (data.sender.id !== user.id) setUnreadCount(prevCount => prevCount + 1)
           return [...prev, data]
         })
       })
@@ -263,6 +266,10 @@ export default function WawancaraClient({ user }: Props) {
         if (json.data?.length) {
           setChats(prev => {
             const newMsgs = json.data.filter((m: ChatMessage) => !prev.some(p => p.id === m.id))
+            if (newMsgs.length > 0) {
+              const fromOthers = newMsgs.filter((m: ChatMessage) => m.sender.id !== user.id)
+              if (fromOthers.length > 0) setUnreadCount(prevCount => prevCount + fromOthers.length)
+            }
             return [...prev, ...newMsgs]
           })
         }
@@ -272,7 +279,7 @@ export default function WawancaraClient({ user }: Props) {
     }, 4000)
 
     return () => clearInterval(pollId)
-  }, [activeSession?.id, !!pusherClient, chats.length])
+  }, [activeSession?.id, !!pusherClient, chats.length, user.id])
 
   function openCreate() {
     setEditingSessionId(null)
@@ -423,6 +430,7 @@ export default function WawancaraClient({ user }: Props) {
     
     setChats((prev) => [...prev, optimisticMsg])
     setChatText('')
+    setUnreadCount(0)
 
     try {
       const res = await fetch('/api/wawancara/chat', {
@@ -676,10 +684,20 @@ export default function WawancaraClient({ user }: Props) {
             )}
           </div>
 
-          <div className="card p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <MessageSquareText className="w-5 h-5 text-indigo-500" />
-              <h3 className="text-sm font-bold text-slate-800">Live Chat Internal</h3>
+          <div className="card p-5" onClick={() => setUnreadCount(0)}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <MessageSquareText className="w-5 h-5 text-indigo-500" />
+                <h3 className="text-sm font-bold text-slate-800">Live Chat Internal</h3>
+              </div>
+              <div className="relative">
+                <Bell className={`w-5 h-5 ${unreadCount > 0 ? 'text-amber-500 animate-bounce' : 'text-slate-400'}`} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm border border-white">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
             </div>
             {activeSession ? (
               <div className="space-y-3">
