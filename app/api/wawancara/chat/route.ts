@@ -2,17 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { canAccessMpk, canAccessOsis } from '@/lib/auth'
 import { z } from 'zod'
+import { pusherServer } from '@/lib/pusher'
 
 export const dynamic = 'force-dynamic'
 
-type CacheEntry = {
-  expiresAt: number
-  payload: unknown
-}
-
-const chatCache = new Map<string, CacheEntry>()
-const CHAT_CACHE_TTL_MS = 3_000
-
+// ── Helpers ───────────────────────────────────────────────────────────────
 function getCtx(req: NextRequest) {
   return {
     userId: parseInt(req.headers.get('x-user-id') || '0'),
@@ -31,18 +25,13 @@ const chatSchema = z.object({
   pesan: z.string().min(1, 'Pesan wajib diisi').max(1000, 'Pesan maksimal 1000 karakter'),
 })
 
+// ── GET ───────────────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
   const ctx = getCtx(req)
   const { searchParams } = new URL(req.url)
   const sesiId = parseInt(searchParams.get('sesiId') || '0')
   const sinceId = parseInt(searchParams.get('sinceId') || '0')
   if (!sesiId) return NextResponse.json({ error: 'ID sesi wajib diisi' }, { status: 400 })
-
-  const cacheKey = JSON.stringify({ role: ctx.userRole, sesiId, sinceId })
-  const cached = chatCache.get(cacheKey)
-  if (cached && cached.expiresAt > Date.now()) {
-    return NextResponse.json(cached.payload)
-  }
 
   const sesi = await prisma.sesiWawancara.findUnique({ where: { id: sesiId } })
   if (!sesi) return NextResponse.json({ error: 'Sesi tidak ditemukan' }, { status: 404 })
@@ -53,6 +42,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Live chat hanya tersedia saat wawancara aktif' }, { status: 400 })
   }
 
+  // Polling mode: initial page-load / history fetch
   const data = await prisma.chatWawancara.findMany({
     where: {
       sesi_id: sesiId,
@@ -63,11 +53,10 @@ export async function GET(req: NextRequest) {
     take: sinceId ? 50 : 100,
   })
 
-  const payload = { data }
-  chatCache.set(cacheKey, { payload, expiresAt: Date.now() + CHAT_CACHE_TTL_MS })
-  return NextResponse.json(payload)
+  return NextResponse.json({ data })
 }
 
+// ── POST ──────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   const ctx = getCtx(req)
   const parsed = chatSchema.safeParse(await req.json())
@@ -91,6 +80,14 @@ export async function POST(req: NextRequest) {
     include: { sender: { select: { id: true, nama: true, role: true } } },
   })
 
-  chatCache.clear()
+  // Trigger Pusher event — robust and works across multiple server instances.
+  // This is non-blocking to keep the response fast.
+  try {
+    await pusherServer.trigger(`chat-${parsed.data.sesi_id}`, 'incoming-chat', data)
+  } catch (err) {
+    console.error('Pusher trigger failed:', err)
+  }
+
   return NextResponse.json({ data }, { status: 201 })
 }
+

@@ -1,7 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { canAccessMpk, canAccessOsis, getSessionFromRequest } from '@/lib/auth'
+import type { AntrianWawancara } from '@prisma/client'
 import { z } from 'zod'
+
+async function updateIpInfo(antrianId: number, sesiId: number, ip: string) {
+  try {
+    if (ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
+      await prisma.antrianWawancara.update({
+        where: { id: antrianId },
+        data: { ip_status: 'NORMAL', ip_country: 'Indonesia', ip_isp: 'Local Network' },
+      })
+      return
+    }
+    const res = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,isp,proxy,hosting,query`)
+    const json = await res.json().catch(() => null)
+    if (!json || json.status !== 'success') return
+    const foreignIp = !!(json.country && json.country.toLowerCase() !== 'indonesia')
+    const proxy = Boolean(json.proxy || json.hosting)
+    const ipStatus: AntrianWawancara['ip_status'] = foreignIp ? 'VPN_LUAR_NEGERI' : proxy ? 'VPN_INDONESIA' : json.country ? 'NORMAL' : 'TIDAK_DIKETAHUI'
+    await prisma.antrianWawancara.update({
+      where: { id: antrianId },
+      data: { ip_status: ipStatus, ip_country: json.country ?? null, ip_isp: json.isp ?? null },
+    })
+  } catch { /* silent – non-critical enrichment */ }
+}
 
 async function getCtx(req: NextRequest) {
   const role = req.headers.get('x-user-role')
@@ -48,22 +71,6 @@ function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number)
   return 2 * r * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-async function lookupIp(ip: string) {
-  if (ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
-    return { country: 'Indonesia', isp: 'Local Network', proxy: false }
-  }
-  try {
-    const res = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,isp,proxy,hosting,query`, {
-      next: { revalidate: 60 * 60 },
-    })
-    const json = await res.json()
-    if (json.status !== 'success') return { country: null, isp: null, proxy: false }
-    return { country: json.country as string | null, isp: json.isp as string | null, proxy: Boolean(json.proxy || json.hosting) }
-  } catch {
-    return { country: null, isp: null, proxy: false }
-  }
-}
-
 export async function POST(req: NextRequest) {
   const parsed = enqueueSchema.safeParse(await req.json())
   if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
@@ -98,25 +105,29 @@ export async function POST(req: NextRequest) {
   }
 
   const ip = getIp(req)
-  const ipInfo = await lookupIp(ip)
+
+  // Default to unknown — IP details will be filled in by a background task
+  // so the participant isn't kept waiting for the ip-api.com HTTP round-trip.
+  const ipInfo: { country: string | null; isp: string | null; proxy: boolean } = {
+    country: null, isp: null, proxy: false,
+  }
   const jarak = haversineMeters(parsed.data.latitude, parsed.data.longitude, SCHOOL_LAT, SCHOOL_LNG)
   const outsideRadius = jarak > SCHOOL_RADIUS_M
-  const foreignIp = !!ipInfo.country && ipInfo.country.toLowerCase() !== 'indonesia'
-  const proxy = ipInfo.proxy
-  const ipStatus = foreignIp ? 'VPN_LUAR_NEGERI' : proxy ? 'VPN_INDONESIA' : ipInfo.country ? 'NORMAL' : 'TIDAK_DIKETAHUI'
-  const statusValidasi = outsideRadius ? 'TIDAK_SAH' : ipStatus === 'VPN_LUAR_NEGERI' ? 'DITOLAK_VPN' : ipStatus === 'VPN_INDONESIA' ? 'SAH_DICURIGAI' : 'SAH'
+  const ipStatus = 'TIDAK_DIKETAHUI'
+  const statusValidasi = outsideRadius ? 'TIDAK_SAH' : 'SAH'
   const alasan = outsideRadius
     ? `Jarak ${Math.round(jarak)}m dari sekolah`
-    : ipStatus === 'VPN_LUAR_NEGERI'
-      ? 'VPN/Proxy luar negeri terdeteksi'
-      : ipStatus === 'VPN_INDONESIA'
-        ? 'VPN/Proxy Indonesia terdeteksi'
-        : 'Valid'
+    : 'Valid'
 
-  if (statusValidasi === 'DITOLAK_VPN' || statusValidasi === 'TIDAK_SAH') {
+  if (statusValidasi === 'TIDAK_SAH') {
     const rejectedCount = await prisma.antrianWawancara.count({
       where: { sesi_id: sesi.id, status_validasi: { in: ['DITOLAK_VPN', 'TIDAK_SAH'] } },
     })
+    const ipSt = (() => {
+      if (ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.'))
+        return { st: 'NORMAL' as const, country: 'Indonesia' as string | null, isp: 'Local Network' as string | null }
+      return { st: 'TIDAK_DIKETAHUI' as const, country: null as string | null, isp: null as string | null }
+    })()
     const rejected = await prisma.antrianWawancara.create({
       data: {
         sesi_id: sesi.id,
@@ -126,9 +137,9 @@ export async function POST(req: NextRequest) {
         nomor_antrian: -(rejectedCount + 1),
         scan_token: parsed.data.token,
         ip_address: ip,
-        ip_country: ipInfo.country || undefined,
-        ip_isp: ipInfo.isp || undefined,
-        ip_status: ipStatus,
+        ip_country: ipSt.country,
+        ip_isp: ipSt.isp,
+        ip_status: ipSt.st,
         gps_lat: parsed.data.latitude,
         gps_lng: parsed.data.longitude,
         jarak_meter: jarak,
@@ -140,33 +151,55 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: alasan, data: rejected }, { status: 400 })
   }
 
-  const maxQueue = await prisma.antrianWawancara.aggregate({
-    where: { sesi_id: sesi.id },
-    _max: { nomor_antrian: true },
-  })
+  // Allocate queue number atomically using the unique index as a concurrency guard.
+  // Both transactions read the current max at the same time; only the unique constraint
+  // prevents them from inserting the same number. We catch P2002 and retry with the new max.
+  const alloc = async (): Promise<AntrianWawancara> => {
+    const maxQueue = await prisma.antrianWawancara.aggregate({
+      where: { sesi_id: sesi.id },
+      _max: { nomor_antrian: true },
+    })
+    const nextNum = (maxQueue._max.nomor_antrian || 0) + 1
+    return prisma.antrianWawancara.create({
+      data: {
+        sesi_id: sesi.id,
+        qr_id: qr.id,
+        nama,
+        kelas,
+        nomor_antrian: nextNum,
+        scan_token: parsed.data.token,
+        ip_address: ip,
+        // defaults – no network round-trip needed before responding
+        ip_status: 'TIDAK_DIKETAHUI',
+        gps_lat: parsed.data.latitude,
+        gps_lng: parsed.data.longitude,
+        jarak_meter: jarak,
+        status_validasi: statusValidasi,
+        alasan_validasi: alasan,
+        user_agent: req.headers.get('user-agent')?.slice(0, 255),
+      },
+    })
+  }
 
-  const data = await prisma.antrianWawancara.create({
-    data: {
-      sesi_id: sesi.id,
-      qr_id: qr.id,
-      nama,
-      kelas,
-      nomor_antrian: (maxQueue._max.nomor_antrian || 0) + 1,
-      scan_token: parsed.data.token,
-      ip_address: ip,
-      ip_country: ipInfo.country || undefined,
-      ip_isp: ipInfo.isp || undefined,
-      ip_status: ipStatus,
-      gps_lat: parsed.data.latitude,
-      gps_lng: parsed.data.longitude,
-      jarak_meter: jarak,
-      status_validasi: statusValidasi,
-      alasan_validasi: alasan,
-      user_agent: req.headers.get('user-agent')?.slice(0, 255),
-    },
-  })
+  let created: AntrianWawancara
+  try {
+    created = await alloc()
+  } catch (e: any) {
+    if (e?.code === 'P2002') {
+      // Unique constraint hit — another concurrent scan took the same number.
+      // Retry once with a freshly computed max.
+      created = await alloc()
+    } else {
+      throw e
+    }
+  }
 
-  return NextResponse.json({ data }, { status: 201 })
+  // Fire-and-forget IP enrichment after the response is already committed.
+  // The participant gets their queue number instantly; the antrian record is updated
+  // with the real ip_status/ip_country/ip_isp a moment later.
+  ;(async () => { try { await updateIpInfo(created.id, sesi.id, ip) } catch {} })()
+
+  return NextResponse.json({ data: created }, { status: 201 })
 }
 
 export async function PATCH(req: NextRequest) {

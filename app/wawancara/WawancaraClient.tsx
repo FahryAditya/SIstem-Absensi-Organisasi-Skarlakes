@@ -12,6 +12,7 @@ import {
   Play, Plus, QrCode, RefreshCcw, Save, Send, ShieldCheck, SquarePen, Users, XCircle, UserX
 } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { pusherClient } from '@/lib/pusher'
 
 type Org = 'osis' | 'mpk'
 type SessionStatus = 'SCHEDULED' | 'ACTIVE' | 'SELESAI' | 'DIBATALKAN'
@@ -119,7 +120,6 @@ const validationStyle: Record<ScanValidation, string> = {
 }
 
 const SESSION_POLL_MS = 15_000
-const CHAT_POLL_MS = 8_000
 
 function datetimeLocalValue(value: string | null) {
   if (!value) return ''
@@ -223,38 +223,29 @@ export default function WawancaraClient({ user }: Props) {
     }
   }, [currentTime, selectedSession])
 
-  const loadChat = useCallback(async () => {
-    if (!activeSession) { setChats([]); return }
-    const lastId = chatLastId.current
-    const params = new URLSearchParams({
-      sesiId: activeSession.id.toString(),
-      ...(lastId && { sinceId: lastId.toString() }),
-    })
-    const json = await fetchJsonCachedUrl<{ data?: ChatMessage[] }>(`/api/wawancara/chat?${params}`, { ttlMs: CHAT_POLL_MS }).catch(() => ({ data: [] }))
-    const incoming = json.data || []
-    if (incoming.length) chatLastId.current = incoming[incoming.length - 1].id
-    setChats((prev) => lastId ? [...prev, ...incoming] : incoming)
-  }, [activeSession])
-
   useEffect(() => {
     chatLastId.current = 0
     setChats([])
   }, [activeSession?.id])
 
-  useEffect(() => { loadChat() }, [loadChat])
   useEffect(() => {
-    const tick = () => {
-      if (document.visibilityState === 'visible') loadChat()
-    }
-    const id = setInterval(tick, CHAT_POLL_MS)
-    document.addEventListener('visibilitychange', tick)
-    window.addEventListener('focus', tick)
+    if (!activeSession?.id) return
+    
+    const channel = pusherClient.subscribe(`chat-${activeSession.id}`)
+    channel.bind('incoming-chat', (data: ChatMessage) => {
+      setChats((prev) => {
+        // Prevent duplicates (e.g. from optimistic update or double broadcast)
+        if (prev.some((c) => c.id === data.id)) return prev
+        // Remove optimistic message if it exists (matching by message content and sender for simplicity if ID is unknown)
+        // But better to just check if we have a real ID matching the new one
+        return [...prev, data]
+      })
+    })
+
     return () => {
-      clearInterval(id)
-      document.removeEventListener('visibilitychange', tick)
-      window.removeEventListener('focus', tick)
+      pusherClient.unsubscribe(`chat-${activeSession.id}`)
     }
-  }, [loadChat])
+  }, [activeSession?.id])
 
   function openCreate() {
     setEditingSessionId(null)
@@ -391,18 +382,33 @@ export default function WawancaraClient({ user }: Props) {
   async function sendChat() {
     if (!activeSession || !chatText.trim()) return
     const message = chatText.trim()
+    
+    // Optimistic UI: Add message immediately
+    const tempId = -Date.now()
+    const optimisticMsg: ChatMessage = {
+      id: tempId,
+      pesan: message,
+      created_at: new Date().toISOString(),
+      sender: { id: user.id, nama: user.nama, role: user.role }
+    }
+    
+    setChats((prev) => [...prev, optimisticMsg])
     setChatText('')
+
     const res = await fetch('/api/wawancara/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sesi_id: activeSession.id, pesan: message }),
     })
     const json = await res.json().catch(() => ({}))
-    if (!res.ok) toast.error(json.error || 'Gagal mengirim chat')
-    else {
-      clearJsonCache()
-      chatLastId.current = json.data.id
-      setChats((prev) => [...prev, json.data])
+    
+    if (!res.ok) {
+      toast.error(json.error || 'Gagal mengirim chat')
+      // Remove optimistic message on error
+      setChats((prev) => prev.filter(c => c.id !== tempId))
+    } else {
+      // Replace optimistic message with real one from server
+      setChats((prev) => prev.map(c => c.id === tempId ? json.data : c))
     }
   }
 
