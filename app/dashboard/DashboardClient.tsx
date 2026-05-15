@@ -116,12 +116,23 @@ export default function DashboardClient({ user }: Props) {
       const worksheet = workbook.Sheets[firstSheetName]
       const json = XLSX.utils.sheet_to_json<any>(worksheet)
       
-      const mappedData = json.map(row => ({
-        nama: row.Nama || row.nama || row.Name || row.name || '',
-        kelas: row.Kelas || row.kelas || row.Class || row.class || '',
-        nis: row.NIS || row.nis || '',
-        jabatan: row.Jabatan || row.jabatan || '',
-      })).filter(item => item.nama) // Filter out empty rows
+      const matchKey = (row: any, targets: string[]) =>
+        Object.keys(row).find((k: string) =>
+          targets.some((t: string) => k.toLowerCase().includes(t.toLowerCase()))
+        )
+
+      const mappedData = (json as any[]).map((row: any) => {
+        const kn = matchKey(row, ['Nama', 'nama', 'Name', 'name'])
+        const ki = matchKey(row, ['Kelas', 'kelas', 'Class', 'class', 'Tingkat', 'tingkat'])
+        const kns = matchKey(row, ['NIS', 'nis', 'NISN', 'nisn'])
+        const kj = matchKey(row, ['Jabatan', 'jabatan', 'Posisi', 'posisi', 'Peran', 'peran'])
+        return {
+          nama:    kn  ? row[kn]  : '',
+          kelas:   ki  ? row[ki]  : '',
+          nis:     kns ? row[kns] : '',
+          jabatan: kj  ? row[kj]  : '',
+        }
+      }).filter((item: any) => item.nama)
 
       if (mappedData.length === 0) throw new Error('Format kolom tidak sesuai atau file kosong. Pastikan ada kolom "Nama".')
 
