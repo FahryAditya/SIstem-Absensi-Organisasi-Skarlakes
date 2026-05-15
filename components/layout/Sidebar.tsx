@@ -104,7 +104,7 @@ export default function Sidebar({ user, mobileOpen, onClose }: SidebarProps) {
           </div>
           <div>
             <div className="text-sm font-black text-white tracking-tight">Sistem Ekstrakurikuler Sekolah</div>
-            <div className="text-[10px] text-[#7EA0C5] font-medium">V 17.5.1</div>
+            <div className="text-[10px] text-white/50 font-medium">V 17.5.1</div>
           </div>
         </div>
         {onClose && (
@@ -176,7 +176,7 @@ export default function Sidebar({ user, mobileOpen, onClose }: SidebarProps) {
           )}
           <div className="min-w-0 flex-1">
             <div className="text-xs font-bold text-white truncate">{user.nama}</div>
-            <div className="text-[10px] text-[#7EA0C5] truncate">{user.email}</div>
+            <div className="text-[10px] text-white/50 truncate">{user.email}</div>
           </div>
         </div>
       </div>

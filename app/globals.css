@@ -125,9 +125,9 @@
   .tr { @apply border-b border-[rgba(84,130,180,0.15)] hover:bg-[rgba(126,160,197,0.15)] transition-colors duration-200; }
 
   /* Sidebar */
-  .nav-link { @apply flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-[#7EA0C5] rounded-lg hover:bg-[rgba(126,160,197,0.15)] hover:shadow-sm hover:text-white transition-all duration-300; }
+  .nav-link { @apply flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-white/90 rounded-lg hover:bg-[rgba(126,160,197,0.15)] hover:shadow-sm hover:text-white transition-all duration-300; }
   .nav-link-active { @apply bg-[#052659] shadow-sm text-white font-semibold; }
-  .nav-section { @apply text-[10px] font-black text-[#7EA0C5] uppercase tracking-widest px-3 pb-1.5 pt-3; }
+  .nav-section { @apply text-[10px] font-black text-white/60 uppercase tracking-widest px-3 pb-1.5 pt-3; }
 
   /* Misc */
   .page-header { @apply flex flex-col sm:flex-row sm:items-center gap-3 mb-5; }
