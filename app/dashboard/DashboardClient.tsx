@@ -15,16 +15,16 @@ import {
 } from 'lucide-react'
 
 // Lazy load Recharts for better performance
-const ResponsiveContainer = dynamic(() => import('recharts').then(mod => mod.ResponsiveContainer), { ssr: false })
-const BarChart = dynamic(() => import('recharts').then(mod => mod.BarChart), { ssr: false })
-const Bar = dynamic(() => import('recharts').then(mod => mod.Bar), { ssr: false })
-const XAxis = dynamic(() => import('recharts').then(mod => mod.XAxis), { ssr: false })
-const YAxis = dynamic(() => import('recharts').then(mod => mod.YAxis), { ssr: false })
-const CartesianGrid = dynamic(() => import('recharts').then(mod => mod.CartesianGrid), { ssr: false })
-const Tooltip = dynamic(() => import('recharts').then(mod => mod.Tooltip), { ssr: false })
-const Legend = dynamic(() => import('recharts').then(mod => mod.Legend), { ssr: false })
-const AreaChart = dynamic(() => import('recharts').then(mod => mod.AreaChart), { ssr: false })
-const Area = dynamic(() => import('recharts').then(mod => mod.Area), { ssr: false })
+const ResponsiveContainer = dynamic<any>(() => import('recharts').then(mod => mod.ResponsiveContainer) as any, { ssr: false })
+const BarChart = dynamic<any>(() => import('recharts').then(mod => mod.BarChart) as any, { ssr: false })
+const Bar = dynamic<any>(() => import('recharts').then(mod => mod.Bar) as any, { ssr: false })
+const XAxis = dynamic<any>(() => import('recharts').then(mod => mod.XAxis) as any, { ssr: false })
+const YAxis = dynamic<any>(() => import('recharts').then(mod => mod.YAxis) as any, { ssr: false })
+const CartesianGrid = dynamic<any>(() => import('recharts').then(mod => mod.CartesianGrid) as any, { ssr: false })
+const Tooltip = dynamic<any>(() => import('recharts').then(mod => mod.Tooltip) as any, { ssr: false })
+const Legend = dynamic<any>(() => import('recharts').then(mod => mod.Legend) as any, { ssr: false })
+const AreaChart = dynamic<any>(() => import('recharts').then(mod => mod.AreaChart) as any, { ssr: false })
+const Area = dynamic<any>(() => import('recharts').then(mod => mod.Area) as any, { ssr: false })
 
 interface Props {
   user: { id: number; nama: string; email: string; role: string }
@@ -435,7 +435,7 @@ export default function DashboardClient({ user }: Props) {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                 <XAxis dataKey="bulan" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false}
-                  tickFormatter={v => v >= 1000 ? `${v/1000}k` : v} />
+                  tickFormatter={(v: number) => v >= 1000 ? `${v/1000}k` : v} />
                 <Tooltip formatter={(v: number) => [formatCurrency(v), 'Total Kas']}
                   contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }} />
                 <Area type="monotone" dataKey="total" stroke="#5482B4" strokeWidth={2.5}

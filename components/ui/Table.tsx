@@ -30,7 +30,7 @@ const TableRow = memo(function TableRow<T>({
   item, columns, selectable, isSelected, onSelect, itemKey 
 }: { 
   item: T, 
-  columns: Column<T>[], 
+  columns: Column<any>[], 
   selectable?: boolean, 
   isSelected?: boolean, 
   onSelect?: (checked: boolean, key: string | number) => void,
