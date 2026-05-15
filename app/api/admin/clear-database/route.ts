@@ -5,6 +5,7 @@ import { createLog, getIp } from '@/lib/log'
 import { mkdir, writeFile } from 'fs/promises'
 import path from 'path'
 import { z } from 'zod'
+import { isAdministrator } from '@/lib/auth-shared'
 
 type Org = 'programming' | 'english' | 'osis' | 'mpk'
 type ClearType = 'absensi' | 'kas' | 'anggota' | 'semua'
@@ -122,7 +123,7 @@ async function clearAnggota(org: Org) {
 
 export async function POST(req: NextRequest) {
   const ctx = getCtx(req)
-  if (ctx.userRole !== 'administrator') {
+  if (!isAdministrator(ctx.userRole.trim())) {
     return NextResponse.json({ error: 'Hanya Super Admin yang dapat clear database' }, { status: 403 })
   }
 
