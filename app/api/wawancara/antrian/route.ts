@@ -45,12 +45,13 @@ function canAccessInterview(role: string, org: string) {
 
 const enqueueSchema = z.object({
   sesi_id: z.number().int().positive().optional(),
-  token: z.string().min(1, 'Token QR wajib diisi'),
+  token: z.string().min(1, 'Token QR wajib diisi').optional(),
   nama: z.string().min(1, 'Nama wajib diisi'),
   kelas: z.string().min(1, 'Kelas wajib diisi'),
   organisasi: z.enum(['osis', 'mpk'], { required_error: 'Pilih organisasi tujuan' }),
-  latitude: z.number(),
-  longitude: z.number(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
+  manual: z.boolean().optional(),
 })
 
 const SCHOOL_LAT = parseFloat(process.env.SCHOOL_LAT || process.env.NEXT_PUBLIC_SCHOOL_LAT || '-1.251278')
@@ -75,22 +76,51 @@ export async function POST(req: NextRequest) {
   const parsed = enqueueSchema.safeParse(await req.json())
   if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
 
-  const qr = await prisma.qrWawancara.findUnique({ where: { token: parsed.data.token } })
-  const now = new Date()
-  if (!qr || !qr.aktif || qr.valid_from > now || qr.valid_until < now) {
-    return NextResponse.json({ error: 'QR tidak aktif atau sudah expired' }, { status: 400 })
+  const ctx = await getCtx(req)
+  const isAdmin = canAccessOsis(ctx.userRole) || canAccessMpk(ctx.userRole)
+  const isManual = parsed.data.manual === true
+
+  if (isManual && !isAdmin) {
+    return NextResponse.json({ error: 'Hanya admin yang dapat menambah peserta secara manual' }, { status: 403 })
+  }
+
+  let qrId: number | null = null
+  let statusValidasi: 'SAH' | 'SAH_DICURIGAI' | 'DITOLAK_VPN' | 'TIDAK_SAH' = 'SAH'
+  let alasan = 'Valid'
+  let jarak: number | null = null
+
+  if (!isManual) {
+    if (!parsed.data.token) return NextResponse.json({ error: 'Token QR wajib diisi' }, { status: 400 })
+    if (parsed.data.latitude === undefined || parsed.data.longitude === undefined) {
+      return NextResponse.json({ error: 'Lokasi GPS wajib diisi' }, { status: 400 })
+    }
+
+    const qr = await prisma.qrWawancara.findUnique({ where: { token: parsed.data.token } })
+    const now = new Date()
+    if (!qr || !qr.aktif || qr.valid_from > now || qr.valid_until < now) {
+      return NextResponse.json({ error: 'QR tidak aktif atau sudah expired' }, { status: 400 })
+    }
+    qrId = qr.id
+
+    jarak = haversineMeters(parsed.data.latitude, parsed.data.longitude, SCHOOL_LAT, SCHOOL_LNG)
+    const outsideRadius = jarak > SCHOOL_RADIUS_M
+    statusValidasi = outsideRadius ? 'TIDAK_SAH' : 'SAH'
+    alasan = outsideRadius ? `Jarak ${Math.round(jarak)}m dari sekolah` : 'Valid'
+  } else {
+    alasan = 'Ditambahkan Manual oleh Admin'
+    statusValidasi = 'SAH'
   }
 
   const sesi = await prisma.sesiWawancara.findFirst({
     where: { 
       status: 'ACTIVE', 
-      organisasi_type: 'osis' // All merged sessions now use 'osis' under the hood
+      organisasi_type: 'osis' 
     },
     orderBy: { created_at: 'desc' }
   })
   
   if (!sesi) {
-    return NextResponse.json({ error: `Sesi wawancara ${parsed.data.organisasi.toUpperCase()} tidak aktif` }, { status: 400 })
+    return NextResponse.json({ error: `Sesi wawancara tidak aktif` }, { status: 400 })
   }
 
   const nama = parsed.data.nama.trim()
@@ -103,24 +133,11 @@ export async function POST(req: NextRequest) {
     },
     orderBy: { created_at: 'desc' },
   })
-  if (previous && previous.status_validasi !== 'DITOLAK_VPN') {
+  if (previous && previous.status_validasi !== 'DITOLAK_VPN' && !isManual) {
     return NextResponse.json({ error: 'Anda sudah melakukan scan. Scan ulang hanya diizinkan jika sebelumnya ditolak karena VPN.' }, { status: 409 })
   }
 
   const ip = getIp(req)
-
-  // Default to unknown — IP details will be filled in by a background task
-  // so the participant isn't kept waiting for the ip-api.com HTTP round-trip.
-  const ipInfo: { country: string | null; isp: string | null; proxy: boolean } = {
-    country: null, isp: null, proxy: false,
-  }
-  const jarak = haversineMeters(parsed.data.latitude, parsed.data.longitude, SCHOOL_LAT, SCHOOL_LNG)
-  const outsideRadius = jarak > SCHOOL_RADIUS_M
-  const ipStatus = 'TIDAK_DIKETAHUI'
-  const statusValidasi = outsideRadius ? 'TIDAK_SAH' : 'SAH'
-  const alasan = outsideRadius
-    ? `Jarak ${Math.round(jarak)}m dari sekolah`
-    : 'Valid'
 
   if (statusValidasi === 'TIDAK_SAH') {
     const rejectedCount = await prisma.antrianWawancara.count({
@@ -134,17 +151,17 @@ export async function POST(req: NextRequest) {
     const rejected = await prisma.antrianWawancara.create({
       data: {
         sesi_id: sesi.id,
-        qr_id: qr.id,
+        qr_id: qrId,
         nama,
         kelas,
         nomor_antrian: -(rejectedCount + 1),
-        scan_token: parsed.data.token,
+        scan_token: parsed.data.token || null,
         ip_address: ip,
         ip_country: ipSt.country,
         ip_isp: ipSt.isp,
         ip_status: ipSt.st,
-        gps_lat: parsed.data.latitude,
-        gps_lng: parsed.data.longitude,
+        gps_lat: parsed.data.latitude || null,
+        gps_lng: parsed.data.longitude || null,
         jarak_meter: jarak,
         status_validasi: statusValidasi,
         alasan_validasi: alasan,
@@ -154,9 +171,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: alasan, data: rejected }, { status: 400 })
   }
 
-  // Allocate queue number atomically using the unique index as a concurrency guard.
-  // Both transactions read the current max at the same time; only the unique constraint
-  // prevents them from inserting the same number. We catch P2002 and retry with the new max.
   const alloc = async (): Promise<AntrianWawancara> => {
     const maxQueue = await prisma.antrianWawancara.aggregate({
       where: { sesi_id: sesi.id },
@@ -166,16 +180,15 @@ export async function POST(req: NextRequest) {
     return prisma.antrianWawancara.create({
       data: {
         sesi_id: sesi.id,
-        qr_id: qr.id,
+        qr_id: qrId,
         nama,
         kelas,
         nomor_antrian: nextNum,
-        scan_token: parsed.data.token,
+        scan_token: parsed.data.token || null,
         ip_address: ip,
-        // defaults – no network round-trip needed before responding
         ip_status: 'TIDAK_DIKETAHUI',
-        gps_lat: parsed.data.latitude,
-        gps_lng: parsed.data.longitude,
+        gps_lat: parsed.data.latitude || null,
+        gps_lng: parsed.data.longitude || null,
         jarak_meter: jarak,
         status_validasi: statusValidasi,
         alasan_validasi: alasan,
@@ -189,21 +202,19 @@ export async function POST(req: NextRequest) {
     created = await alloc()
   } catch (e: any) {
     if (e?.code === 'P2002') {
-      // Unique constraint hit — another concurrent scan took the same number.
-      // Retry once with a freshly computed max.
       created = await alloc()
     } else {
       throw e
     }
   }
 
-  // Fire-and-forget IP enrichment after the response is already committed.
-  // The participant gets their queue number instantly; the antrian record is updated
-  // with the real ip_status/ip_country/ip_isp a moment later.
-  ;(async () => { try { await updateIpInfo(created.id, sesi.id, ip) } catch {} })()
+  if (!isManual) {
+    ;(async () => { try { await updateIpInfo(created.id, sesi.id, ip) } catch {} })()
+  }
 
   return NextResponse.json({ data: created }, { status: 201 })
 }
+
 
 export async function PATCH(req: NextRequest) {
   const ctx = await getCtx(req)

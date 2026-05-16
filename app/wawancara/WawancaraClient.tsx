@@ -10,7 +10,7 @@ import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import {
   CalendarClock, CheckCircle2, Clock, Download, Loader2, Lock, MessageSquareText,
   Play, Plus, QrCode, RefreshCcw, Save, Send, ShieldCheck, SquarePen, Users, XCircle, UserX,
-  Bell
+  Bell, UserPlus
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { pusherClient } from '@/lib/pusher-client'
@@ -157,6 +157,11 @@ export default function WawancaraClient({ user }: Props) {
   const [fCatatan, setFCatatan] = useState('')
   const [overrideTarget, setOverrideTarget] = useState<QueueItem | null>(null)
   const [overrideReason, setOverrideReason] = useState('')
+  const [addPesertaModal, setAddPesertaModal] = useState(false)
+  const [fAddNama, setFAddNama] = useState('')
+  const [fAddTingkat, setFAddTingkat] = useState('X')
+  const [fAddJurusan, setFAddJurusan] = useState('AKL')
+  const [fAddOrg, setFAddOrg] = useState<Org>('osis')
   const [currentTime, setCurrentTime] = useState(new Date())
   const loadedOnce = useRef(false)
   const chatLastId = useRef(0)
@@ -303,6 +308,14 @@ export default function WawancaraClient({ user }: Props) {
     setOverrideModal(true)
   }
 
+  function openAddPeserta() {
+    setFAddNama('')
+    setFAddTingkat('X')
+    setFAddJurusan('AKL')
+    setFAddOrg('osis')
+    setAddPesertaModal(true)
+  }
+
   function openResult(q: QueueItem) {
     setTargetQueue(q)
     setFKet(q.hasil_wawancara?.keterangan || 'AKTIF')
@@ -406,6 +419,36 @@ export default function WawancaraClient({ user }: Props) {
     clearJsonCache()
     setSaving(false)
     setResultModal(false)
+    load(true)
+  }
+
+  async function saveManualPeserta() {
+    if (!fAddNama.trim()) {
+      toast.error('Nama wajib diisi')
+      return
+    }
+    setSaving(true)
+    const kelasGabungan = `[${fAddOrg.toUpperCase()}] ${fAddTingkat} ${fAddJurusan}`
+    const res = await fetch('/api/wawancara/antrian', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nama: fAddNama.trim(),
+        kelas: kelasGabungan,
+        organisasi: fAddOrg,
+        manual: true,
+      }),
+    })
+    const json = await res.json()
+    if (!res.ok) {
+      toast.error(json.error || 'Gagal menambah peserta')
+      setSaving(false)
+      return
+    }
+    toast.success('Peserta berhasil ditambahkan secara manual')
+    clearJsonCache()
+    setSaving(false)
+    setAddPesertaModal(false)
     load(true)
   }
 
@@ -517,6 +560,7 @@ export default function WawancaraClient({ user }: Props) {
             <Clock className="w-4 h-4 text-indigo-400" />
             {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
           </div>
+          <button onClick={openAddPeserta} className="btn-secondary"><UserPlus className="w-4 h-4" />Tambah Peserta</button>
           {admin && <button onClick={openCreate} className="btn-primary"><Plus className="w-4 h-4" />Buat/Aktifkan</button>}
         </div>
       </div>
@@ -760,6 +804,58 @@ export default function WawancaraClient({ user }: Props) {
             Hanya Administrator dapat mengubah kandidat Tidak Lolos menjadi Lolos karena pertimbangan pembina. Alasan akan masuk ke Log Aktivitas.
           </div>
           <div className="form-group"><label className="label">Alasan Override *</label><textarea value={overrideReason} onChange={(e) => setOverrideReason(e.target.value)} className="input min-h-28" placeholder="Contoh: Pertimbangan Pembina" /></div>
+        </div>
+      </Modal>
+
+      <Modal open={addPesertaModal} title="Tambah Peserta Manual" onClose={() => setAddPesertaModal(false)} size="md"
+        footer={<div className="flex justify-end gap-2"><button onClick={() => setAddPesertaModal(false)} className="btn-secondary">Batal</button><button onClick={saveManualPeserta} disabled={saving} className="btn-primary">{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}Simpan Peserta</button></div>}>
+        <div className="space-y-4">
+          <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-sm text-indigo-800">
+            Gunakan fitur ini hanya jika peserta mengalami kendala teknis pada HP (tidak bisa scan QR / GPS bermasalah).
+          </div>
+          <div className="form-group">
+            <label className="label">Nama Lengkap *</label>
+            <input value={fAddNama} onChange={(e) => setFAddNama(e.target.value)} className="input" placeholder="Isi nama lengkap" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="form-group">
+              <label className="label">Tingkat *</label>
+              <select value={fAddTingkat} onChange={(e) => setFAddTingkat(e.target.value)} className="input">
+                <option value="X">X</option>
+                <option value="XI">XI</option>
+                <option value="XII">XII</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="label">Jurusan *</label>
+              <select value={fAddJurusan} onChange={(e) => setFAddJurusan(e.target.value)} className="input">
+                <optgroup label="SMK Airlangga (Skarla)">
+                  <option value="AKL">AKL</option>
+                  <option value="PPLG">PPLG</option>
+                  <option value="DKV">DKV</option>
+                  <option value="MPLB 1">MPLB 1</option>
+                  <option value="MPLB 2">MPLB 2</option>
+                  <option value="TJKT 1">TJKT 1</option>
+                  <option value="TJKT 2">TJKT 2</option>
+                </optgroup>
+                <optgroup label="SMK Kesehatan (Skakes)">
+                  <option value="Kesehatan 1">Kesehatan 1</option>
+                  <option value="Kesehatan 2">Kesehatan 2</option>
+                  <option value="Kesehatan 3">Kesehatan 3</option>
+                  <option value="Kesehatan 4">Kesehatan 4</option>
+                  <option value="Kesehatan 5">Kesehatan 5</option>
+                  <option value="Kesehatan 6">Kesehatan 6</option>
+                </optgroup>
+              </select>
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="label">Pilih Organisasi *</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={() => setFAddOrg('osis')} className={`py-2 px-4 rounded-xl border font-bold transition-all text-center ${fAddOrg === 'osis' ? 'bg-indigo-600 text-white border-transparent shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>OSIS</button>
+              <button onClick={() => setFAddOrg('mpk')} className={`py-2 px-4 rounded-xl border font-bold transition-all text-center ${fAddOrg === 'mpk' ? 'bg-indigo-600 text-white border-transparent shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>MPK</button>
+            </div>
+          </div>
         </div>
       </Modal>
 
