@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { Wallet, Search, Filter, Loader2, Plus, Minus, X, ChevronRight } from 'lucide-react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { Wallet, Search, Filter, Loader2, Plus, Minus, X, History } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatCurrency, ORG_LABELS, OrgType } from '@/lib/utils'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import { useDebounce } from '@/lib/hooks'
 import { motion, AnimatePresence } from 'framer-motion'
-import { SkeletonRow } from '@/components/Skeleton'
+import Table from '@/components/ui/Table'
 
 interface KasData {
   id: number
@@ -125,18 +125,79 @@ export default function KasClient({ user }: Props) {
   const formatTerakhirBayar = useCallback((isoDate: string | null | undefined) => {
     if (!isoDate) return '-'
     const d = new Date(isoDate)
-    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
+    const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
     
     const hari = days[d.getDay()]
     const tanggalNum = d.getDate()
     const bulan = months[d.getMonth()]
-    const tahun = d.getFullYear()
     const jam = d.getHours().toString().padStart(2, '0')
     const menit = d.getMinutes().toString().padStart(2, '0')
     
-    return `${jam}:${menit} ${hari}, ${tanggalNum} ${bulan} ${tahun}`
+    return `${hari}, ${tanggalNum} ${bulan} ${jam}:${menit}`
   }, [])
+
+  const columns = useMemo(() => [
+    {
+      key: 'no',
+      label: 'No',
+      render: (item: KasData) => {
+        const idx = data.indexOf(item)
+        return <span className="text-slate-400 font-mono text-xs">{(page - 1) * PAGE_SIZE + idx + 1}</span>
+      }
+    },
+    {
+      key: 'nama',
+      label: 'Nama Anggota',
+      render: (item: KasData) => (
+        <div className="py-1">
+          <div className="font-bold text-slate-800 text-sm leading-tight">{item.nama}</div>
+          <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider mt-0.5">{item.kelas}</div>
+        </div>
+      )
+    },
+    {
+      key: 'total_kas',
+      label: 'Total Kas',
+      render: (item: KasData) => (
+        <div className="font-mono font-bold text-emerald-600 text-sm">
+          {formatCurrency(item.total_kas)}
+        </div>
+      )
+    },
+    {
+      key: 'terakhir_bayar',
+      label: 'Terakhir Bayar',
+      render: (item: KasData) => (
+        <div className="flex items-center gap-1.5 text-slate-500 text-xs">
+          <History className="w-3 h-3 text-slate-400" />
+          {formatTerakhirBayar(item.terakhir_bayar)}
+        </div>
+      )
+    },
+    {
+      key: 'actions',
+      label: '',
+      render: (item: KasData) => (
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => openModal(item, 'setor')}
+            className="p-2 bg-green-50 text-green-600 hover:bg-green-600 hover:text-white rounded-lg transition-all duration-200"
+            title="Setor Kas"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={() => openModal(item, 'tarik')}
+            className="p-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg transition-all duration-200"
+            title="Tarik Kas"
+          >
+            <Minus className="w-4 h-4" />
+          </button>
+        </div>
+      )
+    }
+  ], [data, page, openModal, formatTerakhirBayar])
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -229,6 +290,19 @@ export default function KasClient({ user }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Table */}
+      <Table
+        columns={columns as any}
+        data={data}
+        loading={loading}
+        emptyMessage="Data anggota tidak ditemukan"
+        page={page}
+        totalPages={totalPages}
+        total={totalItems}
+        onPageChange={setPage}
+        rowKey={item => (item as KasData).id}
+      />
 
       {/* Modal Transaksi */}
       <AnimatePresence>

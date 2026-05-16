@@ -92,7 +92,7 @@ export async function GET(req: NextRequest) {
         return {
           id: a.id,
           nama: a.nama,
-          kelas: a.jabatan || '-',
+          kelas: a.kelas ? `${a.kelas} ${a.jabatan ? `(${a.jabatan})` : ''}` : (a.jabatan || '-'),
           total_kas: a.absensi.reduce((sum: number, ab: any) => sum + (ab.uang_kas || 0), 0),
           terakhir_bayar
         }
@@ -125,7 +125,7 @@ export async function GET(req: NextRequest) {
         return {
           id: a.id,
           nama: a.nama,
-          kelas: a.jabatan || '-',
+          kelas: a.kelas ? `${a.kelas} ${a.jabatan ? `(${a.jabatan})` : ''}` : (a.jabatan || '-'),
           total_kas: a.absensi.reduce((sum: number, ab: any) => sum + (ab.uang_kas || 0), 0),
           terakhir_bayar
         }
