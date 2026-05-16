@@ -163,6 +163,7 @@ export default function WawancaraClient({ user }: Props) {
   const [fAddTingkat, setFAddTingkat] = useState('X')
   const [fAddJurusan, setFAddJurusan] = useState('AKL')
   const [fAddOrg, setFAddOrg] = useState<Org>('osis')
+  const [exportModal, setExportModal] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
   const loadedOnce = useRef(false)
   const chatLastId = useRef(0)
@@ -492,8 +493,12 @@ export default function WawancaraClient({ user }: Props) {
     }
   }
 
-  async function downloadExport(sessionId: number) {
-    window.open(`/api/wawancara/export?sesiId=${sessionId}`, '_blank')
+  function downloadExport(sessionId?: number, org?: Org) {
+    const params = new URLSearchParams()
+    if (sessionId) params.set('sesiId', sessionId.toString())
+    if (org) params.set('org', org)
+    window.open(`/api/wawancara/export?${params}`, '_blank')
+    setExportModal(false)
   }
 
   async function sendChat() {
@@ -645,7 +650,7 @@ export default function WawancaraClient({ user }: Props) {
                   {admin && <button onClick={() => window.location.href = '/hapus-peserta'} className="btn-secondary btn-sm text-red-600"><UserX className="w-3.5 h-3.5" />Hapus Peserta</button>}
                   {admin && selectedSession.status === 'ACTIVE' && <button onClick={() => setConfirmAction({ id: selectedSession.id, action: 'finish', title: 'Finalisasi hasil?', message: 'Setelah finalisasi, semua data wawancara akan terkunci permanen.' })} className="btn-primary btn-sm bg-gradient-to-r from-slate-900 to-slate-800 shadow-md hover:shadow-lg"><CheckCircle2 className="w-3.5 h-3.5" />Finalisasi</button>}
                   {admin && ['SCHEDULED', 'ACTIVE'].includes(selectedSession.status) && <button onClick={() => setConfirmAction({ id: selectedSession.id, action: 'cancel', title: 'Batalkan sesi?', message: 'Sesi dibatalkan dan tidak bisa diedit lagi. Buat jadwal baru jika diperlukan.' })} className="btn-secondary btn-sm text-red-600"><XCircle className="w-3.5 h-3.5" />Batal</button>}
-                  <button onClick={() => downloadExport(selectedSession.id)} className="btn-secondary btn-sm"><Download className="w-3.5 h-3.5" />Excel</button>
+                  <button onClick={() => setExportModal(true)} className="btn-secondary btn-sm"><Download className="w-3.5 h-3.5" />Excel</button>
                 </div>
               )}
             </div>
@@ -900,6 +905,32 @@ export default function WawancaraClient({ user }: Props) {
               <button onClick={() => setFAddOrg('mpk')} className={`py-2 px-4 rounded-xl border font-bold transition-all text-center ${fAddOrg === 'mpk' ? 'bg-indigo-600 text-white border-transparent shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>MPK</button>
             </div>
           </div>
+        </div>
+      </Modal>
+
+      <Modal open={exportModal} title="Ekspor Hasil Wawancara" onClose={() => setExportModal(false)} size="sm">
+        <div className="space-y-3 py-2">
+          <p className="text-sm text-slate-600 mb-4">Pilih data yang ingin Anda ekspor ke format Excel:</p>
+          <button onClick={() => downloadExport(undefined, 'osis')} className="w-full btn-secondary justify-start px-4 py-3 border-slate-200 hover:bg-indigo-50 hover:border-indigo-200 group">
+            <div className="flex flex-col items-start text-left">
+              <span className="font-bold text-slate-800 group-hover:text-indigo-700">Semua Hasil OSIS</span>
+              <span className="text-[11px] text-slate-500">Rekapitulasi seluruh sesi OSIS</span>
+            </div>
+          </button>
+          <button onClick={() => downloadExport(undefined, 'mpk')} className="w-full btn-secondary justify-start px-4 py-3 border-slate-200 hover:bg-indigo-50 hover:border-indigo-200 group">
+            <div className="flex flex-col items-start text-left">
+              <span className="font-bold text-slate-800 group-hover:text-indigo-700">Semua Hasil MPK</span>
+              <span className="text-[11px] text-slate-500">Rekapitulasi seluruh sesi MPK</span>
+            </div>
+          </button>
+          {selectedSession && (
+            <button onClick={() => downloadExport(selectedSession.id)} className="w-full btn-primary justify-start px-4 py-3 group">
+              <div className="flex flex-col items-start text-left">
+                <span className="font-bold">Sesi Saat Ini Saja</span>
+                <span className="text-[11px] text-indigo-100">Hanya data dari sesi ID #{selectedSession.id}</span>
+              </div>
+            </button>
+          )}
         </div>
       </Modal>
 
