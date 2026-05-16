@@ -184,7 +184,7 @@ export default function DashboardClient({ user }: Props) {
       const json = await res.json()
       if (!res.ok) throw new Error(json.error)
       toast.success('Anggota berhasil ditambahkan')
-      setQuickName(''); setQuickClass(''); setQuickJabatan('')
+      setQuickName(''); setQuickJabatan('Anggota')
       clearJsonCache()
       fetchDashboardData()
     } catch (e: any) {
