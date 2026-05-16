@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 import { formatCurrency, ORG_LABELS, OrgType } from '@/lib/utils'
 import { clearJsonCache, fetchJsonCachedUrl, clientQueryClient } from '@/lib/client-cache'
 import { useDebounce } from '@/lib/hooks'
-import { motion, AnimatePresence } from 'framer-motion'
+
 import Table from '@/components/ui/Table'
 
 interface KasData {
@@ -327,41 +327,40 @@ export default function KasClient({ user }: Props) {
         />
       </div>
 
-      {/* Modal Transaksi */}
-      <AnimatePresence>
-        {modalOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      {/* Modal Transaksi — CSS native, tanpa framer-motion */}
+      {modalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          style={{ animation: 'fadeIn 0.15s ease' }}
+          onClick={(e) => { if (e.target === e.currentTarget) setModalOpen(false) }}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+            style={{ animation: 'slideUp 0.15s ease' }}
           >
-            <motion.div 
-              initial={{ scale: 0.95, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
-            >
-              <div className="p-4 border-b flex items-center justify-between text-white bg-green-600">
-                <h3 className="font-bold flex items-center gap-2">
-                  <Plus className="w-5 h-5" />
-                  Setor Kas Manual
-                </h3>
-                <button onClick={() => setModalOpen(false)} className="p-1 hover:bg-white/20 rounded-lg"><X className="w-5 h-5" /></button>
-              </div>
-            
+            <div className="p-4 border-b flex items-center justify-between text-white bg-green-600">
+              <h3 className="font-bold flex items-center gap-2">
+                <Plus className="w-5 h-5" />
+                Setor Kas Manual
+              </h3>
+              <button onClick={() => setModalOpen(false)} className="p-1 hover:bg-white/20 rounded-lg" aria-label="Tutup modal">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
             <form onSubmit={handleTransaction} className="p-5 space-y-4">
               <div className="form-group">
-                <label className="label">Pilih Anggota</label>
+                <label htmlFor="kas-member-select" className="label">Pilih Anggota</label>
                 {memberLoading ? (
                   <div className="flex items-center gap-2 text-sm text-slate-500 p-2 bg-slate-50 rounded-lg border border-dashed">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Memuat daftar anggota...
                   </div>
                 ) : (
-                  <select 
-                    value={selectedMemberId} 
+                  <select
+                    id="kas-member-select"
+                    value={selectedMemberId}
+                    onChange={e => setSelectedMemberId(Number(e.target.value) || '')}
                     className="input font-medium"
                     required
                   >
@@ -374,31 +373,33 @@ export default function KasClient({ user }: Props) {
               </div>
 
               <div className="form-group">
-                <label className="label">Nominal Setoran (Rp)</label>
+                <label htmlFor="kas-nominal" className="label">Nominal Setoran (Rp)</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400">Rp</span>
-                  <input 
-                    type="text" 
-                    value={txNominal} 
+                  <input
+                    id="kas-nominal"
+                    type="text"
+                    value={txNominal}
                     onChange={e => {
                       const val = e.target.value.replace(/\D/g, '')
                       setTxNominal(val ? parseInt(val).toLocaleString('id-ID') : '')
                     }}
-                    className="input pl-10 font-mono font-bold text-lg text-emerald-600" 
-                    placeholder="10.000" 
-                    required 
+                    className="input pl-10 font-mono font-bold text-lg text-emerald-600"
+                    placeholder="10.000"
+                    required
                   />
                 </div>
               </div>
 
               <div className="form-group">
-                <label className="label">Keterangan</label>
-                <input 
-                  type="text" 
-                  value={txKet} 
-                  onChange={e => setTxKet(e.target.value)} 
-                  className="input" 
-                  placeholder="Misal: Pembayaran bulan Mei" 
+                <label htmlFor="kas-ket" className="label">Keterangan</label>
+                <input
+                  id="kas-ket"
+                  type="text"
+                  value={txKet}
+                  onChange={e => setTxKet(e.target.value)}
+                  className="input"
+                  placeholder="Misal: Pembayaran bulan Mei"
                 />
               </div>
 
@@ -409,10 +410,9 @@ export default function KasClient({ user }: Props) {
                 </button>
               </div>
             </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

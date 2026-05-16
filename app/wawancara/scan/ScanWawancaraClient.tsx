@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import { Loader2, MessageSquareText, Send, UserRoundCheck } from 'lucide-react'
-import { motion } from 'framer-motion'
+
 
 interface Props {
   sesiId: string
@@ -99,11 +99,8 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
 
   return (
     <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <motion.div 
-        initial={{ y: 30, opacity: 0 }} 
-        animate={{ y: 0, opacity: 1 }} 
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-md bg-white border border-slate-200/60 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden"
+      <div
+        className="w-full max-w-md bg-white border border-slate-200/60 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden slide-up"
       >
         <div className="p-6 border-b border-slate-100/50 bg-white/50 backdrop-blur-sm">
           <div className="flex items-center gap-3">
@@ -135,7 +132,7 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
             <p className="text-sm text-slate-500 mt-4">Tunggu sampai nama Anda dipanggil oleh admin OSIS & MPK.</p>
           </div>
         ) : (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 space-y-4">
+          <div className="p-6 space-y-4 fade-in">
             <div className="rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100/60 p-5 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-200/40 to-purple-200/40 blur-3xl -mr-10 -mt-10 rounded-full" />
               <div className="relative">
@@ -207,9 +204,9 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
               {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
               Masuk Antrian
             </button>
-          </motion.div>
+          </div>
         )}
-      </motion.div>
+        </div>
     </main>
   )
 }

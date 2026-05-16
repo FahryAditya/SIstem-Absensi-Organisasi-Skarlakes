@@ -12,7 +12,7 @@ import {
   Play, Plus, QrCode, RefreshCcw, Save, Send, ShieldCheck, SquarePen, Users, XCircle, UserX,
   Bell, UserPlus
 } from 'lucide-react'
-import { motion } from 'framer-motion'
+
 import { pusherClient } from '@/lib/pusher-client'
 
 type Org = 'osis' | 'mpk'
@@ -731,12 +731,9 @@ export default function WawancaraClient({ user }: Props) {
                     {queue.map((q, index) => {
                       const notes = noteFor(q)
                       return (
-                      <motion.tr 
-                        key={q.id} 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.03, duration: 0.2 }}
-                        className="hover:bg-slate-50/80 transition-colors group"
+                      <tr
+                        key={q.id}
+                        className="hover:bg-slate-50/80 transition-colors group fade-in"
                       >
                         <td className="td font-mono text-slate-400">#{q.nomor_antrian}</td>
                         <td className="td">
@@ -793,7 +790,7 @@ export default function WawancaraClient({ user }: Props) {
                             </div>
                           ) : <span className="text-xs text-slate-400">Terkunci</span>}
                         </td>
-                      </motion.tr>
+                      </tr>
                     )})}
                   </tbody>
                 </table>
