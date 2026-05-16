@@ -11,9 +11,11 @@ interface TopbarProps {
   user: { id: number; nama: string; email: string; role: string }
   pageTitle: string
   onMenuClick: () => void
+  isCollapsed: boolean
+  onToggleCollapse: () => void
 }
 
-export default function Topbar({ user, pageTitle, onMenuClick }: TopbarProps) {
+export default function Topbar({ user, pageTitle, onMenuClick, isCollapsed, onToggleCollapse }: TopbarProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
@@ -31,6 +33,10 @@ export default function Topbar({ user, pageTitle, onMenuClick }: TopbarProps) {
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-[rgba(84,130,180,0.15)] h-14 flex items-center px-4 lg:px-6 gap-4">
       <button onClick={onMenuClick} className="lg:hidden btn-icon">
         <Menu className="w-5 h-5" />
+      </button>
+
+      <button onClick={onToggleCollapse} className="hidden lg:flex btn-icon hover:bg-slate-100 transition-colors">
+        <Menu className="w-5 h-5 text-slate-600" />
       </button>
 
       <h1 className="flex-1 text-sm font-bold text-[#011025] truncate">{pageTitle}</h1>

@@ -464,6 +464,10 @@ export default function WawancaraClient({ user }: Props) {
       toast.error('Nama wajib diisi')
       return
     }
+    if (/[^a-zA-Z\s]/.test(fAddNama)) {
+      toast.error('Nama hanya boleh berisi huruf dan spasi')
+      return
+    }
     setSaving(true)
     try {
       const kelasGabungan = `[${fAddOrg.toUpperCase()}] ${fAddTingkat} ${fAddJurusan}`
@@ -864,7 +868,12 @@ export default function WawancaraClient({ user }: Props) {
           </div>
           <div className="form-group">
             <label className="label">Nama Lengkap *</label>
-            <input value={fAddNama} onChange={(e) => setFAddNama(e.target.value)} className="input" placeholder="Isi nama lengkap" />
+            <input 
+              value={fAddNama} 
+              onChange={(e) => setFAddNama(e.target.value.replace(/[^a-zA-Z\s]/g, ''))} 
+              className="input" 
+              placeholder="Isi nama lengkap (hanya huruf)" 
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="form-group">

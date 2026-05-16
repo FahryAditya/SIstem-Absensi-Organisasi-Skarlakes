@@ -14,6 +14,7 @@ interface SidebarProps {
   user: { id: number; nama: string; email: string; role: string }
   mobileOpen?: boolean
   onClose?: () => void
+  isCollapsed?: boolean
 }
 
 function getNavItems(role: string) {
@@ -85,7 +86,7 @@ function RoleBadge({ role }: { role: string }) {
   )
 }
 
-export default function Sidebar({ user, mobileOpen, onClose }: SidebarProps) {
+export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: SidebarProps) {
   const pathname = usePathname()
   const navItems = getNavItems(user.role)
 
@@ -99,13 +100,15 @@ export default function Sidebar({ user, mobileOpen, onClose }: SidebarProps) {
       {/* Logo */}
       <div className="px-4 py-5 border-b border-[#5482B4]/15 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-[#052659] rounded-xl flex items-center justify-center shadow-sm shadow-[#052659]/30">
+          <div className="w-9 h-9 bg-[#052659] rounded-xl flex items-center justify-center shadow-sm shadow-[#052659]/30 flex-shrink-0">
             <GraduationCap className="w-5 h-5 text-white" />
           </div>
-          <div>
-            <div className="text-sm font-black text-white tracking-tight">Sistem Ekstrakurikuler Sekolah</div>
-            <div className="text-[10px] text-white/50 font-medium">V 17.5.1</div>
-          </div>
+          {!isCollapsed && (
+            <div className="fade-in whitespace-nowrap">
+              <div className="text-sm font-black text-white tracking-tight">Sistem Ekstrakurikuler</div>
+              <div className="text-[10px] text-white/50 font-medium">V 17.5.1</div>
+            </div>
+          )}
         </div>
         {onClose && (
           <button onClick={onClose} className="lg:hidden btn-icon">
@@ -115,7 +118,7 @@ export default function Sidebar({ user, mobileOpen, onClose }: SidebarProps) {
       </div>
 
       {/* Role badge */}
-      <div className="px-4 py-3 border-b border-[#5482B4]/15 flex-shrink-0">
+      <div className={cn("px-4 py-3 border-b border-[#5482B4]/15 flex-shrink-0", isCollapsed && "px-2")}>
         <RoleBadge role={user.role} />
       </div>
 
@@ -123,7 +126,8 @@ export default function Sidebar({ user, mobileOpen, onClose }: SidebarProps) {
       <nav className="flex-1 overflow-y-auto px-3 py-2">
         {navItems.map(section => (
           <div key={section.section} className="mb-1">
-            <div className="nav-section">{section.section}</div>
+            {!isCollapsed && <div className="nav-section fade-in">{section.section}</div>}
+            {isCollapsed && <div className="h-4" />}
             {section.links.map(link => {
               const Icon = link.icon
               const isNonaktif = (link as any).status === 'nonaktif'
@@ -147,9 +151,9 @@ export default function Sidebar({ user, mobileOpen, onClose }: SidebarProps) {
                   )}
                 >
                   <Icon className={cn("w-4 h-4 flex-shrink-0", isNonaktif && "text-red-500")} />
-                  <span className={cn("flex-1 truncate text-[13px]", isNonaktif && "text-red-500 font-medium")}>{link.label}</span>
-                  {isNonaktif && <span className="text-[9px] font-bold bg-red-100 text-red-600 px-1.5 py-0.5 rounded">NONAKTIF</span>}
-                  {active && <ChevronRight className="w-3 h-3 opacity-40" />}
+                  {!isCollapsed && <span className={cn("flex-1 truncate text-[13px] fade-in", isNonaktif && "text-red-500 font-medium")}>{link.label}</span>}
+                  {!isCollapsed && isNonaktif && <span className="text-[9px] font-bold bg-red-100 text-red-600 px-1.5 py-0.5 rounded fade-in">NONAKTIF</span>}
+                  {!isCollapsed && active && <ChevronRight className="w-3 h-3 opacity-40 fade-in" />}
                 </Link>
               )
             })}
@@ -158,10 +162,10 @@ export default function Sidebar({ user, mobileOpen, onClose }: SidebarProps) {
       </nav>
 
       {/* User info */}
-      <div className="px-4 py-4 border-t border-[#5482B4]/15 flex-shrink-0">
+       <div className="px-4 py-4 border-t border-[#5482B4]/15 flex-shrink-0">
         <div className="flex items-center gap-2.5">
           {user.role === 'administrator' ? (
-            <div className="relative w-8 h-8 rounded-full overflow-hidden shadow-sm border border-[#5482B4]/30">
+            <div className="relative w-8 h-8 rounded-full overflow-hidden shadow-sm border border-[#5482B4]/30 flex-shrink-0">
               <Image 
                 src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" 
                 alt="Admin Profile" 
@@ -174,10 +178,12 @@ export default function Sidebar({ user, mobileOpen, onClose }: SidebarProps) {
               {user.nama.charAt(0).toUpperCase()}
             </div>
           )}
-          <div className="min-w-0 flex-1">
-            <div className="text-xs font-bold text-white truncate">{user.nama}</div>
-            <div className="text-[10px] text-white/50 truncate">{user.email}</div>
-          </div>
+          {!isCollapsed && (
+            <div className="min-w-0 flex-1 fade-in">
+              <div className="text-xs font-bold text-white truncate">{user.nama}</div>
+              <div className="text-[10px] text-white/50 truncate">{user.email}</div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -185,7 +191,10 @@ export default function Sidebar({ user, mobileOpen, onClose }: SidebarProps) {
 
   return (
     <>
-      <aside className="hidden lg:flex flex-col w-60 bg-[#011025] border-r border-[#5482B4]/15 h-screen sticky top-0 shadow-sm">
+      <aside className={cn(
+        "hidden lg:flex flex-col bg-[#011025] border-r border-[#5482B4]/15 h-screen sticky top-0 shadow-sm transition-all duration-300 ease-in-out",
+        isCollapsed ? "w-16" : "w-60"
+      )}>
         {content}
       </aside>
       {mobileOpen && (
