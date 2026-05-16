@@ -21,7 +21,7 @@ function canAccessInterview(role: string, org: string) {
 const resultSchema = z.object({
   antrian_id: z.number().int().positive(),
   keterangan: z.enum(['AKTIF', 'KURANG_AKTIF']),
-  hasil: z.enum(['LOLOS', 'TIDAK_LOLOS']),
+  hasil: z.enum(['LOLOS', 'TIDAK_LOLOS', 'PENDING']),
   persentase: z.number().min(1).max(100),
   catatan: z.string().nullable().optional(),
 })
@@ -52,14 +52,14 @@ export async function POST(req: NextRequest) {
       antrian_id: parsed.data.antrian_id,
       interviewer_id: ctx.userId,
       keterangan: parsed.data.keterangan,
-      hasil: parsed.data.hasil,
+      hasil: parsed.data.hasil as any,
       persentase: parsed.data.persentase,
       catatan: parsed.data.catatan || undefined,
     },
     update: {
       interviewer_id: ctx.userId,
       keterangan: parsed.data.keterangan,
-      hasil: parsed.data.hasil,
+      hasil: parsed.data.hasil as any,
       persentase: parsed.data.persentase,
       catatan: parsed.data.catatan || undefined,
     },

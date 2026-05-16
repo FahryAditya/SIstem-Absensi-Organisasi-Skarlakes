@@ -75,6 +75,7 @@ enum HasilWawancara {
   DIPERTIMBANGKAN
   LOLOS
   TIDAK_LOLOS
+  PENDING
 }
 
 enum KeteranganWawancara {

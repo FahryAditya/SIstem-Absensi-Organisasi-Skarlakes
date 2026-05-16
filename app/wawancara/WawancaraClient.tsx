@@ -24,7 +24,7 @@ type IpStatus = 'NORMAL' | 'VPN_INDONESIA' | 'VPN_LUAR_NEGERI' | 'TIDAK_DIKETAHU
 interface InterviewResult {
   id: number
   keterangan: 'AKTIF' | 'KURANG_AKTIF'
-  hasil: 'LOLOS' | 'TIDAK_LOLOS'
+  hasil: 'LOLOS' | 'TIDAK_LOLOS' | 'PENDING'
   persentase: number
   catatan: string | null
   override_alasan: string | null
@@ -99,6 +99,7 @@ const resultLabel = {
   KURANG_AKTIF: 'Kurang Aktif',
   LOLOS: 'Lolos',
   TIDAK_LOLOS: 'Tidak Lolos',
+  PENDING: 'Pending',
 }
 
 const orgLabelMap: Record<Org, string> = {
@@ -152,7 +153,7 @@ export default function WawancaraClient({ user }: Props) {
   const [fSelesai, setFSelesai] = useState('')
   const [fOrg, setFOrg] = useState<Org>('osis')
   const [fKet, setFKet] = useState<'AKTIF' | 'KURANG_AKTIF'>('AKTIF')
-  const [fHasil, setFHasil] = useState<'LOLOS' | 'TIDAK_LOLOS'>('LOLOS')
+  const [fHasil, setFHasil] = useState<'LOLOS' | 'TIDAK_LOLOS' | 'PENDING'>('LOLOS')
   const [fPersen, setFPersen] = useState(80)
   const [fCatatan, setFCatatan] = useState('')
   const [overrideTarget, setOverrideTarget] = useState<QueueItem | null>(null)
@@ -324,6 +325,28 @@ export default function WawancaraClient({ user }: Props) {
     setFCatatan(q.hasil_wawancara?.catatan || '')
     setResultModal(true)
   }
+
+  async function cancelInterview() {
+    if (targetQueue && targetQueue.status === 'WAWANCARA') {
+      await setQueueStatus(targetQueue.id, 'MENUNGGU')
+    }
+    setResultModal(false)
+    setTargetQueue(null)
+  }
+
+  // Auto-revert if tab closed during active interview
+  useEffect(() => {
+    if (!resultModal || !targetQueue || targetQueue.status !== 'WAWANCARA') return
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Revert status using beacon to ensure it hits the server even if tab is closing
+      const body = JSON.stringify({ id: targetQueue.id, status: 'MENUNGGU' })
+      navigator.sendBeacon('/api/wawancara/antrian', body)
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [resultModal, targetQueue])
 
   async function saveSession() {
     setSaving(true)
@@ -673,7 +696,11 @@ export default function WawancaraClient({ user }: Props) {
                             <div className="text-[11px] text-slate-400">{q.ip_country || 'IP tidak diketahui'}</div>
                           </div>
                         </td>
-                        <td className="td">{q.hasil_wawancara ? <span className={q.hasil_wawancara.hasil === 'LOLOS' ? 'badge bg-green-50 text-green-700 border border-green-200' : 'badge bg-red-50 text-red-700 border border-red-200'}>{resultLabel[q.hasil_wawancara.hasil]}</span> : <span className="text-xs text-slate-400">Belum dinilai</span>}</td>
+                        <td className="td">{q.hasil_wawancara ? <span className={
+                           q.hasil_wawancara.hasil === 'LOLOS' ? 'badge bg-green-50 text-green-700 border border-green-200' : 
+                           q.hasil_wawancara.hasil === 'PENDING' ? 'badge bg-amber-50 text-amber-700 border border-amber-200' :
+                           'badge bg-red-50 text-red-700 border border-red-200'
+                         }>{resultLabel[q.hasil_wawancara.hasil]}</span> : <span className="text-xs text-slate-400">Belum dinilai</span>}</td>
                         <td className="td font-mono text-sm">{q.hasil_wawancara ? `${q.hasil_wawancara.persentase}%` : '-'}</td>
                         <td className="td">
                           {notes.length ? (
@@ -785,13 +812,13 @@ export default function WawancaraClient({ user }: Props) {
         </div>
       </Modal>
 
-      <Modal open={resultModal} title={targetQueue ? `Penilaian ${targetQueue.nama}` : 'Penilaian'} onClose={() => setResultModal(false)} size="lg"
-        footer={<div className="flex justify-end gap-2"><button onClick={() => setResultModal(false)} className="btn-secondary">Batal</button><button onClick={saveResult} disabled={saving} className="btn-primary">{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}Simpan Hasil</button></div>}>
+      <Modal open={resultModal} title={targetQueue ? `Penilaian ${targetQueue.nama}` : 'Penilaian'} onClose={cancelInterview} size="lg"
+        footer={<div className="flex justify-end gap-2"><button onClick={cancelInterview} className="btn-secondary">Batal</button><button onClick={saveResult} disabled={saving} className="btn-primary">{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}Simpan Hasil</button></div>}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="form-group"><label className="label">Nama</label><input value={targetQueue?.nama || ''} readOnly className="input bg-slate-50" /></div>
           <div className="form-group"><label className="label">Kelas</label><input value={targetQueue?.kelas || ''} readOnly className="input bg-slate-50" /></div>
           <div className="form-group"><label className="label">Keterangan *</label><select value={fKet} onChange={(e) => setFKet(e.target.value as any)} className="input"><option value="AKTIF">Aktif</option><option value="KURANG_AKTIF">Kurang Aktif</option></select></div>
-          <div className="form-group"><label className="label">Hasil *</label><select value={fHasil} onChange={(e) => setFHasil(e.target.value as any)} className="input"><option value="LOLOS">Lolos</option><option value="TIDAK_LOLOS">Tidak Lolos</option></select></div>
+          <div className="form-group"><label className="label">Hasil *</label><select value={fHasil} onChange={(e) => setFHasil(e.target.value as any)} className="input"><option value="LOLOS">Lolos</option><option value="TIDAK_LOLOS">Tidak Lolos</option><option value="PENDING">Pending</option></select></div>
           <div className="form-group md:col-span-2"><label className="label">Persentase *</label><input type="number" min={1} max={100} value={fPersen} onChange={(e) => setFPersen(Number(e.target.value))} className="input" /></div>
           <div className="form-group md:col-span-2"><label className="label">Catatan Pembina / Admin</label><textarea value={fCatatan} onChange={(e) => setFCatatan(e.target.value)} className="input min-h-24" placeholder="Opsional" /></div>
         </div>
