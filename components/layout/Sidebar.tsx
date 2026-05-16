@@ -108,7 +108,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
           {!isCollapsed && (
             <div className="fade-in whitespace-nowrap">
               <div className="text-sm font-black text-white tracking-tight">Sistem Ekstrakurikuler</div>
-              <div className="text-[10px] text-white/50 font-medium">V 17.5.1</div>
+              <div className="text-[10px] text-white/50 font-medium">V 17.5.5</div>
             </div>
           )}
         </div>
