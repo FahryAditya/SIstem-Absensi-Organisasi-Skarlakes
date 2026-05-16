@@ -184,5 +184,64 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // ─── Request Statistics (administrator only) ─────────────────────────────────
+  if ((part === 'request_stats') && userRole === 'administrator') {
+    const since30 = subDays(new Date(), 29)
+
+    // 1) Total per aksi (all time summary)
+    const totalPerAksi = await prisma.logAktivitas.groupBy({
+      by: ['aksi'],
+      _count: { _all: true },
+    })
+
+    // 2) Daily breakdown for last 30 days (grouped by date + aksi)
+    const dailyRaw = await prisma.logAktivitas.groupBy({
+      by: ['aksi', 'created_at'],
+      where: { created_at: { gte: since30 } },
+      _count: { _all: true },
+      orderBy: { created_at: 'asc' },
+    })
+
+    // Summarize daily: { date: 'yyyy-MM-dd', CREATE: n, UPDATE: n, DELETE: n, LOGIN: n, LOGOUT: n }
+    const dayMap: Record<string, Record<string, number>> = {}
+    for (const row of dailyRaw) {
+      const d = format(row.created_at, 'yyyy-MM-dd')
+      if (!dayMap[d]) dayMap[d] = {}
+      dayMap[d][row.aksi] = (dayMap[d][row.aksi] || 0) + (row._count._all as number)
+    }
+
+    // Fill last 30 days (ensure no gap)
+    const AKSI_TYPES = ['CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT']
+    const daily30 = Array.from({ length: 30 }, (_, i) => {
+      const d = subDays(new Date(), 29 - i)
+      const key = format(d, 'yyyy-MM-dd')
+      const entry: Record<string, any> = { date: key, label: format(d, 'dd/MM') }
+      for (const a of AKSI_TYPES) entry[a] = dayMap[key]?.[a] || 0
+      return entry
+    })
+
+    // 3) Total grand
+    const grandTotal = totalPerAksi.reduce((s, r) => s + (r._count._all as number), 0)
+
+    // 4) Request-method mapping (AksiLog → HTTP verb semantics)
+    const METHOD_MAP: Record<string, string> = {
+      CREATE: 'POST',
+      UPDATE: 'PUT',
+      DELETE: 'DELETE',
+      LOGIN:  'GET',
+      LOGOUT: 'GET',
+    }
+
+    response.requestStats = {
+      grandTotal,
+      perAksi: totalPerAksi.map(r => ({
+        aksi: r.aksi,
+        method: METHOD_MAP[r.aksi] || 'GET',
+        count: r._count._all,
+      })),
+      daily30,
+    }
+  }
+
   return NextResponse.json(response)
 }

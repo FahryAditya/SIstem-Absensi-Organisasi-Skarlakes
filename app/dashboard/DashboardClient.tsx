@@ -11,7 +11,7 @@ import { ROLE_LABELS } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl, clientQueryClient } from '@/lib/client-cache'
 import TextType from '@/components/TextType'
 import {
-  Users, CheckCircle2, Wallet, UserPlus, LogOut, Clock, CalendarDays, PlusCircle, LayoutList, HandCoins, Loader2, UploadCloud, TrendingUp, Activity, X, Megaphone, Sparkles, PlusCircle as PlusCircleIcon
+  Users, CheckCircle2, Wallet, UserPlus, LogOut, Clock, CalendarDays, PlusCircle, LayoutList, HandCoins, Loader2, UploadCloud, TrendingUp, Activity, X, Megaphone, Sparkles, PlusCircle as PlusCircleIcon, Zap, ArrowUpDown, MousePointerClick, RefreshCw, Trash2
 } from 'lucide-react'
 
 // Lazy load Recharts for better performance
@@ -25,6 +25,8 @@ const Tooltip = dynamic<any>(() => import('recharts').then(mod => mod.Tooltip) a
 const Legend = dynamic<any>(() => import('recharts').then(mod => mod.Legend) as any, { ssr: false })
 const AreaChart = dynamic<any>(() => import('recharts').then(mod => mod.AreaChart) as any, { ssr: false })
 const Area = dynamic<any>(() => import('recharts').then(mod => mod.Area) as any, { ssr: false })
+const LineChart = dynamic<any>(() => import('recharts').then(mod => mod.LineChart) as any, { ssr: false })
+const Line = dynamic<any>(() => import('recharts').then(mod => mod.Line) as any, { ssr: false })
 
 interface Props {
   user: { id: number; nama: string; email: string; role: string }
@@ -52,6 +54,12 @@ interface LogData {
   recentLog: { id: number; user_nama: string; deskripsi: string; created_at: string; aksi: string }[]
 }
 
+interface RequestStatsData {
+  grandTotal: number
+  perAksi: { aksi: string; method: string; count: number }[]
+  daily30: { date: string; label: string; CREATE: number; UPDATE: number; DELETE: number; LOGIN: number; LOGOUT: number }[]
+}
+
 const AKSI_COLORS: Record<string, string> = {
   CREATE: 'text-green-600 bg-green-50',
   UPDATE: 'text-blue-600 bg-blue-50',
@@ -60,11 +68,22 @@ const AKSI_COLORS: Record<string, string> = {
   LOGOUT: 'text-slate-600 bg-slate-100',
 }
 
+// Request stats visual config per aksi
+const REQUEST_META: Record<string, { label: string; method: string; color: string; chartColor: string; icon: React.ElementType; bg: string }> = {
+  CREATE: { label: 'Create',  method: 'POST',   color: 'text-emerald-700', chartColor: '#10b981', icon: PlusCircle,         bg: 'bg-emerald-50 border-emerald-200' },
+  UPDATE: { label: 'Update',  method: 'PUT',    color: 'text-blue-700',    chartColor: '#3b82f6', icon: RefreshCw,          bg: 'bg-blue-50   border-blue-200'    },
+  DELETE: { label: 'Delete',  method: 'DELETE', color: 'text-red-700',     chartColor: '#ef4444', icon: Trash2,             bg: 'bg-red-50    border-red-200'     },
+  LOGIN:  { label: 'Login',   method: 'GET',    color: 'text-violet-700',  chartColor: '#8b5cf6', icon: MousePointerClick,  bg: 'bg-violet-50 border-violet-200'  },
+  LOGOUT: { label: 'Logout',  method: 'GET',    color: 'text-slate-600',   chartColor: '#94a3b8', icon: ArrowUpDown,        bg: 'bg-slate-50  border-slate-200'   },
+}
+
 export default function DashboardClient({ user }: Props) {
   const [stats, setStats] = useState<StatsData | null>(null)
   const [charts, setCharts] = useState<ChartData | null>(null)
   const [logs, setLogs] = useState<LogData | null>(null)
   const [latestUpdate, setLatestUpdate] = useState<any>(null)
+  const [requestStats, setRequestStats] = useState<RequestStatsData | null>(null)
+  const [loadingRequestStats, setLoadingRequestStats] = useState(true)
   
   const [loading, setLoading] = useState(true)
   const [loadingCharts, setLoadingCharts] = useState(true)
@@ -93,6 +112,7 @@ export default function DashboardClient({ user }: Props) {
     setLoading(true)
     setLoadingCharts(true)
     setLoadingLogs(true)
+    setLoadingRequestStats(true)
     clearDashboardCache() 
     try {
       const [d, c] = await Promise.all([
@@ -106,15 +126,20 @@ export default function DashboardClient({ user }: Props) {
     setLoadingCharts(false)
     if (user.role === 'administrator') {
       try {
-        const l = await fetchJsonCachedUrl<LogData>('/api/dashboard?part=logs')
+        const [l, rs] = await Promise.all([
+          fetchJsonCachedUrl<LogData>('/api/dashboard?part=logs'),
+          fetchJsonCachedUrl<RequestStatsData>('/api/dashboard?part=request_stats'),
+        ])
         setLogs(l)
+        setRequestStats(rs)
       } catch {}
       setLoadingLogs(false)
+      setLoadingRequestStats(false)
     }
   }
 
   function clearDashboardCache() {
-    const parts: string[] = ['stats', 'charts', 'logs', 'kas', 'members', 'absensi']
+    const parts: string[] = ['stats', 'charts', 'logs', 'kas', 'members', 'absensi', 'request_stats']
     parts.forEach(p => {
       clientQueryClient.removeQueries({ queryKey: ['client-json', '/api/dashboard?part=' + p], exact: true })
     })
@@ -602,6 +627,103 @@ export default function DashboardClient({ user }: Props) {
             <div className="py-8 text-center text-sm text-slate-400">
               Tidak ada aktivitas terbaru
             </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Request Statistics (administrator only) ─────────────────────────── */}
+      {user.role === 'administrator' && (
+        <div className="card p-5">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-[#5482B4]" />
+              <h3 className="text-sm font-bold text-[#011025]">Statistik Request API</h3>
+            </div>
+            {!loadingRequestStats && requestStats && (
+              <span className="text-xs font-semibold text-[#7EA0C5]">
+                Total: <span className="text-[#011025] font-black">{requestStats.grandTotal.toLocaleString('id-ID')}</span> request
+              </span>
+            )}
+          </div>
+
+          {loadingRequestStats ? (
+            <div className="py-10 flex items-center justify-center text-sm text-slate-400 gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" /> Memuat statistik request...
+            </div>
+          ) : requestStats ? (
+            <div className="space-y-5">
+              {/* Summary cards per aksi */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                {(['CREATE','UPDATE','DELETE','LOGIN','LOGOUT'] as const).map(aksi => {
+                  const meta = REQUEST_META[aksi]
+                  const stat = requestStats.perAksi.find(p => p.aksi === aksi)
+                  const count = stat?.count || 0
+                  const pct = requestStats.grandTotal > 0 ? Math.round(count / requestStats.grandTotal * 100) : 0
+                  const Icon = meta.icon
+                  return (
+                    <div key={aksi} className={`relative flex flex-col gap-2 p-3.5 rounded-xl border ${meta.bg} overflow-hidden`}>
+                      {/* Progress bar accent */}
+                      <div
+                        className="absolute bottom-0 left-0 h-[3px] rounded-b-xl transition-all duration-700"
+                        style={{ width: `${pct}%`, backgroundColor: meta.chartColor }}
+                      />
+                      <div className="flex items-center justify-between">
+                        <span className={`text-[10px] font-black uppercase tracking-wider ${meta.color}`}>
+                          {meta.method}
+                        </span>
+                        <Icon className={`w-3.5 h-3.5 ${meta.color} opacity-60`} />
+                      </div>
+                      <div className={`text-2xl font-black font-mono leading-none ${meta.color}`}>
+                        {count.toLocaleString('id-ID')}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-slate-500 font-medium">{meta.label}</span>
+                        <span className="text-[10px] font-bold text-slate-400">{pct}%</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* 30-day trend line chart */}
+              <div>
+                <p className="text-xs text-[#7EA0C5] font-semibold mb-3">Tren 30 Hari Terakhir</p>
+                <div className="h-[180px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={requestStats.daily30} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                      <XAxis
+                        dataKey="label"
+                        tick={{ fontSize: 9, fill: '#94a3b8' }}
+                        axisLine={false}
+                        tickLine={false}
+                        interval={4}
+                      />
+                      <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                      <Tooltip
+                        contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,.08)' }}
+                        labelStyle={{ fontWeight: 700, color: '#011025' }}
+                      />
+                      <Legend iconType="circle" iconSize={6} wrapperStyle={{ fontSize: 10, paddingTop: 8 }} />
+                      {(['CREATE','UPDATE','DELETE','LOGIN','LOGOUT'] as const).map(aksi => (
+                        <Line
+                          key={aksi}
+                          type="monotone"
+                          dataKey={aksi}
+                          name={REQUEST_META[aksi].label}
+                          stroke={REQUEST_META[aksi].chartColor}
+                          strokeWidth={1.8}
+                          dot={false}
+                          activeDot={{ r: 4 }}
+                        />
+                      ))}
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="py-8 text-center text-sm text-slate-400">Tidak ada data request</div>
           )}
         </div>
       )}
