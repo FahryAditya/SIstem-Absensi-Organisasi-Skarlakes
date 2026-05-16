@@ -381,6 +381,44 @@ export default function WawancaraClient({ user }: Props) {
     }
   }
 
+  async function autoSchedule() {
+    setSaving(true)
+    try {
+      const now = new Date()
+      const start = new Date()
+      start.setHours(8, 0, 0, 0)
+      const end = new Date()
+      end.setHours(15, 0, 0, 0)
+
+      if (now.getHours() >= 15) {
+        start.setDate(start.getDate() + 1)
+        end.setDate(end.getDate() + 1)
+      }
+
+      const res = await fetch('/api/wawancara', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organisasi_type: 'osis',
+          jadwal_mulai: start.toISOString(),
+          jadwal_selesai: end.toISOString(),
+        }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast.error(json.error || 'Gagal membuat jadwal otomatis')
+        return
+      }
+      toast.success('Jadwal wawancara otomatis berhasil dibuat')
+      clearJsonCache()
+      load(true)
+    } catch (err) {
+      toast.error('Terjadi kesalahan koneksi')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function updateSession(id: number, action: 'activate' | 'finish' | 'cancel') {
     setSaving(true)
     try {
@@ -609,6 +647,7 @@ export default function WawancaraClient({ user }: Props) {
             <Clock className="w-4 h-4 text-indigo-400" />
             {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
           </div>
+          {admin && <button onClick={autoSchedule} disabled={saving} className="btn-secondary text-indigo-600 border-indigo-200 hover:bg-indigo-50"><CalendarClock className="w-4 h-4" />Jadwalkan</button>}
           <button onClick={openAddPeserta} className="btn-secondary"><UserPlus className="w-4 h-4" />Tambah Peserta</button>
           {admin && <button onClick={openCreate} className="btn-primary"><Plus className="w-4 h-4" />Buat/Aktifkan</button>}
         </div>
