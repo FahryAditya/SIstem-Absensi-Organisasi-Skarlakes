@@ -464,8 +464,8 @@ export default function WawancaraClient({ user }: Props) {
       toast.error('Nama wajib diisi')
       return
     }
-    if (/[^a-zA-Z\s]/.test(fAddNama)) {
-      toast.error('Nama hanya boleh berisi huruf dan spasi')
+    if (!/^[a-zA-Z\s.']*$/.test(fAddNama)) {
+      toast.error('Nama hanya boleh berisi huruf dan simbol . \'')
       return
     }
     setSaving(true)

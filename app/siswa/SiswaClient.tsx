@@ -103,6 +103,10 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
 
   const handleSave = useCallback(async () => {
     if (!fNama.trim()) { toast.error('Nama wajib diisi'); return }
+    if (!/^[a-zA-Z\s.']*$/.test(fNama)) {
+      toast.error('Nama hanya boleh berisi huruf dan simbol . \'');
+      return
+    }
     setSaving(true)
     const finalKelas = `${fTingkat} ${fJurusan}`.trim()
     const body = { nama: fNama.trim(), nis: fNis.trim() || undefined, kelas: finalKelas || undefined, ekskul: fEkskul }
@@ -240,14 +244,7 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
             <label className="label">Nama Lengkap *</label>
             <input 
               value={fNama} 
-              onChange={e => {
-                const val = e.target.value
-                if (val && !/^[a-zA-Z\s.']*$/.test(val)) {
-                  toast.error('Nama hanya boleh berisi huruf', { id: 'nama-error' })
-                  return
-                }
-                setFNama(val)
-              }} 
+              onChange={e => setFNama(e.target.value)} 
               placeholder="Nama lengkap siswa (Hanya Huruf)" 
               className="input" 
               autoFocus 

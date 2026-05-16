@@ -76,8 +76,10 @@ export default function DashboardClient({ user }: Props) {
   // Quick Add State
   const [quickOrg, setQuickOrg] = useState<string>('')
   const [quickName, setQuickName] = useState('')
-  const [quickClass, setQuickClass] = useState('')
-  const [quickJabatan, setQuickJabatan] = useState('')
+  const [quickLevel, setQuickLevel] = useState('X')
+  const [quickSchool, setQuickSchool] = useState<'Skarla' | 'Skakes'>('Skarla')
+  const [quickMajor, setQuickMajor] = useState('PPLG')
+  const [quickJabatan, setQuickJabatan] = useState('Anggota')
   const [quickLoading, setQuickLoading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -166,9 +168,14 @@ export default function DashboardClient({ user }: Props) {
   async function handleQuickAdd(e: React.FormEvent) {
     e.preventDefault()
     if (!quickName || !quickOrg) return toast.error('Nama wajib diisi')
+    if (!/^[a-zA-Z\s.']*$/.test(quickName)) {
+      toast.error('Nama hanya boleh berisi huruf dan simbol . \'')
+      return
+    }
     setQuickLoading(true)
     try {
-      const data = [{ nama: quickName, kelas: quickClass, jabatan: quickJabatan }]
+      const finalClass = `${quickLevel} ${quickMajor}`.trim()
+      const data = [{ nama: quickName, kelas: finalClass, jabatan: quickJabatan }]
       const res = await fetch('/api/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -387,8 +394,55 @@ export default function DashboardClient({ user }: Props) {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="form-group">
-                  <label className="label">Kelas</label>
-                  <input type="text" value={quickClass} onChange={e => setQuickClass(e.target.value)} className="input" placeholder="X MIPA 1" />
+                  <label className="label">Tingkat</label>
+                  <select value={quickLevel} onChange={e => setQuickLevel(e.target.value)} className="input cursor-pointer">
+                    <option value="X">Kelas X</option>
+                    <option value="XI">Kelas XI</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="label">Pilih Sekolah</label>
+                  <select 
+                    value={quickSchool} 
+                    onChange={e => {
+                      const school = e.target.value as 'Skarla' | 'Skakes'
+                      setQuickSchool(school)
+                      setQuickMajor(school === 'Skarla' ? 'PPLG' : 'FKK')
+                    }} 
+                    className="input cursor-pointer"
+                  >
+                    <option value="Skarla">Skarla</option>
+                    <option value="Skakes">Skakes</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="form-group">
+                  <label className="label">Kejuruan / Major</label>
+                  <select value={quickMajor} onChange={e => setQuickMajor(e.target.value)} className="input cursor-pointer">
+                    {quickSchool === 'Skarla' ? (
+                      <>
+                        <option value="PPLG">PPLG</option>
+                        <option value="TJKT">TJKT</option>
+                        <option value="DKV">DKV</option>
+                        <option value="MPLB 1">MPLB 1</option>
+                        <option value="MPLB 2">MPLB 2</option>
+                        <option value="AKL">AKL</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="FKK">FKK</option>
+                        <option value="AKC 1">AKC 1</option>
+                        <option value="AKC 2">AKC 2</option>
+                        <option value="AKC 3">AKC 3</option>
+                        <option value="AKC 4">AKC 4</option>
+                        <option value="AKC 5">AKC 5</option>
+                        <option value="AKC 6">AKC 6</option>
+                        <option value="TLM">TLM</option>
+                      </>
+                    )}
+                  </select>
                 </div>
                 {(quickOrg === 'osis' || quickOrg === 'mpk') && (
                   <div className="form-group">

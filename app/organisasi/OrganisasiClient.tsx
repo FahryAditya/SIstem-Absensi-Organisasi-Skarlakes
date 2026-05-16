@@ -153,6 +153,10 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
 
   async function handleSave() {
     if (!fNama.trim()) { toast.error('Nama wajib diisi'); return }
+    if (!/^[a-zA-Z\s.']*$/.test(fNama)) {
+      toast.error('Nama hanya boleh berisi huruf dan simbol . \'');
+      return
+    }
     setSaving(true)
     const finalKelas = `${fTingkat} ${fJurusan}`.trim()
     const body = { nama: fNama.trim(), nis: fNis || undefined, kelas: finalKelas || undefined, jabatan: fJabatan || undefined, tipe: activeOrg }
@@ -265,14 +269,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
                 <label className="label">Nama Lengkap *</label>
                 <input 
                   value={fNama} 
-                  onChange={e => {
-                    const val = e.target.value
-                    if (val && !/^[a-zA-Z\s.']*$/.test(val)) {
-                      toast.error('Nama hanya boleh berisi huruf', { id: 'nama-error' })
-                      return
-                    }
-                    setFNama(val)
-                  }} 
+                  onChange={e => setFNama(e.target.value)} 
                   placeholder="Nama lengkap anggota (Hanya Huruf)" 
                   className="input" 
                   autoFocus 

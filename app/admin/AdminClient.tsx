@@ -52,6 +52,10 @@ export default function AdminClient({ user }: Props) {
     if (!fNama.trim() || !fEmail.trim()) { toast.error('Nama dan email wajib diisi'); return }
     if (!editTarget && !fPassword) { toast.error('Password wajib diisi untuk user baru'); return }
     if (fPassword && fPassword.length < 6) { toast.error('Password minimal 6 karakter'); return }
+    if (!/^[a-zA-Z\s.']*$/.test(fNama)) {
+      toast.error('Nama hanya boleh berisi huruf dan simbol . \'')
+      return
+    }
     setSaving(true)
 
     const body: Record<string, unknown> = { nama: fNama.trim(), email: fEmail.trim(), role: fRole }
