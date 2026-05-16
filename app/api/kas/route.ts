@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     const searchCondition = searchQuery ? { nama: { contains: searchQuery, mode: 'insensitive' as any } } : {}
 
     if (org === 'programming' || org === 'english') {
-      const [siswaList, total, totalKasData] = await Promise.all([
+      const [siswaList, total, totalKasData, totalPengeluaran] = await Promise.all([
         prisma.siswa.findMany({
           where: { ekskul: org, ...searchCondition },
           include: { absensi: { select: { uang_kas: true, updated_at: true } } },
@@ -44,11 +44,15 @@ export async function GET(req: NextRequest) {
         prisma.absensi.aggregate({
           where: { siswa: { ekskul: org } },
           _sum: { uang_kas: true }
+        }),
+        prisma.pengeluaranKas.aggregate({
+          where: { organisasi_type: org },
+          _sum: { nominal: true }
         })
       ])
 
       totalItems = total
-      totalKasSum = totalKasData._sum?.uang_kas || 0
+      totalKasSum = (totalKasData._sum?.uang_kas || 0) - (totalPengeluaran._sum?.nominal || 0)
       results = siswaList.map(s => {
         let terakhir_bayar = null
         const paidAbsensi = s.absensi.filter((a: any) => a.uang_kas !== 0)
@@ -65,7 +69,7 @@ export async function GET(req: NextRequest) {
         }
       })
     } else if (org === 'osis') {
-      const [anggotaList, total, totalKasData] = await Promise.all([
+      const [anggotaList, total, totalKasData, totalPengeluaran] = await Promise.all([
         prisma.anggotaOsis.findMany({
           where: searchCondition,
           include: { absensi: { select: { uang_kas: true, updated_at: true } } },
@@ -77,11 +81,15 @@ export async function GET(req: NextRequest) {
         prisma.absensiOrganisasi.aggregate({
           where: { organisasi_type: 'osis' },
           _sum: { uang_kas: true }
+        }),
+        prisma.pengeluaranKas.aggregate({
+          where: { organisasi_type: 'osis' },
+          _sum: { nominal: true }
         })
       ])
 
       totalItems = total
-      totalKasSum = totalKasData._sum?.uang_kas || 0
+      totalKasSum = (totalKasData._sum?.uang_kas || 0) - (totalPengeluaran._sum?.nominal || 0)
       results = anggotaList.map(a => {
         let terakhir_bayar = null
         const paidAbsensi = a.absensi.filter((ab: any) => ab.uang_kas !== 0)
@@ -98,7 +106,7 @@ export async function GET(req: NextRequest) {
         }
       })
     } else if (org === 'mpk') {
-      const [anggotaList, total, totalKasData] = await Promise.all([
+      const [anggotaList, total, totalKasData, totalPengeluaran] = await Promise.all([
         prisma.anggotaMpk.findMany({
           where: searchCondition,
           include: { absensi: { select: { uang_kas: true, updated_at: true } } },
@@ -110,11 +118,15 @@ export async function GET(req: NextRequest) {
         prisma.absensiOrganisasi.aggregate({
           where: { organisasi_type: 'mpk' },
           _sum: { uang_kas: true }
+        }),
+        prisma.pengeluaranKas.aggregate({
+          where: { organisasi_type: 'mpk' },
+          _sum: { nominal: true }
         })
       ])
 
       totalItems = total
-      totalKasSum = totalKasData._sum?.uang_kas || 0
+      totalKasSum = (totalKasData._sum?.uang_kas || 0) - (totalPengeluaran._sum?.nominal || 0)
       results = anggotaList.map(a => {
         let terakhir_bayar = null
         const paidAbsensi = a.absensi.filter((ab: any) => ab.uang_kas !== 0)

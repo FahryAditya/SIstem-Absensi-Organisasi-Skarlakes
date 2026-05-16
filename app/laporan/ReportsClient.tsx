@@ -23,9 +23,8 @@ export default function ReportsClient({ user }: Props) {
     setServerError(null)
     try {
       const res = await fetch('/api/reports?type=all')
-      const isUnauth = res.status === 401
       
-      if (isUnauth) {
+      if (res.status === 401) {
         setAuthError(true)
         setLoading(false)
         return
@@ -40,8 +39,8 @@ export default function ReportsClient({ user }: Props) {
       }
       
       setData(json)
-    } catch (error) {
-      console.error('Failed to fetch reports data:', error)
+    } catch (err) {
+      console.error('Failed to fetch reports data:', err)
       setServerError('Gagal terhubung ke server. Pastikan koneksi internet Anda stabil.')
     }
     setLoading(false)

@@ -35,9 +35,13 @@ export default function KasClient({ user }: Props) {
   const [totalPages, setTotalPages] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
 
+  // Member Selection State
+  const [members, setMembers] = useState<{ id: number; nama: string; kelas: string }[]>([])
+  const [memberLoading, setMemberLoading] = useState(false)
+
   // Transaction Modal State
   const [modalOpen, setModalOpen] = useState(false)
-  const [selectedItem, setSelectedItem] = useState<KasData | null>(null)
+  const [selectedMemberId, setSelectedMemberId] = useState<number | ''>('')
   const [txType, setTxType] = useState<'setor' | 'tarik'>('setor')
   const [txNominal, setTxNominal] = useState('')
   const [txKet, setTxKet] = useState('')
@@ -77,33 +81,42 @@ export default function KasClient({ user }: Props) {
     setPage(1)
   }, [activeOrg, debouncedSearch])
 
-  const openModal = useCallback((item: KasData, type: 'setor' | 'tarik') => {
-    setSelectedItem(item)
-    setTxType(type)
+  const fetchMembers = useCallback(async (org: string) => {
+    if (!org) return
+    setMemberLoading(true)
+    try {
+      const res = await fetch(`/api/kas/members?org=${org}`)
+      const json = await res.json()
+      setMembers(json.data || [])
+    } catch (err) {
+      console.error(err)
+    }
+    setMemberLoading(false)
+  }, [])
+
+  const openModal = useCallback((memberId?: number) => {
+    setSelectedMemberId(memberId || '')
+    setTxType('setor')
     setTxNominal('')
     setTxKet('')
     setModalOpen(true)
-  }, [])
+    if (members.length === 0) fetchMembers(activeOrg)
+  }, [activeOrg, members.length, fetchMembers])
 
   const handleTransaction = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedItem || !txNominal) return
+    if (!selectedMemberId || !txNominal) return
     
     let nominalInt = parseInt(txNominal.replace(/\D/g, ''))
     if (isNaN(nominalInt) || nominalInt <= 0) return toast.error('Nominal tidak valid')
     
-    if (txType === 'tarik') {
-      nominalInt = -Math.abs(nominalInt)
-      if (!txKet) return toast.error('Keterangan wajib diisi saat menarik/mengurangi kas')
-    }
-
     setTxLoading(true)
     try {
       const res = await fetch('/api/kas/transaksi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id_anggota: selectedItem.id,
+          id_anggota: selectedMemberId,
           org: activeOrg,
           nominal: nominalInt,
           keterangan: txKet || 'Setor uang kas'
@@ -120,7 +133,7 @@ export default function KasClient({ user }: Props) {
       toast.error(err.message)
     }
     setTxLoading(false)
-  }, [selectedItem, txNominal, txType, txKet, activeOrg, fetchData])
+  }, [selectedMemberId, txNominal, txKet, activeOrg, fetchData])
 
   const formatTerakhirBayar = useCallback((isoDate: string | null | undefined) => {
     if (!isoDate) return '-'
@@ -181,18 +194,11 @@ export default function KasClient({ user }: Props) {
       render: (item: KasData) => (
         <div className="flex items-center gap-2">
           <button 
-            onClick={() => openModal(item, 'setor')}
+            onClick={() => openModal(item.id)}
             className="p-2 bg-green-50 text-green-600 hover:bg-green-600 hover:text-white rounded-lg transition-all duration-200"
             title="Setor Kas"
           >
             <Plus className="w-4 h-4" />
-          </button>
-          <button 
-            onClick={() => openModal(item, 'tarik')}
-            className="p-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg transition-all duration-200"
-            title="Tarik Kas"
-          >
-            <Minus className="w-4 h-4" />
           </button>
         </div>
       )
@@ -201,26 +207,38 @@ export default function KasClient({ user }: Props) {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      <div>
-        <div className="flex items-center gap-2.5">
-          <Wallet className="w-6 h-6 text-amber-500" />
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight">Buku Kas</h1>
+      <div className="flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <Wallet className="w-6 h-6 text-amber-500" />
+            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Buku Kas</h1>
+          </div>
+          <p className="text-sm text-slate-500 mt-1">Laporan rekapitulasi pembayaran uang kas anggota secara keseluruhan.</p>
         </div>
-        <p className="text-sm text-slate-500 mt-1">Laporan rekapitulasi pembayaran uang kas anggota secara keseluruhan.</p>
+        <div className="flex items-center gap-2">
+          <button onClick={() => openModal()} className="btn-primary whitespace-nowrap shadow-sm">
+            <Plus className="w-4 h-4 mr-1.5" />
+            Setor Kas
+          </button>
+          <a href="/pengeluaran" className="btn bg-red-50 text-red-600 hover:bg-red-600 hover:text-white border-red-200 whitespace-nowrap shadow-sm">
+            <Minus className="w-4 h-4 mr-1.5" />
+            Tarik Kas
+          </a>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Total Card */}
-        <div className="card p-6 bg-gradient-to-br from-amber-500 to-amber-600 text-white md:col-span-1 shadow-md">
-          <div className="flex items-center gap-2 text-amber-100 mb-2">
+        <div className="card p-6 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white md:col-span-1 shadow-md">
+          <div className="flex items-center gap-2 text-emerald-100 mb-2">
             <Wallet className="w-5 h-5" />
-            <h2 className="text-sm font-bold">Total Kas {activeOrg ? ORG_LABELS[activeOrg as OrgType] : ''}</h2>
+            <h2 className="text-sm font-bold">Saldo Kas Saat Ini</h2>
           </div>
           <div className="text-3xl font-black font-mono">
             {formatCurrency(totalKas)}
           </div>
-          <div className="text-xs text-amber-100 mt-2 opacity-80">
-            Total dari seluruh anggota {activeOrg ? ORG_LABELS[activeOrg as OrgType] : ''}
+          <div className="text-xs text-emerald-100 mt-2 opacity-80">
+            Total kas masuk dikurangi total pengeluaran {activeOrg ? ORG_LABELS[activeOrg as OrgType] : ''}
           </div>
         </div>
 
@@ -242,7 +260,10 @@ export default function KasClient({ user }: Props) {
                 <Filter className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <select
                   value={activeOrg}
-                  onChange={e => setActiveOrg(e.target.value)}
+                  onChange={e => {
+                    setActiveOrg(e.target.value)
+                    setMembers([]) // Reset members when org changes
+                  }}
                   className="input pl-9 appearance-none"
                 >
                   {orgs.map(o => (
@@ -251,42 +272,6 @@ export default function KasClient({ user }: Props) {
                 </select>
               </div>
             )}
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Transaction Buttons */}
-      <div className="card p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Wallet className="w-5 h-5 text-amber-500" />
-          <h3 className="text-sm font-bold text-[#011025]">Transaksi Manual Cepat</h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-green-50 rounded-lg border border-green-100">
-            <div className="text-xs font-semibold text-green-700 mb-1">Setor Kas</div>
-            <p className="text-xs text-slate-600 mb-3">Tambahkan kas untuk anggota secara manual</p>
-            <button 
-              onClick={() => {
-                if (data.length > 0) openModal(data[0], 'setor')
-                else toast.error('Pilih anggota terlebih dahulu')
-              }}
-              className="w-full py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-colors"
-            >
-              Setor Kas
-            </button>
-          </div>
-          <div className="p-4 bg-red-50 rounded-lg border border-red-100">
-            <div className="text-xs font-semibold text-red-700 mb-1">Tarik Kas</div>
-            <p className="text-xs text-slate-600 mb-3">Kurangi kas untuk pengeluaran</p>
-            <button 
-              onClick={() => {
-                if (data.length > 0) openModal(data[0], 'tarik')
-                else toast.error('Pilih anggota terlebih dahulu')
-              }}
-              className="w-full py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition-colors"
-            >
-              Tarik Kas
-            </button>
           </div>
         </div>
       </div>
@@ -306,7 +291,7 @@ export default function KasClient({ user }: Props) {
 
       {/* Modal Transaksi */}
       <AnimatePresence>
-        {modalOpen && selectedItem && (
+        {modalOpen && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -320,22 +305,39 @@ export default function KasClient({ user }: Props) {
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
             >
-              <div className={`p-4 border-b flex items-center justify-between text-white ${txType === 'setor' ? 'bg-green-600' : 'bg-red-600'}`}>
+              <div className="p-4 border-b flex items-center justify-between text-white bg-green-600">
                 <h3 className="font-bold flex items-center gap-2">
-                  {txType === 'setor' ? <Plus className="w-5 h-5" /> : <Minus className="w-5 h-5" />}
-                  {txType === 'setor' ? 'Setor Kas Manual' : 'Tarik / Kurangi Kas'}
+                  <Plus className="w-5 h-5" />
+                  Setor Kas Manual
                 </h3>
                 <button onClick={() => setModalOpen(false)} className="p-1 hover:bg-white/20 rounded-lg"><X className="w-5 h-5" /></button>
               </div>
             
             <form onSubmit={handleTransaction} className="p-5 space-y-4">
-              <div className="p-3 bg-slate-50 rounded-lg border text-sm">
-                <div className="text-slate-500">Anggota</div>
-                <div className="font-bold text-slate-800 text-base">{selectedItem.nama}</div>
+              <div className="form-group">
+                <label className="label">Pilih Anggota</label>
+                {memberLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-slate-500 p-2 bg-slate-50 rounded-lg border border-dashed">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Memuat daftar anggota...
+                  </div>
+                ) : (
+                  <select 
+                    value={selectedMemberId} 
+                    onChange={e => setSelectedMemberId(parseInt(e.target.value))}
+                    className="input font-medium"
+                    required
+                  >
+                    <option value="">-- Pilih Anggota --</option>
+                    {members.map(m => (
+                      <option key={m.id} value={m.id}>{m.nama} - {m.kelas}</option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div className="form-group">
-                <label className="label">Nominal (Rp)</label>
+                <label className="label">Nominal Setoran (Rp)</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400">Rp</span>
                   <input 
@@ -345,7 +347,7 @@ export default function KasClient({ user }: Props) {
                       const val = e.target.value.replace(/\D/g, '')
                       setTxNominal(val ? parseInt(val).toLocaleString('id-ID') : '')
                     }}
-                    className="input pl-10 font-mono font-bold text-lg" 
+                    className="input pl-10 font-mono font-bold text-lg text-emerald-600" 
                     placeholder="10.000" 
                     required 
                   />
@@ -353,21 +355,20 @@ export default function KasClient({ user }: Props) {
               </div>
 
               <div className="form-group">
-                <label className="label">Keterangan {txType === 'tarik' && <span className="text-red-500">*</span>}</label>
+                <label className="label">Keterangan</label>
                 <input 
                   type="text" 
                   value={txKet} 
                   onChange={e => setTxKet(e.target.value)} 
                   className="input" 
-                  placeholder={txType === 'setor' ? 'Misal: Pembayaran tunggakan bulan lalu' : 'Misal: Untuk beli spidol'} 
-                  required={txType === 'tarik'}
+                  placeholder="Misal: Pembayaran bulan Mei" 
                 />
               </div>
 
               <div className="pt-2 flex gap-3">
                 <button type="button" onClick={() => setModalOpen(false)} className="btn-secondary flex-1 justify-center py-2.5">Batal</button>
-                <button type="submit" disabled={txLoading} className={`btn flex-1 justify-center py-2.5 text-white ${txType === 'setor' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}>
-                  {txLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Simpan Transaksi'}
+                <button type="submit" disabled={txLoading} className="btn flex-1 justify-center py-2.5 text-white bg-green-600 hover:bg-green-700">
+                  {txLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Simpan Setoran'}
                 </button>
               </div>
             </form>

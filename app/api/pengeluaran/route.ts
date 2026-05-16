@@ -29,17 +29,26 @@ export async function GET(req: NextRequest) {
       ? {} 
       : { organisasi_type: org as any }
 
-    const data = await (prisma as any).pengeluaranKas.findMany({
-      where: whereCondition,
-      include: { creator: { select: { nama: true } } },
-      orderBy: { tanggal: 'desc' }
-    })
+    const [data, totalKasData, totalPengeluaran] = await Promise.all([
+      (prisma as any).pengeluaranKas.findMany({
+        where: whereCondition,
+        include: { creator: { select: { nama: true } } },
+        orderBy: { tanggal: 'desc' }
+      }),
+      org === 'programming' || org === 'english' 
+        ? prisma.absensi.aggregate({ where: { siswa: { ekskul: org as any } }, _sum: { uang_kas: true } })
+        : prisma.absensiOrganisasi.aggregate({ where: { organisasi_type: org as any }, _sum: { uang_kas: true } }),
+      prisma.pengeluaranKas.aggregate({ where: { organisasi_type: org as any }, _sum: { nominal: true } })
+    ])
+
+    const balance = (totalKasData._sum?.uang_kas || 0) - (totalPengeluaran._sum?.nominal || 0)
 
     return NextResponse.json({
       data: data.map((d: any) => ({
         ...d,
         creator_nama: d.creator.nama
       })),
+      totalKas: balance,
       orgs: accessible,
       activeOrg: org
     })
