@@ -168,8 +168,8 @@ export default function DashboardClient({ user }: Props) {
   async function handleQuickAdd(e: React.FormEvent) {
     e.preventDefault()
     if (!quickName || !quickOrg) return toast.error('Nama wajib diisi')
-    if (!/^[a-zA-Z\s.']*$/.test(quickName)) {
-      toast.error('Nama hanya boleh berisi huruf dan simbol . \'')
+    if (!/^[a-zA-Z\s]*$/.test(quickName)) {
+      toast.error('Nama hanya boleh berisi huruf (A-Z)')
       return
     }
     setQuickLoading(true)
@@ -390,7 +390,19 @@ export default function DashboardClient({ user }: Props) {
               </div>
               <div className="form-group">
                 <label className="label">Nama Lengkap</label>
-                <input type="text" value={quickName} onChange={e => setQuickName(e.target.value)} className="input" placeholder="Misal: Budi Santoso" required />
+                <input 
+                  type="text" 
+                  value={quickName} 
+                  onChange={e => {
+                    const val = e.target.value
+                    if (val === '' || /^[a-zA-Z\s]*$/.test(val)) {
+                      setQuickName(val)
+                    }
+                  }} 
+                  className="input" 
+                  placeholder="Misal: Budi Santoso" 
+                  required 
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="form-group">
