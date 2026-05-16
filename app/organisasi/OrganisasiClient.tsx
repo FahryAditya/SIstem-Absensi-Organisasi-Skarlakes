@@ -307,14 +307,20 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
                   <select value={fJurusan} onChange={e => setFJurusan(e.target.value)} className="input flex-1 cursor-pointer font-medium text-slate-700">
                     <option value="" disabled>Pilih Kejuruan...</option>
                     <option value="AKL">AKL</option>
+                    <option value="PPLG">PPLG</option>
+                    <option value="TJKT 1">TJKT 1</option>
+                    <option value="TJKT 2">TJKT 2</option>
+                    <option value="DKV">DKV</option>
                     <option value="MPLB 1">MPLB 1</option>
                     <option value="MPLB 2">MPLB 2</option>
-                    <option value="PPLG">PPLG</option>
-                    <option value="DKV">DKV</option>
-                    <option value="TJKT">TJKT</option>
-                    <option value="AKC">AKC</option>
                     <option value="FKK">FKK</option>
-                    <option value="FARMASI">FARMASI</option>
+                    <option value="TLM">TLM</option>
+                    <option value="AKC 1">AKC 1</option>
+                    <option value="AKC 2">AKC 2</option>
+                    <option value="AKC 3">AKC 3</option>
+                    <option value="AKC 4">AKC 4</option>
+                    <option value="AKC 5">AKC 5</option>
+                    <option value="AKC 6">AKC 6</option>
                   </select>
                 </div>
               </div>

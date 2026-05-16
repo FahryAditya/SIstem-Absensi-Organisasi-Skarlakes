@@ -424,7 +424,8 @@ export default function DashboardClient({ user }: Props) {
                     {quickSchool === 'Skarla' ? (
                       <>
                         <option value="PPLG">PPLG</option>
-                        <option value="TJKT">TJKT</option>
+                        <option value="TJKT 1">TJKT 1</option>
+                        <option value="TJKT 2">TJKT 2</option>
                         <option value="DKV">DKV</option>
                         <option value="MPLB 1">MPLB 1</option>
                         <option value="MPLB 2">MPLB 2</option>
