@@ -11,7 +11,7 @@ import { ROLE_LABELS } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl, clientQueryClient } from '@/lib/client-cache'
 import TextType from '@/components/TextType'
 import {
-  Users, CheckCircle2, Wallet, UserPlus, LogOut, Clock, CalendarDays, PlusCircle, LayoutList, HandCoins, Loader2, UploadCloud, TrendingUp, Activity, X, Megaphone, Sparkles
+  Users, CheckCircle2, Wallet, UserPlus, LogOut, Clock, CalendarDays, PlusCircle, LayoutList, HandCoins, Loader2, UploadCloud, TrendingUp, Activity, X, Megaphone, Sparkles, PlusCircle as PlusCircleIcon
 } from 'lucide-react'
 
 // Lazy load Recharts for better performance
@@ -91,7 +91,7 @@ export default function DashboardClient({ user }: Props) {
     setLoading(true)
     setLoadingCharts(true)
     setLoadingLogs(true)
-    clearDashboardCache() // <-- surface all fresh stat
+    clearDashboardCache() 
     try {
       const [d, c] = await Promise.all([
         fetchJsonCachedUrl<StatsData>('/api/dashboard?part=stats'),
@@ -111,38 +111,18 @@ export default function DashboardClient({ user }: Props) {
     }
   }
 
-  /** Remove all stale /api/dashboard keys from the TanStack Query cache so the dashboard re-fetches fresh data */
   function clearDashboardCache() {
-    // fetchJsonCachedUrl uses the full URL as the cache key, e.g. '/api/dashboard?part=stats'
     const parts: string[] = ['stats', 'charts', 'logs', 'kas', 'members', 'absensi']
     parts.forEach(p => {
       clientQueryClient.removeQueries({ queryKey: ['client-json', '/api/dashboard?part=' + p], exact: true })
     })
-    // Also remove the 'all' key and the bare '/api/dashboard' key
     clientQueryClient.removeQueries({ queryKey: ['client-json', '/api/dashboard'], exact: true })
     clientQueryClient.removeQueries({ queryKey: ['client-json', '/api/dashboard?part=all'], exact: true })
-  }
-
-  /** Force-reload dashboard stats from the server and prime the TanStack Query cache with fresh data */
-  async function triggerDashboardRefresh() {
-    clearDashboardCache()
-    // Refetch stats and charts in parallel to immediately re-prime all relevant cache entries
-    await Promise.all([
-      clientQueryClient.fetchQuery({
-        queryKey: ['client-json', '/api/dashboard?part=stats'],
-        queryFn: () => fetch('/api/dashboard?part=stats').then(r => r.json()).catch(() => ({})),
-      }),
-      clientQueryClient.fetchQuery({
-        queryKey: ['client-json', '/api/dashboard?part=charts'],
-        queryFn: () => fetch('/api/dashboard?part=charts').then(r => r.json()).catch(() => ({})),
-      }),
-    ])
   }
 
   useEffect(() => {
     fetchDashboardData()
     
-    // System Update & Welcome logic
     async function checkUpdates() {
       try {
         const res = await fetch('/api/system-update')
@@ -150,12 +130,9 @@ export default function DashboardClient({ user }: Props) {
         
         if (data.latestUpdate) {
           setLatestUpdate(data.latestUpdate)
-          
-          // Show if not seen yet OR if it's administrator (who should always see greeting, but we'll prioritize update info)
           if (data.latestUpdate.id > data.lastSeenId) {
             setShowWelcomeModal(true)
           } else if (user.role === 'administrator' && !sessionStorage.getItem('welcome_shown')) {
-            // Default greeting for admin if no new update
             setShowWelcomeModal(true)
             sessionStorage.setItem('welcome_shown', 'true')
           }
@@ -267,8 +244,8 @@ export default function DashboardClient({ user }: Props) {
     </div>
   )
 
-  const statCards = stats ? [
-    orgs.some(o => ['programming', 'english'].includes(o)) && {
+  const statCards = stats ? ([
+    {
       label: 'Total Siswa Ekskul',
       value: stats.totalSiswa,
       suffix: 'siswa',
@@ -331,7 +308,7 @@ export default function DashboardClient({ user }: Props) {
       icon: HandCoins,
       color: 'bg-red-50 text-red-600',
     },
-  ].filter(Boolean) as { label: string; value: number | string; suffix?: string; isCurrency?: boolean; icon: React.ElementType; color: string }[] : []
+  ].filter(Boolean) as { label: string; value: number | string; suffix?: string; isCurrency?: boolean; icon: React.ElementType; color: string }[]) : []
 
   return (
     <div className="space-y-6 max-w-7xl">
@@ -389,7 +366,7 @@ export default function DashboardClient({ user }: Props) {
       {orgs.length > 0 && (
         <div className="card p-5">
           <div className="flex items-center gap-2 mb-4">
-            <PlusCircle className="w-5 h-5 text-[#5482B4]" />
+            <PlusCircleIcon className="w-5 h-5 text-[#5482B4]" />
             <h3 className="text-base font-bold text-[#011025]">Quick Add / Import Anggota</h3>
           </div>
           

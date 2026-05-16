@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 
   if (part === 'all' || part === 'stats') {
     const [
-      totalSiswa,
+      totalSiswaCount, // Programming + English
       totalProgramming,
       totalEnglish,
       totalOsis,
@@ -40,11 +40,11 @@ export async function GET(req: NextRequest) {
       kasOrgTotal,
       pengeluaranTotalData,
     ] = await Promise.all([
-      prisma.siswa.count(), // Total semua siswa ekskul
+      prisma.siswa.count(), 
       prisma.siswa.count({ where: { ekskul: 'programming' } }),
       prisma.siswa.count({ where: { ekskul: 'english' } }),
-      orgOrgs.includes('osis') ? prisma.anggotaOsis.count() : Promise.resolve(0),
-      orgOrgs.includes('mpk') ? prisma.anggotaMpk.count() : Promise.resolve(0),
+      prisma.anggotaOsis.count(),
+      prisma.anggotaMpk.count(),
       ekskulOrgs.length ? prisma.absensi.count({
         where: {
           tanggal: new Date(todayStr),
@@ -77,7 +77,8 @@ export async function GET(req: NextRequest) {
     const totalPemasukan = (kasEkskulTotal._sum?.uang_kas || 0) + (kasOrgTotal._sum?.uang_kas || 0)
     const totalPengeluaran = pengeluaranTotalData._sum?.nominal || 0
 
-    response.totalSiswa = totalSiswa
+    // Total Siswa Ekskul is now the sum of ALL organizations
+    response.totalSiswa = totalSiswaCount + totalOsis + totalMpk
     response.totalProgramming = totalProgramming
     response.totalEnglish = totalEnglish
     response.totalOsis = totalOsis
