@@ -126,12 +126,14 @@ export default function DashboardClient({ user }: Props) {
     setLoadingCharts(false)
     if (user.role === 'administrator') {
       try {
-        const [l, rs] = await Promise.all([
+        const [l, rsRaw] = await Promise.all([
           fetchJsonCachedUrl<LogData>('/api/dashboard?part=logs'),
-          fetchJsonCachedUrl<RequestStatsData>('/api/dashboard?part=request_stats'),
+          fetchJsonCachedUrl<any>('/api/dashboard?part=request_stats'),
         ])
         setLogs(l)
-        setRequestStats(rs)
+        // API returns { orgs, requestStats: { grandTotal, perAksi, daily30 } }
+        // so we must extract the nested .requestStats property
+        setRequestStats(rsRaw?.requestStats ?? null)
       } catch {}
       setLoadingLogs(false)
       setLoadingRequestStats(false)
