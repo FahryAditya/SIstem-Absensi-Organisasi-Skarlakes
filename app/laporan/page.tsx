@@ -11,7 +11,7 @@ export default async function ReportsPage() {
     redirect('/login')
   }
 
-  const user = verifyToken(token)
+  const user = await verifyToken(token)
   if (!user) {
     redirect('/login')
   }

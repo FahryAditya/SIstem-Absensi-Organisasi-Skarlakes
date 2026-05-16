@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
         tidak_hadir: dayRecords.filter(r => r.status !== 'hadir').length,
         izin: dayRecords.filter(r => r.status === 'izin').length,
         sakit: dayRecords.filter(r => r.status === 'sakit').length,
-        alpa: dayRecords.filter(r => r.status === 'alpa').length,
+        alpa: dayRecords.filter(r => r.status === 'tidak_hadir').length,
       }
     })
 
@@ -190,14 +190,14 @@ export async function GET(req: NextRequest) {
     response.keuanganBulanan = months6.map(m => {
       const mStr = format(m, 'yyyy-MM')
       const ekskulTotal = kasEkskulBulanan
-        .filter(a => format(a.tanggal, 'yyyy-MM') === mStr)
-        .reduce((s, a: { uang_kas: number | null }) => s + (a.uang_kas || 0), 0)
+        .filter((a: any) => format(a.tanggal, 'yyyy-MM') === mStr)
+        .reduce((s: number, a: { uang_kas: number | null }) => s + (a.uang_kas || 0), 0)
       const orgTotal = kasOrgBulanan
-        .filter(a => format(a.tanggal, 'yyyy-MM') === mStr)
-        .reduce((s, a: { uang_kas: number | null }) => s + (a.uang_kas || 0), 0)
+        .filter((a: any) => format(a.tanggal, 'yyyy-MM') === mStr)
+        .reduce((s: number, a: { uang_kas: number | null }) => s + (a.uang_kas || 0), 0)
       const pengeluaranTotal = pengeluaranBulanan
-        .filter(a => format(a.tanggal, 'yyyy-MM') === mStr)
-        .reduce((s, a: { nominal: number | null }) => s + (a.nominal || 0), 0)
+        .filter((a: any) => format(a.tanggal, 'yyyy-MM') === mStr)
+        .reduce((s: number, a: { nominal: number | null }) => s + (a.nominal || 0), 0)
       return {
         bulan: format(m, 'MMM yyyy'),
         pemasukan: ekskulTotal + orgTotal,
@@ -211,14 +211,14 @@ export async function GET(req: NextRequest) {
     response.keuanganTahunan = months12.map(m => {
       const mStr = format(m, 'yyyy-MM')
       const ekskulTotal = kasEkskulTahunan
-        .filter(a => format(a.tanggal, 'yyyy-MM') === mStr)
-        .reduce((s, a) => s + (a.uang_kas || 0), 0)
+        .filter((a: any) => format(a.tanggal, 'yyyy-MM') === mStr)
+        .reduce((s: number, a: any) => s + (a.uang_kas || 0), 0)
       const orgTotal = kasOrgTahunan
-        .filter(a => format(a.tanggal, 'yyyy-MM') === mStr)
-        .reduce((s, a) => s + (a.uang_kas || 0), 0)
+        .filter((a: any) => format(a.tanggal, 'yyyy-MM') === mStr)
+        .reduce((s: number, a: any) => s + (a.uang_kas || 0), 0)
       const pengeluaranTotal = pengeluaranTahunan
-        .filter(a => format(a.tanggal, 'yyyy-MM') === mStr)
-        .reduce((s, a: { nominal: number | null }) => s + (a.nominal || 0), 0)
+        .filter((a: any) => format(a.tanggal, 'yyyy-MM') === mStr)
+        .reduce((s: number, a: { nominal: number | null }) => s + (a.nominal || 0), 0)
       return {
         bulan: format(m, 'MMM'),
         pemasukan: ekskulTotal + orgTotal,

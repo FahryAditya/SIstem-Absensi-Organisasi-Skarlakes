@@ -3,19 +3,19 @@
 import dynamic from 'next/dynamic'
 
 // Lazy load Recharts components for better performance
-const ResponsiveContainer = dynamic<any>(() => import('recharts').then(mod => mod.ResponsiveContainer), { ssr: false })
-const BarChart = dynamic<any>(() => import('recharts').then(mod => mod.BarChart), { ssr: false })
-const Bar = dynamic<any>(() => import('recharts').then(mod => mod.Bar), { ssr: false })
-const XAxis = dynamic<any>(() => import('recharts').then(mod => mod.XAxis), { ssr: false })
-const YAxis = dynamic<any>(() => import('recharts').then(mod => mod.YAxis), { ssr: false })
-const CartesianGrid = dynamic<any>(() => import('recharts').then(mod => mod.CartesianGrid), { ssr: false })
-const Tooltip = dynamic<any>(() => import('recharts').then(mod => mod.Tooltip), { ssr: false })
-const Legend = dynamic<any>(() => import('recharts').then(mod => mod.Legend), { ssr: false })
-const LineChart = dynamic<any>(() => import('recharts').then(mod => mod.LineChart), { ssr: false })
-const Line = dynamic<any>(() => import('recharts').then(mod => mod.Line), { ssr: false })
-const PieChart = dynamic<any>(() => import('recharts').then(mod => mod.PieChart), { ssr: false })
-const Pie = dynamic<any>(() => import('recharts').then(mod => mod.Pie), { ssr: false })
-const Cell = dynamic<any>(() => import('recharts').then(mod => mod.Cell), { ssr: false })
+const ResponsiveContainer = dynamic<any>(() => import('recharts').then(mod => mod.ResponsiveContainer) as any, { ssr: false })
+const BarChart = dynamic<any>(() => import('recharts').then(mod => mod.BarChart) as any, { ssr: false })
+const Bar = dynamic<any>(() => import('recharts').then(mod => mod.Bar) as any, { ssr: false })
+const XAxis = dynamic<any>(() => import('recharts').then(mod => mod.XAxis) as any, { ssr: false })
+const YAxis = dynamic<any>(() => import('recharts').then(mod => mod.YAxis) as any, { ssr: false })
+const CartesianGrid = dynamic<any>(() => import('recharts').then(mod => mod.CartesianGrid) as any, { ssr: false })
+const Tooltip = dynamic<any>(() => import('recharts').then(mod => mod.Tooltip) as any, { ssr: false })
+const Legend = dynamic<any>(() => import('recharts').then(mod => mod.Legend) as any, { ssr: false })
+const LineChart = dynamic<any>(() => import('recharts').then(mod => mod.LineChart) as any, { ssr: false })
+const Line = dynamic<any>(() => import('recharts').then(mod => mod.Line) as any, { ssr: false })
+const PieChart = dynamic<any>(() => import('recharts').then(mod => mod.PieChart) as any, { ssr: false })
+const Pie = dynamic<any>(() => import('recharts').then(mod => mod.Pie) as any, { ssr: false })
+const Cell = dynamic<any>(() => import('recharts').then(mod => mod.Cell) as any, { ssr: false })
 
 interface AttendanceData {
   day?: string
