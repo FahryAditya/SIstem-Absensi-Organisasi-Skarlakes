@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Wallet, Search, Filter, Loader2, Plus, Minus, X, ChevronRight } from 'lucide-react'
+import { Wallet, Search, Filter, Loader2, Plus, Minus, X, ChevronRight, Users } from 'lucide-react'
+import { Skeleton } from '@/components/Skeleton'
 import toast from 'react-hot-toast'
 import { formatCurrency, ORG_LABELS, OrgType } from '@/lib/utils'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
@@ -194,40 +195,110 @@ export default function KasClient({ user }: Props) {
         </div>
       </div>
 
-      {/* Quick Transaction Buttons */}
-      <div className="card p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Wallet className="w-5 h-5 text-amber-500" />
-          <h3 className="text-sm font-bold text-[#011025]">Transaksi Manual Cepat</h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-green-50 rounded-lg border border-green-100">
-            <div className="text-xs font-semibold text-green-700 mb-1">Setor Kas</div>
-            <p className="text-xs text-slate-600 mb-3">Tambahkan kas untuk anggota secara manual</p>
-            <button 
-              onClick={() => {
-                if (data.length > 0) openModal(data[0], 'setor')
-                else toast.error('Pilih anggota terlebih dahulu')
-              }}
-              className="w-full py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-colors"
-            >
-              Setor Kas
-            </button>
+      {/* Dynamic Member List for Quick Transactions */}
+      <div className="card overflow-hidden">
+        <div className="px-5 py-4 border-b flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-amber-500" />
+            <h3 className="text-sm font-bold text-[#011025]">Daftar Anggota & Transaksi Cepat</h3>
           </div>
-          <div className="p-4 bg-red-50 rounded-lg border border-red-100">
-            <div className="text-xs font-semibold text-red-700 mb-1">Tarik Kas</div>
-            <p className="text-xs text-slate-600 mb-3">Kurangi kas untuk pengeluaran</p>
-            <button 
-              onClick={() => {
-                if (data.length > 0) openModal(data[0], 'tarik')
-                else toast.error('Pilih anggota terlebih dahulu')
-              }}
-              className="w-full py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition-colors"
-            >
-              Tarik Kas
-            </button>
+          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            {totalItems} Anggota
           </div>
         </div>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-100">
+                <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Anggota</th>
+                <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Terakhir Bayar</th>
+                <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Nominal</th>
+                <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-b border-slate-50">
+                    <td className="px-5 py-4"><Skeleton className="h-4 w-32 mb-1" /><Skeleton className="h-3 w-20" /></td>
+                    <td className="px-5 py-4"><Skeleton className="h-4 w-40" /></td>
+                    <td className="px-5 py-4 text-right"><Skeleton className="h-4 w-24 ml-auto" /></td>
+                    <td className="px-5 py-4"><Skeleton className="h-8 w-20 mx-auto" /></td>
+                  </tr>
+                ))
+              ) : data.length > 0 ? (
+                data.map((item) => (
+                  <tr key={item.id} className="hover:bg-slate-50 transition-colors group">
+                    <td className="px-5 py-4">
+                      <div className="font-bold text-slate-700 text-sm">{item.nama}</div>
+                      <div className="text-xs text-slate-400 font-medium">{item.kelas}</div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="text-xs text-slate-500 font-medium">
+                        {formatTerakhirBayar(item.terakhir_bayar)}
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <div className="font-bold text-slate-700 text-sm font-mono">
+                        {formatCurrency(item.total_kas)}
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <button 
+                          onClick={() => openModal(item, 'setor')}
+                          className="p-2 bg-green-50 text-green-600 hover:bg-green-600 hover:text-white rounded-lg transition-all"
+                          title="Setor Kas"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => openModal(item, 'tarik')}
+                          className="p-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg transition-all"
+                          title="Tarik Kas"
+                        >
+                          <Minus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={4} className="px-5 py-10 text-center text-slate-400 text-sm">
+                    Tidak ada data ditemukan
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="px-5 py-4 border-t bg-slate-50/50 flex items-center justify-between">
+            <div className="text-xs text-slate-500">
+              Halaman <span className="font-bold text-slate-700">{page}</span> dari <span className="font-bold text-slate-700">{totalPages}</span>
+            </div>
+            <div className="flex gap-2">
+              <button 
+                disabled={page <= 1}
+                onClick={() => setPage(p => p - 1)}
+                className="px-3 py-1 text-xs font-bold bg-white border rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors"
+              >
+                Prev
+              </button>
+              <button 
+                disabled={page >= totalPages}
+                onClick={() => setPage(p => p + 1)}
+                className="px-3 py-1 text-xs font-bold bg-white border rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal Transaksi */}
