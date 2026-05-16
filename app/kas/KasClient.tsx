@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import { Wallet, Search, Filter, Loader2, Plus, Minus, X, ChevronRight, History } from 'lucide-react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { Wallet, Search, Filter, Loader2, Plus, Minus, X, ChevronRight, History, ChevronDown, Check, UserCircle2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatCurrency, ORG_LABELS, OrgType } from '@/lib/utils'
 import { clearJsonCache, fetchJsonCachedUrl, clientQueryClient } from '@/lib/client-cache'
@@ -48,6 +48,11 @@ export default function KasClient({ user }: Props) {
   const [txKet, setTxKet] = useState('')
   const [txLoading, setTxLoading] = useState(false)
 
+  // Custom dropdown state
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [memberSearch, setMemberSearch] = useState('')
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
@@ -91,6 +96,8 @@ export default function KasClient({ user }: Props) {
     setTxType('setor')
     setTxNominal('')
     setTxKet('')
+    setMemberSearch('')
+    setDropdownOpen(false)
     setModalOpen(true)
     if (members.length === 0) fetchMembers(activeOrg)
   }, [activeOrg, members.length, fetchMembers])
@@ -130,6 +137,38 @@ export default function KasClient({ user }: Props) {
     }
     setTxLoading(false)
   }, [selectedMemberId, txNominal, txKet, activeOrg, fetchData])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false)
+      }
+    }
+    if (dropdownOpen) document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [dropdownOpen])
+
+  const filteredMembers = useMemo(() => {
+    if (!memberSearch.trim()) return members
+    const q = memberSearch.toLowerCase()
+    return members.filter(m =>
+      m.nama.toLowerCase().includes(q) || m.kelas.toLowerCase().includes(q)
+    )
+  }, [members, memberSearch])
+
+  const selectedMember = useMemo(() =>
+    members.find(m => m.id === selectedMemberId) ?? null
+  , [members, selectedMemberId])
+
+  // Avatar color based on first char
+  function avatarColor(nama: string) {
+    const colors = [
+      'bg-blue-500','bg-emerald-500','bg-violet-500','bg-amber-500',
+      'bg-rose-500','bg-cyan-500','bg-orange-500','bg-indigo-500',
+    ]
+    return colors[(nama.charCodeAt(0) || 0) % colors.length]
+  }
 
   const formatTerakhirBayar = useCallback((isoDate: string | null | undefined) => {
     if (!isoDate) return '-'
@@ -350,25 +389,118 @@ export default function KasClient({ user }: Props) {
 
             <form onSubmit={handleTransaction} className="p-5 space-y-4">
               <div className="form-group">
-                <label htmlFor="kas-member-select" className="label">Pilih Anggota</label>
+                <label className="label">Pilih Anggota</label>
+
                 {memberLoading ? (
-                  <div className="flex items-center gap-2 text-sm text-slate-500 p-2 bg-slate-50 rounded-lg border border-dashed">
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                  <div className="flex items-center gap-2 text-sm text-slate-500 p-3 bg-slate-50 rounded-xl border border-dashed">
+                    <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
                     Memuat daftar anggota...
                   </div>
                 ) : (
-                  <select
-                    id="kas-member-select"
-                    value={selectedMemberId}
-                    onChange={e => setSelectedMemberId(Number(e.target.value) || '')}
-                    className="input font-medium"
-                    required
-                  >
-                    <option value="">-- Pilih Anggota --</option>
-                    {members.map(m => (
-                      <option key={m.id} value={m.id}>{m.nama} - {m.kelas}</option>
-                    ))}
-                  </select>
+                  <div ref={dropdownRef} className="relative">
+                    {/* Trigger button */}
+                    <button
+                      type="button"
+                      onClick={() => setDropdownOpen(o => !o)}
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl border-2 bg-white text-left transition-all duration-200 ${
+                        dropdownOpen
+                          ? 'border-emerald-400 ring-2 ring-emerald-100 shadow-sm'
+                          : 'border-slate-200 hover:border-emerald-300'
+                      }`}
+                    >
+                      {selectedMember ? (
+                        <>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-black flex-shrink-0 shadow-sm ${avatarColor(selectedMember.nama)}`}>
+                            {selectedMember.nama.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-bold text-slate-800 truncate">{selectedMember.nama}</div>
+                            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{selectedMember.kelas}</div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                            <UserCircle2 className="w-5 h-5 text-slate-400" />
+                          </div>
+                          <span className="text-slate-400 text-sm flex-1">-- Pilih Anggota --</span>
+                        </>
+                      )}
+                      <ChevronDown className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {/* Dropdown panel */}
+                    {dropdownOpen && (
+                      <div
+                        className="absolute z-50 w-full mt-2 bg-white rounded-2xl border border-slate-100 shadow-2xl shadow-slate-200/80 overflow-hidden"
+                        style={{ animation: 'slideUp 0.15s ease' }}
+                      >
+                        {/* Search bar */}
+                        <div className="p-3 border-b border-slate-100">
+                          <div className="relative">
+                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input
+                              autoFocus
+                              type="text"
+                              placeholder="Cari nama atau kelas..."
+                              value={memberSearch}
+                              onChange={e => setMemberSearch(e.target.value)}
+                              className="w-full pl-9 pr-3 py-2 text-sm rounded-lg bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Member list */}
+                        <div className="max-h-52 overflow-y-auto py-1.5 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+                          {filteredMembers.length === 0 ? (
+                            <div className="py-6 text-center text-sm text-slate-400">Anggota tidak ditemukan</div>
+                          ) : (
+                            filteredMembers.map(m => {
+                              const isSelected = m.id === selectedMemberId
+                              return (
+                                <button
+                                  key={m.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedMemberId(m.id)
+                                    setDropdownOpen(false)
+                                    setMemberSearch('')
+                                  }}
+                                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-left transition-colors ${
+                                    isSelected
+                                      ? 'bg-emerald-50'
+                                      : 'hover:bg-slate-50'
+                                  }`}
+                                >
+                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-black flex-shrink-0 shadow-sm ${
+                                    isSelected ? 'bg-emerald-500' : avatarColor(m.nama)
+                                  }`}>
+                                    {m.nama.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className={`text-sm font-semibold truncate ${
+                                      isSelected ? 'text-emerald-700' : 'text-slate-700'
+                                    }`}>{m.nama}</div>
+                                    <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{m.kelas}</div>
+                                  </div>
+                                  {isSelected && (
+                                    <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                                  )}
+                                </button>
+                              )
+                            })
+                          )}
+                        </div>
+
+                        {/* Footer count */}
+                        <div className="px-4 py-2 border-t border-slate-100 bg-slate-50">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            {filteredMembers.length} dari {members.length} anggota
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 
