@@ -7,7 +7,7 @@ import { ROLE_LABELS } from '@/lib/auth-shared'
 import Image from 'next/image'
 import {
   LayoutDashboard, Users, ClipboardList, Building2, UserCog,
-  Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode, UserX, Megaphone
+  Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode, UserX, Megaphone, BarChart3
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -21,6 +21,7 @@ function getNavItems(role: string) {
   const items = [
     { section: 'Utama', links: [
       { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      { href: '/laporan', label: 'Laporan Statistik', icon: BarChart3 },
       { href: '/kas', label: 'Buku Kas', icon: Wallet },
       { href: '/pengeluaran', label: 'Pengeluaran Kas', icon: HandCoins },
     ]},

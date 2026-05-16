@@ -8,6 +8,7 @@ import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import { useDebounce } from '@/lib/hooks'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SkeletonRow } from '@/components/Skeleton'
+import KasSiswaCharts from '@/components/charts/KasSiswaCharts'
 
 interface KasData {
   id: number
@@ -35,6 +36,10 @@ export default function KasClient({ user }: Props) {
   const [totalPages, setTotalPages] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
 
+  // Chart data state
+  const [chartData, setChartData] = useState<any>(null)
+  const [loadingCharts, setLoadingCharts] = useState(true)
+
   // Transaction Modal State
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<KasData | null>(null)
@@ -49,10 +54,10 @@ export default function KasClient({ user }: Props) {
     if (debouncedSearch) url += `&search=${debouncedSearch}`
 
     setLoading(true)
-    fetchJsonCachedUrl<{ 
-      data?: KasData[]; 
-      totalKas?: number; 
-      orgs?: string[]; 
+    fetchJsonCachedUrl<{
+      data?: KasData[];
+      totalKas?: number;
+      orgs?: string[];
       activeOrg?: string;
       total?: number;
       totalPages?: number;
@@ -69,9 +74,20 @@ export default function KasClient({ user }: Props) {
       .catch(() => setLoading(false))
   }, [page, activeOrg, debouncedSearch])
 
+  const fetchChartData = useCallback(() => {
+    setLoadingCharts(true)
+    fetchJsonCachedUrl<any>('/api/reports?type=kas-siswa')
+      .then(json => {
+        setChartData(json)
+        setLoadingCharts(false)
+      })
+      .catch(() => setLoadingCharts(false))
+  }, [])
+
   useEffect(() => {
     fetchData()
-  }, [fetchData])
+    fetchChartData()
+  }, [fetchData, fetchChartData])
 
   useEffect(() => {
     setPage(1)
@@ -194,116 +210,59 @@ export default function KasClient({ user }: Props) {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="table">
-            <thead>
-              <tr>
-                <th className="w-12">No</th>
-                <th className="min-w-[200px]">Nama Anggota</th>
-                <th className="min-w-[120px]">Unit / Kelas</th>
-                <th className="text-right min-w-[120px]">Total Kas</th>
-                <th className="min-w-[180px]">Waktu Bayar</th>
-                <th className="w-40 text-center">Aksi (Manual)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <>
-                  <SkeletonRow />
-                  <SkeletonRow />
-                  <SkeletonRow />
-                  <SkeletonRow />
-                  <SkeletonRow />
-                </>
-              ) : data.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="h-32 text-center text-slate-400">
-                    Belum ada data anggota atau pembayaran kas.
-                  </td>
-                </tr>
-              ) : (
-                data.map((item, idx) => (
-                  <motion.tr 
-                    key={item.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05, duration: 0.3 }}
-                    className="hover:bg-slate-50/80 transition-colors duration-200"
-                  >
-                    <td className="font-medium text-slate-500">{(page - 1) * PAGE_SIZE + idx + 1}</td>
-                    <td className="font-bold text-slate-800 whitespace-nowrap">{item.nama}</td>
-                    <td className="text-slate-500 whitespace-nowrap">{item.kelas}</td>
-                    <td className="text-right font-mono font-bold text-emerald-600 bg-emerald-50/30 whitespace-nowrap">
-                      {formatCurrency(item.total_kas)}
-                    </td>
-                    <td className="text-slate-500 text-xs font-mono whitespace-nowrap">
-                      {formatTerakhirBayar(item.terakhir_bayar)}
-                    </td>
-                    <td className="whitespace-nowrap">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button onClick={() => openModal(item, 'setor')} className="p-1.5 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg tooltip-trigger active:scale-90 transition-transform" title="Setor / Tambah Kas">
-                          <Plus className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => openModal(item, 'tarik')} className="p-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg tooltip-trigger active:scale-90 transition-transform" title="Tarik / Kurangi Kas">
-                          <Minus className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {/* Charts Section - Animated Charts Only */}
+      <div className="card p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold text-[#011025]">Grafik Kas Siswa</h3>
+          <span className="text-xs text-slate-500">Data visualisasi kas siswa</span>
         </div>
-
-        {/* Pagination */}
-        {!loading && totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 bg-slate-50/50 border-t">
-            <span className="text-xs text-slate-500">
-              Menampilkan {data.length} dari {totalItems} anggota — Halaman {page} dari {totalPages}
-            </span>
-            <div className="flex items-center gap-1">
-              <button 
-                onClick={() => setPage(p => Math.max(1, p - 1))} 
-                disabled={page <= 1} 
-                className="p-1.5 rounded-lg border bg-white hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                <ChevronRight className="w-4 h-4 rotate-180" />
-              </button>
-              <div className="flex items-center gap-1 px-1">
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let pNum = page - 2 + i
-                  if (page <= 2) pNum = i + 1
-                  if (page >= totalPages - 1) pNum = totalPages - 4 + i
-                  if (pNum < 1 || pNum > totalPages) return null
-                  
-                  return (
-                    <button
-                      key={pNum}
-                      onClick={() => setPage(pNum)}
-                      className={`w-8 h-8 text-xs font-bold rounded-lg transition-all ${
-                        page === pNum 
-                        ? 'bg-amber-500 text-white shadow-md shadow-amber-200' 
-                        : 'text-slate-600 hover:bg-slate-100'
-                      }`}
-                    >
-                      {pNum}
-                    </button>
-                  )
-                })}
-              </div>
-              <button 
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
-                disabled={page >= totalPages} 
-                className="p-1.5 rounded-lg border bg-white hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+        {loadingCharts ? (
+          <div className="h-64 flex items-center justify-center text-sm text-slate-400 gap-2">
+            <Loader2 className="w-5 h-5 animate-spin" /> Memuat grafik...
+          </div>
+        ) : chartData ? (
+          <KasSiswaCharts data={chartData} activeOrg={activeOrg} />
+        ) : (
+          <div className="h-64 flex items-center justify-center text-sm text-slate-400">
+            Belum ada data grafik kas siswa
           </div>
         )}
+      </div>
+
+      {/* Quick Transaction Buttons */}
+      <div className="card p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Wallet className="w-5 h-5 text-amber-500" />
+          <h3 className="text-sm font-bold text-[#011025]">Transaksi Manual Cepat</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 bg-green-50 rounded-lg border border-green-100">
+            <div className="text-xs font-semibold text-green-700 mb-1">Setor Kas</div>
+            <p className="text-xs text-slate-600 mb-3">Tambahkan kas untuk anggota secara manual</p>
+            <button 
+              onClick={() => {
+                if (data.length > 0) openModal(data[0], 'setor')
+                else toast.error('Pilih anggota terlebih dahulu')
+              }}
+              className="w-full py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-colors"
+            >
+              Setor Kas
+            </button>
+          </div>
+          <div className="p-4 bg-red-50 rounded-lg border border-red-100">
+            <div className="text-xs font-semibold text-red-700 mb-1">Tarik Kas</div>
+            <p className="text-xs text-slate-600 mb-3">Kurangi kas untuk pengeluaran</p>
+            <button 
+              onClick={() => {
+                if (data.length > 0) openModal(data[0], 'tarik')
+                else toast.error('Pilih anggota terlebih dahulu')
+              }}
+              className="w-full py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition-colors"
+            >
+              Tarik Kas
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Modal Transaksi */}
