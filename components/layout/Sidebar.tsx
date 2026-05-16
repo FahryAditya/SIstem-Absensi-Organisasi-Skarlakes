@@ -117,7 +117,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
               )}
             </div>
             {onClose && (
-              <button onClick={onClose} className="lg:hidden btn-icon">
+              <button onClick={onClose} className="lg:hidden btn-icon" aria-label="Tutup menu navigasi">
                 <X className="w-4 h-4 text-white/50" />
               </button>
             )}

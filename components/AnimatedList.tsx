@@ -1,5 +1,18 @@
 import React, { useRef, useState, useEffect, useCallback, ReactNode, MouseEventHandler, UIEvent } from 'react';
-import { motion, useInView } from 'motion/react';
+
+// Detect if we should reduce/skip animations (mobile or prefers-reduced-motion)
+function useReducedAnimation() {
+  const [reduced, setReduced] = useState(true); // default true (SSR safe)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const isMobile = window.innerWidth < 1024 || ('ontouchstart' in window);
+    setReduced(isMobile || mq.matches);
+    const handler = () => setReduced(isMobile || mq.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+  return reduced;
+}
 
 interface AnimatedItemProps {
   children: ReactNode;
@@ -8,24 +21,40 @@ interface AnimatedItemProps {
   onMouseEnter?: MouseEventHandler<HTMLDivElement>;
   onClick?: MouseEventHandler<HTMLDivElement>;
   className?: string;
+  reduced?: boolean;
 }
 
-const AnimatedItem: React.FC<AnimatedItemProps> = ({ children, delay = 0, index, onMouseEnter, onClick, className = '' }) => {
+const AnimatedItem: React.FC<AnimatedItemProps> = ({ children, delay = 0, index, onMouseEnter, onClick, className = '', reduced = false }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { amount: 0.1, once: false }); // Reduced amount to trigger animation earlier
+  const [visible, setVisible] = useState(reduced);
+
+  useEffect(() => {
+    if (reduced) { setVisible(true); return; }
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+      { threshold: 0.05 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [reduced]);
+
   return (
-    <motion.div
+    <div
       ref={ref}
       data-index={index}
       onMouseEnter={onMouseEnter}
       onClick={onClick}
-      initial={{ scale: 0.9, opacity: 0, y: 10 }}
-      animate={inView ? { scale: 1, opacity: 1, y: 0 } : { scale: 0.9, opacity: 0, y: 10 }}
-      transition={{ duration: 0.3, delay }}
       className={`mb-1 cursor-pointer ${className}`}
+      style={reduced ? undefined : {
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(8px)',
+        transition: visible ? `opacity 0.25s ease ${delay}s, transform 0.25s ease ${delay}s` : 'none',
+      }}
     >
       {children}
-    </motion.div>
+    </div>
   );
 };
 
@@ -56,6 +85,7 @@ const AnimatedList = <T,>({
   initialSelectedIndex = -1,
   selectedIndex: controlledSelectedIndex
 }: AnimatedListProps<T>) => {
+  const reduced = useReducedAnimation();
   const listRef = useRef<HTMLDivElement>(null);
   const [internalSelectedIndex, setInternalSelectedIndex] = useState<number>(initialSelectedIndex);
   
@@ -155,11 +185,12 @@ const AnimatedList = <T,>({
         {items.map((item, index) => (
           <AnimatedItem
             key={index}
-            delay={index * 0.03}
+            delay={reduced ? 0 : index * 0.03}
             index={index}
             onMouseEnter={() => handleItemMouseEnter(index)}
             onClick={() => handleItemClick(item, index)}
             className={itemClassName}
+            reduced={reduced}
           >
             {renderItem ? (
               renderItem(item, index, selectedIndex === index)
