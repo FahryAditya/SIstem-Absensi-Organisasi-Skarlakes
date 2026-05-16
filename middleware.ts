@@ -32,15 +32,15 @@ export async function middleware(request: NextRequest) {
   }
 
   // Protect log aktivitas - administrator only
-  if (pathname.startsWith('/log') && session.role !== 'administrator') {
+  if (pathname.startsWith('/log') && session.role.trim() !== 'administrator') {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
-  if (pathname.startsWith('/api/log') && session.role !== 'administrator') {
+  if (pathname.startsWith('/api/log') && session.role.trim() !== 'administrator') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   // Protect admin management - administrator only
-  if (pathname.startsWith('/admin') && session.role !== 'administrator') {
+  if (pathname.startsWith('/admin') && session.role.trim() !== 'administrator') {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 

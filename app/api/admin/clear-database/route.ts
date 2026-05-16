@@ -122,7 +122,8 @@ async function clearAnggota(org: Org) {
 }
 
 export async function POST(req: NextRequest) {
-  const ctx = getCtx(req)
+  try {
+    const ctx = getCtx(req)
   if (!isAdministrator(ctx.userRole.trim())) {
     return NextResponse.json({ error: 'Hanya Super Admin yang dapat clear database' }, { status: 403 })
   }
@@ -162,4 +163,8 @@ export async function POST(req: NextRequest) {
   })
 
   return NextResponse.json({ success: true, backup: backup.filename, result })
+  } catch (err) {
+    console.error('Clear database error:', err)
+    return NextResponse.json({ error: 'Terjadi kesalahan saat membersihkan database — cek log server' }, { status: 500 })
+  }
 }

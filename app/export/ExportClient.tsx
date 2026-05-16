@@ -101,12 +101,17 @@ export default function ExportClient({ user }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ org: clearOrg, tipe: clearType, konfirmasi: clearConfirm }),
       })
-      const json = await res.json().catch(() => ({}))
+      const data = await res.json().catch((e) => {
+        console.error('Clear database: failed to parse server response', res.status, res.statusText, e)
+        if (res.status > 0) {
+          throw new Error(`Server error ${res.status} ${res.statusText} — cek log server`)
+        }
+        throw new Error('Tidak dapat terhubung ke server')
+      })
       if (!res.ok) {
-        toast.error(json.error || 'Clear database gagal')
+        toast.error(data?.error || 'Clear database gagal')
         return
       }
-      toast.success(`Data berhasil dihapus. Backup: ${json.backup}`)
       setClearConfirm('')
     } catch {
       toast.error('Terjadi kesalahan saat clear database')

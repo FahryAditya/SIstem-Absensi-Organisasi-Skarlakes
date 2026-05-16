@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { Wallet, Search, Filter, Loader2, Plus, Minus, X, History } from 'lucide-react'
+import { Wallet, Search, Filter, Loader2, Plus, Minus, X, ChevronRight, History } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatCurrency, ORG_LABELS, OrgType } from '@/lib/utils'
 import { clearJsonCache, fetchJsonCachedUrl, clientQueryClient } from '@/lib/client-cache'
@@ -28,9 +28,10 @@ export default function KasClient({ user }: Props) {
   const [totalKas, setTotalKas] = useState(0)
   const [orgs, setOrgs] = useState<string[]>([])
   const [activeOrg, setActiveOrg] = useState<string>('')
+  
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search, 500)
-  const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
@@ -47,31 +48,22 @@ export default function KasClient({ user }: Props) {
   const [txKet, setTxKet] = useState('')
   const [txLoading, setTxLoading] = useState(false)
 
-  const fetchData = useCallback(() => {
-    let url = `/api/kas?page=${page}&limit=${PAGE_SIZE}`
-    if (activeOrg) url += `&org=${activeOrg}`
-    if (debouncedSearch) url += `&search=${debouncedSearch}`
-
+  const fetchData = useCallback(async () => {
     setLoading(true)
-    fetchJsonCachedUrl<{
-      data?: KasData[];
-      totalKas?: number;
-      orgs?: string[];
-      activeOrg?: string;
-      total?: number;
-      totalPages?: number;
-    }>(url)
-      .then(json => {
-        setData(json.data || [])
-        setTotalKas(json.totalKas || 0)
-        setOrgs(json.orgs || [])
-        setTotalItems(json.total || 0)
-        setTotalPages(json.totalPages || 1)
-        if (!activeOrg && json.activeOrg) setActiveOrg(json.activeOrg)
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
-  }, [page, activeOrg, debouncedSearch])
+    try {
+      const url = `/api/kas?org=${activeOrg}&search=${debouncedSearch}&page=${page}&limit=${PAGE_SIZE}`
+      const json = await fetchJsonCachedUrl<any>(url)
+      setData(json.data)
+      setTotalPages(json.totalPages)
+      setTotalItems(json.total)
+      setTotalKas(json.totalKas)
+      setOrgs(json.orgs)
+      if (!activeOrg && json.orgs.length > 0) setActiveOrg(json.orgs[0])
+    } catch (err: any) {
+      toast.error(err.message)
+    }
+    setLoading(false)
+  }, [activeOrg, debouncedSearch, page])
 
   useEffect(() => {
     fetchData()
@@ -124,7 +116,6 @@ export default function KasClient({ user }: Props) {
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error)
-      
       toast.success(json.message || 'Transaksi berhasil')
       setModalOpen(false)
       clearJsonCache()
@@ -143,11 +134,11 @@ export default function KasClient({ user }: Props) {
   const formatTerakhirBayar = useCallback((isoDate: string | null | undefined) => {
     if (!isoDate) return '-'
     const d = new Date(isoDate)
+    const tanggalNum = d.getDate()
     const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
     
     const hari = days[d.getDay()]
-    const tanggalNum = d.getDate()
     const bulan = months[d.getMonth()]
     const jam = d.getHours().toString().padStart(2, '0')
     const menit = d.getMinutes().toString().padStart(2, '0')
@@ -281,18 +272,60 @@ export default function KasClient({ user }: Props) {
         </div>
       </div>
 
-      {/* Table */}
-      <Table
-        columns={columns as any}
-        data={data}
-        loading={loading}
-        emptyMessage="Data anggota tidak ditemukan"
-        page={page}
-        totalPages={totalPages}
-        total={totalItems}
-        onPageChange={setPage}
-        rowKey={item => (item as KasData).id}
-      />
+      {/* Quick Transaction Buttons */}
+      <div className="card p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Wallet className="w-5 h-5 text-amber-500" />
+          <h3 className="text-sm font-bold text-[#011025]">Transaksi Manual Cepat</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 bg-green-50 rounded-lg border border-green-100">
+            <div className="text-xs font-semibold text-green-700 mb-1">Setor Kas</div>
+            <p className="text-xs text-slate-600 mb-3">Tambahkan kas untuk anggota secara manual</p>
+            <button 
+              onClick={() => {
+                if (data.length > 0) openModal(data[0].id)
+                else openModal()
+              }}
+              className="w-full py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-colors"
+            >
+              Setor Kas
+            </button>
+          </div>
+          <div className="p-4 bg-red-50 rounded-lg border border-red-100">
+            <div className="text-xs font-semibold text-red-700 mb-1">Tarik Kas</div>
+            <p className="text-xs text-slate-600 mb-3">Kurangi kas untuk pengeluaran</p>
+            <a 
+              href="/pengeluaran"
+              className="w-full py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition-colors flex items-center justify-center"
+            >
+              Tarik Kas
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabel Utama Anggota */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+            <Search className="w-4 h-4 text-slate-400" />
+            Daftar Pembayaran Anggota
+          </h3>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            {totalItems} Total Anggota
+          </span>
+        </div>
+        <Table
+          columns={columns}
+          data={data}
+          loading={loading}
+          page={page}
+          totalPages={totalPages}
+          total={totalItems}
+          onPageChange={setPage}
+        />
+      </div>
 
       {/* Modal Transaksi */}
       <AnimatePresence>
@@ -329,7 +362,6 @@ export default function KasClient({ user }: Props) {
                 ) : (
                   <select 
                     value={selectedMemberId} 
-                    onChange={e => setSelectedMemberId(parseInt(e.target.value))}
                     className="input font-medium"
                     required
                   >

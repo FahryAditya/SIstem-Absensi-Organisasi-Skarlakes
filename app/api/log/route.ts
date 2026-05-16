@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(req: NextRequest) {
-  const userRole = req.headers.get('x-user-role')
+  const userRole = req.headers.get('x-user-role')?.trim() || ''
   if (userRole !== 'administrator') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }

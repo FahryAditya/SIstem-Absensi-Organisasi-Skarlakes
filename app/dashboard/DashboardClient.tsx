@@ -32,6 +32,8 @@ interface Props {
 
 interface StatsData {
   totalSiswa: number
+  totalProgramming: number
+  totalEnglish: number
   totalOsis: number
   totalMpk: number
   hadirHariIni: number
@@ -269,6 +271,20 @@ export default function DashboardClient({ user }: Props) {
     orgs.some(o => ['programming', 'english'].includes(o)) && {
       label: 'Total Siswa Ekskul',
       value: stats.totalSiswa,
+      suffix: 'siswa',
+      icon: Users,
+      color: 'bg-[rgba(84,130,180,0.12)] text-[#5482B4]',
+    },
+    orgs.includes('programming') && {
+      label: 'Total Programming',
+      value: stats.totalProgramming,
+      suffix: 'siswa',
+      icon: Users,
+      color: 'bg-[rgba(84,130,180,0.12)] text-[#5482B4]',
+    },
+    orgs.includes('english') && {
+      label: 'Total English Club',
+      value: stats.totalEnglish,
       suffix: 'siswa',
       icon: Users,
       color: 'bg-[rgba(84,130,180,0.12)] text-[#5482B4]',

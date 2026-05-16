@@ -9,6 +9,7 @@ import {
   LayoutDashboard, Users, ClipboardList, Building2, UserCog,
   Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode, UserX, Megaphone, BarChart3
 } from 'lucide-react'
+import AnimatedList from '../AnimatedList'
 
 interface SidebarProps {
   user: { id: number; nama: string; email: string; role: string }
@@ -17,59 +18,67 @@ interface SidebarProps {
   isCollapsed?: boolean
 }
 
-function getNavItems(role: string) {
-  const items = [
-    { section: 'Utama', links: [
-      { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-      { href: '/laporan', label: 'Laporan Statistik', icon: BarChart3 },
-      { href: '/kas', label: 'Buku Kas', icon: Wallet },
-      { href: '/pengeluaran', label: 'Pengeluaran Kas', icon: HandCoins },
-    ]},
-  ]
+type SidebarItem = 
+  | { type: 'logo'; label: string; version: string }
+  | { type: 'badge'; role: string }
+  | { type: 'section'; label: string }
+  | { type: 'link'; label: string; href: string; icon: any; status?: string; target?: string }
 
-  const ekskulLinks = []
-  const orgLinks = []
+function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[] {
+  const items: SidebarItem[] = []
+  
+  // Header / Logo
+  items.push({ type: 'logo', label: 'Sistem Ekstrakurikuler', version: 'V 17.5.1' })
+  
+  // Role Badge
+  if (!isCollapsed) {
+    items.push({ type: 'badge', role })
+  }
 
+  // Utama Section
+  items.push({ type: 'section', label: 'Utama' })
+  items.push({ type: 'link', href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard })
+  items.push({ type: 'link', href: '/laporan', label: 'Laporan Statistik', icon: BarChart3 })
+  items.push({ type: 'link', href: '/kas', label: 'Buku Kas', icon: Wallet })
+  items.push({ type: 'link', href: '/pengeluaran', label: 'Pengeluaran Kas', icon: HandCoins })
+
+  // Ekstrakurikuler Section
   if (role === 'administrator' || role === 'admin_programming' || role === 'admin_english') {
+    items.push({ type: 'section', label: 'Ekstrakurikuler' })
     if (role === 'administrator' || role === 'admin_programming') {
-      ekskulLinks.push({ href: '/siswa?org=programming', label: 'Siswa Programming', icon: Users })
-      ekskulLinks.push({ href: '/absensi?org=programming', label: 'Absensi Programming', icon: ClipboardList })
+      items.push({ type: 'link', href: '/siswa?org=programming', label: 'Siswa Programming', icon: Users })
+      items.push({ type: 'link', href: '/absensi?org=programming', label: 'Absensi Programming', icon: ClipboardList })
     }
     if (role === 'administrator' || role === 'admin_english') {
-      ekskulLinks.push({ href: '/siswa?org=english', label: 'Siswa English', icon: Users })
-      ekskulLinks.push({ href: '/absensi?org=english', label: 'Absensi English', icon: ClipboardList })
+      items.push({ type: 'link', href: '/siswa?org=english', label: 'Siswa English', icon: Users })
+      items.push({ type: 'link', href: '/absensi?org=english', label: 'Absensi English', icon: ClipboardList })
     }
-    items.push({ section: 'Ekstrakurikuler', links: ekskulLinks })
   }
 
+  // Organisasi Section
   if (role === 'administrator' || role === 'admin_osis_mpk') {
-    orgLinks.push({ href: '/organisasi?org=osis', label: 'OSIS', icon: Building2 })
-    orgLinks.push({ href: '/organisasi?org=mpk', label: 'MPK', icon: Building2 })
-    
-    orgLinks.push({ 
-      href: '/wawancara',
-      label: 'Wawancara OSIS & MPK', 
-      icon: MessagesSquare,
-    } as any)
-    
-    items.push({ section: 'Organisasi', links: orgLinks })
+    items.push({ type: 'section', label: 'Organisasi' })
+    items.push({ type: 'link', href: '/organisasi?org=osis', label: 'OSIS', icon: Building2 })
+    items.push({ type: 'link', href: '/organisasi?org=mpk', label: 'MPK', icon: Building2 })
+    items.push({ type: 'link', href: '/wawancara', label: 'Wawancara OSIS & MPK', icon: MessagesSquare })
   }
 
-const toolLinks = [
-     { href: '/import', label: 'Import Excel', icon: Download },
-     { href: '/export', label: 'Export Data', icon: Download },
-   ]
+  // Tools Section
+  items.push({ type: 'section', label: 'Tools' })
+  if (role === 'administrator') {
+    items.push({ type: 'link', href: '/admin', label: 'Kelola User', icon: UserCog })
+  }
+  items.push({ type: 'link', href: '/import', label: 'Import Excel', icon: Download })
+  items.push({ type: 'link', href: '/export', label: 'Export Data', icon: Download })
+  
+  if (role === 'administrator') {
+    items.push({ type: 'link', href: '/update-sistem', label: 'Update Sistem', icon: Megaphone })
+    items.push({ type: 'link', href: '/qr-code', label: 'QR Code Wawancara', icon: QrCode })
+    items.push({ type: 'link', href: '/hapus-peserta', label: 'Hapus Peserta Wawancara', icon: UserX })
+    items.push({ type: 'link', href: '/log', label: 'Log Aktivitas', icon: ScrollText })
+    items.push({ type: 'link', href: '/api/admin/backup', label: 'Backup SQL', icon: Database, target: '_blank' })
+  }
 
-   if (role === 'administrator') {
-     toolLinks.unshift({ href: '/admin', label: 'Kelola User', icon: UserCog })
-     toolLinks.push({ href: '/update-sistem', label: 'Update Sistem', icon: Megaphone })
-     toolLinks.push({ href: '/qr-code', label: 'QR Code Wawancara', icon: QrCode })
-     toolLinks.push({ href: '/hapus-peserta', label: 'Hapus Peserta Wawancara', icon: UserX })
-     toolLinks.push({ href: '/log', label: 'Log Aktivitas', icon: ScrollText })
-     toolLinks.push({ href: '/api/admin/backup', label: 'Backup SQL', icon: Database, target: '_blank' } as any)
-   }
-
-  items.push({ section: 'Tools', links: toolLinks })
   return items
 }
 
@@ -90,83 +99,96 @@ function RoleBadge({ role }: { role: string }) {
 
 export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: SidebarProps) {
   const pathname = usePathname()
-  const navItems = getNavItems(user.role)
+  const navItems = getFlattenedNavItems(user.role, !!isCollapsed)
 
   const isActive = (href: string) => {
     const base = href.split('?')[0]
     return pathname.startsWith(base)
   }
 
+  const renderSidebarItem = (item: SidebarItem, index: number, isSelected: boolean) => {
+    switch (item.type) {
+      case 'logo':
+        return (
+          <div className="px-1 py-4 flex items-center justify-between border-b border-[#5482B4]/15 mb-2">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-[#052659] rounded-xl flex items-center justify-center shadow-sm shadow-[#052659]/30 flex-shrink-0">
+                <GraduationCap className="w-5 h-5 text-white" />
+              </div>
+              {!isCollapsed && (
+                <div className="fade-in whitespace-nowrap">
+                  <div className="text-sm font-black text-white tracking-tight">{item.label}</div>
+                  <div className="text-[10px] text-white/50 font-medium">{item.version}</div>
+                </div>
+              )}
+            </div>
+            {onClose && (
+              <button onClick={onClose} className="lg:hidden btn-icon">
+                <X className="w-4 h-4 text-white/50" />
+              </button>
+            )}
+          </div>
+        )
+      case 'badge':
+        return (
+          <div className="px-1 py-2 mb-2">
+            <RoleBadge role={item.role} />
+          </div>
+        )
+      case 'section':
+        return !isCollapsed ? (
+          <div className="px-3 pt-4 pb-2 text-[10px] font-bold text-white/30 uppercase tracking-wider">
+            {item.label}
+          </div>
+        ) : <div className="h-4" />
+      case 'link':
+        const Icon = item.icon
+        const isNonaktif = item.status === 'nonaktif'
+        const active = !isNonaktif && isActive(item.href)
+        return (
+          <Link
+            href={item.href}
+            onClick={(e) => {
+              if (isNonaktif) {
+                e.preventDefault()
+              } else if (onClose) {
+                onClose()
+              }
+            }}
+            target={item.target}
+            className={cn(
+              'nav-link flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200',
+              active ? 'bg-[#5482B4]/20 text-white border border-[#5482B4]/30' : 'text-white/60 hover:bg-white/5 hover:text-white',
+              isNonaktif && 'opacity-60 cursor-not-allowed'
+            )}
+          >
+            <Icon className={cn("w-4 h-4 flex-shrink-0", active ? "text-[#C2E8FF]" : "text-inherit")} />
+            {!isCollapsed && (
+              <span className={cn("flex-1 truncate text-[13px]", active && "font-semibold")}>
+                {item.label}
+              </span>
+            )}
+            {!isCollapsed && active && <ChevronRight className="w-3 h-3 opacity-40" />}
+          </Link>
+        )
+    }
+  }
+
   const content = (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Logo */}
-      <div className="px-4 py-5 border-b border-[#5482B4]/15 flex items-center justify-between flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-[#052659] rounded-xl flex items-center justify-center shadow-sm shadow-[#052659]/30 flex-shrink-0">
-            <GraduationCap className="w-5 h-5 text-white" />
-          </div>
-          {!isCollapsed && (
-            <div className="fade-in whitespace-nowrap">
-              <div className="text-sm font-black text-white tracking-tight">Sistem Ekstrakurikuler</div>
-              <div className="text-[10px] text-white/50 font-medium">V 17.5.1</div>
-            </div>
-          )}
-        </div>
-        {onClose && (
-          <button onClick={onClose} className="lg:hidden btn-icon">
-            <X className="w-4 h-4" />
-          </button>
-        )}
+      <div className="flex-1 overflow-hidden">
+        <AnimatedList
+          items={navItems}
+          renderItem={renderSidebarItem}
+          className="h-full"
+          listClassName="px-3"
+          showGradients={true}
+          enableArrowNavigation={true}
+        />
       </div>
 
-      {/* Role badge */}
-      {!isCollapsed && (
-        <div className="px-4 py-3 border-b border-[#5482B4]/15 flex-shrink-0 fade-in">
-          <RoleBadge role={user.role} />
-        </div>
-      )}
-
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-2">
-        {navItems.map(section => (
-          <div key={section.section} className="mb-1">
-            {!isCollapsed && <div className="nav-section fade-in">{section.section}</div>}
-            {isCollapsed && <div className="h-4" />}
-            {section.links.map(link => {
-              const Icon = link.icon
-              const isNonaktif = (link as any).status === 'nonaktif'
-              const active = !isNonaktif && isActive(link.href)
-              return (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  onClick={(e) => {
-                    if (isNonaktif) {
-                      e.preventDefault()
-                    } else if (onClose) {
-                      onClose()
-                    }
-                  }}
-                  target={(link as any).target}
-                  className={cn(
-                    'nav-link', 
-                    active && 'nav-link-active',
-                    isNonaktif && 'opacity-60 cursor-not-allowed hover:bg-transparent'
-                  )}
-                >
-                  <Icon className={cn("w-4 h-4 flex-shrink-0", isNonaktif && "text-red-500")} />
-                  {!isCollapsed && <span className={cn("flex-1 truncate text-[13px] fade-in", isNonaktif && "text-red-500 font-medium")}>{link.label}</span>}
-                  {!isCollapsed && isNonaktif && <span className="text-[9px] font-bold bg-red-100 text-red-600 px-1.5 py-0.5 rounded fade-in">NONAKTIF</span>}
-                  {!isCollapsed && active && <ChevronRight className="w-3 h-3 opacity-40 fade-in" />}
-                </Link>
-              )
-            })}
-          </div>
-        ))}
-      </nav>
-
       {/* User info */}
-       <div className="px-4 py-4 border-t border-[#5482B4]/15 flex-shrink-0">
+       <div className="px-4 py-4 border-t border-[#5482B4]/15 flex-shrink-0 bg-[#011025]/80 backdrop-blur-sm">
         <div className="flex items-center gap-2.5">
           {user.role === 'administrator' ? (
             <div className="relative w-8 h-8 rounded-full overflow-hidden shadow-sm border border-[#5482B4]/30 flex-shrink-0">
@@ -212,3 +234,4 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
     </>
   )
 }
+

@@ -31,13 +31,14 @@ export default function UpdateSistemClient({ user }: Props) {
   async function fetchHistory() {
     try {
       const res = await fetch('/api/system-update')
-      const data = await res.json()
-      if (res.ok) {
-        // We only get latest from GET, let's assume we want more for history.
-        // For now, let's just show the latest if available.
-        if (data.latestUpdate) {
-          setHistory([data.latestUpdate])
-        }
+      let data: any = null
+      try {
+        data = await res.json()
+      } catch {
+        console.error('Failed to parse system-update history response', res.status, res.statusText)
+      }
+      if (res.ok && data?.latestUpdate) {
+        setHistory([data.latestUpdate])
       }
     } catch (e) {
       console.error(e)
@@ -57,14 +58,21 @@ export default function UpdateSistemClient({ user }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ version, content })
       })
-      const data = await res.json()
-      
-      if (!res.ok) throw new Error(data.error)
-      
-      toast.success('Pembaruan sistem berhasil diposting!')
-      setVersion('')
-      setContent('')
-      fetchHistory()
+      let data: any = null
+      try {
+        data = await res.json()
+      } catch {
+        console.error('Failed to parse system-update submit response', res.status, res.statusText)
+        throw new Error(res.status > 0 ? `Server error ${res.status} — periksa log server` : 'Tidak dapat terhubung ke server')
+      }
+      if (res.ok) {
+        toast.success('Pembaruan sistem berhasil diposting!')
+        setVersion('')
+        setContent('')
+        fetchHistory()
+      } else {
+        toast.error(data?.error || 'Pembaruan gagal dipost')
+      }
     } catch (e: any) {
       toast.error(e.message)
     } finally {
