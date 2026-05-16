@@ -38,14 +38,13 @@ export const ADMINISTRATOR_MENU_ITEMS: AdminMenuItem[] = [
   { label: 'Backup SQL',               section: 'Tools',         href: '/api/admin/backup' },
 ];
 
-// Detect if we should reduce/skip animations (mobile or prefers-reduced-motion)
+// Detect if we should reduce/skip animations (only prefers-reduced-motion, NOT mobile)
 function useReducedAnimation() {
-  const [reduced, setReduced] = useState(true); // default true (SSR safe)
+  const [reduced, setReduced] = useState(false); // default false agar animasi aktif semua device
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const isMobile = window.innerWidth < 1024 || ('ontouchstart' in window);
-    setReduced(isMobile || mq.matches);
-    const handler = () => setReduced(isMobile || mq.matches);
+    setReduced(mq.matches);
+    const handler = () => setReduced(mq.matches);
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
@@ -60,11 +59,23 @@ interface AnimatedItemProps {
   onClick?: MouseEventHandler<HTMLDivElement>;
   className?: string;
   reduced?: boolean;
+  /** Root element untuk IntersectionObserver — gunakan scroll container sidebar */
+  scrollRoot?: Element | null;
 }
 
-const AnimatedItem: React.FC<AnimatedItemProps> = ({ children, delay = 0, index, onMouseEnter, onClick, className = '', reduced = false }) => {
+const AnimatedItem: React.FC<AnimatedItemProps> = ({
+  children,
+  delay = 0,
+  index,
+  onMouseEnter,
+  onClick,
+  className = '',
+  reduced = false,
+  scrollRoot,
+}) => {
   const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(reduced);
+  // Mulai invisible; akan visible saat masuk ke dalam scroll container
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (reduced) { setVisible(true); return; }
@@ -72,11 +83,17 @@ const AnimatedItem: React.FC<AnimatedItemProps> = ({ children, delay = 0, index,
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) setVisible(true); },
-      { threshold: 0.05 }
+      {
+        // Gunakan scroll container sidebar sebagai root, bukan viewport
+        root: scrollRoot ?? null,
+        threshold: 0.05,
+        // Sedikit margin bawah agar item mulai animate sebelum benar-benar terlihat
+        rootMargin: '0px 0px -10px 0px',
+      }
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [reduced]);
+  }, [reduced, scrollRoot]);
 
   return (
     <div
@@ -87,8 +104,11 @@ const AnimatedItem: React.FC<AnimatedItemProps> = ({ children, delay = 0, index,
       className={`mb-1 cursor-pointer ${className}`}
       style={reduced ? undefined : {
         opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(8px)',
-        transition: visible ? `opacity 0.25s ease ${delay}s, transform 0.25s ease ${delay}s` : 'none',
+        transform: visible ? 'translateY(0)' : 'translateY(12px)',
+        transition: visible
+          ? `opacity 0.3s cubic-bezier(0.4,0,0.2,1) ${delay}s, transform 0.3s cubic-bezier(0.4,0,0.2,1) ${delay}s`
+          : 'none',
+        willChange: 'opacity, transform',
       }}
     >
       {children}
@@ -232,12 +252,13 @@ const AnimatedList = <T,>({
         {resolvedItems.map((item, index) => (
           <AnimatedItem
             key={index}
-            delay={reduced ? 0 : index * 0.03}
+            delay={reduced ? 0 : index * 0.04}
             index={index}
             onMouseEnter={() => handleItemMouseEnter(index)}
             onClick={() => handleItemClick(item, index)}
             className={itemClassName}
             reduced={reduced}
+            scrollRoot={listRef.current}
           >
             {renderItem ? (
               renderItem(item, index, selectedIndex === index)
