@@ -1,5 +1,43 @@
 import React, { useRef, useState, useEffect, useCallback, ReactNode, MouseEventHandler, UIEvent } from 'react';
 
+// ─── Tipe & Preset Menu Administrator ────────────────────────────────────────
+export interface AdminMenuItem {
+  label: string;
+  section?: string;
+  href?: string;
+  icon?: string; // nama icon opsional (untuk render kustom)
+}
+
+/**
+ * Daftar menu lengkap untuk peran Administrator.
+ * Bisa digunakan langsung via prop `administratorItems` pada AnimatedList.
+ */
+export const ADMINISTRATOR_MENU_ITEMS: AdminMenuItem[] = [
+  // Utama
+  { label: 'Dashboard',               section: 'Utama',         href: '/dashboard' },
+  { label: 'Laporan Statistik',        section: 'Utama',         href: '/laporan' },
+  { label: 'Buku Kas',                 section: 'Utama',         href: '/kas' },
+  { label: 'Pengeluaran Kas',          section: 'Utama',         href: '/pengeluaran' },
+  // Ekstrakurikuler
+  { label: 'Siswa Programming',        section: 'Ekstrakurikuler', href: '/siswa?org=programming' },
+  { label: 'Absensi Programming',      section: 'Ekstrakurikuler', href: '/absensi?org=programming' },
+  { label: 'Siswa English',            section: 'Ekstrakurikuler', href: '/siswa?org=english' },
+  { label: 'Absensi English',          section: 'Ekstrakurikuler', href: '/absensi?org=english' },
+  // Organisasi
+  { label: 'OSIS',                     section: 'Organisasi',    href: '/organisasi?org=osis' },
+  { label: 'MPK',                      section: 'Organisasi',    href: '/organisasi?org=mpk' },
+  { label: 'Wawancara OSIS & MPK',     section: 'Organisasi',    href: '/wawancara' },
+  // Tools
+  { label: 'Kelola User',              section: 'Tools',         href: '/admin' },
+  { label: 'Import Excel',             section: 'Tools',         href: '/import' },
+  { label: 'Export Data',              section: 'Tools',         href: '/export' },
+  { label: 'Update Sistem',            section: 'Tools',         href: '/update-sistem' },
+  { label: 'QR Code Wawancara',        section: 'Tools',         href: '/qr-code' },
+  { label: 'Hapus Peserta Wawancara',  section: 'Tools',         href: '/hapus-peserta' },
+  { label: 'Log Aktivitas',            section: 'Tools',         href: '/log' },
+  { label: 'Backup SQL',               section: 'Tools',         href: '/api/admin/backup' },
+];
+
 // Detect if we should reduce/skip animations (mobile or prefers-reduced-motion)
 function useReducedAnimation() {
   const [reduced, setReduced] = useState(true); // default true (SSR safe)
@@ -59,7 +97,9 @@ const AnimatedItem: React.FC<AnimatedItemProps> = ({ children, delay = 0, index,
 };
 
 interface AnimatedListProps<T> {
-  items: T[];
+  items?: T[];
+  /** Jika true, gunakan ADMINISTRATOR_MENU_ITEMS sebagai items default (hanya berlaku saat items tidak diberikan) */
+  administratorItems?: boolean;
   onItemSelect?: (item: T, index: number) => void;
   renderItem?: (item: T, index: number, isSelected: boolean) => ReactNode;
   showGradients?: boolean;
@@ -73,7 +113,8 @@ interface AnimatedListProps<T> {
 }
 
 const AnimatedList = <T,>({
-  items = [],
+  items,
+  administratorItems = false,
   onItemSelect,
   renderItem,
   showGradients = true,
@@ -85,6 +126,12 @@ const AnimatedList = <T,>({
   initialSelectedIndex = -1,
   selectedIndex: controlledSelectedIndex
 }: AnimatedListProps<T>) => {
+  // Gunakan ADMINISTRATOR_MENU_ITEMS jika prop administratorItems=true dan items tidak disupply
+  const resolvedItems: T[] = (items && items.length > 0)
+    ? items
+    : administratorItems
+      ? (ADMINISTRATOR_MENU_ITEMS as unknown as T[])
+      : [];
   const reduced = useReducedAnimation();
   const listRef = useRef<HTMLDivElement>(null);
   const [internalSelectedIndex, setInternalSelectedIndex] = useState<number>(initialSelectedIndex);
@@ -127,16 +174,16 @@ const AnimatedList = <T,>({
       if (e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey)) {
         e.preventDefault();
         setKeyboardNav(true);
-        setSelectedIndex(Math.min(selectedIndex + 1, items.length - 1));
+        setSelectedIndex(Math.min(selectedIndex + 1, resolvedItems.length - 1));
       } else if (e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey)) {
         e.preventDefault();
         setKeyboardNav(true);
         setSelectedIndex(Math.max(selectedIndex - 1, 0));
       } else if (e.key === 'Enter') {
-        if (selectedIndex >= 0 && selectedIndex < items.length) {
+        if (selectedIndex >= 0 && selectedIndex < resolvedItems.length) {
           e.preventDefault();
           if (onItemSelect) {
-            onItemSelect(items[selectedIndex], selectedIndex);
+            onItemSelect(resolvedItems[selectedIndex], selectedIndex);
           }
         }
       }
@@ -144,7 +191,7 @@ const AnimatedList = <T,>({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [items, selectedIndex, onItemSelect, enableArrowNavigation, setSelectedIndex]);
+  }, [resolvedItems, selectedIndex, onItemSelect, enableArrowNavigation, setSelectedIndex]);
 
   useEffect(() => {
     if (!keyboardNav || selectedIndex < 0 || !listRef.current) return;
@@ -182,7 +229,7 @@ const AnimatedList = <T,>({
           scrollbarWidth: displayScrollbar ? 'thin' : 'none',
         }}
       >
-        {items.map((item, index) => (
+        {resolvedItems.map((item, index) => (
           <AnimatedItem
             key={index}
             delay={reduced ? 0 : index * 0.03}
