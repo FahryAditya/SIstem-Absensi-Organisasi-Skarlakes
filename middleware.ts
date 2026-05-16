@@ -18,7 +18,7 @@ export async function middleware(request: NextRequest) {
 
   const session = await getSessionFromRequest(request)
 
-  // Not authenticated
+  // Not authenticated — return 401 for API, redirect pages to login
   if (!session) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

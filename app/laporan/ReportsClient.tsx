@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { BarChart3, TrendingUp, Wallet, Loader2, RefreshCw } from 'lucide-react'
-import { fetchJsonCachedUrl } from '@/lib/client-cache'
+import { useState, useEffect, useCallback } from 'react'
+import { BarChart3, TrendingUp, Wallet, Loader2, RefreshCw, ShieldAlert, RefreshCwDot } from 'lucide-react'
 import AttendanceCharts from '@/components/charts/AttendanceCharts'
 import FinanceCharts from '@/components/charts/FinanceCharts'
 import KasSiswaCharts from '@/components/charts/KasSiswaCharts'
@@ -14,22 +13,43 @@ interface Props {
 export default function ReportsClient({ user }: Props) {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [authError, setAuthError] = useState(false)
+  const [serverError, setServerError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'attendance' | 'finance' | 'kas'>('attendance')
+
+  const fetchReportsData = useCallback(async () => {
+    setLoading(true)
+    setAuthError(false)
+    setServerError(null)
+    try {
+      const res = await fetch('/api/reports?type=all')
+      const isUnauth = res.status === 401
+      
+      if (isUnauth) {
+        setAuthError(true)
+        setLoading(false)
+        return
+      }
+
+      const json = await res.json().catch(() => ({ error: 'Gagal membaca respon server' }))
+
+      if (!res.ok) {
+        setServerError(json?.error || `Error ${res.status}: Terjadi kesalahan pada server`)
+        setLoading(false)
+        return
+      }
+      
+      setData(json)
+    } catch (error) {
+      console.error('Failed to fetch reports data:', error)
+      setServerError('Gagal terhubung ke server. Pastikan koneksi internet Anda stabil.')
+    }
+    setLoading(false)
+  }, [])
 
   useEffect(() => {
     fetchReportsData()
-  }, [])
-
-  async function fetchReportsData() {
-    setLoading(true)
-    try {
-      const response = await fetchJsonCachedUrl<any>('/api/reports?type=all')
-      setData(response)
-    } catch (error) {
-      console.error('Failed to fetch reports data:', error)
-    }
-    setLoading(false)
-  }
+  }, [fetchReportsData])
 
   return (
     <div className="space-y-6 max-w-7xl">
@@ -56,7 +76,10 @@ export default function ReportsClient({ user }: Props) {
             Kehadiran
           </button>
           <button
-            onClick={() => setActiveTab('finance')}
+            onClick={() => {
+              setActiveTab('finance')
+              if (!data?.keuanganBulanan) fetchReportsData()
+            }}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
               activeTab === 'finance'
                 ? 'bg-[#5482B4] text-white'
@@ -67,7 +90,10 @@ export default function ReportsClient({ user }: Props) {
             Keuangan
           </button>
           <button
-            onClick={() => setActiveTab('kas')}
+            onClick={() => {
+              setActiveTab('kas')
+              if (!data?.kasSiswa) fetchReportsData()
+            }}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
               activeTab === 'kas'
                 ? 'bg-[#5482B4] text-white'
@@ -104,6 +130,32 @@ export default function ReportsClient({ user }: Props) {
             <p className="text-sm text-slate-500">Memuat laporan...</p>
           </div>
         </div>
+      ) : authError ? (
+        <div className="card p-12 text-center">
+          <ShieldAlert className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+          <p className="text-sm font-bold text-slate-700 mb-1">Sesi habis atau akses ditolak</p>
+          <p className="text-sm text-slate-500 mb-4">Silakan login ulang untuk melanjutkan.</p>
+          <button
+            onClick={() => { window.location.href = '/login' }}
+            className="btn-primary inline-flex items-center gap-2"
+          >
+            <RefreshCwDot className="w-4 h-4" />
+            Login Ulang
+          </button>
+        </div>
+      ) : serverError ? (
+        <div className="card p-12 text-center">
+          <ShieldAlert className="w-12 h-12 text-rose-500 mx-auto mb-4" />
+          <p className="text-sm font-bold text-slate-700 mb-1">Gagal Memuat Data</p>
+          <p className="text-sm text-slate-500 mb-4">{serverError}</p>
+          <button
+            onClick={fetchReportsData}
+            className="btn-primary inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Coba Lagi
+          </button>
+        </div>
       ) : data ? (
         <>
           {activeTab === 'attendance' && <AttendanceCharts data={data} />}
@@ -112,9 +164,10 @@ export default function ReportsClient({ user }: Props) {
         </>
       ) : (
         <div className="card p-12 text-center">
-          <p className="text-sm text-slate-500">Gagal memuat data laporan</p>
+          <p className="text-sm text-slate-500">Tidak ada data untuk ditampilkan</p>
         </div>
       )}
     </div>
   )
 }
+
