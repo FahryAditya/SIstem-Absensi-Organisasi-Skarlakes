@@ -107,6 +107,9 @@ model User {
   override_wawancara HasilWawancaraTable[] @relation("WawancaraOverriddenBy")
   chat_wawancara ChatWawancara[]
 
+  last_seen_update_id Int?
+  updates_created     SystemUpdate[] @relation("UpdateCreatedBy")
+
   @@index([created_at])
   @@map("users")
 }
@@ -406,4 +409,20 @@ model ChatWawancara {
   @@index([sesi_id, created_at])
   @@index([created_at])
   @@map("chat_wawancara")
+}
+
+// ============================================================
+// TABLE: system_updates (notifikasi pembaruan)
+// ============================================================
+model SystemUpdate {
+  id         Int      @id @default(autoincrement())
+  version    String   @db.VarChar(50)
+  content    String   @db.Text
+  created_at DateTime @default(now())
+  created_by Int
+  
+  // Relations
+  creator    User     @relation("UpdateCreatedBy", fields: [created_by], references: [id])
+
+  @@map("system_updates")
 }

@@ -7,7 +7,7 @@ import { ROLE_LABELS } from '@/lib/auth-shared'
 import Image from 'next/image'
 import {
   LayoutDashboard, Users, ClipboardList, Building2, UserCog,
-  Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode, UserX
+  Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode, UserX, Megaphone
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -61,6 +61,7 @@ const toolLinks = [
 
    if (role === 'administrator') {
      toolLinks.unshift({ href: '/admin', label: 'Kelola User', icon: UserCog })
+     toolLinks.push({ href: '/update-sistem', label: 'Update Sistem', icon: Megaphone })
      toolLinks.push({ href: '/qr-code', label: 'QR Code Wawancara', icon: QrCode })
      toolLinks.push({ href: '/hapus-peserta', label: 'Hapus Peserta Wawancara', icon: UserX })
      toolLinks.push({ href: '/log', label: 'Log Aktivitas', icon: ScrollText })

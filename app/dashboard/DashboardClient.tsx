@@ -11,7 +11,7 @@ import { ROLE_LABELS } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import TextType from '@/components/TextType'
 import {
-  Users, CheckCircle2, Wallet, UserPlus, LogOut, Clock, CalendarDays, PlusCircle, LayoutList, HandCoins, Loader2, UploadCloud, TrendingUp, Activity, X
+  Users, CheckCircle2, Wallet, UserPlus, LogOut, Clock, CalendarDays, PlusCircle, LayoutList, HandCoins, Loader2, UploadCloud, TrendingUp, Activity, X, Megaphone, Sparkles
 } from 'lucide-react'
 
 // Lazy load Recharts for better performance
@@ -62,6 +62,7 @@ export default function DashboardClient({ user }: Props) {
   const [stats, setStats] = useState<StatsData | null>(null)
   const [charts, setCharts] = useState<ChartData | null>(null)
   const [logs, setLogs] = useState<LogData | null>(null)
+  const [latestUpdate, setLatestUpdate] = useState<any>(null)
   
   const [loading, setLoading] = useState(true)
   const [loadingCharts, setLoadingCharts] = useState(true)
@@ -115,14 +116,49 @@ export default function DashboardClient({ user }: Props) {
   useEffect(() => {
     fetchDashboardData()
     
-    // Welcome popup logic for administrator
-    if (user.role === 'administrator' && typeof window !== 'undefined') {
-      if (!sessionStorage.getItem('welcome_shown')) {
-        setShowWelcomeModal(true)
-        sessionStorage.setItem('welcome_shown', 'true')
+    // System Update & Welcome logic
+    async function checkUpdates() {
+      try {
+        const res = await fetch('/api/system-update')
+        const data = await res.json()
+        
+        if (data.latestUpdate) {
+          setLatestUpdate(data.latestUpdate)
+          
+          // Show if not seen yet OR if it's administrator (who should always see greeting, but we'll prioritize update info)
+          if (data.latestUpdate.id > data.lastSeenId) {
+            setShowWelcomeModal(true)
+          } else if (user.role === 'administrator' && !sessionStorage.getItem('welcome_shown')) {
+            // Default greeting for admin if no new update
+            setShowWelcomeModal(true)
+            sessionStorage.setItem('welcome_shown', 'true')
+          }
+        } else if (user.role === 'administrator' && !sessionStorage.getItem('welcome_shown')) {
+          setShowWelcomeModal(true)
+          sessionStorage.setItem('welcome_shown', 'true')
+        }
+      } catch (e) {
+        console.error('Failed to fetch update info', e)
       }
     }
+    
+    checkUpdates()
   }, [user.role])
+
+  async function handleDismissUpdate() {
+    setShowWelcomeModal(false)
+    if (latestUpdate) {
+      try {
+        await fetch('/api/system-update/seen', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ updateId: latestUpdate.id })
+        })
+      } catch (e) {
+        console.error('Failed to mark update as seen', e)
+      }
+    }
+  }
 
   async function handleQuickAdd(e: React.FormEvent) {
     e.preventDefault()
@@ -486,43 +522,83 @@ export default function DashboardClient({ user }: Props) {
         </div>
       )}
 
-      {/* Welcome Modal */}
+      {/* Welcome & Update Modal */}
       {showWelcomeModal && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm slide-up">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden relative border border-slate-100">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-sm overflow-hidden relative border border-slate-100 slide-up">
             <button 
               onClick={() => setShowWelcomeModal(false)} 
-              className="absolute top-3 right-3 p-1.5 bg-black/10 hover:bg-black/20 text-white rounded-full z-10 transition-colors"
+              className="absolute top-4 right-4 p-2 bg-black/5 hover:bg-black/10 text-slate-400 hover:text-slate-600 rounded-full z-20 transition-all"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
-            <div className="h-32 bg-gradient-to-br from-[#052659] to-[#5482B4] relative">
-              <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, white 2px, transparent 2px)', backgroundSize: '20px 20px' }}></div>
+
+            {/* Modal Header/Cover */}
+            <div className="h-32 bg-gradient-to-br from-[#052659] via-[#052659] to-[#5482B4] relative">
+              <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, white 2px, transparent 2px)', backgroundSize: '24px 24px' }}></div>
+              <div className="absolute -bottom-10 left-0 right-0 flex justify-center">
+                <div className="w-20 h-20 rounded-2xl bg-white shadow-xl flex items-center justify-center border-4 border-white rotate-3 group hover:rotate-0 transition-transform">
+                  {latestUpdate ? (
+                    <div className="w-full h-full bg-blue-50 rounded-xl flex items-center justify-center">
+                      <Megaphone className="w-10 h-10 text-[#052659]" />
+                    </div>
+                  ) : (
+                    <div className="relative w-full h-full rounded-xl overflow-hidden">
+                      <Image 
+                        src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" 
+                        alt="Profile" 
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="px-6 pb-8 pt-0 text-center relative">
-              <div className="w-24 h-24 mx-auto -mt-12 mb-4 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white flex items-center justify-center relative">
-                <Image 
-                  src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" 
-                  alt="Administrator" 
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <div className="block w-full">
-                <TextType as="h2" text={`${greeting}, 👋`} className="text-2xl font-black text-[#011025] tracking-tight" typingSpeed={50} loop={false} showCursor={false} />
-              </div>
-              <div className="block w-full">
-                <TextType as="p" text={user.nama} className="text-[#052659] font-bold mt-1 text-lg" typingSpeed={60} initialDelay={800} loop={false} cursorClassName="text-[#052659]" />
-              </div>
-              <p className="text-slate-500 text-sm mt-3 leading-relaxed">
-                Anda masuk sebagai Administrator. Selamat bekerja dan pantau terus perkembangan ekstrakurikuler serta organisasi!
-              </p>
-              <button 
-                onClick={() => setShowWelcomeModal(false)}
-                className="mt-6 w-full py-3 px-4 bg-[#052659] hover:bg-[#011025] text-white font-bold rounded-xl shadow-md transition-all active:scale-[0.98]"
-              >
-                Mulai Bekerja 🚀
-              </button>
+
+            <div className="px-8 pb-8 pt-14 text-center relative">
+              {latestUpdate ? (
+                <div className="space-y-4">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-wider">
+                    <Sparkles className="w-3 h-3" /> Update Sistem Tersedia
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-black text-[#011025] leading-tight">
+                      Versi {latestUpdate.version}
+                    </h2>
+                    <p className="text-[#052659] text-xs font-bold mt-1 opacity-70">
+                      Pembaruan & Peningkatan Patch
+                    </p>
+                  </div>
+                  <div className="bg-slate-50 rounded-2xl p-4 text-left border border-slate-100 max-h-[160px] overflow-y-auto custom-scrollbar">
+                    <p className="text-[13px] text-slate-600 leading-relaxed whitespace-pre-line">
+                      {latestUpdate.content}
+                    </p>
+                  </div>
+                  <button 
+                    onClick={handleDismissUpdate}
+                    className="w-full py-4 px-6 bg-[#052659] hover:bg-[#011025] text-white font-bold rounded-2xl shadow-lg shadow-[#052659]/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                  >
+                    Mulai Bekerja 🚀
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <TextType as="h2" text={`${greeting}, 👋`} className="text-2xl font-black text-[#011025] tracking-tight" typingSpeed={50} loop={false} showCursor={false} />
+                    <TextType as="p" text={user.nama} className="text-[#052659] font-bold mt-1 text-lg" typingSpeed={60} initialDelay={800} loop={false} cursorClassName="text-[#052659]" />
+                  </div>
+                  <p className="text-slate-500 text-sm leading-relaxed">
+                    Selamat datang kembali! Pantau terus perkembangan dan aktivitas terbaru hari ini.
+                  </p>
+                  <button 
+                    onClick={() => setShowWelcomeModal(false)}
+                    className="w-full py-4 px-6 bg-[#052659] hover:bg-[#011025] text-white font-bold rounded-2xl shadow-lg shadow-[#052659]/20 transition-all active:scale-[0.98]"
+                  >
+                    Mulai Bekerja 🚀
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>,
