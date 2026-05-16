@@ -27,22 +27,18 @@ type SidebarItem =
 function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[] {
   const items: SidebarItem[] = []
   
-  // Header / Logo
   items.push({ type: 'logo', label: 'Sistem Ekstrakurikuler', version: 'V 17.5.1' })
   
-  // Role Badge
   if (!isCollapsed) {
     items.push({ type: 'badge', role })
   }
 
-  // Utama Section
   items.push({ type: 'section', label: 'Utama' })
   items.push({ type: 'link', href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard })
   items.push({ type: 'link', href: '/laporan', label: 'Laporan Statistik', icon: BarChart3 })
   items.push({ type: 'link', href: '/kas', label: 'Buku Kas', icon: Wallet })
   items.push({ type: 'link', href: '/pengeluaran', label: 'Pengeluaran Kas', icon: HandCoins })
 
-  // Ekstrakurikuler Section
   if (role === 'administrator' || role === 'admin_programming' || role === 'admin_english') {
     items.push({ type: 'section', label: 'Ekstrakurikuler' })
     if (role === 'administrator' || role === 'admin_programming') {
@@ -55,7 +51,6 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
     }
   }
 
-  // Organisasi Section
   if (role === 'administrator' || role === 'admin_osis_mpk') {
     items.push({ type: 'section', label: 'Organisasi' })
     items.push({ type: 'link', href: '/organisasi?org=osis', label: 'OSIS', icon: Building2 })
@@ -63,7 +58,6 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
     items.push({ type: 'link', href: '/wawancara', label: 'Wawancara OSIS & MPK', icon: MessagesSquare })
   }
 
-  // Tools Section
   items.push({ type: 'section', label: 'Tools' })
   if (role === 'administrator') {
     items.push({ type: 'link', href: '/admin', label: 'Kelola User', icon: UserCog })
@@ -106,7 +100,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
     return pathname.startsWith(base)
   }
 
-  const renderSidebarItem = (item: SidebarItem, index: number, isSelected: boolean) => {
+  const renderSidebarItem = (item: SidebarItem, index: number) => {
     switch (item.type) {
       case 'logo':
         return (
@@ -148,6 +142,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
         return (
           <Link
             href={item.href}
+            prefetch={false}
             onClick={(e) => {
               if (isNonaktif) {
                 e.preventDefault()
@@ -187,7 +182,6 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
         />
       </div>
 
-      {/* User info */}
        <div className="px-4 py-4 border-t border-[#5482B4]/15 flex-shrink-0 bg-[#011025]/80 backdrop-blur-sm">
         <div className="flex items-center gap-2.5">
           {user.role === 'administrator' ? (
@@ -234,4 +228,3 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
     </>
   )
 }
-
