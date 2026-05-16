@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Megaphone, History, Save, PlusCircle, Loader2, Info, CheckCircle2 } from 'lucide-react'
+import { Megaphone, History, Save, PlusCircle, Loader2, Info, CheckCircle2, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatDateTime } from '@/lib/utils'
 
@@ -80,6 +80,26 @@ export default function UpdateSistemClient({ user }: Props) {
     }
   }
 
+  async function handleClearHistory() {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus seluruh riwayat update? Notifikasi di dashboard admin lain juga akan hilang.')) return
+
+    setLoadingHistory(true)
+    try {
+      const res = await fetch('/api/system-update', { method: 'DELETE' })
+      if (res.ok) {
+        toast.success('Riwayat update berhasil dibersihkan')
+        setHistory([])
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Gagal membersihkan riwayat')
+      }
+    } catch (e) {
+      toast.error('Terjadi kesalahan koneksi')
+    } finally {
+      setLoadingHistory(false)
+    }
+  }
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header Info */}
@@ -150,9 +170,19 @@ export default function UpdateSistemClient({ user }: Props) {
         {/* Recent Updates History */}
         <div className="space-y-6">
           <div className="card p-5 border border-slate-100">
-            <div className="flex items-center gap-2 mb-4">
-              <History className="w-4 h-4 text-[#5482B4]" />
-              <h3 className="text-sm font-bold text-[#011025]">Riwayat Terbaru</h3>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <History className="w-4 h-4 text-[#5482B4]" />
+                <h3 className="text-sm font-bold text-[#011025]">Riwayat Terbaru</h3>
+              </div>
+              {history.length > 0 && user.role === 'administrator' && (
+                <button 
+                  onClick={handleClearHistory}
+                  className="text-[10px] flex items-center gap-1 text-red-500 hover:text-red-700 font-bold transition-colors"
+                >
+                  <Trash2 className="w-3 h-3" /> Bersihkan
+                </button>
+              )}
             </div>
 
             {loadingHistory ? (

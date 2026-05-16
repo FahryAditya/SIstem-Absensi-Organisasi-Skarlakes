@@ -63,3 +63,25 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ data: update }, { status: 201 })
 }
+
+export async function DELETE(req: NextRequest) {
+  const ctx = getCtx(req)
+  if (ctx.userRole !== 'administrator') {
+    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+  }
+
+  await prisma.systemUpdate.deleteMany()
+
+  await createLog({
+    userId: ctx.userId,
+    userNama: ctx.userNama,
+    aksi: 'DELETE',
+    tabel: 'system_updates',
+    recordId: 0,
+    deskripsi: `${ctx.userNama} membersihkan seluruh riwayat update sistem`,
+    dataBaru: {},
+    ipAddress: getIp(req),
+  })
+
+  return NextResponse.json({ message: 'Riwayat update berhasil dibersihkan' })
+}
