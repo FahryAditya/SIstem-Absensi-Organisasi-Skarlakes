@@ -118,9 +118,11 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
       </div>
 
       {/* Role badge */}
-      <div className={cn("px-4 py-3 border-b border-[#5482B4]/15 flex-shrink-0", isCollapsed && "px-2")}>
-        <RoleBadge role={user.role} />
-      </div>
+      {!isCollapsed && (
+        <div className="px-4 py-3 border-b border-[#5482B4]/15 flex-shrink-0 fade-in">
+          <RoleBadge role={user.role} />
+        </div>
+      )}
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-2">
