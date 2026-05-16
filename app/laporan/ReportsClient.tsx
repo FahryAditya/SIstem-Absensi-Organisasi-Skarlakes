@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { BarChart3, TrendingUp, Wallet, Loader2, RefreshCw, ShieldAlert, RefreshCwDot } from 'lucide-react'
+import { BarChart3, TrendingUp, Wallet, Loader2, RefreshCw, ShieldAlert, RefreshCcwDot } from 'lucide-react'
 import AttendanceCharts from '@/components/charts/AttendanceCharts'
 import FinanceCharts from '@/components/charts/FinanceCharts'
 import KasSiswaCharts from '@/components/charts/KasSiswaCharts'
@@ -139,7 +139,7 @@ export default function ReportsClient({ user }: Props) {
             onClick={() => { window.location.href = '/login' }}
             className="btn-primary inline-flex items-center gap-2"
           >
-            <RefreshCwDot className="w-4 h-4" />
+            <RefreshCcwDot className="w-4 h-4" />
             Login Ulang
           </button>
         </div>
