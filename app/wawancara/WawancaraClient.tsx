@@ -350,46 +350,55 @@ export default function WawancaraClient({ user }: Props) {
 
   async function saveSession() {
     setSaving(true)
-    const url = '/api/wawancara'
-    const method = editingSessionId ? 'PUT' : 'POST'
-    const body = {
-      ...(editingSessionId && { id: editingSessionId }),
-      ...(!editingSessionId && { organisasi_type: fOrg }),
-      jadwal_mulai: fMulai ? new Date(fMulai).toISOString() : null,
-      jadwal_selesai: fSelesai ? new Date(fSelesai).toISOString() : null,
-    }
-    const res = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-    const json = await res.json()
-    if (!res.ok) {
-      toast.error(json.error || `Gagal ${editingSessionId ? 'mengubah' : 'membuat'} sesi`)
+    try {
+      const url = '/api/wawancara'
+      const method = editingSessionId ? 'PUT' : 'POST'
+      const body = {
+        ...(editingSessionId && { id: editingSessionId }),
+        ...(!editingSessionId && { organisasi_type: fOrg }),
+        jadwal_mulai: fMulai ? new Date(fMulai).toISOString() : null,
+        jadwal_selesai: fSelesai ? new Date(fSelesai).toISOString() : null,
+      }
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast.error(json.error || `Gagal ${editingSessionId ? 'mengubah' : 'membuat'} sesi`)
+        return
+      }
+      toast.success(editingSessionId ? 'Jadwal wawancara diubah' : (json.data.status === 'ACTIVE' ? 'Wawancara aktif' : 'Jadwal wawancara dibuat'))
+      clearJsonCache()
+      setSessionModal(false)
+      load(true)
+    } catch (err) {
+      toast.error('Terjadi kesalahan koneksi')
+    } finally {
       setSaving(false)
-      return
     }
-    toast.success(editingSessionId ? 'Jadwal wawancara diubah' : (json.data.status === 'ACTIVE' ? 'Wawancara aktif' : 'Jadwal wawancara dibuat'))
-    clearJsonCache()
-    setSaving(false)
-    setSessionModal(false)
-    load(true)
   }
 
   async function updateSession(id: number, action: 'activate' | 'finish' | 'cancel') {
     setSaving(true)
-    const res = await fetch('/api/wawancara', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, action }),
-    })
-    const json = await res.json()
-    if (!res.ok) toast.error(json.error || 'Gagal mengubah sesi')
-    else toast.success(action === 'activate' ? 'Sesi diaktifkan' : action === 'finish' ? 'Hasil difinalisasi dan data dikunci' : 'Sesi dibatalkan')
-    clearJsonCache()
-    setSaving(false)
-    setConfirmAction(null)
-    load(true)
+    try {
+      const res = await fetch('/api/wawancara', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, action }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) toast.error(json.error || 'Gagal mengubah sesi')
+      else toast.success(action === 'activate' ? 'Sesi diaktifkan' : action === 'finish' ? 'Hasil difinalisasi dan data dikunci' : 'Sesi dibatalkan')
+      clearJsonCache()
+      setConfirmAction(null)
+      load(true)
+    } catch (err) {
+      toast.error('Terjadi kesalahan koneksi')
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function setQueueStatus(id: number, status: QueueStatus) {
@@ -421,28 +430,32 @@ export default function WawancaraClient({ user }: Props) {
   async function saveResult() {
     if (!targetQueue) return
     setSaving(true)
-    const res = await fetch('/api/wawancara/hasil', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        antrian_id: targetQueue.id,
-        keterangan: fKet,
-        hasil: fHasil,
-        persentase: Number(fPersen),
-        catatan: fCatatan || null,
-      }),
-    })
-    const json = await res.json()
-    if (!res.ok) {
-      toast.error(json.error || 'Gagal menyimpan hasil')
+    try {
+      const res = await fetch('/api/wawancara/hasil', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          antrian_id: targetQueue.id,
+          keterangan: fKet,
+          hasil: fHasil,
+          persentase: Number(fPersen),
+          catatan: fCatatan || null,
+        }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast.error(json.error || 'Gagal menyimpan hasil')
+        return
+      }
+      toast.success('Hasil wawancara tersimpan')
+      clearJsonCache()
+      setResultModal(false)
+      load(true)
+    } catch (err) {
+      toast.error('Terjadi kesalahan koneksi')
+    } finally {
       setSaving(false)
-      return
     }
-    toast.success('Hasil wawancara tersimpan')
-    clearJsonCache()
-    setSaving(false)
-    setResultModal(false)
-    load(true)
   }
 
   async function saveManualPeserta() {
@@ -451,28 +464,32 @@ export default function WawancaraClient({ user }: Props) {
       return
     }
     setSaving(true)
-    const kelasGabungan = `[${fAddOrg.toUpperCase()}] ${fAddTingkat} ${fAddJurusan}`
-    const res = await fetch('/api/wawancara/antrian', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        nama: fAddNama.trim(),
-        kelas: kelasGabungan,
-        organisasi: fAddOrg,
-        manual: true,
-      }),
-    })
-    const json = await res.json()
-    if (!res.ok) {
-      toast.error(json.error || 'Gagal menambah peserta')
+    try {
+      const kelasGabungan = `[${fAddOrg.toUpperCase()}] ${fAddTingkat} ${fAddJurusan}`
+      const res = await fetch('/api/wawancara/antrian', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nama: fAddNama.trim(),
+          kelas: kelasGabungan,
+          organisasi: fAddOrg,
+          manual: true,
+        }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast.error(json.error || 'Gagal menambah peserta')
+        return
+      }
+      toast.success('Peserta berhasil ditambahkan secara manual')
+      clearJsonCache()
+      setAddPesertaModal(false)
+      load(true)
+    } catch (err) {
+      toast.error('Terjadi kesalahan koneksi')
+    } finally {
       setSaving(false)
-      return
     }
-    toast.success('Peserta berhasil ditambahkan secara manual')
-    clearJsonCache()
-    setSaving(false)
-    setAddPesertaModal(false)
-    load(true)
   }
 
   async function downloadExport(sessionId: number) {
@@ -724,7 +741,7 @@ export default function WawancaraClient({ user }: Props) {
                                 </div>
                               )}
                               {q.status === 'SELESAI_WAWANCARA' && ['SAH', 'SAH_DICURIGAI'].includes(q.status_validasi) && <button onClick={() => openResult(q)} className="btn-secondary btn-sm"><SquarePen className="w-3.5 h-3.5" />Lihat/Edit</button>}
-                              {admin && q.hasil_wawancara && q.hasil_wawancara.hasil === 'TIDAK_LOLOS' && <button onClick={() => openOverride(q)} className="btn-secondary btn-sm text-amber-700"><ShieldCheck className="w-3.5 h-3.5" />Override</button>}
+                              {admin && q.hasil_wawancara && (q.hasil_wawancara.hasil === 'TIDAK_LOLOS' || q.hasil_wawancara.hasil === 'PENDING') && <button onClick={() => openOverride(q)} className="btn-secondary btn-sm text-amber-700"><ShieldCheck className="w-3.5 h-3.5" />Override</button>}
                             </div>
                           ) : <span className="text-xs text-slate-400">Terkunci</span>}
                         </td>
