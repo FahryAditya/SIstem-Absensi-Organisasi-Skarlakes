@@ -8,7 +8,6 @@ import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import { useDebounce } from '@/lib/hooks'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SkeletonRow } from '@/components/Skeleton'
-import KasSiswaCharts from '@/components/charts/KasSiswaCharts'
 
 interface KasData {
   id: number
@@ -35,10 +34,6 @@ export default function KasClient({ user }: Props) {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
-
-  // Chart data state
-  const [chartData, setChartData] = useState<any>(null)
-  const [loadingCharts, setLoadingCharts] = useState(true)
 
   // Transaction Modal State
   const [modalOpen, setModalOpen] = useState(false)
@@ -74,20 +69,9 @@ export default function KasClient({ user }: Props) {
       .catch(() => setLoading(false))
   }, [page, activeOrg, debouncedSearch])
 
-  const fetchChartData = useCallback(() => {
-    setLoadingCharts(true)
-    fetchJsonCachedUrl<any>('/api/reports?type=kas-siswa')
-      .then(json => {
-        setChartData(json)
-        setLoadingCharts(false)
-      })
-      .catch(() => setLoadingCharts(false))
-  }, [])
-
   useEffect(() => {
     fetchData()
-    fetchChartData()
-  }, [fetchData, fetchChartData])
+  }, [fetchData])
 
   useEffect(() => {
     setPage(1)
@@ -208,25 +192,6 @@ export default function KasClient({ user }: Props) {
             )}
           </div>
         </div>
-      </div>
-
-      {/* Charts Section - Animated Charts Only */}
-      <div className="card p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-[#011025]">Grafik Kas Siswa</h3>
-          <span className="text-xs text-slate-500">Data visualisasi kas siswa</span>
-        </div>
-        {loadingCharts ? (
-          <div className="h-64 flex items-center justify-center text-sm text-slate-400 gap-2">
-            <Loader2 className="w-5 h-5 animate-spin" /> Memuat grafik...
-          </div>
-        ) : chartData ? (
-          <KasSiswaCharts data={chartData} activeOrg={activeOrg} />
-        ) : (
-          <div className="h-64 flex items-center justify-center text-sm text-slate-400">
-            Belum ada data grafik kas siswa
-          </div>
-        )}
       </div>
 
       {/* Quick Transaction Buttons */}
