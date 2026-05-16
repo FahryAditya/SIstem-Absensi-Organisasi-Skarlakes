@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Wallet, Search, Filter, Loader2, Plus, Minus, X, History } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatCurrency, ORG_LABELS, OrgType } from '@/lib/utils'
-import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
+import { clearJsonCache, fetchJsonCachedUrl, clientQueryClient } from '@/lib/client-cache'
 import { useDebounce } from '@/lib/hooks'
 import { motion, AnimatePresence } from 'framer-motion'
 import Table from '@/components/ui/Table'
@@ -128,6 +128,11 @@ export default function KasClient({ user }: Props) {
       toast.success(json.message || 'Transaksi berhasil')
       setModalOpen(false)
       clearJsonCache()
+      // Remove any stale /api/dashboard cache entries so the dashboard re-fetches fresh totals
+      clientQueryClient.removeQueries({ predicate: q => {
+        const [, k] = q.queryKey
+        return typeof k === 'string' && k.startsWith('/api/dashboard')
+      } })
       fetchData()
     } catch (err: any) {
       toast.error(err.message)

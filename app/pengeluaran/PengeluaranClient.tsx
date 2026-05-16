@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { HandCoins, Search, Filter, Loader2, Plus, X, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatCurrency, formatDateTime, ORG_LABELS, OrgType } from '@/lib/utils'
-import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
+import { clearJsonCache, fetchJsonCachedUrl, clientQueryClient } from '@/lib/client-cache'
 
 interface PengeluaranData {
   id: number
@@ -71,6 +71,11 @@ export default function PengeluaranClient({ user }: Props) {
       if (!res.ok) throw new Error(json.error)
       toast.success(json.message || 'Transaksi dihapus')
       clearJsonCache()
+      // Remove any stale /api/dashboard cache entries so the dashboard re-fetches fresh totals
+      clientQueryClient.removeQueries({ predicate: q => {
+        const [, k] = q.queryKey
+        return typeof k === 'string' && k.startsWith('/api/dashboard')
+      } })
       fetchData()
     } catch (err: any) {
       toast.error(err.message)
@@ -105,6 +110,11 @@ export default function PengeluaranClient({ user }: Props) {
       toast.success(json.message || 'Pengeluaran berhasil dicatat')
       setModalOpen(false)
       clearJsonCache()
+      // Remove any stale /api/dashboard cache entries so the dashboard re-fetches fresh totals
+      clientQueryClient.removeQueries({ predicate: q => {
+        const [, k] = q.queryKey
+        return typeof k === 'string' && k.startsWith('/api/dashboard')
+      } })
       fetchData()
     } catch (err: any) {
       toast.error(err.message)

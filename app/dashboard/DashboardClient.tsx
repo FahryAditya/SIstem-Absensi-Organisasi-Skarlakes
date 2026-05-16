@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 import * as XLSX from 'xlsx'
 import { formatCurrency, formatDate, formatDateTime, ORG_LABELS, OrgType } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
-import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
+import { clearJsonCache, fetchJsonCachedUrl, clientQueryClient } from '@/lib/client-cache'
 import TextType from '@/components/TextType'
 import {
   Users, CheckCircle2, Wallet, UserPlus, LogOut, Clock, CalendarDays, PlusCircle, LayoutList, HandCoins, Loader2, UploadCloud, TrendingUp, Activity, X, Megaphone, Sparkles
@@ -87,30 +87,54 @@ export default function DashboardClient({ user }: Props) {
 
   async function fetchDashboardData() {
     setLoading(true)
-    // 1. Fetch Stats (Priority)
-    try {
-      const d = await fetchJsonCachedUrl<StatsData>('/api/dashboard?part=stats')
-      setStats(d)
-    } catch {}
-    setLoading(false)
-
-    // 2. Fetch Charts
     setLoadingCharts(true)
+    setLoadingLogs(true)
+    clearDashboardCache() // <-- surface all fresh stat
     try {
-      const c = await fetchJsonCachedUrl<ChartData>('/api/dashboard?part=charts')
+      const [d, c] = await Promise.all([
+        fetchJsonCachedUrl<StatsData>('/api/dashboard?part=stats'),
+        fetchJsonCachedUrl<ChartData>('/api/dashboard?part=charts'),
+      ])
+      setStats(d)
       setCharts(c)
     } catch {}
+    setLoading(false)
     setLoadingCharts(false)
-
-    // 3. Fetch Logs (if admin)
     if (user.role === 'administrator') {
-      setLoadingLogs(true)
       try {
         const l = await fetchJsonCachedUrl<LogData>('/api/dashboard?part=logs')
         setLogs(l)
       } catch {}
       setLoadingLogs(false)
     }
+  }
+
+  /** Remove all stale /api/dashboard keys from the TanStack Query cache so the dashboard re-fetches fresh data */
+  function clearDashboardCache() {
+    // fetchJsonCachedUrl uses the full URL as the cache key, e.g. '/api/dashboard?part=stats'
+    const parts: string[] = ['stats', 'charts', 'logs', 'kas', 'members', 'absensi']
+    parts.forEach(p => {
+      clientQueryClient.removeQueries({ queryKey: ['client-json', '/api/dashboard?part=' + p], exact: true })
+    })
+    // Also remove the 'all' key and the bare '/api/dashboard' key
+    clientQueryClient.removeQueries({ queryKey: ['client-json', '/api/dashboard'], exact: true })
+    clientQueryClient.removeQueries({ queryKey: ['client-json', '/api/dashboard?part=all'], exact: true })
+  }
+
+  /** Force-reload dashboard stats from the server and prime the TanStack Query cache with fresh data */
+  async function triggerDashboardRefresh() {
+    clearDashboardCache()
+    // Refetch stats and charts in parallel to immediately re-prime all relevant cache entries
+    await Promise.all([
+      clientQueryClient.fetchQuery({
+        queryKey: ['client-json', '/api/dashboard?part=stats'],
+        queryFn: () => fetch('/api/dashboard?part=stats').then(r => r.json()).catch(() => ({})),
+      }),
+      clientQueryClient.fetchQuery({
+        queryKey: ['client-json', '/api/dashboard?part=charts'],
+        queryFn: () => fetch('/api/dashboard?part=charts').then(r => r.json()).catch(() => ({})),
+      }),
+    ])
   }
 
   useEffect(() => {
