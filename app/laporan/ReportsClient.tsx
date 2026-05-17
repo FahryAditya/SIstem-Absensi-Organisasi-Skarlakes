@@ -582,7 +582,7 @@ export default function ReportsClient({ user }: Props) {
         </div>
 
         {/* Action Export & Futuristic Cool Filters Panel */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center justify-end gap-3 xl:ml-auto">
           
           {/* Custom Cool Select Dropdown period pickers (Administrator Only) */}
           {user.role === 'administrator' && data?.keuanganBulanan && data.keuanganBulanan.length > 0 && (
