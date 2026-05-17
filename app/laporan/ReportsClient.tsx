@@ -177,6 +177,7 @@ export default function ReportsClient({ user }: Props) {
   const [activeTab, setActiveTab] = useState<'attendance' | 'finance' | 'kas'>('attendance')
   const [exportingPdf, setExportingPdf] = useState(false)
   const [exportingExcel, setExportingExcel] = useState(false)
+  const [printMenuOpen, setPrintMenuOpen] = useState(false)
   
   // Date range filters
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
@@ -225,8 +226,20 @@ export default function ReportsClient({ user }: Props) {
     }
   }, [data])
 
+  // Close print menu on click outside
+  useEffect(() => {
+    if (!printMenuOpen) return
+    const handleOutsideClick = () => setPrintMenuOpen(false)
+    window.addEventListener('click', handleOutsideClick)
+    return () => window.removeEventListener('click', handleOutsideClick)
+  }, [printMenuOpen])
+
   // PDF Export Generation
   const handleExportPDF = async () => {
+    if (user.role !== 'administrator') {
+      toast.error('Akses ditolak: Hanya Administrator yang dapat mengunduh laporan resmi.')
+      return
+    }
     if (!data) {
       toast.error('Data laporan belum siap. Silakan refresh terlebih dahulu.')
       return
@@ -473,6 +486,10 @@ export default function ReportsClient({ user }: Props) {
 
   // Excel Export Generation
   const handleExportExcel = () => {
+    if (user.role !== 'administrator') {
+      toast.error('Akses ditolak: Hanya Administrator yang dapat mengekspor laporan.')
+      return
+    }
     if (!data) {
       toast.error('Data laporan belum siap. Silakan refresh terlebih dahulu.')
       return
@@ -567,8 +584,8 @@ export default function ReportsClient({ user }: Props) {
         {/* Action Export & Futuristic Cool Filters Panel */}
         <div className="flex flex-wrap items-center gap-3">
           
-          {/* Custom Cool Select Dropdown period pickers */}
-          {data?.keuanganBulanan && data.keuanganBulanan.length > 0 && (
+          {/* Custom Cool Select Dropdown period pickers (Administrator Only) */}
+          {user.role === 'administrator' && data?.keuanganBulanan && data.keuanganBulanan.length > 0 && (
             <div className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200/50 border border-slate-200/80 px-3 py-2 rounded-2xl transition-all">
               <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider hidden sm:inline">Periode:</span>
               
@@ -601,31 +618,75 @@ export default function ReportsClient({ user }: Props) {
             </div>
           )}
 
-          <button
-            onClick={handleExportPDF}
-            disabled={loading || exportingPdf}
-            className="flex items-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-black rounded-xl transition-all shadow-md shadow-rose-600/10 hover:shadow-rose-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {exportingPdf ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Printer className="w-4 h-4" />
-            )}
-            Cetak PDF Resmi
-          </button>
-          
-          <button
-            onClick={handleExportExcel}
-            disabled={loading || exportingExcel}
-            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-black rounded-xl transition-all shadow-md shadow-emerald-600/10 hover:shadow-emerald-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {exportingExcel ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <FileSpreadsheet className="w-4 h-4" />
-            )}
-            Ekspor Excel
-          </button>
+          {/* Unified Print Dropdown (Administrator Only) */}
+          {user.role === 'administrator' && (
+            <div className="relative inline-block text-left" onClick={(e) => e.stopPropagation()}>
+              {/* Load Material Symbols Outlined Link stylesheet directly */}
+              <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=print" />
+              
+              <button
+                onClick={() => setPrintMenuOpen(!printMenuOpen)}
+                disabled={loading || exportingPdf || exportingExcel}
+                className="flex items-center gap-2 px-4 py-2.5 bg-[#052659] hover:bg-[#073377] border border-[#5482B4]/30 text-white text-sm font-black rounded-xl transition-all shadow-md shadow-[#052659]/10 hover:shadow-[#052659]/20 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
+              >
+                <span className="material-symbols-outlined text-lg leading-none" style={{ fontVariationSettings: "'FILL' 0, 'wght' 700, 'GRAD' 0, 'opsz' 24" }}>print</span>
+                <span>Cetak Laporan</span>
+                <svg className={`w-3.5 h-3.5 text-white/70 transition-transform duration-200 ${printMenuOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {printMenuOpen && (
+                <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-slate-900/95 border border-white/10 shadow-2xl backdrop-blur-xl z-50 overflow-hidden animate-fade-in-down">
+                  <div className="py-1">
+                    {/* Option 1: PDF */}
+                    <button
+                      onClick={() => {
+                        setPrintMenuOpen(false)
+                        handleExportPDF()
+                      }}
+                      disabled={exportingPdf}
+                      className="w-full text-left px-4 py-3 text-xs font-bold text-slate-200 hover:bg-white/10 hover:text-white transition-all flex items-center gap-3 border-b border-white/5 disabled:opacity-50"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 flex-shrink-0">
+                        {exportingPdf ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Printer className="w-4 h-4" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-black">Cetak PDF Resmi</div>
+                        <div className="text-[9px] text-slate-400 font-normal mt-0.5">Format Kop Surat Resmi</div>
+                      </div>
+                    </button>
+
+                    {/* Option 2: Excel */}
+                    <button
+                      onClick={() => {
+                        setPrintMenuOpen(false)
+                        handleExportExcel()
+                      }}
+                      disabled={exportingExcel}
+                      className="w-full text-left px-4 py-3 text-xs font-bold text-slate-200 hover:bg-white/10 hover:text-white transition-all flex items-center gap-3 disabled:opacity-50"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 flex-shrink-0">
+                        {exportingExcel ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <FileSpreadsheet className="w-4 h-4" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-black">Ekspor Excel</div>
+                        <div className="text-[9px] text-slate-400 font-normal mt-0.5">3 Sheet Data Absensi & Kas</div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <button
             onClick={fetchReportsData}
