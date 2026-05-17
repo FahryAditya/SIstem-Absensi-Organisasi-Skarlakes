@@ -45,6 +45,12 @@ const nextConfig = {
         ],
       },
       {
+        source: '/:all*(svg|png|jpg|jpeg|webp|avif|ico)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, must-revalidate' },
+        ],
+      },
+      {
         source: '/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$).*)',
         headers: [
           { key: 'X-Robots-Tag', value: 'index, follow, max-image-preview:large, max-snippet:-1' },
