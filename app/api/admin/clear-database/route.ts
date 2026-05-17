@@ -106,23 +106,30 @@ async function clearKas(org: Org) {
       const pengeluaran = await prisma.pengeluaranKas.deleteMany({ where: { organisasi_type: org } })
       return { count: pengeluaran.count }
     }
-    const [kasAbsensi, pengeluaran] = await prisma.$transaction([
+    const siswaIds = siswa.map(s => s.id)
+    const [deletedKasSaja, kasAbsensi, pengeluaran] = await prisma.$transaction([
+      prisma.absensi.deleteMany({
+        where: { siswa_id: { in: siswaIds }, status: 'kas_saja' }
+      }),
       prisma.absensi.updateMany({
-        where: { siswa_id: { in: siswa.map(s => s.id) } },
+        where: { siswa_id: { in: siswaIds }, status: { not: 'kas_saja' } },
         data: { uang_kas: 0 },
       }),
       prisma.pengeluaranKas.deleteMany({ where: { organisasi_type: org } }),
     ])
-    return { count: kasAbsensi.count + pengeluaran.count }
+    return { count: deletedKasSaja.count + kasAbsensi.count + pengeluaran.count }
   }
-  const [kasAbsensi, pengeluaran] = await prisma.$transaction([
+  const [deletedKasSaja, kasAbsensi, pengeluaran] = await prisma.$transaction([
+    prisma.absensiOrganisasi.deleteMany({
+      where: { organisasi_type: org, status: 'kas_saja' }
+    }),
     prisma.absensiOrganisasi.updateMany({
-      where: { organisasi_type: org },
+      where: { organisasi_type: org, status: { not: 'kas_saja' } },
       data: { uang_kas: 0 },
     }),
     prisma.pengeluaranKas.deleteMany({ where: { organisasi_type: org } }),
   ])
-  return { count: kasAbsensi.count + pengeluaran.count }
+  return { count: deletedKasSaja.count + kasAbsensi.count + pengeluaran.count }
 }
 
 async function clearAnggota(org: Org) {

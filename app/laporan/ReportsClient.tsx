@@ -33,11 +33,41 @@ const formatRupiah = (val: number | null | undefined) => {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val)
 }
 
-// Convert month-year string (e.g. "Des 2025" or "Mei 2026") into numeric value for chronological filtering
-const parseMonthYearToValue = (monthYearStr: string) => {
-  if (!monthYearStr) return 0
+const MONTH_OPTIONS = [
+  { value: 1, label: 'Januari' },
+  { value: 2, label: 'Februari' },
+  { value: 3, label: 'Maret' },
+  { value: 4, label: 'April' },
+  { value: 5, label: 'Mei' },
+  { value: 6, label: 'Juni' },
+  { value: 7, label: 'Juli' },
+  { value: 8, label: 'Agustus' },
+  { value: 9, label: 'September' },
+  { value: 10, label: 'Oktober' },
+  { value: 11, label: 'November' },
+  { value: 12, label: 'Desember' }
+]
+
+// Extract years dynamically from the Buku Kas monthly data
+const extractYearsFromData = (keuanganBulanan: any[]) => {
+  if (!keuanganBulanan || keuanganBulanan.length === 0) return [new Date().getFullYear()]
+  const yearsSet = new Set<number>()
+  keuanganBulanan.forEach((item: any) => {
+    const parts = item.bulan.trim().split(' ')
+    if (parts.length >= 2) {
+      const year = parseInt(parts[1])
+      if (year) yearsSet.add(year)
+    }
+  })
+  const years = Array.from(yearsSet).sort((a, b) => a - b)
+  return years.length > 0 ? years : [new Date().getFullYear()]
+}
+
+// Convert month-year string (e.g. "Des 2025") into object for precise year/month filters
+const parseMonthYearObject = (monthYearStr: string) => {
+  if (!monthYearStr) return { year: 0, monthNum: 0 }
   const parts = monthYearStr.trim().split(' ')
-  if (parts.length < 2) return 0
+  if (parts.length < 2) return { year: 0, monthNum: 0 }
   const monthName = parts[0].toLowerCase()
   const year = parseInt(parts[1]) || 0
   
@@ -55,7 +85,7 @@ const parseMonthYearToValue = (monthYearStr: string) => {
       break
     }
   }
-  return year * 12 + monthNum
+  return { year, monthNum }
 }
 
 // Convert image url to base64 securely on client-side
@@ -80,6 +110,68 @@ const loadBase64Image = (url: string): Promise<string> => {
   })
 }
 
+// PREMIUM CUSTOM ARTEMIS DROPDOWN SELECTOR
+interface CoolSelectProps {
+  value: any
+  onChange: (val: any) => void
+  options: { value: any; label: string }[]
+  labelPrefix?: string
+}
+
+function CoolSelect({ value, onChange, options, labelPrefix = '' }: CoolSelectProps) {
+  const [open, setOpen] = useState(false)
+  const activeOption = options.find(o => o.value === value) || options[0]
+
+  useEffect(() => {
+    if (!open) return
+    const handleOutsideClick = () => setOpen(false)
+    window.addEventListener('click', handleOutsideClick)
+    return () => window.removeEventListener('click', handleOutsideClick)
+  }, [open])
+
+  return (
+    <div className="relative inline-block text-left" onClick={(e) => e.stopPropagation()}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center justify-between gap-2 px-3 py-2.5 bg-slate-800/90 border border-slate-700/50 hover:bg-slate-700 text-white text-xs font-black rounded-xl transition-all shadow-sm focus:outline-none"
+      >
+        <span>{labelPrefix}{activeOption?.label}</span>
+        <svg className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute left-0 mt-2 w-48 rounded-2xl bg-slate-900/95 border border-white/10 shadow-2xl backdrop-blur-xl z-50 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar animate-fade-in-down">
+          <div className="py-1">
+            {options.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => {
+                  onChange(opt.value)
+                  setOpen(false)
+                }}
+                className={`w-full text-left px-4 py-2 text-xs font-bold transition-all duration-150 flex items-center justify-between ${
+                  opt.value === value
+                    ? 'bg-[#5482B4] text-white font-extrabold'
+                    : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <span>{opt.label}</span>
+                {opt.value === value && (
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function ReportsClient({ user }: Props) {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -90,8 +182,9 @@ export default function ReportsClient({ user }: Props) {
   const [exportingExcel, setExportingExcel] = useState(false)
   
   // Date range filters
-  const [startMonth, setStartMonth] = useState<string>('')
-  const [endMonth, setEndMonth] = useState<string>('')
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
+  const [startMonthNum, setStartMonthNum] = useState<number>(1) // default Januari
+  const [endMonthNum, setEndMonthNum] = useState<number>(12) // default Desember
 
   const fetchReportsData = useCallback(async () => {
     setLoading(true)
@@ -129,8 +222,10 @@ export default function ReportsClient({ user }: Props) {
   // Automatically initialize month filters when data is fetched
   useEffect(() => {
     if (data?.keuanganBulanan && data.keuanganBulanan.length > 0) {
-      setStartMonth(data.keuanganBulanan[0].bulan)
-      setEndMonth(data.keuanganBulanan[data.keuanganBulanan.length - 1].bulan)
+      const years = extractYearsFromData(data.keuanganBulanan)
+      setSelectedYear(years[years.length - 1]) // Default to latest year
+      setStartMonthNum(1) // Default to Januari
+      setEndMonthNum(12) // Default to Desember
     }
   }, [data])
 
@@ -216,11 +311,14 @@ export default function ReportsClient({ user }: Props) {
       doc.setTextColor(15, 23, 42) // Slate 900
       doc.text('LAPORAN DATA KINERJA & KEUANGAN EKSTRAKURIKULER', 105, currentY, { align: 'center' })
       
+      const startMonthLabel = MONTH_OPTIONS.find(m => m.value === startMonthNum)?.label || ''
+      const endMonthLabel = MONTH_OPTIONS.find(m => m.value === endMonthNum)?.label || ''
+
       currentY += 5
       doc.setFont('Helvetica', 'bold')
-      doc.setFontSize(9)
+      doc.setFontSize(9.5)
       doc.setTextColor(5, 38, 89)
-      doc.text(`Periode Laporan: ${startMonth} s/d ${endMonth}`, 105, currentY, { align: 'center' })
+      doc.text(`Periode: ${startMonthLabel} s/d ${endMonthLabel} ${selectedYear}`, 105, currentY, { align: 'center' })
 
       // Metadata Info Box
       currentY += 8
@@ -242,11 +340,6 @@ export default function ReportsClient({ user }: Props) {
       doc.text(`Akses Data : ${data.orgs.map((o: string) => o.toUpperCase()).join(', ')}`, 110, currentY + 10.5)
       doc.text(`Dokumen    : 100% Client-Side Automated (Artemis)`, 110, currentY + 14.5)
 
-      // Get comparative values for filtering
-      const startVal = parseMonthYearToValue(startMonth)
-      const endVal = parseMonthYearToValue(endMonth)
-      const currentYear = new Date().getFullYear()
-
       // ── SECTION 1: KEHADIRAN ANGOTA TAHUNAN ────────────────────
       currentY += 25
       doc.setFont('Helvetica', 'bold')
@@ -254,13 +347,13 @@ export default function ReportsClient({ user }: Props) {
       doc.setTextColor(5, 38, 89)
       doc.text('1. Laporan Statistik Kehadiran Bulanan', 15, currentY)
 
-      // Filter attendance records based on startMonth and endMonth
+      // Filter attendance records based on selectedYear, startMonthNum, and endMonthNum
       const filteredAttendance = (data.kehadiranTahunan || []).filter((item: any) => {
-        const itemVal = parseMonthYearToValue(`${item.month} ${currentYear}`)
-        if (startVal && endVal) {
-          return itemVal >= startVal && itemVal <= endVal
+        const parsed = parseMonthYearObject(`${item.month} ${selectedYear}`)
+        if (parsed.year === selectedYear) {
+          return parsed.monthNum >= startMonthNum && parsed.monthNum <= endMonthNum
         }
-        return true
+        return false
       })
 
       const attendanceRows = filteredAttendance.map((item: any) => [
@@ -296,13 +389,13 @@ export default function ReportsClient({ user }: Props) {
       doc.setTextColor(5, 38, 89)
       doc.text('2. Laporan Transaksi Rincian Keuangan Buku Kas', 15, currentY)
 
-      // Filter finance records based on startMonth and endMonth
+      // Filter finance records based on selectedYear, startMonthNum, and endMonthNum
       const filteredFinance = (data.keuanganBulanan || []).filter((item: any) => {
-        const itemVal = parseMonthYearToValue(item.bulan)
-        if (startVal && endVal) {
-          return itemVal >= startVal && itemVal <= endVal
+        const parsed = parseMonthYearObject(item.bulan)
+        if (parsed.year === selectedYear) {
+          return parsed.monthNum >= startMonthNum && parsed.monthNum <= endMonthNum
         }
-        return true
+        return false
       })
 
       const financeRows = filteredFinance.map((item: any) => [
@@ -373,7 +466,7 @@ export default function ReportsClient({ user }: Props) {
       // Note: Tanda tangan resmi pembina dan kepala sekolah dihapus sesuai permintaan user.
 
       // Save PDF document
-      doc.save(`Laporan_Resmi_Airlangga_${startMonth.replace(' ', '_')}_to_${endMonth.replace(' ', '_')}.pdf`)
+      doc.save(`Laporan_Resmi_Airlangga_${startMonthLabel}_s.d_${endMonthLabel}_${selectedYear}.pdf`)
       toast.success('Laporan PDF Resmi berhasil diterbitkan! 📄🎉', { id: toastId })
     } catch (err: any) {
       console.error(err)
@@ -392,17 +485,13 @@ export default function ReportsClient({ user }: Props) {
     const toastId = toast.loading('Menyiapkan dan menyusun Laporan Excel (XLSX)...')
 
     try {
-      const startVal = parseMonthYearToValue(startMonth)
-      const endVal = parseMonthYearToValue(endMonth)
-      const currentYear = new Date().getFullYear()
-
       // 1. Sheet 1: Kehadiran Tahunan (Filtered)
       const filteredAttendance = (data.kehadiranTahunan || []).filter((item: any) => {
-        const itemVal = parseMonthYearToValue(`${item.month} ${currentYear}`)
-        if (startVal && endVal) {
-          return itemVal >= startVal && itemVal <= endVal
+        const parsed = parseMonthYearObject(`${item.month} ${selectedYear}`)
+        if (parsed.year === selectedYear) {
+          return parsed.monthNum >= startMonthNum && parsed.monthNum <= endMonthNum
         }
-        return true
+        return false
       })
 
       const attendanceData = filteredAttendance.map((item: any) => ({
@@ -414,11 +503,11 @@ export default function ReportsClient({ user }: Props) {
 
       // 2. Sheet 2: Buku Kas Keuangan (Filtered)
       const filteredFinance = (data.keuanganBulanan || []).filter((item: any) => {
-        const itemVal = parseMonthYearToValue(item.bulan)
-        if (startVal && endVal) {
-          return itemVal >= startVal && itemVal <= endVal
+        const parsed = parseMonthYearObject(item.bulan)
+        if (parsed.year === selectedYear) {
+          return parsed.monthNum >= startMonthNum && parsed.monthNum <= endMonthNum
         }
-        return true
+        return false
       })
 
       const financeData = filteredFinance.map((item: any) => ({
@@ -465,9 +554,12 @@ export default function ReportsClient({ user }: Props) {
     setExportingExcel(false)
   }
 
+  // Construct Dynamic Years for selector
+  const availableYears = data?.keuanganBulanan ? extractYearsFromData(data.keuanganBulanan).map(y => ({ value: y, label: `Tahun ${y}` })) : [{ value: new Date().getFullYear(), label: `Tahun ${new Date().getFullYear()}` }]
+
   return (
     <div className="space-y-6 max-w-7xl">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
             <BarChart3 className="w-6 h-6 text-[#5482B4]" />
@@ -476,32 +568,40 @@ export default function ReportsClient({ user }: Props) {
           <p className="text-sm text-slate-500 mt-1">Kompilasi dan visualisasi data kehadiran, keuangan, dan kas siswa terintegrasi.</p>
         </div>
 
-        {/* Action Export & Filters Panel */}
+        {/* Action Export & Futuristic Cool Filters Panel */}
         <div className="flex flex-wrap items-center gap-3">
           
-          {/* Month Period Pickers */}
+          {/* Custom Cool Select Dropdown period pickers */}
           {data?.keuanganBulanan && data.keuanganBulanan.length > 0 && (
-            <div className="flex items-center gap-2 bg-slate-100 border border-slate-200/80 px-3 py-2 rounded-xl">
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Periode:</span>
-              <select
-                value={startMonth}
-                onChange={(e) => setStartMonth(e.target.value)}
-                className="bg-transparent text-xs font-black text-slate-700 outline-none cursor-pointer border-none p-0 focus:ring-0 focus:outline-none"
-              >
-                {data.keuanganBulanan.map((m: any) => (
-                  <option key={m.bulan} value={m.bulan}>{m.bulan}</option>
-                ))}
-              </select>
+            <div className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200/50 border border-slate-200/80 px-3 py-2 rounded-2xl transition-all">
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider hidden sm:inline">Periode:</span>
+              
+              {/* Cool Select Year */}
+              <CoolSelect 
+                value={selectedYear} 
+                onChange={(val) => setSelectedYear(val)} 
+                options={availableYears} 
+              />
+              
+              <span className="text-slate-400 text-xs font-black">·</span>
+
+              {/* Cool Select Start Month */}
+              <CoolSelect 
+                value={startMonthNum} 
+                onChange={(val) => setStartMonthNum(val)} 
+                options={MONTH_OPTIONS} 
+                labelPrefix="Mulai: "
+              />
+              
               <span className="text-slate-400 text-xs font-bold">s/d</span>
-              <select
-                value={endMonth}
-                onChange={(e) => setEndMonth(e.target.value)}
-                className="bg-transparent text-xs font-black text-slate-700 outline-none cursor-pointer border-none p-0 focus:ring-0 focus:outline-none"
-              >
-                {data.keuanganBulanan.map((m: any) => (
-                  <option key={m.bulan} value={m.bulan}>{m.bulan}</option>
-                ))}
-              </select>
+
+              {/* Cool Select End Month */}
+              <CoolSelect 
+                value={endMonthNum} 
+                onChange={(val) => setEndMonthNum(val)} 
+                options={MONTH_OPTIONS} 
+                labelPrefix="Sampai: "
+              />
             </div>
           )}
 
