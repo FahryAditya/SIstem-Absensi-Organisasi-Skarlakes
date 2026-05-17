@@ -212,3 +212,21 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Crisp and Sharp Image Rendering for High-Quality Presentation Zoom */
+.crisp-presentation-content canvas,
+.crisp-presentation-content table,
+.crisp-presentation-content img,
+.crisp-presentation-content h2,
+.crisp-presentation-content span,
+.crisp-presentation-content p,
+.crisp-presentation-content td,
+.crisp-presentation-content th,
+.crisp-presentation-content div {
+  image-rendering: -webkit-optimize-contrast !important;
+  image-rendering: crisp-edges !important;
+  image-rendering: pixelated !important;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+}

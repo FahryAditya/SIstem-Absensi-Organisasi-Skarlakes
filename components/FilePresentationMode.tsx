@@ -107,8 +107,16 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
   const [fileType, setFileType] = useState<'pdf' | 'excel' | 'text' | null>(null)
   const [fileName, setFileName] = useState('')
   const [fileSize, setFileSize] = useState('')
-  const [zoom, setZoom] = useState(1.2) // PDF Zoom factor
+  const [zoom, setZoom] = useState(1.0) // Universal Zoom factor (defaults to 1.0)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   
+  // Reset pan & zoom factor slightly to fit nicely on slide change
+  useEffect(() => {
+    setPan({ x: 0, y: 0 })
+  }, [currentSlide])
+
   const fileInputRef = useRef<HTMLInputElement>(null)
   const now = new Date()
 
@@ -195,6 +203,8 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
   const handleClose = () => {
     if (document.fullscreenElement) document.exitFullscreen()
     setOpen(false)
+    setZoom(1.0)
+    setPan({ x: 0, y: 0 })
   }
 
   const resetPresentation = () => {
@@ -203,7 +213,8 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
     setFileType(null)
     setFileName('')
     setFileSize('')
-    setZoom(1.2)
+    setZoom(1.0)
+    setPan({ x: 0, y: 0 })
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
@@ -432,16 +443,36 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
             </div>
 
             <div className="flex items-center gap-1.5 md:gap-3">
-              {/* PDF Zoom controls */}
-              {fileType === 'pdf' && (
+              {/* Universal Zoom & Reset controls */}
+              {fileType && (
                 <div className="flex items-center gap-0.5 md:gap-1 bg-white/5 border border-white/10 rounded-xl px-1 py-0.5">
-                  <button onClick={() => setZoom(z => Math.max(0.6, z - 0.2))} className="p-1 md:p-1.5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg transition-colors" title="Zoom Out">
+                  <button 
+                    onClick={() => {
+                      setZoom(z => Math.max(1.0, z - 0.25))
+                      if (zoom <= 1.25) setPan({ x: 0, y: 0 })
+                    }} 
+                    disabled={zoom <= 1.0}
+                    className="p-1 md:p-1.5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed" 
+                    title="Zoom Out (-)"
+                  >
                     <ZoomOut className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   </button>
-                  <span className="text-white/70 text-[10px] md:text-xs font-mono font-bold px-1">
+                  <button
+                    onClick={() => {
+                      setZoom(1.0)
+                      setPan({ x: 0, y: 0 })
+                    }}
+                    className="text-white/70 hover:text-white text-[10px] md:text-xs font-mono font-bold px-1.5 py-0.5 bg-white/10 rounded-md transition-colors"
+                    title="Double Click Slide untuk Reset"
+                  >
                     {Math.round(zoom * 100)}%
-                  </span>
-                  <button onClick={() => setZoom(z => Math.min(2.4, z + 0.2))} className="p-1 md:p-1.5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg transition-colors" title="Zoom In">
+                  </button>
+                  <button 
+                    onClick={() => setZoom(z => Math.min(3.5, z + 0.25))} 
+                    disabled={zoom >= 3.5}
+                    className="p-1 md:p-1.5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed" 
+                    title="Zoom In (+)"
+                  >
                     <ZoomIn className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   </button>
                 </div>
@@ -563,13 +594,51 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
             {slides.length > 0 && (
               <div className="w-full h-full flex flex-col justify-between items-center z-10">
                 
-                {/* Active Slide Display Area */}
-                <div className="flex-1 w-full flex items-center justify-center overflow-hidden">
+                {/* Active Slide Display Area with Drag-to-Pan support */}
+                <div 
+                  className="flex-1 w-full flex items-center justify-center overflow-hidden select-none"
+                  onMouseDown={(e) => {
+                    if (zoom <= 1.0) return
+                    setIsDragging(true)
+                    setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y })
+                  }}
+                  onMouseMove={(e) => {
+                    if (!isDragging) return
+                    setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y })
+                  }}
+                  onMouseUp={() => setIsDragging(false)}
+                  onMouseLeave={() => setIsDragging(false)}
+                  onTouchStart={(e) => {
+                    if (zoom <= 1.0) return
+                    setIsDragging(true)
+                    const touch = e.touches[0]
+                    setDragStart({ x: touch.clientX - pan.x, y: touch.clientY - pan.y })
+                  }}
+                  onTouchMove={(e) => {
+                    if (!isDragging) return
+                    const touch = e.touches[0]
+                    setPan({ x: touch.clientX - dragStart.x, y: touch.clientY - dragStart.y })
+                  }}
+                  onTouchEnd={() => setIsDragging(false)}
+                  onDoubleClick={() => {
+                    setZoom(1.0)
+                    setPan({ x: 0, y: 0 })
+                  }}
+                >
                   
-                  <div key={currentSlide} className="w-full h-full flex items-center justify-center animate-slide-change">
+                  <div 
+                    key={currentSlide} 
+                    className="w-full h-full flex items-center justify-center animate-slide-change crisp-presentation-content"
+                    style={{
+                      transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                      transition: isDragging ? 'none' : 'transform 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
+                      cursor: zoom > 1.0 ? (isDragging ? 'grabbing' : 'grab') : 'default',
+                      transformOrigin: 'center center'
+                    }}
+                  >
                     {/* PDF PRESENTATION PLAYER */}
                     {fileType === 'pdf' && (
-                      <PdfSlideRenderer page={slides[currentSlide]} zoom={zoom} />
+                      <PdfSlideRenderer page={slides[currentSlide]} zoom={zoom * 1.2} />
                     )}
 
                     {/* EXCEL TABLE PRESENTATION PLAYER */}
