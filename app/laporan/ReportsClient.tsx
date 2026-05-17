@@ -48,19 +48,16 @@ const MONTH_OPTIONS = [
   { value: 12, label: 'Desember' }
 ]
 
-// Extract years dynamically from the Buku Kas monthly data
-const extractYearsFromData = (keuanganBulanan: any[]) => {
-  if (!keuanganBulanan || keuanganBulanan.length === 0) return [new Date().getFullYear()]
-  const yearsSet = new Set<number>()
-  keuanganBulanan.forEach((item: any) => {
-    const parts = item.bulan.trim().split(' ')
-    if (parts.length >= 2) {
-      const year = parseInt(parts[1])
-      if (year) yearsSet.add(year)
-    }
-  })
-  const years = Array.from(yearsSet).sort((a, b) => a - b)
-  return years.length > 0 ? years : [new Date().getFullYear()]
+// Generate a wide range of years dynamically (from 2020 up to 15 years in the future)
+const generateYearsList = () => {
+  const currentYear = new Date().getFullYear()
+  const startYear = 2020
+  const endYear = currentYear + 15
+  const years = []
+  for (let y = startYear; y <= endYear; y++) {
+    years.push({ value: y, label: `Tahun ${y}` })
+  }
+  return years
 }
 
 // Convert month-year string (e.g. "Des 2025") into object for precise year/month filters
@@ -222,8 +219,7 @@ export default function ReportsClient({ user }: Props) {
   // Automatically initialize month filters when data is fetched
   useEffect(() => {
     if (data?.keuanganBulanan && data.keuanganBulanan.length > 0) {
-      const years = extractYearsFromData(data.keuanganBulanan)
-      setSelectedYear(years[years.length - 1]) // Default to latest year
+      setSelectedYear(new Date().getFullYear()) // Default to current year
       setStartMonthNum(1) // Default to Januari
       setEndMonthNum(12) // Default to Desember
     }
@@ -554,8 +550,8 @@ export default function ReportsClient({ user }: Props) {
     setExportingExcel(false)
   }
 
-  // Construct Dynamic Years for selector
-  const availableYears = data?.keuanganBulanan ? extractYearsFromData(data.keuanganBulanan).map(y => ({ value: y, label: `Tahun ${y}` })) : [{ value: new Date().getFullYear(), label: `Tahun ${new Date().getFullYear()}` }]
+  // Construct Dynamic Years for selector (unlimited dynamic range)
+  const availableYears = generateYearsList()
 
   return (
     <div className="space-y-6 max-w-7xl">
