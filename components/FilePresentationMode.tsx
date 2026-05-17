@@ -544,74 +544,76 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
                 {/* Active Slide Display Area */}
                 <div className="flex-1 w-full flex items-center justify-center overflow-hidden">
                   
-                  {/* PDF PRESENTATION PLAYER */}
-                  {fileType === 'pdf' && (
-                    <PdfSlideRenderer page={slides[currentSlide]} zoom={zoom} />
-                  )}
+                  <div key={currentSlide} className="w-full h-full flex items-center justify-center animate-slide-change">
+                    {/* PDF PRESENTATION PLAYER */}
+                    {fileType === 'pdf' && (
+                      <PdfSlideRenderer page={slides[currentSlide]} zoom={zoom} />
+                    )}
 
-                  {/* EXCEL TABLE PRESENTATION PLAYER */}
-                  {fileType === 'excel' && (
-                    <div className="w-full max-w-5xl max-h-[70vh] bg-slate-950/80 border border-white/10 rounded-3xl p-6 overflow-hidden flex flex-col gap-4 shadow-2xl backdrop-blur-xl">
-                      <div className="flex items-center justify-between border-b border-white/10 pb-3 flex-shrink-0">
-                        <span className="text-[#C2E8FF] font-bold text-sm bg-[#5482B4]/20 border border-[#5482B4]/30 px-3 py-1 rounded-lg">
-                          📊 Sheet: {slides[currentSlide].sheetName}
-                        </span>
-                        <span className="text-white/40 text-xs font-mono">
-                          {slides[currentSlide].data.length} baris terdeteksi
-                        </span>
-                      </div>
-                      
-                      {/* Interactive Sheet Table */}
-                      <div className="flex-1 overflow-auto custom-scrollbar">
-                        <table className="w-full border-collapse text-left">
-                          <thead>
-                            <tr className="border-b border-white/15 sticky top-0 bg-slate-900 z-10">
-                              {slides[currentSlide].data[0]?.map((cell: any, idx: number) => (
-                                <th key={idx} className="px-4 py-3 text-xs font-black text-[#7EA0C5] uppercase tracking-wider">
-                                  {cell !== null && cell !== undefined ? String(cell) : ''}
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {slides[currentSlide].data.slice(1).map((row: any[], rowIdx: number) => (
-                              <tr key={rowIdx} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                {row.map((cell: any, cellIdx: number) => (
-                                  <td key={cellIdx} className="px-4 py-3.5 text-xs text-white/80 font-medium">
+                    {/* EXCEL TABLE PRESENTATION PLAYER */}
+                    {fileType === 'excel' && (
+                      <div className="w-full max-w-5xl max-h-[70vh] bg-slate-950/80 border border-white/10 rounded-3xl p-6 overflow-hidden flex flex-col gap-4 shadow-2xl backdrop-blur-xl">
+                        <div className="flex items-center justify-between border-b border-white/10 pb-3 flex-shrink-0">
+                          <span className="text-[#C2E8FF] font-bold text-sm bg-[#5482B4]/20 border border-[#5482B4]/30 px-3 py-1 rounded-lg">
+                            📊 Sheet: {slides[currentSlide].sheetName}
+                          </span>
+                          <span className="text-white/40 text-xs font-mono">
+                            {slides[currentSlide].data.length} baris terdeteksi
+                          </span>
+                        </div>
+                        
+                        {/* Interactive Sheet Table */}
+                        <div className="flex-1 overflow-auto custom-scrollbar">
+                          <table className="w-full border-collapse text-left">
+                            <thead>
+                              <tr className="border-b border-white/15 sticky top-0 bg-slate-900 z-10">
+                                {slides[currentSlide].data[0]?.map((cell: any, idx: number) => (
+                                  <th key={idx} className="px-4 py-3 text-xs font-black text-[#7EA0C5] uppercase tracking-wider">
                                     {cell !== null && cell !== undefined ? String(cell) : ''}
-                                  </td>
+                                  </th>
                                 ))}
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody>
+                              {slides[currentSlide].data.slice(1).map((row: any[], rowIdx: number) => (
+                                <tr key={rowIdx} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                  {row.map((cell: any, cellIdx: number) => (
+                                    <td key={cellIdx} className="px-4 py-3.5 text-xs text-white/80 font-medium">
+                                      {cell !== null && cell !== undefined ? String(cell) : ''}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* TEXT/MARKDOWN PRESENTATION PLAYER */}
-                  {fileType === 'text' && (
-                    <div className="w-full max-w-4xl min-h-[50vh] flex flex-col justify-center items-center text-center p-8 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-md shadow-2xl relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-48 h-48 bg-[#5482B4]/10 rounded-full blur-3xl pointer-events-none" />
-                      
-                      <div className="space-y-8 max-w-2xl">
-                        <h2 className="text-4xl xl:text-5xl font-black text-white tracking-tight leading-snug drop-shadow-md">
-                          {slides[currentSlide].title}
-                        </h2>
+                    {/* TEXT/MARKDOWN PRESENTATION PLAYER */}
+                    {fileType === 'text' && (
+                      <div className="w-full max-w-4xl min-h-[50vh] flex flex-col justify-center items-center text-center p-8 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-md shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-48 h-48 bg-[#5482B4]/10 rounded-full blur-3xl pointer-events-none" />
                         
-                        {slides[currentSlide].content.length > 0 && (
-                          <div className="flex flex-col items-center justify-center gap-3.5 mt-6">
-                            {slides[currentSlide].content.map((bullet: string, idx: number) => (
-                              <div key={idx} className="flex items-center gap-3 text-lg text-white/80 font-semibold text-left w-full max-w-lg leading-relaxed">
-                                <div className="w-2 h-2 rounded-full bg-[#5482B4] flex-shrink-0 shadow-[0_0_10px_rgba(84,130,180,0.8)]" />
-                                <span>{bullet}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                        <div className="space-y-8 max-w-2xl">
+                          <h2 className="text-4xl xl:text-5xl font-black text-white tracking-tight leading-snug drop-shadow-md">
+                            {slides[currentSlide].title}
+                          </h2>
+                          
+                          {slides[currentSlide].content.length > 0 && (
+                            <div className="flex flex-col items-center justify-center gap-3.5 mt-6">
+                              {slides[currentSlide].content.map((bullet: string, idx: number) => (
+                                <div key={idx} className="flex items-center gap-3 text-lg text-white/80 font-semibold text-left w-full max-w-lg leading-relaxed">
+                                  <div className="w-2 h-2 rounded-full bg-[#5482B4] flex-shrink-0 shadow-[0_0_10px_rgba(84,130,180,0.8)]" />
+                                  <span>{bullet}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
 
                 </div>
 
