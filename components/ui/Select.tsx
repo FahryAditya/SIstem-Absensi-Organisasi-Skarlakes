@@ -51,16 +51,17 @@ export default function Select({
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') setOpen(false)
     }
-    function onClick(e: MouseEvent) {
+    function onOutsideClick(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false)
       }
     }
     document.addEventListener('keydown', onKey)
-    document.addEventListener('mousedown', onClick)
+    // Gunakan 'click' (bukan 'mousedown') agar onClick item list sempat berjalan lebih dulu
+    document.addEventListener('click', onOutsideClick)
     return () => {
       document.removeEventListener('keydown', onKey)
-      document.removeEventListener('mousedown', onClick)
+      document.removeEventListener('click', onOutsideClick)
     }
   }, [open])
 
@@ -112,6 +113,7 @@ export default function Select({
               <li
                 role="option"
                 aria-selected={value === ''}
+                onMouseDown={e => e.preventDefault()}
                 onClick={() => { onChange(''); setOpen(false) }}
                 className={[
                   'flex items-center gap-2.5 px-3.5 py-2 cursor-pointer transition-colors',
@@ -131,6 +133,7 @@ export default function Select({
                   role="option"
                   aria-selected={isSelected}
                   aria-disabled={opt.disabled}
+                  onMouseDown={e => e.preventDefault()}
                   onClick={() => {
                     if (!opt.disabled) {
                       onChange(opt.value)
