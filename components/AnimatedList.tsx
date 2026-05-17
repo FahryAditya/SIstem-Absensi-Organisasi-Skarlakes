@@ -78,21 +78,28 @@ const AnimatedItem: React.FC<AnimatedItemProps> = ({
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (reduced) { setVisible(true); return; }
+    if (reduced || typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+      setVisible(true);
+      return;
+    }
     const el = ref.current;
     if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
-      {
-        // Gunakan scroll container sidebar sebagai root, bukan viewport
-        root: scrollRoot ?? null,
-        threshold: 0.05,
-        // Sedikit margin bawah agar item mulai animate sebelum benar-benar terlihat
-        rootMargin: '0px 0px -10px 0px',
-      }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
+    try {
+      const observer = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+        {
+          // Gunakan scroll container sidebar sebagai root, bukan viewport
+          root: scrollRoot ?? null,
+          threshold: 0.05,
+          // Sedikit margin bawah agar item mulai animate sebelum benar-benar terlihat
+          rootMargin: '0px 0px -10px 0px',
+        }
+      );
+      observer.observe(el);
+      return () => observer.disconnect();
+    } catch (e) {
+      setVisible(true);
+    }
   }, [reduced, scrollRoot]);
 
   return (

@@ -67,20 +67,28 @@ const TextType = ({
 
   useEffect(() => {
     if (!startOnVisible || !containerRef.current) return;
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+      setIsVisible(true);
+      return;
+    }
 
-    const observer = new IntersectionObserver(
-      entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            setIsVisible(true);
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
+    try {
+      const observer = new IntersectionObserver(
+        entries => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              setIsVisible(true);
+            }
+          });
+        },
+        { threshold: 0.1 }
+      );
 
-    observer.observe(containerRef.current);
-    return () => observer.disconnect();
+      observer.observe(containerRef.current);
+      return () => observer.disconnect();
+    } catch (e) {
+      setIsVisible(true);
+    }
   }, [startOnVisible]);
 
   // Cursor blink via CSS — no GSAP needed
