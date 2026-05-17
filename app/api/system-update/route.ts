@@ -37,15 +37,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
   }
 
-  const { version, content } = await req.json()
+  const { version, content, update_type } = await req.json()
   if (!version || !content) {
     return NextResponse.json({ error: 'Versi dan konten wajib diisi' }, { status: 400 })
   }
+
+  const validTypes = ['update', 'pengumuman', 'perbaikan']
+  const resolvedType = validTypes.includes(update_type) ? update_type : 'update'
 
   const update = await prisma.systemUpdate.create({
     data: {
       version,
       content,
+      update_type: resolvedType as any,
       created_by: ctx.userId
     }
   })

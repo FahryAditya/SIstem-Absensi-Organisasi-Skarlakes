@@ -83,6 +83,12 @@ enum KeteranganWawancara {
   KURANG_AKTIF
 }
 
+enum UpdateType {
+  update
+  pengumuman
+  perbaikan
+}
+
 // ============================================================
 // TABLE: users
 // ============================================================
@@ -415,14 +421,15 @@ model ChatWawancara {
 // TABLE: system_updates (notifikasi pembaruan)
 // ============================================================
 model SystemUpdate {
-  id         Int      @id @default(autoincrement())
-  version    String   @db.VarChar(50)
-  content    String   @db.Text
-  created_at DateTime @default(now())
-  created_by Int
-  
+  id          Int        @id @default(autoincrement())
+  version     String     @db.VarChar(50)
+  content     String     @db.Text
+  update_type UpdateType @default(update)
+  created_at  DateTime   @default(now())
+  created_by  Int
+
   // Relations
-  creator    User     @relation("UpdateCreatedBy", fields: [created_by], references: [id])
+  creator     User       @relation("UpdateCreatedBy", fields: [created_by], references: [id])
 
   @@map("system_updates")
 }
