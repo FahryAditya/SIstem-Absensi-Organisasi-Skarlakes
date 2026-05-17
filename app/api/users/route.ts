@@ -114,15 +114,69 @@ export async function DELETE(req: NextRequest) {
   const existing = await prisma.user.findUnique({ where: { id }, select: { nama: true, role: true } })
   if (!existing) return NextResponse.json({ error: 'User tidak ditemukan' }, { status: 404 })
 
-  await prisma.user.delete({ where: { id } })
+  const activeAdminId = ctx.userId
 
-  await createLog({
-    userId: ctx.userId, userNama: ctx.userNama, aksi: 'DELETE',
-    tabel: 'users', recordId: id,
-    deskripsi: `${ctx.userNama} menghapus akun "${existing.nama}" (${existing.role})`,
-    dataLama: { nama: existing.nama, role: existing.role },
-    ipAddress: getIp(req),
-  })
+  try {
+    // Jalankan pembersihan relasi dan penghapusan dalam satu transaksi aman
+    await prisma.$transaction([
+      // 1. Hapus log aktivitas & chat milik user yang akan dihapus
+      prisma.logAktivitas.deleteMany({ where: { user_id: id } }),
+      prisma.chatWawancara.deleteMany({ where: { sender_id: id } }),
 
-  return NextResponse.json({ success: true })
+      // 2. Alihkan pencipta/pengubah data ke Admin yang sedang aktif agar data historis tetap aman
+      prisma.siswa.updateMany({
+        where: { created_by: id },
+        data: { created_by: activeAdminId }
+      }),
+      prisma.absensi.updateMany({
+        where: { created_by: id },
+        data: { created_by: activeAdminId }
+      }),
+      prisma.absensi.updateMany({
+        where: { updated_by: id },
+        data: { updated_by: activeAdminId }
+      }),
+      prisma.pengeluaranKas.updateMany({
+        where: { created_by: id },
+        data: { created_by: activeAdminId }
+      }),
+      prisma.sesiWawancara.updateMany({
+        where: { created_by: id },
+        data: { created_by: activeAdminId }
+      }),
+      prisma.qrWawancara.updateMany({
+        where: { created_by: id },
+        data: { created_by: activeAdminId }
+      }),
+      prisma.hasilWawancaraTable.updateMany({
+        where: { interviewer_id: id },
+        data: { interviewer_id: activeAdminId }
+      }),
+      prisma.hasilWawancaraTable.updateMany({
+        where: { override_by: id },
+        data: { override_by: activeAdminId }
+      }),
+      prisma.systemUpdate.updateMany({
+        where: { created_by: id },
+        data: { created_by: activeAdminId }
+      }),
+
+      // 3. Setelah aman, hapus user utama
+      prisma.user.delete({ where: { id } })
+    ])
+
+    // Buat log aktivitas penghapusan
+    await createLog({
+      userId: ctx.userId, userNama: ctx.userNama, aksi: 'DELETE',
+      tabel: 'users', recordId: id,
+      deskripsi: `${ctx.userNama} menghapus akun "${existing.nama}" (${existing.role})`,
+      dataLama: { nama: existing.nama, role: existing.role },
+      ipAddress: getIp(req),
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (err: any) {
+    console.error('Safe delete error:', err)
+    return NextResponse.json({ error: 'Gagal menghapus user: ' + err.message }, { status: 500 })
+  }
 }
