@@ -176,7 +176,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-[#C2E8FF]/60 text-xs mt-6">
-          SMK AIRLANGGA BALIKPAPAN • Sistem Ekstrakurikuler Sekolah
+          SKARLAKES • Sistem Ekstrakurikuler Sekolah
         </p>
       </div>
     </div>

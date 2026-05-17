@@ -287,7 +287,7 @@ export default function ReportsClient({ user }: Props) {
       let currentY = 12
 
       // ── DRAW KOP SURAT (OFFICIAL LETTERHEAD) ───────────────────
-      // Left Logo: SMK Airlangga Balikpapan
+      // Left Logo: SKARLAKES
       if (logoAirlanggaBase64) {
         doc.addImage(logoAirlanggaBase64, 'PNG', 15, currentY, 20, 20)
       }

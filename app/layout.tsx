@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     'Wawancara Sekolah Digital',
     'Absensi QR Code',
     'Manajemen Kas Organisasi',
-    'SMK Airlangga Balikpapan',
+    'SKARLAKES',
     'SMK Kesehatan Airlangga',
     'Artemis Series',
     'Skarla',
@@ -39,14 +39,14 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'Yayasan Airlangga Balikpapan', url: 'https://smkairlangga.sch.id' }],
   creator: 'Artemis Developer Team',
-  publisher: 'SMK Airlangga Balikpapan',
+  publisher: 'SKARLAKES',
   metadataBase: new URL('https://artemis.smkairlangga.sch.id'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: 'Artemis Series • Sistem Ekstrakurikuler & Absensi OSIS MPK',
-    description: 'Portal resmi manajemen kegiatan kesiswaan terintegrasi SMK Airlangga Balikpapan. Fitur absensi instan QR Code, Buku Kas otomatis, dan wawancara kesiswaan digital.',
+    description: 'Portal resmi manajemen kegiatan kesiswaan terintegrasi SKARLAKES. Fitur absensi instan QR Code, Buku Kas otomatis, dan wawancara kesiswaan digital.',
     url: 'https://artemis.smkairlangga.sch.id',
     siteName: 'Artemis Series',
     locale: 'id_ID',
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
         url: 'https://uploads.onecompiler.io/43k3cj6jv/44ph8dpc9/Logo-smk-airlangga-balikpapan2-1.png',
         width: 800,
         height: 800,
-        alt: 'Artemis Series SMK Airlangga Balikpapan Logo'
+        alt: 'Artemis Series SKARLAKES Logo'
       }
     ]
   },
@@ -95,7 +95,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     "description": "Sistem Informasi Manajemen Ekstrakurikuler, Keuangan Buku Kas Terpadu, Absensi Real-time QR Code, dan Sistem Antrean Wawancara OSIS & MPK Digital Resmi Yayasan Airlangga Balikpapan.",
     "publisher": {
       "@type": "EducationalOrganization",
-      "name": "SMK Airlangga Balikpapan",
+      "name": "SKARLAKES",
       "url": "https://smkairlangga.sch.id"
     }
   }
