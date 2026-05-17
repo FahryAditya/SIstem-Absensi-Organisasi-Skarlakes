@@ -35,13 +35,19 @@ const nextConfig = {
   // Kompres response HTTP
   compress: true,
 
-  // Header caching untuk aset statis
+  // Header caching dan instruksi crawler robot SEO
   async headers() {
     return [
       {
         source: '/_next/static/:path*',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
+        source: '/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$).*)',
+        headers: [
+          { key: 'X-Robots-Tag', value: 'index, follow, max-image-preview:large, max-snippet:-1' },
         ],
       },
     ]
