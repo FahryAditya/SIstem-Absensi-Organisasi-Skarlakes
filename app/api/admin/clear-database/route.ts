@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { ORG_LABELS } from '@/lib/utils'
 import { createLog, getIp } from '@/lib/log'
-import { mkdir, writeFile } from 'fs/promises'
-import path from 'path'
 import { z } from 'zod'
 import { isAdministrator } from '@/lib/auth-shared'
 
@@ -39,7 +37,9 @@ function insertSql(tableName: string, rows: Record<string, unknown>[]) {
   if (!rows.length) return `-- Tabel ${tableName}: kosong\n\n`
   const columns = Object.keys(rows[0])
   const columnSql = columns.map(c => `"${c}"`).join(', ')
-  const valueSql = rows.map(row => `  (${columns.map(c => escapeSqlValue(row[c])).join(', ')})`).join(',\n')
+  const valueSql = rows
+    .map(row => `  (${columns.map(c => escapeSqlValue(row[c])).join(', ')})`)
+    .join(',\n')
   return `INSERT INTO "${tableName}" (${columnSql}) VALUES\n${valueSql};\n\n`
 }
 
@@ -51,47 +51,49 @@ async function getScopedData(org: Org) {
   if (org === 'programming' || org === 'english') {
     const siswa = await prisma.siswa.findMany({ where: { ekskul: org } })
     const siswaIds = siswa.map(s => s.id)
-    const absensi = await prisma.absensi.findMany({ where: { siswa_id: { in: siswaIds } } })
+    const absensi = siswaIds.length
+      ? await prisma.absensi.findMany({ where: { siswa_id: { in: siswaIds } } })
+      : []
     const pengeluaranKas = await prisma.pengeluaranKas.findMany({ where: { organisasi_type: org } })
     return { siswa, anggotaOsis: [], anggotaMpk: [], absensi, absensiOrganisasi: [], pengeluaranKas }
   }
-
   if (org === 'osis') {
     const anggotaOsis = await prisma.anggotaOsis.findMany()
     const absensiOrganisasi = await prisma.absensiOrganisasi.findMany({ where: { organisasi_type: org } })
     const pengeluaranKas = await prisma.pengeluaranKas.findMany({ where: { organisasi_type: org } })
     return { siswa: [], anggotaOsis, anggotaMpk: [], absensi: [], absensiOrganisasi, pengeluaranKas }
   }
-
+  // mpk
   const anggotaMpk = await prisma.anggotaMpk.findMany()
   const absensiOrganisasi = await prisma.absensiOrganisasi.findMany({ where: { organisasi_type: org } })
   const pengeluaranKas = await prisma.pengeluaranKas.findMany({ where: { organisasi_type: org } })
   return { siswa: [], anggotaOsis: [], anggotaMpk, absensi: [], absensiOrganisasi, pengeluaranKas }
 }
 
-async function createScopedBackup(org: Org, tipe: ClearType) {
+/**
+ * Buat backup SQL in-memory — TIDAK menulis ke filesystem.
+ * Aman di semua environment (Vercel, Railway, Docker read-only FS).
+ */
+async function createScopedBackupSql(org: Org, tipe: ClearType): Promise<string> {
   const data = await getScopedData(org)
   const now = new Date()
-  const stamp = now.toISOString().replace(/[:.]/g, '-')
-  let sql = `-- Backup sebelum clear database\n-- Ekskul: ${ORG_LABELS[org]}\n-- Tipe clear: ${tipe}\n-- Dibuat: ${now.toISOString()}\n\n`
+  let sql = `-- Backup sebelum clear database\n`
+  sql += `-- Ekskul  : ${ORG_LABELS[org]}\n`
+  sql += `-- Tipe    : ${tipe}\n`
+  sql += `-- Dibuat  : ${now.toISOString()}\n\n`
   sql += '-- Tabel: siswa\n' + insertSql('siswa', asRows(data.siswa))
   sql += '-- Tabel: anggota_osis\n' + insertSql('anggota_osis', asRows(data.anggotaOsis))
   sql += '-- Tabel: anggota_mpk\n' + insertSql('anggota_mpk', asRows(data.anggotaMpk))
   sql += '-- Tabel: absensi\n' + insertSql('absensi', asRows(data.absensi))
   sql += '-- Tabel: absensi_organisasi\n' + insertSql('absensi_organisasi', asRows(data.absensiOrganisasi))
   sql += '-- Tabel: pengeluaran_kas\n' + insertSql('pengeluaran_kas', asRows(data.pengeluaranKas))
-
-  const backupDir = path.join(process.cwd(), 'backups')
-  await mkdir(backupDir, { recursive: true })
-  const filename = `backup-clear-${org}-${tipe}-${stamp}.sql`
-  const filePath = path.join(backupDir, filename)
-  await writeFile(filePath, sql, 'utf8')
-  return { filename, filePath }
+  return sql
 }
 
 async function clearAbsensi(org: Org) {
   if (org === 'programming' || org === 'english') {
     const siswa = await prisma.siswa.findMany({ where: { ekskul: org }, select: { id: true } })
+    if (!siswa.length) return { count: 0 }
     return prisma.absensi.deleteMany({ where: { siswa_id: { in: siswa.map(s => s.id) } } })
   }
   return prisma.absensiOrganisasi.deleteMany({ where: { organisasi_type: org } })
@@ -100,14 +102,24 @@ async function clearAbsensi(org: Org) {
 async function clearKas(org: Org) {
   if (org === 'programming' || org === 'english') {
     const siswa = await prisma.siswa.findMany({ where: { ekskul: org }, select: { id: true } })
+    if (!siswa.length) {
+      const pengeluaran = await prisma.pengeluaranKas.deleteMany({ where: { organisasi_type: org } })
+      return { count: pengeluaran.count }
+    }
     const [kasAbsensi, pengeluaran] = await prisma.$transaction([
-      prisma.absensi.updateMany({ where: { siswa_id: { in: siswa.map(s => s.id) } }, data: { uang_kas: 0 } }),
+      prisma.absensi.updateMany({
+        where: { siswa_id: { in: siswa.map(s => s.id) } },
+        data: { uang_kas: 0 },
+      }),
       prisma.pengeluaranKas.deleteMany({ where: { organisasi_type: org } }),
     ])
     return { count: kasAbsensi.count + pengeluaran.count }
   }
   const [kasAbsensi, pengeluaran] = await prisma.$transaction([
-    prisma.absensiOrganisasi.updateMany({ where: { organisasi_type: org }, data: { uang_kas: 0 } }),
+    prisma.absensiOrganisasi.updateMany({
+      where: { organisasi_type: org },
+      data: { uang_kas: 0 },
+    }),
     prisma.pengeluaranKas.deleteMany({ where: { organisasi_type: org } }),
   ])
   return { count: kasAbsensi.count + pengeluaran.count }
@@ -124,47 +136,64 @@ async function clearAnggota(org: Org) {
 export async function POST(req: NextRequest) {
   try {
     const ctx = getCtx(req)
-  if (!isAdministrator(ctx.userRole.trim())) {
-    return NextResponse.json({ error: 'Hanya Super Admin yang dapat clear database' }, { status: 403 })
-  }
+    if (!isAdministrator(ctx.userRole.trim())) {
+      return NextResponse.json(
+        { error: 'Hanya Super Admin yang dapat clear database' },
+        { status: 403 }
+      )
+    }
 
-  const parsed = clearSchema.safeParse(await req.json())
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
+    const parsed = clearSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
+    }
 
-  const { org, tipe, konfirmasi } = parsed.data
-  if (konfirmasi !== `HAPUS ${org.toUpperCase()}`) {
-    return NextResponse.json({ error: `Ketik HAPUS ${org.toUpperCase()} untuk konfirmasi` }, { status: 400 })
-  }
+    const { org, tipe, konfirmasi } = parsed.data
+    if (konfirmasi !== `HAPUS ${org.toUpperCase()}`) {
+      return NextResponse.json(
+        { error: `Ketik HAPUS ${org.toUpperCase()} untuk konfirmasi` },
+        { status: 400 }
+      )
+    }
 
-  const backup = await createScopedBackup(org, tipe)
-  const result: Record<string, number> = {}
+    // Buat backup in-memory (tidak perlu tulis ke disk)
+    const backupSql = await createScopedBackupSql(org, tipe)
+    const backupLabel = `backup-clear-${org}-${tipe}-${new Date().toISOString().replace(/[:.]/g, '-')}.sql`
 
-  if (tipe === 'absensi') {
-    result.absensi = (await clearAbsensi(org)).count
-  } else if (tipe === 'kas') {
-    result.kas = (await clearKas(org)).count
-  } else if (tipe === 'anggota') {
-    result.anggota = (await clearAnggota(org)).count
-  } else {
-    result.absensi = (await clearAbsensi(org)).count
-    result.kas = (await clearKas(org)).count
-    result.anggota = (await clearAnggota(org)).count
-  }
+    const result: Record<string, number> = {}
 
-  await createLog({
-    userId: ctx.userId,
-    userNama: ctx.userNama,
-    aksi: 'DELETE',
-    tabel: 'clear_database',
-    deskripsi: `${ctx.userNama} clear database ${tipe} untuk ${ORG_LABELS[org]}. Backup: ${backup.filename}`,
-    dataLama: { org, tipe, backup: backup.filename },
-    dataBaru: result,
-    ipAddress: getIp(req),
-  })
+    if (tipe === 'absensi') {
+      result.absensi = (await clearAbsensi(org)).count
+    } else if (tipe === 'kas') {
+      result.kas = (await clearKas(org)).count
+    } else if (tipe === 'anggota') {
+      // Reset kas di absensi dulu sebelum hapus anggota (cascade)
+      result.kas = (await clearKas(org)).count
+      result.anggota = (await clearAnggota(org)).count
+    } else {
+      // 'semua': urutan wajib — kas (update uang_kas) → absensi (delete) → anggota (delete cascade)
+      result.kas = (await clearKas(org)).count
+      result.absensi = (await clearAbsensi(org)).count
+      result.anggota = (await clearAnggota(org)).count
+    }
 
-  return NextResponse.json({ success: true, backup: backup.filename, result })
+    await createLog({
+      userId: ctx.userId,
+      userNama: ctx.userNama,
+      aksi: 'DELETE',
+      tabel: 'clear_database',
+      deskripsi: `${ctx.userNama} clear database [${tipe}] untuk ${ORG_LABELS[org]}. Backup ref: ${backupLabel} (${backupSql.length} chars)`,
+      dataLama: { org, tipe },
+      dataBaru: result,
+      ipAddress: getIp(req),
+    })
+
+    return NextResponse.json({ success: true, backup: backupLabel, result })
   } catch (err) {
     console.error('Clear database error:', err)
-    return NextResponse.json({ error: 'Terjadi kesalahan saat membersihkan database — cek log server' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Terjadi kesalahan saat membersihkan database — cek log server' },
+      { status: 500 }
+    )
   }
 }
