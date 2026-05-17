@@ -58,14 +58,55 @@ function LiveClock() {
   )
 }
 
-/** Angka besar animated counter */
-function BigNumber({ value, prefix = '', suffix = '' }: { value: number | string; prefix?: string; suffix?: string }) {
+/** Komponen hitung naik (count-up) angka besar yang halus & premium */
+function AnimatedCounter({ 
+  value, 
+  duration = 1000, 
+  isCurrency = false,
+  prefix = "",
+  suffix = "",
+  className = ""
+}: { 
+  value: number
+  duration?: number
+  isCurrency?: boolean
+  prefix?: string
+  suffix?: string
+  className?: string
+}) {
+  const [current, setCurrent] = useState(0)
+
+  useEffect(() => {
+    let startTimestamp: number | null = null
+    const startValue = 0
+    const endValue = value
+
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1)
+      
+      // Easing: easeOutExpo (melaju cepat di awal lalu melambat secara halus di akhir)
+      const easedProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress)
+      
+      const nextValue = Math.floor(easedProgress * (endValue - startValue) + startValue)
+      setCurrent(nextValue)
+
+      if (progress < 1) {
+        window.requestAnimationFrame(step)
+      } else {
+        setCurrent(endValue)
+      }
+    }
+
+    window.requestAnimationFrame(step)
+  }, [value, duration])
+
+  const formatted = isCurrency ? formatCurrency(current) : current.toLocaleString('id-ID')
+
   return (
-    <div className="flex items-end gap-1 leading-none">
-      {prefix && <span className="text-3xl font-black text-white/70 mb-1">{prefix}</span>}
-      <span className="text-6xl xl:text-7xl font-black text-white tracking-tighter">{value}</span>
-      {suffix && <span className="text-2xl font-bold text-white/60 mb-2 ml-1">{suffix}</span>}
-    </div>
+    <span className={className}>
+      {prefix}{formatted}{suffix}
+    </span>
   )
 }
 
@@ -131,7 +172,7 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
     },
     {
       label: 'Saldo Kas',
-      value: formatCurrency(stats.totalKas),
+      value: stats.totalKas,
       icon: Wallet,
       accent: '#f59e0b',
       glow: 'rgba(245,158,11,0.35)',
@@ -139,7 +180,7 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
     },
     {
       label: 'Total Pemasukan',
-      value: formatCurrency(stats.totalPemasukan),
+      value: stats.totalPemasukan,
       icon: TrendingUp,
       accent: '#06b6d4',
       glow: 'rgba(6,182,212,0.35)',
@@ -271,10 +312,13 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
 
                     {card.isCurrency ? (
                       <div className="font-black text-white leading-none">
-                        <span className="text-3xl xl:text-4xl">{card.value}</span>
+                        <AnimatedCounter value={card.value} isCurrency={true} className="text-3xl xl:text-4xl" />
                       </div>
                     ) : (
-                      <BigNumber value={card.value as number} suffix={card.suffix} />
+                      <div className="flex items-end gap-1 leading-none">
+                        <AnimatedCounter value={card.value} className="text-6xl xl:text-7xl font-black text-white tracking-tighter" />
+                        {card.suffix && <span className="text-2xl font-bold text-white/60 mb-2 ml-1">{card.suffix}</span>}
+                      </div>
                     )}
 
                     {/* Org breakdown badges */}
@@ -282,22 +326,22 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
                       <div className="flex flex-wrap gap-1.5 mt-1">
                         {orgs.includes('programming') && (
                           <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/70">
-                            Programming: {stats.totalProgramming}
+                            Programming: <AnimatedCounter value={stats.totalProgramming} duration={1200} />
                           </span>
                         )}
                         {orgs.includes('english') && (
                           <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/70">
-                            English: {stats.totalEnglish}
+                            English: <AnimatedCounter value={stats.totalEnglish} duration={1200} />
                           </span>
                         )}
                         {orgs.includes('osis') && (
                           <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/70">
-                            OSIS: {stats.totalOsis}
+                            OSIS: <AnimatedCounter value={stats.totalOsis} duration={1200} />
                           </span>
                         )}
                         {orgs.includes('mpk') && (
                           <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/70">
-                            MPK: {stats.totalMpk}
+                            MPK: <AnimatedCounter value={stats.totalMpk} duration={1200} />
                           </span>
                         )}
                       </div>
