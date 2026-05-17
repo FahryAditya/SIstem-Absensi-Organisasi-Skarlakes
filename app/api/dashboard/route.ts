@@ -82,8 +82,19 @@ export async function GET(req: NextRequest) {
       const totalPemasukan = (kasEkskulTotal._sum?.uang_kas || 0) + (kasOrgTotal._sum?.uang_kas || 0)
       const totalPengeluaran = pengeluaranTotalData._sum?.nominal || 0
 
+      // Filter totalSiswa secara dinamis berdasarkan hak akses role
+      let totalSiswa = 0
+      if (userRole === 'administrator') {
+        totalSiswa = totalSiswaCount + totalOsis + totalMpk
+      } else {
+        if (orgs.includes('programming')) totalSiswa += totalProgramming
+        if (orgs.includes('english')) totalSiswa += totalEnglish
+        if (orgs.includes('osis')) totalSiswa += totalOsis
+        if (orgs.includes('mpk')) totalSiswa += totalMpk
+      }
+
       return {
-        totalSiswa: totalSiswaCount + totalOsis + totalMpk,
+        totalSiswa,
         totalProgramming,
         totalEnglish,
         totalOsis,
