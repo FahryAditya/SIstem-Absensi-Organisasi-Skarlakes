@@ -78,10 +78,10 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
 
 function RoleBadge({ role }: { role: string }) {
   const colors: Record<string, string> = {
-    administrator: 'bg-[#052659] border-[#5482B4]/30 text-white',
-    admin_programming: 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-[#C2E8FF]',
-    admin_english: 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-[#C2E8FF]',
-    admin_osis_mpk: 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-[#C2E8FF]',
+    administrator: 'bg-[#052659] border-[#5482B4]/30 text-white font-extrabold',
+    admin_programming: 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-white font-extrabold',
+    admin_english: 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-white font-extrabold',
+    admin_osis_mpk: 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-white font-extrabold',
   }
   return (
     <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold ${colors[role] || 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-[#C2E8FF]'}`}>
@@ -112,7 +112,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
               {!isCollapsed && (
                 <div className="fade-in whitespace-nowrap">
                   <div className="text-sm font-black text-white tracking-tight">{item.label}</div>
-                  <div className="text-[10px] text-white/50 font-medium">{item.version}</div>
+                  <div className="text-[10px] text-white font-medium">{item.version}</div>
                 </div>
               )}
             </div>
@@ -131,7 +131,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
         )
       case 'section':
         return !isCollapsed ? (
-          <div className="px-3 pt-4 pb-2 text-[10px] font-bold text-white/30 uppercase tracking-wider">
+          <div className="px-3 pt-4 pb-2 text-[10px] font-black text-white uppercase tracking-wider">
             {item.label}
           </div>
         ) : <div className="h-4" />
@@ -153,7 +153,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
             target={item.target}
             className={cn(
               'nav-link flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200',
-              active ? 'bg-[#5482B4]/20 text-white border border-[#5482B4]/30' : 'text-white/60 hover:bg-white/5 hover:text-white',
+              active ? 'bg-[#5482B4]/20 text-white border border-[#5482B4]/30 font-extrabold' : 'text-white hover:bg-white/5 hover:text-white',
               isNonaktif && 'opacity-60 cursor-not-allowed'
             )}
           >
