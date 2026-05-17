@@ -731,82 +731,120 @@ export default function DashboardClient({ user }: Props) {
       {/* Welcome & Update Modal */}
       {showWelcomeModal && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-sm overflow-hidden relative border border-slate-100 slide-up">
-            <button 
-              onClick={() => setShowWelcomeModal(false)} 
-              className="absolute top-4 right-4 p-2 bg-black/5 hover:bg-black/10 text-slate-400 hover:text-slate-600 rounded-full z-20 transition-all"
-            >
-              <X className="w-4 h-4" />
-            </button>
+          {(() => {
+            // ── Type-based color config ──
+            const ut = latestUpdate?.update_type || 'pengumuman'
+            const modalCfg = {
+              update: {
+                gradientFrom: '#78350f', gradientVia: '#b45309', gradientTo: '#d97706',
+                badgeBg: 'bg-yellow-50', badgeText: 'text-yellow-700',
+                badgeLabel: '⚡ Update Sistem',
+                iconBg: 'bg-yellow-50', iconColor: 'text-yellow-600',
+                btnBg: 'bg-yellow-500 hover:bg-yellow-600 shadow-yellow-400/30',
+                descLabel: 'Pembaruan & Peningkatan Fitur',
+              },
+              pengumuman: {
+                gradientFrom: '#052659', gradientVia: '#052659', gradientTo: '#5482B4',
+                badgeBg: 'bg-blue-50', badgeText: 'text-blue-700',
+                badgeLabel: '📢 Pengumuman',
+                iconBg: 'bg-blue-50', iconColor: 'text-[#052659]',
+                btnBg: 'bg-[#052659] hover:bg-[#011025] shadow-[#052659]/20',
+                descLabel: 'Informasi Penting untuk Seluruh Admin',
+              },
+              perbaikan: {
+                gradientFrom: '#14532d', gradientVia: '#15803d', gradientTo: '#16a34a',
+                badgeBg: 'bg-green-50', badgeText: 'text-green-700',
+                badgeLabel: '🔧 Perbaikan Sistem',
+                iconBg: 'bg-green-50', iconColor: 'text-green-700',
+                btnBg: 'bg-green-600 hover:bg-green-700 shadow-green-500/30',
+                descLabel: 'Bug Fix & Peningkatan Performa',
+              },
+            } as const
+            const cfg = modalCfg[ut as keyof typeof modalCfg] ?? modalCfg.pengumuman
 
-            {/* Modal Header/Cover */}
-            <div className="h-32 bg-gradient-to-br from-[#052659] via-[#052659] to-[#5482B4] relative">
-              <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, white 2px, transparent 2px)', backgroundSize: '24px 24px' }}></div>
-              <div className="absolute -bottom-10 left-0 right-0 flex justify-center">
-                <div className="w-20 h-20 rounded-2xl bg-white shadow-xl flex items-center justify-center border-4 border-white rotate-3 group hover:rotate-0 transition-transform">
+            return (
+              <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-sm overflow-hidden relative border border-slate-100 slide-up">
+                <button
+                  onClick={() => setShowWelcomeModal(false)}
+                  className="absolute top-4 right-4 p-2 bg-black/5 hover:bg-black/10 text-slate-400 hover:text-slate-600 rounded-full z-20 transition-all"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                {/* Modal Header/Cover – dynamic color */}
+                <div
+                  className="h-32 relative"
+                  style={{ background: `linear-gradient(135deg, ${cfg.gradientFrom}, ${cfg.gradientVia}, ${cfg.gradientTo})` }}
+                >
+                  <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, white 2px, transparent 2px)', backgroundSize: '24px 24px' }} />
+                  <div className="absolute -bottom-10 left-0 right-0 flex justify-center">
+                    <div className="w-20 h-20 rounded-2xl bg-white shadow-xl flex items-center justify-center border-4 border-white rotate-3 group hover:rotate-0 transition-transform">
+                      {latestUpdate ? (
+                        <div className={`w-full h-full ${cfg.iconBg} rounded-xl flex items-center justify-center`}>
+                          <Megaphone className={`w-10 h-10 ${cfg.iconColor}`} />
+                        </div>
+                      ) : (
+                        <div className="relative w-full h-full rounded-xl overflow-hidden">
+                          <Image
+                            src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg"
+                            alt="Profile"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="px-8 pb-8 pt-14 text-center relative">
                   {latestUpdate ? (
-                    <div className="w-full h-full bg-blue-50 rounded-xl flex items-center justify-center">
-                      <Megaphone className="w-10 h-10 text-[#052659]" />
+                    <div className="space-y-4">
+                      {/* Dynamic badge */}
+                      <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${cfg.badgeBg} ${cfg.badgeText} text-[10px] font-black uppercase tracking-wider`}>
+                        <Sparkles className="w-3 h-3" />{cfg.badgeLabel}
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-black text-[#011025] leading-tight">
+                          Versi {latestUpdate.version}
+                        </h2>
+                        <p className="text-[#052659] text-xs font-bold mt-1 opacity-70">
+                          {cfg.descLabel}
+                        </p>
+                      </div>
+                      <div className="bg-slate-50 rounded-2xl p-4 text-left border border-slate-100 max-h-[160px] overflow-y-auto custom-scrollbar">
+                        <p className="text-[13px] text-slate-600 leading-relaxed whitespace-pre-line">
+                          {latestUpdate.content}
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleDismissUpdate}
+                        className={`w-full py-4 px-6 ${cfg.btnBg} text-white font-bold rounded-2xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2`}
+                      >
+                        Mulai Bekerja 🚀
+                      </button>
                     </div>
                   ) : (
-                    <div className="relative w-full h-full rounded-xl overflow-hidden">
-                      <Image 
-                        src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" 
-                        alt="Profile" 
-                        fill
-                        className="object-cover"
-                      />
+                    <div className="space-y-4">
+                      <div>
+                        <TextType as="h2" text={`${greeting}, 👋`} className="text-2xl font-black text-[#011025] tracking-tight" typingSpeed={50} loop={false} showCursor={false} />
+                        <TextType as="p" text={user.nama} className="text-[#052659] font-bold mt-1 text-lg" typingSpeed={60} initialDelay={800} loop={false} cursorClassName="text-[#052659]" />
+                      </div>
+                      <p className="text-slate-500 text-sm leading-relaxed">
+                        Selamat datang kembali! Pantau terus perkembangan dan aktivitas terbaru hari ini.
+                      </p>
+                      <button
+                        onClick={() => setShowWelcomeModal(false)}
+                        className="w-full py-4 px-6 bg-[#052659] hover:bg-[#011025] text-white font-bold rounded-2xl shadow-lg shadow-[#052659]/20 transition-all active:scale-[0.98]"
+                      >
+                        Mulai Bekerja 🚀
+                      </button>
                     </div>
                   )}
                 </div>
               </div>
-            </div>
-
-            <div className="px-8 pb-8 pt-14 text-center relative">
-              {latestUpdate ? (
-                <div className="space-y-4">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-wider">
-                    <Sparkles className="w-3 h-3" /> Update Sistem Tersedia
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-black text-[#011025] leading-tight">
-                      Versi {latestUpdate.version}
-                    </h2>
-                    <p className="text-[#052659] text-xs font-bold mt-1 opacity-70">
-                      Pembaruan & Peningkatan Patch
-                    </p>
-                  </div>
-                  <div className="bg-slate-50 rounded-2xl p-4 text-left border border-slate-100 max-h-[160px] overflow-y-auto custom-scrollbar">
-                    <p className="text-[13px] text-slate-600 leading-relaxed whitespace-pre-line">
-                      {latestUpdate.content}
-                    </p>
-                  </div>
-                  <button 
-                    onClick={handleDismissUpdate}
-                    className="w-full py-4 px-6 bg-[#052659] hover:bg-[#011025] text-white font-bold rounded-2xl shadow-lg shadow-[#052659]/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-                  >
-                    Mulai Bekerja 🚀
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div>
-                    <TextType as="h2" text={`${greeting}, 👋`} className="text-2xl font-black text-[#011025] tracking-tight" typingSpeed={50} loop={false} showCursor={false} />
-                    <TextType as="p" text={user.nama} className="text-[#052659] font-bold mt-1 text-lg" typingSpeed={60} initialDelay={800} loop={false} cursorClassName="text-[#052659]" />
-                  </div>
-                  <p className="text-slate-500 text-sm leading-relaxed">
-                    Selamat datang kembali! Pantau terus perkembangan dan aktivitas terbaru hari ini.
-                  </p>
-                  <button 
-                    onClick={() => setShowWelcomeModal(false)}
-                    className="w-full py-4 px-6 bg-[#052659] hover:bg-[#011025] text-white font-bold rounded-2xl shadow-lg shadow-[#052659]/20 transition-all active:scale-[0.98]"
-                  >
-                    Mulai Bekerja 🚀
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+            )
+          })()}
         </div>,
         document.body
       )}
