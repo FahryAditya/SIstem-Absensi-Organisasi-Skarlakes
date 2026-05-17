@@ -10,6 +10,7 @@ import { formatCurrency, formatDate, formatDateTime, ORG_LABELS, OrgType } from 
 import { ROLE_LABELS } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl, clientQueryClient } from '@/lib/client-cache'
 import TextType from '@/components/TextType'
+import Select from '@/components/ui/Select'
 import {
   Users, CheckCircle2, Wallet, UserPlus, LogOut, Clock, CalendarDays, PlusCircle, LayoutList, HandCoins, Loader2, UploadCloud, TrendingUp, Activity, X, Megaphone, Sparkles, PlusCircle as PlusCircleIcon, Zap, ArrowUpDown, MousePointerClick, RefreshCw, Trash2
 } from 'lucide-react'
@@ -409,80 +410,77 @@ export default function DashboardClient({ user }: Props) {
             <form onSubmit={handleQuickAdd} className="space-y-3">
               <div className="form-group">
                 <label className="label">Unit / Organisasi Tujuan</label>
-                <select value={quickOrg} onChange={e => setQuickOrg(e.target.value)} className="input bg-slate-50">
-                  {orgs.map(o => (
-                    <option key={o} value={o}>{ORG_LABELS[o as OrgType]}</option>
-                  ))}
-                </select>
+                <Select
+                  value={quickOrg}
+                  onChange={setQuickOrg}
+                  options={orgs.map(o => ({ value: o, label: ORG_LABELS[o as OrgType] }))}
+                />
               </div>
               <div className="form-group">
                 <label className="label">Nama Lengkap</label>
-                <input 
-                  type="text" 
-                  value={quickName} 
+                <input
+                  type="text"
+                  value={quickName}
                   onChange={e => {
                     const val = e.target.value
-                    if (val === '' || /^[a-zA-Z\s]*$/.test(val)) {
-                      setQuickName(val)
-                    }
-                  }} 
-                  className="input" 
-                  placeholder="Misal: Budi Santoso" 
-                  required 
+                    if (val === '' || /^[a-zA-Z\s]*$/.test(val)) setQuickName(val)
+                  }}
+                  className="input"
+                  placeholder="Misal: Budi Santoso"
+                  required
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="form-group">
                   <label className="label">Tingkat</label>
-                  <select value={quickLevel} onChange={e => setQuickLevel(e.target.value)} className="input cursor-pointer">
-                    <option value="X">Kelas X</option>
-                    <option value="XI">Kelas XI</option>
-                  </select>
+                  <Select
+                    value={quickLevel}
+                    onChange={setQuickLevel}
+                    options={[
+                      { value: 'X',   label: 'Kelas X'   },
+                      { value: 'XI',  label: 'Kelas XI'  },
+                      { value: 'XII', label: 'Kelas XII' },
+                    ]}
+                  />
                 </div>
                 <div className="form-group">
                   <label className="label">Pilih Sekolah</label>
-                  <select 
-                    value={quickSchool} 
-                    onChange={e => {
-                      const school = e.target.value as 'Skarla' | 'Skakes'
+                  <Select
+                    value={quickSchool}
+                    onChange={v => {
+                      const school = v as 'Skarla' | 'Skakes'
                       setQuickSchool(school)
                       setQuickMajor(school === 'Skarla' ? 'PPLG' : 'FKK')
-                    }} 
-                    className="input cursor-pointer"
-                  >
-                    <option value="Skarla">Skarla</option>
-                    <option value="Skakes">Skakes</option>
-                  </select>
+                    }}
+                    options={[
+                      { value: 'Skarla', label: 'Skarla' },
+                      { value: 'Skakes', label: 'Skakes' },
+                    ]}
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="form-group">
                   <label className="label">Kejuruan / Major</label>
-                  <select value={quickMajor} onChange={e => setQuickMajor(e.target.value)} className="input cursor-pointer">
-                    {quickSchool === 'Skarla' ? (
-                      <>
-                        <option value="PPLG">PPLG</option>
-                        <option value="TJKT 1">TJKT 1</option>
-                        <option value="TJKT 2">TJKT 2</option>
-                        <option value="DKV">DKV</option>
-                        <option value="MPLB 1">MPLB 1</option>
-                        <option value="MPLB 2">MPLB 2</option>
-                        <option value="AKL">AKL</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="FKK">FKK</option>
-                        <option value="AKC 1">AKC 1</option>
-                        <option value="AKC 2">AKC 2</option>
-                        <option value="AKC 3">AKC 3</option>
-                        <option value="AKC 4">AKC 4</option>
-                        <option value="AKC 5">AKC 5</option>
-                        <option value="AKC 6">AKC 6</option>
-                        <option value="TLM">TLM</option>
-                      </>
-                    )}
-                  </select>
+                  <Select
+                    value={quickMajor}
+                    onChange={setQuickMajor}
+                    options={quickSchool === 'Skarla'
+                      ? [
+                          { value: 'PPLG', label: 'PPLG' }, { value: 'TJKT 1', label: 'TJKT 1' },
+                          { value: 'TJKT 2', label: 'TJKT 2' }, { value: 'DKV', label: 'DKV' },
+                          { value: 'MPLB 1', label: 'MPLB 1' }, { value: 'MPLB 2', label: 'MPLB 2' },
+                          { value: 'AKL', label: 'AKL' },
+                        ]
+                      : [
+                          { value: 'FKK', label: 'FKK' }, { value: 'AKC 1', label: 'AKC 1' },
+                          { value: 'AKC 2', label: 'AKC 2' }, { value: 'AKC 3', label: 'AKC 3' },
+                          { value: 'AKC 4', label: 'AKC 4' }, { value: 'AKC 5', label: 'AKC 5' },
+                          { value: 'AKC 6', label: 'AKC 6' }, { value: 'TLM', label: 'TLM' },
+                        ]
+                    }
+                  />
                 </div>
                 {(quickOrg === 'osis' || quickOrg === 'mpk') && (
                   <div className="form-group">

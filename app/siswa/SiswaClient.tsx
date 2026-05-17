@@ -11,6 +11,23 @@ import { canManageSiswaData } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import { useDebounce } from '@/lib/hooks'
 import { Plus, Search, Pencil, Trash2, Users, Loader2, Filter, Contact } from 'lucide-react'
+import Select from '@/components/ui/Select'
+
+const TINGKAT_OPTIONS = [
+  { value: 'X', label: 'Kelas X' },
+  { value: 'XI', label: 'Kelas XI' },
+  { value: 'XII', label: 'Kelas XII' },
+]
+const JURUSAN_OPTIONS = [
+  { value: 'AKL', label: 'AKL' }, { value: 'PPLG', label: 'PPLG' },
+  { value: 'TJKT 1', label: 'TJKT 1' }, { value: 'TJKT 2', label: 'TJKT 2' },
+  { value: 'DKV', label: 'DKV' }, { value: 'MPLB 1', label: 'MPLB 1' },
+  { value: 'MPLB 2', label: 'MPLB 2' }, { value: 'FKK', label: 'FKK' },
+  { value: 'TLM', label: 'TLM' }, { value: 'AKC 1', label: 'AKC 1' },
+  { value: 'AKC 2', label: 'AKC 2' }, { value: 'AKC 3', label: 'AKC 3' },
+  { value: 'AKC 4', label: 'AKC 4' }, { value: 'AKC 5', label: 'AKC 5' },
+  { value: 'AKC 6', label: 'AKC 6' },
+]
 
 interface Siswa {
   id: number; nis: string | null; nama: string; kelas: string | null; ekskul: string; created_at: string
@@ -197,14 +214,16 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
             placeholder="Cari nama atau NIS siswa..." className="input pl-10" />
         </div>
         {canUseEkskulDropdown && (
-          <div className="relative sm:w-44">
-            <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <select value={orgFilter} onChange={e => setOrgFilter(e.target.value)} className="input pl-10 appearance-none">
-              <option value="">Semua Ekskul</option>
-              <option value="programming">Programming</option>
-              <option value="english">English Club</option>
-            </select>
-          </div>
+          <Select
+            value={orgFilter}
+            onChange={setOrgFilter}
+            placeholder="Semua Ekskul"
+            className="sm:w-44"
+            options={[
+              { value: 'programming', label: 'Programming' },
+              { value: 'english', label: 'English Club' },
+            ]}
+          />
         )}
       </div>
 
@@ -275,40 +294,34 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
           <div className="form-group">
             <label className="label">Tingkat & Kejuruan</label>
             <div className="flex gap-3">
-              <select value={fTingkat} onChange={e => setFTingkat(e.target.value)} className="input sm:w-32 w-28 cursor-pointer font-medium text-slate-700">
-                <option value="" disabled>Tingkat</option>
-                <option value="X">Kelas X</option>
-                <option value="XI">Kelas XI</option>
-                <option value="XII">Kelas XII</option>
-              </select>
-              <select value={fJurusan} onChange={e => setFJurusan(e.target.value)} className="input flex-1 cursor-pointer font-medium text-slate-700">
-                <option value="" disabled>Pilih Kejuruan...</option>
-                <option value="AKL">AKL</option>
-                <option value="PPLG">PPLG</option>
-                <option value="TJKT 1">TJKT 1</option>
-                <option value="TJKT 2">TJKT 2</option>
-                <option value="DKV">DKV</option>
-                <option value="MPLB 1">MPLB 1</option>
-                <option value="MPLB 2">MPLB 2</option>
-                <option value="FKK">FKK</option>
-                <option value="TLM">TLM</option>
-                <option value="AKC 1">AKC 1</option>
-                <option value="AKC 2">AKC 2</option>
-                <option value="AKC 3">AKC 3</option>
-                <option value="AKC 4">AKC 4</option>
-                <option value="AKC 5">AKC 5</option>
-                <option value="AKC 6">AKC 6</option>
-              </select>
+              <Select
+                value={fTingkat}
+                onChange={setFTingkat}
+                placeholder="Tingkat"
+                className="w-32"
+                options={TINGKAT_OPTIONS}
+              />
+              <Select
+                value={fJurusan}
+                onChange={setFJurusan}
+                placeholder="Pilih Kejuruan..."
+                className="flex-1"
+                options={JURUSAN_OPTIONS}
+              />
             </div>
           </div>
 
           <div className="form-group">
             <label className="label">Ekstrakurikuler</label>
-            <select value={fEkskul} onChange={e => setFEkskul(e.target.value as 'programming' | 'english')}
-              disabled={!canUseEkskulDropdown} className="input cursor-pointer font-medium text-slate-700">
-              <option value="programming">Programming</option>
-              <option value="english">English Club</option>
-            </select>
+            <Select
+              value={fEkskul}
+              onChange={v => setFEkskul(v as 'programming' | 'english')}
+              disabled={!canUseEkskulDropdown}
+              options={[
+                { value: 'programming', label: 'Programming' },
+                { value: 'english', label: 'English Club' },
+              ]}
+            />
           </div>
         </div>
       </Modal>

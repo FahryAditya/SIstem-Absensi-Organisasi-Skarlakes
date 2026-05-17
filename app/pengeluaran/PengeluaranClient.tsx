@@ -5,6 +5,7 @@ import { HandCoins, Search, Filter, Loader2, Plus, X, Trash2 } from 'lucide-reac
 import toast from 'react-hot-toast'
 import { formatCurrency, formatDateTime, ORG_LABELS, OrgType } from '@/lib/utils'
 import { clearJsonCache, fetchJsonCachedUrl, clientQueryClient } from '@/lib/client-cache'
+import Select from '@/components/ui/Select'
 
 interface PengeluaranData {
   id: number
@@ -159,19 +160,13 @@ export default function PengeluaranClient({ user }: Props) {
             <h3 className="text-sm font-bold text-slate-700">Filter Unit / Organisasi</h3>
           </div>
           {orgs.length > 1 && (
-            <div className="relative w-full sm:w-72">
-              <Filter className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <select
-                value={activeOrg}
-                onChange={e => setActiveOrg(e.target.value)}
-                className="input pl-9 appearance-none"
-              >
-                {user.role === 'administrator' && <option value="">Semua Unit / Organisasi</option>}
-                {orgs.map(o => (
-                  <option key={o} value={o}>{ORG_LABELS[o as OrgType]}</option>
-                ))}
-              </select>
-            </div>
+            <Select
+              value={activeOrg}
+              onChange={setActiveOrg}
+              placeholder={user.role === 'administrator' ? 'Semua Unit / Organisasi' : undefined}
+              className="w-full sm:w-72"
+              options={orgs.map(o => ({ value: o, label: ORG_LABELS[o as OrgType] }))}
+            />
           )}
         </div>
       </div>
@@ -252,17 +247,13 @@ export default function PengeluaranClient({ user }: Props) {
             <form onSubmit={handleTransaction} className="p-5 space-y-4">
               <div className="form-group">
                 <label className="label">Unit / Organisasi</label>
-                <select 
-                  value={txOrg} 
-                  onChange={e => setTxOrg(e.target.value)} 
-                  className="input bg-slate-50"
+                <Select
+                  value={txOrg}
+                  onChange={setTxOrg}
+                  placeholder="Pilih Unit"
                   required
-                >
-                  <option value="" disabled>Pilih Unit</option>
-                  {orgs.map(o => (
-                    <option key={o} value={o}>{ORG_LABELS[o as OrgType]}</option>
-                  ))}
-                </select>
+                  options={orgs.map(o => ({ value: o, label: ORG_LABELS[o as OrgType] }))}
+                />
               </div>
 
               <div className="form-group">

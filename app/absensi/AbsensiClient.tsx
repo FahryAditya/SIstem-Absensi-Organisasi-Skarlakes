@@ -7,8 +7,9 @@ import { StatusBadge, OrgBadge } from '@/components/ui/Badges'
 import { formatDate, formatCurrency, STATUS_LABELS } from '@/lib/utils'
 import { canAccessProgramming, canAccessEnglish } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
-import { ClipboardList, Save, Calendar, Filter, Loader2, CheckCircle2, XCircle, Clock, Heart, Banknote, Users, ChevronDown } from 'lucide-react'
+import { ClipboardList, Save, Calendar, Filter, Loader2, CheckCircle2, XCircle, Clock, Heart, Banknote, Users } from 'lucide-react'
 import { format } from 'date-fns'
+import Select from '@/components/ui/Select'
 
 interface Siswa { id: number; nama: string; kelas: string | null; ekskul: string }
 interface AbsensiRow { siswa_id: number; nama: string; kelas: string | null; ekskul: string; status: string; uang_kas: number; keterangan: string }
@@ -165,10 +166,15 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
               <input type="date" value={bulkDate} onChange={e => setBulkDate(e.target.value)} className="input pl-10" />
             </div>
             {canProg && canEng && (
-              <select value={bulkOrg} onChange={e => setBulkOrg(e.target.value as 'programming' | 'english')} className="input sm:w-48">
-                {canProg && <option value="programming">Programming</option>}
-                {canEng && <option value="english">English Club</option>}
-              </select>
+              <Select
+                value={bulkOrg}
+                onChange={v => setBulkOrg(v as 'programming' | 'english')}
+                className="sm:w-48"
+                options={[
+                  ...(canProg ? [{ value: 'programming', label: 'Programming' }] : []),
+                  ...(canEng  ? [{ value: 'english',     label: 'English Club' }] : []),
+                ]}
+              />
             )}
           </div>
 
@@ -293,14 +299,16 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
               <input type="date" value={filterTanggal} onChange={e => setFilterTanggal(e.target.value)} className="input pl-10" />
             </div>
             {canProg && canEng && (
-              <div className="relative sm:w-44">
-                <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <select value={filterOrg} onChange={e => setFilterOrg(e.target.value)} className="input pl-10 appearance-none">
-                  <option value="">Semua Ekskul</option>
-                  {canProg && <option value="programming">Programming</option>}
-                  {canEng && <option value="english">English Club</option>}
-                </select>
-              </div>
+              <Select
+                value={filterOrg}
+                onChange={setFilterOrg}
+                placeholder="Semua Ekskul"
+                className="sm:w-44"
+                options={[
+                  ...(canProg ? [{ value: 'programming', label: 'Programming' }] : []),
+                  ...(canEng  ? [{ value: 'english',     label: 'English Club' }] : []),
+                ]}
+              />
             )}
           </div>
           <Table

@@ -8,6 +8,7 @@ import { clearJsonCache, fetchJsonCachedUrl, clientQueryClient } from '@/lib/cli
 import { useDebounce } from '@/lib/hooks'
 
 import Table from '@/components/ui/Table'
+import Select from '@/components/ui/Select'
 
 interface KasData {
   id: number
@@ -291,21 +292,15 @@ export default function KasClient({ user }: Props) {
               />
             </div>
             {orgs.length > 1 && (
-              <div className="relative w-full sm:w-48 flex-shrink-0">
-                <Filter className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <select
-                  value={activeOrg}
-                  onChange={e => {
-                    setActiveOrg(e.target.value)
-                    setMembers([]) // Reset members when org changes
-                  }}
-                  className="input pl-9 appearance-none"
-                >
-                  {orgs.map(o => (
-                    <option key={o} value={o}>{ORG_LABELS[o as OrgType]}</option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                value={activeOrg}
+                onChange={v => {
+                  setActiveOrg(v)
+                  setMembers([]) // Reset members when org changes
+                }}
+                className="w-full sm:w-48 flex-shrink-0"
+                options={orgs.map(o => ({ value: o, label: ORG_LABELS[o as OrgType] }))}
+              />
             )}
           </div>
         </div>

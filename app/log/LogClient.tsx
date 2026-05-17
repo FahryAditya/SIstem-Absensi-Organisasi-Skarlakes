@@ -4,8 +4,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { formatDateTime } from '@/lib/utils'
 import { fetchJsonCachedUrl } from '@/lib/client-cache'
 import { useDebounce } from '@/lib/hooks'
-import { ScrollText, Search, Filter, ChevronDown, ChevronRight, Loader2, Eye } from 'lucide-react'
+import { ScrollText, Search, ChevronRight, Loader2, Eye } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
+import Select from '@/components/ui/Select'
 
 interface LogEntry {
   id: number
@@ -89,14 +90,20 @@ export default function LogClient() {
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Cari nama user atau deskripsi..." className="input pl-10" />
         </div>
-        <select value={filterAksi} onChange={e => setFilterAksi(e.target.value)} className="input sm:w-36">
-          <option value="">Semua Aksi</option>
-          {['CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT'].map(a => <option key={a} value={a}>{a}</option>)}
-        </select>
-        <select value={filterTabel} onChange={e => setFilterTabel(e.target.value)} className="input sm:w-44">
-          <option value="">Semua Tabel</option>
-          {tabelOptions.map(t => <option key={t} value={t}>{t}</option>)}
-        </select>
+        <Select
+          value={filterAksi}
+          onChange={setFilterAksi}
+          placeholder="Semua Aksi"
+          className="sm:w-36"
+          options={['CREATE','UPDATE','DELETE','LOGIN','LOGOUT'].map(a => ({ value: a, label: a }))}
+        />
+        <Select
+          value={filterTabel}
+          onChange={setFilterTabel}
+          placeholder="Semua Tabel"
+          className="sm:w-44"
+          options={tabelOptions.map(t => ({ value: t, label: t }))}
+        />
       </div>
 
       {/* Log table */}

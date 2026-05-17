@@ -10,6 +10,7 @@ import { formatDateTime } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import { UserCog, Plus, Pencil, Trash2, Loader2, Shield, Mail, User, Lock, Eye, EyeOff, AlertTriangle, Database } from 'lucide-react'
+import Select from '@/components/ui/Select'
 
 interface UserData { id: number; nama: string; email: string; role: string; created_at: string }
 interface Props { user: { id: number; nama: string; email: string; role: string } }
@@ -196,11 +197,11 @@ export default function AdminClient({ user }: Props) {
           </div>
           <div className="form-group">
             <label className="label">Role / Hak Akses *</label>
-            <select value={fRole} onChange={e => setFRole(e.target.value)} className="input">
-              {Object.entries(ROLE_LABELS).map(([val, label]) => (
-                <option key={val} value={val}>{label}</option>
-              ))}
-            </select>
+            <Select
+              value={fRole}
+              onChange={setFRole}
+              options={Object.entries(ROLE_LABELS).map(([val, label]) => ({ value: val, label }))}
+            />
           </div>
           <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 flex gap-2.5 text-xs text-amber-700">
             <Shield className="w-4 h-4 flex-shrink-0 mt-0.5"/>
