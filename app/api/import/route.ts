@@ -59,22 +59,38 @@ export async function POST(req: NextRequest) {
       insertedCount = result.count
       
     } else if (org === 'osis') {
-      const createData = data.map(item => ({
-        nama: item.nama,
-        kelas: item.kelas || '',
-        nis: item.nis || '',
-        jabatan: item.jabatan || 'Anggota',
-      }))
+      const filteredData = data.filter(item => {
+        const k = item.kelas ? String(item.kelas).trim().toUpperCase() : ''
+        return !k.startsWith('[MPK]')
+      })
+      const createData = filteredData.map(item => {
+        const rawKelas = item.kelas ? String(item.kelas).trim() : ''
+        const cleanKelas = rawKelas.replace(/^\[(OSIS|MPK)\]\s*/i, '')
+        return {
+          nama: item.nama,
+          kelas: cleanKelas,
+          nis: item.nis || '',
+          jabatan: item.jabatan || 'Anggota',
+        }
+      })
       const result = await prisma.anggotaOsis.createMany({ data: createData, skipDuplicates: true })
       insertedCount = result.count
       
     } else if (org === 'mpk') {
-      const createData = data.map(item => ({
-        nama: item.nama,
-        kelas: item.kelas || '',
-        nis: item.nis || '',
-        jabatan: item.jabatan || 'Anggota',
-      }))
+      const filteredData = data.filter(item => {
+        const k = item.kelas ? String(item.kelas).trim().toUpperCase() : ''
+        return !k.startsWith('[OSIS]')
+      })
+      const createData = filteredData.map(item => {
+        const rawKelas = item.kelas ? String(item.kelas).trim() : ''
+        const cleanKelas = rawKelas.replace(/^\[(OSIS|MPK)\]\s*/i, '')
+        return {
+          nama: item.nama,
+          kelas: cleanKelas,
+          nis: item.nis || '',
+          jabatan: item.jabatan || 'Anggota',
+        }
+      })
       const result = await prisma.anggotaMpk.createMany({ data: createData, skipDuplicates: true })
       insertedCount = result.count
     }

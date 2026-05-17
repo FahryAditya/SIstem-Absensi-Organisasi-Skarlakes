@@ -113,8 +113,7 @@ export async function POST(req: NextRequest) {
 
   const sesi = await prisma.sesiWawancara.findFirst({
     where: { 
-      status: 'ACTIVE', 
-      organisasi_type: 'osis' 
+      status: 'ACTIVE'
     },
     orderBy: { created_at: 'desc' }
   })

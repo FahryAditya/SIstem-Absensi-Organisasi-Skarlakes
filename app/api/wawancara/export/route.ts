@@ -61,7 +61,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
     antrian = await prisma.antrianWawancara.findMany({
-      where: { sesi: { organisasi_type: org as any } },
+      where: org === 'mpk'
+        ? { kelas: { startsWith: '[MPK]' } }
+        : { NOT: { kelas: { startsWith: '[MPK]' } } },
       include: {
         hasil_wawancara: { include: { interviewer: { select: { nama: true } } } },
       },
@@ -73,26 +75,30 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'ID sesi atau Organisasi wajib diisi' }, { status: 400 })
   }
 
-  const rows = antrian.map((a, i) => ({
-    No: i + 1,
-    'Organisasi': orgTitle,
-    'Nomor Antrian': a.nomor_antrian,
-    Nama: a.nama,
-    Kelas: a.kelas,
-    Keterangan: a.hasil_wawancara ? ketLabel[a.hasil_wawancara.keterangan] : '-',
-    Hasil: a.hasil_wawancara ? hasilLabel[a.hasil_wawancara.hasil] : '-',
-    Persentase: a.hasil_wawancara?.persentase ?? '-',
-    Catatan: a.hasil_wawancara?.catatan || '-',
-    Interviewer: a.hasil_wawancara?.interviewer?.nama || '-',
-    'Waktu Daftar': formatDateTime(a.created_at),
-    'Status Kehadiran': a.status_validasi,
-    'Status IP': a.ip_status,
-    'IP Address': a.ip_address || '-',
-    'Negara IP': a.ip_country || '-',
-    'GPS': a.gps_lat && a.gps_lng ? `${a.gps_lat}, ${a.gps_lng}` : '-',
-    'Jarak Meter': a.jarak_meter ? Math.round(a.jarak_meter) : '-',
-    'Token QR': a.scan_token || '-',
-  }))
+  const rows = antrian.map((a, i) => {
+    const candidateOrg = a.kelas.startsWith('[MPK]') ? 'MPK' : a.kelas.startsWith('[OSIS]') ? 'OSIS' : orgTitle
+    const cleanKelas = a.kelas.replace(/^\[(OSIS|MPK)\]\s*/i, '')
+    return {
+      No: i + 1,
+      'Organisasi': candidateOrg,
+      'Nomor Antrian': a.nomor_antrian,
+      Nama: a.nama,
+      Kelas: cleanKelas,
+      Keterangan: a.hasil_wawancara ? ketLabel[a.hasil_wawancara.keterangan] : '-',
+      Hasil: a.hasil_wawancara ? hasilLabel[a.hasil_wawancara.hasil] : '-',
+      Persentase: a.hasil_wawancara?.persentase ?? '-',
+      Catatan: a.hasil_wawancara?.catatan || '-',
+      Interviewer: a.hasil_wawancara?.interviewer?.nama || '-',
+      'Waktu Daftar': formatDateTime(a.created_at),
+      'Status Kehadiran': a.status_validasi,
+      'Status IP': a.ip_status,
+      'IP Address': a.ip_address || '-',
+      'Negara IP': a.ip_country || '-',
+      'GPS': a.gps_lat && a.gps_lng ? `${a.gps_lat}, ${a.gps_lng}` : '-',
+      'Jarak Meter': a.jarak_meter ? Math.round(a.jarak_meter) : '-',
+      'Token QR': a.scan_token || '-',
+    }
+  })
 
   const wb = XLSX.utils.book_new()
   const ws = XLSX.utils.json_to_sheet(rows, {
