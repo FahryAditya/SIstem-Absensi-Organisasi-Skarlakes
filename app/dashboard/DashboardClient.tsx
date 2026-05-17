@@ -11,6 +11,8 @@ import { ROLE_LABELS } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl, clientQueryClient } from '@/lib/client-cache'
 import TextType from '@/components/TextType'
 import Select from '@/components/ui/Select'
+import PresentationMode from '@/components/PresentationMode'
+import FilePresentationMode from '@/components/FilePresentationMode'
 import {
   Users, CheckCircle2, Wallet, UserPlus, LogOut, Clock, CalendarDays, PlusCircle, LayoutList, HandCoins, Loader2, UploadCloud, TrendingUp, Activity, X, Megaphone, Sparkles, PlusCircle as PlusCircleIcon, Zap, ArrowUpDown, MousePointerClick, RefreshCw, Trash2
 } from 'lucide-react'
@@ -351,31 +353,38 @@ export default function DashboardClient({ user }: Props) {
       <div className="bg-gradient-to-r from-[#052659] to-[#5482B4] rounded-2xl p-6 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-full opacity-10"
           style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
-        <div className="relative">
-          <div className="block w-full">
-            <TextType as="p" text={`${greeting}, 👋`} className="text-[#C2E8FF] text-sm font-medium" typingSpeed={40} loop={false} showCursor={false} />
-          </div>
-          <div className="block w-full">
-            <TextType as="h2" text={user.nama} className="text-2xl font-black mt-0.5" typingSpeed={60} initialDelay={600} loop={false} cursorClassName="text-white opacity-70" />
-          </div>
-          <div className="flex items-center gap-3 mt-2 flex-wrap">
-            <span className="text-xs font-semibold bg-white/20 px-2.5 py-1 rounded-full">
-              {ROLE_LABELS[user.role] || user.role}
-            </span>
-            <span className="text-xs text-[#C2E8FF] flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {formatDate(now, 'EEEE, dd MMMM yyyy')}
-            </span>
-          </div>
-          {orgs.length > 0 && (
-            <div className="flex gap-2 mt-3 flex-wrap">
-              {orgs.map(o => (
-                <span key={o} className="text-xs font-bold bg-white/15 border border-white/25 px-2.5 py-1 rounded-lg">
-                  {ORG_LABELS[o as OrgType] || o}
-                </span>
-              ))}
+        <div className="relative flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="block w-full">
+              <TextType as="p" text={`${greeting}, 👋`} className="text-[#C2E8FF] text-sm font-medium" typingSpeed={40} loop={false} showCursor={false} />
             </div>
-          )}
+            <div className="block w-full">
+              <TextType as="h2" text={user.nama} className="text-2xl font-black mt-0.5" typingSpeed={60} initialDelay={600} loop={false} cursorClassName="text-white opacity-70" />
+            </div>
+            <div className="flex items-center gap-3 mt-2 flex-wrap">
+              <span className="text-xs font-semibold bg-white/20 px-2.5 py-1 rounded-full">
+                {ROLE_LABELS[user.role] || user.role}
+              </span>
+              <span className="text-xs text-[#C2E8FF] flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {formatDate(now, 'EEEE, dd MMMM yyyy')}
+              </span>
+            </div>
+            {orgs.length > 0 && (
+              <div className="flex gap-2 mt-3 flex-wrap">
+                {orgs.map(o => (
+                  <span key={o} className="text-xs font-bold bg-white/15 border border-white/25 px-2.5 py-1 rounded-lg">
+                    {ORG_LABELS[o as OrgType] || o}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Tombol Mode Presentasi & Presentasi File */}
+          <div className="flex-shrink-0 flex flex-col sm:flex-row gap-2">
+            <PresentationMode stats={stats} charts={charts} user={user} />
+            <FilePresentationMode user={user} />
+          </div>
         </div>
       </div>
 
