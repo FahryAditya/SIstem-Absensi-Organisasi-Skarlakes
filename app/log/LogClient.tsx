@@ -4,9 +4,11 @@ import { useState, useEffect, useCallback } from 'react'
 import { formatDateTime } from '@/lib/utils'
 import { fetchJsonCachedUrl } from '@/lib/client-cache'
 import { useDebounce } from '@/lib/hooks'
-import { ScrollText, Search, ChevronRight, Loader2, Eye } from 'lucide-react'
+import { ScrollText, Search, ChevronRight, Loader2, Eye, Trash2 } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 import Select from '@/components/ui/Select'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
+import toast from 'react-hot-toast'
 
 interface LogEntry {
   id: number
@@ -44,6 +46,30 @@ export default function LogClient() {
   const [total, setTotal] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
   const [detailLog, setDetailLog] = useState<LogEntry | null>(null)
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
+  const [clearing, setClearing] = useState(false)
+
+  const handleClearLogs = async () => {
+    setClearing(true)
+    try {
+      const res = await fetch('/api/log', {
+        method: 'DELETE',
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        toast.error(json.error || 'Gagal membersihkan log')
+        setClearing(false)
+        return
+      }
+      toast.success('Log berhasil dibersihkan')
+      setClearConfirmOpen(false)
+      load()
+    } catch (e) {
+      toast.error('Terjadi kesalahan koneksi')
+    } finally {
+      setClearing(false)
+    }
+  }
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -80,6 +106,12 @@ export default function LogClient() {
             <span className="badge bg-slate-100 text-slate-600 border border-slate-200">{total} log</span>
           </div>
           <p className="page-sub mt-0.5">Rekam jejak semua perubahan data dalam sistem</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => setClearConfirmOpen(true)} className="btn-secondary text-red-600 border-red-200 hover:bg-red-50 flex items-center gap-2">
+            <Trash2 className="w-4 h-4" />
+            Bersihkan Log
+          </button>
         </div>
       </div>
 
@@ -243,6 +275,16 @@ export default function LogClient() {
           </div>
         )}
       </Modal>
+      <ConfirmDialog
+        open={clearConfirmOpen}
+        title="Bersihkan Semua Log?"
+        message="Seluruh catatan log aktivitas akan dihapus secara permanen dari database. Tindakan ini tidak dapat dibatalkan."
+        confirmLabel="Bersihkan"
+        confirmClass="btn-danger"
+        loading={clearing}
+        onConfirm={handleClearLogs}
+        onCancel={() => setClearConfirmOpen(false)}
+      />
     </div>
   )
 }

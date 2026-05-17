@@ -32,6 +32,16 @@ const nextConfig = {
     ],
   },
 
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      canvg: false,
+      html2canvas: false,
+      dompurify: false,
+    }
+    return config
+  },
+
   // Kompres response HTTP
   compress: true,
 
