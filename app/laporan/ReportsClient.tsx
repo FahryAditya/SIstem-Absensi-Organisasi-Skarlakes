@@ -85,7 +85,7 @@ const parseMonthYearObject = (monthYearStr: string) => {
   return { year, monthNum }
 }
 
-// Convert image url to base64 securely on client-side
+// Convert image url to base64 securely on client-side (optimized for iOS/Safari memory stability)
 const loadBase64Image = (url: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     const img = new window.Image()
@@ -97,12 +97,24 @@ const loadBase64Image = (url: string): Promise<string> => {
       const ctx = canvas.getContext('2d')
       if (ctx) {
         ctx.drawImage(img, 0, 0)
-        resolve(canvas.toDataURL('image/png'))
+        const dataUrl = canvas.toDataURL('image/png')
+        // Clean up canvas memory immediately to prevent iOS OOM (Out Of Memory) crash
+        canvas.width = 0
+        canvas.height = 0
+        img.onload = null
+        img.onerror = null
+        resolve(dataUrl)
       } else {
+        img.onload = null
+        img.onerror = null
         reject(new Error('Failed to get canvas context'))
       }
     }
-    img.onerror = () => reject(new Error('Failed to load image: ' + url))
+    img.onerror = () => {
+      img.onload = null
+      img.onerror = null
+      reject(new Error('Failed to load image: ' + url))
+    }
     img.src = url
   })
 }

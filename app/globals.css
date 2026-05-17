@@ -6,9 +6,26 @@
 @tailwind utilities;
 
 @layer base {
-  *, *::before, *::after { box-sizing: border-box; }
-  html { -webkit-font-smoothing: antialiased;
-    @apply font-sans; }
+  *, *::before, *::after { 
+    box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent; /* Hilangkan kedipan abu-abu di iOS */
+  }
+  html { 
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%; /* Cegah teks membesar acak saat rotasi di Safari iOS */
+    scroll-behavior: smooth;
+    @apply font-sans; 
+  }
+  
+  /* Safari / iOS / macOS Backdrop Blur Fallback */
+  .backdrop-blur-xl {
+    -webkit-backdrop-filter: blur(24px) !important;
+    backdrop-filter: blur(24px) !important;
+  }
+  .backdrop-blur-md {
+    -webkit-backdrop-filter: blur(12px) !important;
+    backdrop-filter: blur(12px) !important;
+  }
 
   :root {
     /* Blue Color Palette */
