@@ -1,13 +1,59 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { BarChart3, TrendingUp, Wallet, Loader2, RefreshCw, ShieldAlert, RefreshCcwDot } from 'lucide-react'
+import { 
+  BarChart3, 
+  TrendingUp, 
+  Wallet, 
+  Loader2, 
+  RefreshCw, 
+  ShieldAlert, 
+  RefreshCcwDot,
+  FileSpreadsheet,
+  FileText,
+  Printer
+} from 'lucide-react'
 import AttendanceCharts from '@/components/charts/AttendanceCharts'
 import FinanceCharts from '@/components/charts/FinanceCharts'
 import KasSiswaCharts from '@/components/charts/KasSiswaCharts'
+import { format } from 'date-fns'
+import { id } from 'date-fns/locale'
+import toast from 'react-hot-toast'
+import * as XLSX from 'xlsx'
 
 interface Props {
   user: { id: number; nama: string; email: string; role: string }
+}
+
+const formatDate = (date: Date, formatStr: string) => {
+  return format(date, formatStr, { locale: id })
+}
+
+const formatRupiah = (val: number | null | undefined) => {
+  if (val === null || val === undefined) return 'Rp 0'
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val)
+}
+
+// Convert image url to base64 securely on client-side
+const loadBase64Image = (url: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image()
+    img.crossOrigin = 'Anonymous'
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        ctx.drawImage(img, 0, 0)
+        resolve(canvas.toDataURL('image/png'))
+      } else {
+        reject(new Error('Failed to get canvas context'))
+      }
+    }
+    img.onerror = () => reject(new Error('Failed to load image: ' + url))
+    img.src = url
+  })
 }
 
 export default function ReportsClient({ user }: Props) {
@@ -16,6 +62,8 @@ export default function ReportsClient({ user }: Props) {
   const [authError, setAuthError] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'attendance' | 'finance' | 'kas'>('attendance')
+  const [exportingPdf, setExportingPdf] = useState(false)
+  const [exportingExcel, setExportingExcel] = useState(false)
 
   const fetchReportsData = useCallback(async () => {
     setLoading(true)
@@ -50,14 +98,376 @@ export default function ReportsClient({ user }: Props) {
     fetchReportsData()
   }, [fetchReportsData])
 
+  // PDF Export Generation
+  const handleExportPDF = async () => {
+    if (!data) {
+      toast.error('Data laporan belum siap. Silakan refresh terlebih dahulu.')
+      return
+    }
+    setExportingPdf(true)
+    const toastId = toast.loading('Mengunduh logo & menyiapkan dokumen laporan resmi (PDF)...')
+    
+    try {
+      const { jsPDF } = await import('jspdf')
+      const { default: autoTable } = await import('jspdf-autotable')
+      
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      })
+
+      // Image resources
+      const logoAirlanggaUrl = 'https://uploads.onecompiler.io/43k3cj6jv/44ph8dpc9/Logo-smk-airlangga-balikpapan2-1.png'
+      const logoKesUrl = 'https://uploads.onecompiler.io/43k3cj6jv/44ph8dpc9/LOGO_SMK_KES_.png'
+
+      const [logoAirlanggaBase64, logoKesBase64] = await Promise.all([
+        loadBase64Image(logoAirlanggaUrl).catch((err) => {
+          console.warn('Failed to load SMK Airlangga logo', err)
+          return ''
+        }),
+        loadBase64Image(logoKesUrl).catch((err) => {
+          console.warn('Failed to SMK Kes logo', err)
+          return ''
+        })
+      ])
+
+      let currentY = 12
+
+      // ── DRAW KOP SURAT (OFFICIAL LETTERHEAD) ───────────────────
+      // Left Logo: SMK Airlangga Balikpapan
+      if (logoAirlanggaBase64) {
+        doc.addImage(logoAirlanggaBase64, 'PNG', 15, currentY, 20, 20)
+      }
+
+      // Right Logo: SMK Kesehatan Airlangga Balikpapan
+      if (logoKesBase64) {
+        doc.addImage(logoKesBase64, 'PNG', 175, currentY, 20, 20)
+      }
+
+      // Center Official Texts
+      doc.setFont('Helvetica', 'bold')
+      doc.setFontSize(13)
+      doc.setTextColor(5, 38, 89) // #052659 - Corporate Premium Blue
+      doc.text('YAYASAN AIRLANGGA BALIKPAPAN', 105, currentY + 3, { align: 'center' })
+      
+      doc.setFontSize(11)
+      doc.setTextColor(5, 38, 89)
+      doc.text('SMK AIRLANGGA & SMK KESEHATAN AIRLANGGA', 105, currentY + 8, { align: 'center' })
+      
+      doc.setFont('Helvetica', 'oblique')
+      doc.setFontSize(8.5)
+      doc.setTextColor(100, 100, 100)
+      doc.text('Terakreditasi A • Bidang Keahlian: Teknologi, Bisnis, Kesehatan & Farmasi', 105, currentY + 13, { align: 'center' })
+      
+      doc.setFont('Helvetica', 'normal')
+      doc.setFontSize(7.5)
+      doc.setTextColor(110, 110, 110)
+      doc.text('Jl. S. Parman No. 27, Gunung Sari Ulu, Balikpapan Tengah, Kota Balikpapan 76122 • Telp: (0542) 732103', 105, currentY + 17, { align: 'center' })
+
+      // Double Line Divider
+      currentY += 21
+      doc.setLineWidth(0.8)
+      doc.setDrawColor(5, 38, 89)
+      doc.line(15, currentY, 195, currentY)
+      doc.setLineWidth(0.2)
+      doc.line(15, currentY + 0.8, 195, currentY + 0.8)
+
+      // ── REPORT TITLE & PERIOD ──────────────────────────────────
+      currentY += 10
+      doc.setFont('Helvetica', 'bold')
+      doc.setFontSize(12)
+      doc.setTextColor(15, 23, 42) // Slate 900
+      doc.text('LAPORAN DATA KINERJA & KEUANGAN EKSTRAKURIKULER', 105, currentY, { align: 'center' })
+      
+      currentY += 5
+      doc.setFont('Helvetica', 'normal')
+      doc.setFontSize(9)
+      doc.setTextColor(100, 100, 100)
+      doc.text(`Tahun Ajaran ${new Date().getFullYear()}/${new Date().getFullYear() + 1}`, 105, currentY, { align: 'center' })
+
+      // Metadata Info Box
+      currentY += 8
+      doc.setFillColor(248, 250, 252) // Slate 50
+      doc.setDrawColor(226, 232, 240) // Slate 200
+      doc.roundedRect(15, currentY, 180, 18, 2, 2, 'FD')
+
+      doc.setFont('Helvetica', 'bold')
+      doc.setFontSize(8.5)
+      doc.setTextColor(5, 38, 89)
+      doc.text('INFORMASI LAPORAN', 20, currentY + 5.5)
+      
+      doc.setFont('Helvetica', 'normal')
+      doc.setFontSize(8)
+      doc.setTextColor(71, 85, 105)
+      doc.text(`Cetak Oleh   : ${user.nama} (${user.role === 'administrator' ? 'Administrator' : 'Pembina'})`, 20, currentY + 10.5)
+      doc.text(`Tanggal Cetak: ${formatDate(new Date(), 'dd MMMM yyyy HH:mm')} WITA`, 20, currentY + 14.5)
+      
+      doc.text(`Akses Data : ${data.orgs.map((o: string) => o.toUpperCase()).join(', ')}`, 110, currentY + 10.5)
+      doc.text(`Dokumen    : 100% Client-Side Automated (Artemis)`, 110, currentY + 14.5)
+
+      // ── SECTION 1: KEHADIRAN ANGOTA TAHUNAN ────────────────────
+      currentY += 25
+      doc.setFont('Helvetica', 'bold')
+      doc.setFontSize(10.5)
+      doc.setTextColor(5, 38, 89)
+      doc.text('1. Laporan Statistik Kehadiran Bulanan (Tahunan)', 15, currentY)
+
+      const attendanceRows = (data.kehadiranTahunan || []).map((item: any) => [
+        item.month,
+        `${item.hadir} Sesi`,
+        `${item.tidak_hadir} Sesi`,
+        `${item.persentase}%`
+      ])
+
+      currentY += 3.5
+      autoTable(doc, {
+        startY: currentY,
+        head: [['Bulan', 'Total Kehadiran (Hadir)', 'Total Absen (Sakit/Izin/Alfa)', 'Tingkat Kehadiran']],
+        body: attendanceRows,
+        theme: 'striped',
+        headStyles: { fillColor: [5, 38, 89], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8.5 },
+        bodyStyles: { fontSize: 8, textColor: [40, 40, 40] },
+        alternateRowStyles: { fillColor: [248, 250, 253] },
+        margin: { left: 15, right: 15 }
+      })
+
+      // Update Y Position
+      currentY = (doc as any).lastAutoTable.finalY + 10
+
+      // Add a page break if not enough space for Section 2
+      if (currentY > 210) {
+        doc.addPage()
+        currentY = 20
+      }
+
+      // ── SECTION 2: BUKU KAS KEUANGAN ──────────────────────────
+      doc.setFont('Helvetica', 'bold')
+      doc.setFontSize(10.5)
+      doc.setTextColor(5, 38, 89)
+      doc.text('2. Laporan Transaksi Buku Kas Keuangan (6 Bulan Terakhir)', 15, currentY)
+
+      const financeRows = (data.keuanganBulanan || []).map((item: any) => [
+        item.bulan,
+        formatRupiah(item.pemasukan),
+        formatRupiah(item.pengeluaran),
+        formatRupiah(item.saldo)
+      ])
+
+      currentY += 3.5
+      autoTable(doc, {
+        startY: currentY,
+        head: [['Bulan Periode', 'Pemasukan Kas', 'Pengeluaran Kas', 'Saldo Bersih Bulanan']],
+        body: financeRows,
+        theme: 'striped',
+        headStyles: { fillColor: [84, 130, 180], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8.5 },
+        bodyStyles: { fontSize: 8, textColor: [40, 40, 40] },
+        alternateRowStyles: { fillColor: [248, 250, 253] },
+        margin: { left: 15, right: 15 }
+      })
+
+      currentY = (doc as any).lastAutoTable.finalY + 10
+
+      // Add page break for Section 3 & Signatures if close to page end
+      if (currentY > 200) {
+        doc.addPage()
+        currentY = 25
+      }
+
+      // ── SECTION 3: TOP KAS CONTRIBUTORS ────────────────────────
+      doc.setFont('Helvetica', 'bold')
+      doc.setFontSize(10.5)
+      doc.setTextColor(5, 38, 89)
+      doc.text('3. Daftar Anggota Teraktif & Pembayar Kas Teladan', 15, currentY)
+
+      // Merge data kas
+      const allTopStudents = [
+        ...(data.kasSiswa?.programming || []),
+        ...(data.kasSiswa?.english || []),
+        ...(data.kasSiswa?.osis || []),
+        ...(data.kasSiswa?.mpk || [])
+      ].slice(0, 5) // Top 5 members
+
+      const memberRows = allTopStudents.map((item: any, idx: number) => [
+        String(idx + 1),
+        item.nama,
+        item.kelas,
+        item.organisasi,
+        formatRupiah(item.total_kas)
+      ])
+
+      currentY += 3.5
+      if (memberRows.length > 0) {
+        autoTable(doc, {
+          startY: currentY,
+          head: [['No', 'Nama Lengkap Anggota', 'Kelas / Jabatan', 'Unit Organisasi', 'Total Kas Terbayar']],
+          body: memberRows,
+          theme: 'striped',
+          headStyles: { fillColor: [34, 197, 94], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8.5 },
+          bodyStyles: { fontSize: 8, textColor: [40, 40, 40] },
+          alternateRowStyles: { fillColor: [248, 250, 253] },
+          margin: { left: 15, right: 15 }
+        })
+        currentY = (doc as any).lastAutoTable.finalY + 15
+      } else {
+        doc.setFont('Helvetica', 'normal')
+        doc.setFontSize(9)
+        doc.text('Belum ada data kontribusi anggota terdaftar.', 15, currentY + 6)
+        currentY += 15
+      }
+
+      // Make sure signature section is never cut off
+      if (currentY > 230) {
+        doc.addPage()
+        currentY = 25
+      }
+
+      // ── SIGNATURES (KOLOM TANDA TANGAN) ─────────────────────────
+      currentY += 5
+      doc.setFont('Helvetica', 'normal')
+      doc.setFontSize(9.5)
+      doc.setTextColor(15, 23, 42)
+      
+      // Left side: Kepala Sekolah
+      doc.text('Mengetahui,', 30, currentY)
+      doc.text('Kepala Sekolah SMK Airlangga,', 30, currentY + 5)
+      doc.text('___________________________', 30, currentY + 28)
+      doc.setFont('Helvetica', 'bold')
+      doc.text('Agus Budianto, M.Pd.', 30, currentY + 33)
+
+      // Right side: Pembina Ekskul
+      doc.setFont('Helvetica', 'normal')
+      doc.text(`Balikpapan, ${formatDate(new Date(), 'dd MMMM yyyy')}`, 130, currentY)
+      doc.text('Pembina Ekstrakurikuler,', 130, currentY + 5)
+      doc.text('___________________________', 130, currentY + 28)
+      doc.setFont('Helvetica', 'bold')
+      doc.text(user.nama, 130, currentY + 33)
+
+      // Save PDF document
+      doc.save(`Laporan_Resmi_Airlangga_${formatDate(new Date(), 'yyyy-MM-dd')}.pdf`)
+      toast.success('Laporan PDF Resmi berhasil diterbitkan! 📄🎉', { id: toastId })
+    } catch (err: any) {
+      console.error(err)
+      toast.error('Gagal memproses PDF: ' + err.message, { id: toastId })
+    }
+    setExportingPdf(false)
+  }
+
+  // Excel Export Generation
+  const handleExportExcel = () => {
+    if (!data) {
+      toast.error('Data laporan belum siap. Silakan refresh terlebih dahulu.')
+      return
+    }
+    setExportingExcel(true)
+    const toastId = toast.loading('Menyiapkan dan menyusun Laporan Excel (XLSX)...')
+
+    try {
+      // 1. Sheet 1: Kehadiran Tahunan
+      const attendanceData = (data.kehadiranTahunan || []).map((item: any) => ({
+        'Bulan': item.month,
+        'Hadir (Sesi)': item.hadir,
+        'Absen / Tidak Hadir (Sesi)': item.tidak_hadir,
+        'Persentase Tingkat Kehadiran': `${item.persentase}%`
+      }))
+
+      // 2. Sheet 2: Buku Kas Keuangan
+      const financeData = (data.keuanganBulanan || []).map((item: any) => ({
+        'Bulan Periode': item.bulan,
+        'Pemasukan (Rp)': item.pemasukan,
+        'Pengeluaran (Rp)': item.pengeluaran,
+        'Saldo Bersih (Rp)': item.saldo
+      }))
+
+      // 3. Sheet 3: Kas Anggota Ekskul
+      const allTopStudents = [
+        ...(data.kasSiswa?.programming || []),
+        ...(data.kasSiswa?.english || []),
+        ...(data.kasSiswa?.osis || []),
+        ...(data.kasSiswa?.mpk || [])
+      ]
+      
+      const memberData = allTopStudents.map((item: any) => ({
+        'Nama Lengkap Anggota': item.nama,
+        'Kelas / Jabatan': item.kelas,
+        'Unit Organisasi': item.organisasi,
+        'Total Kas Terbayar (Rp)': item.total_kas
+      }))
+
+      // Construct workbook
+      const wb = XLSX.utils.book_new()
+
+      const wsAttendance = XLSX.utils.json_to_sheet(attendanceData)
+      XLSX.utils.book_append_sheet(wb, wsAttendance, 'Laporan Kehadiran')
+
+      const wsFinance = XLSX.utils.json_to_sheet(financeData)
+      XLSX.utils.book_append_sheet(wb, wsFinance, 'Laporan Buku Kas')
+
+      const wsMembers = XLSX.utils.json_to_sheet(memberData)
+      XLSX.utils.book_append_sheet(wb, wsMembers, 'Data Kas Anggota')
+
+      // Save XLSX file to downloads
+      XLSX.writeFile(wb, `Laporan_Ekskul_Airlangga_${formatDate(new Date(), 'yyyy-MM-dd')}.xlsx`)
+      toast.success('Laporan Excel (XLSX) berhasil diunduh! 📊🎉', { id: toastId })
+    } catch (err: any) {
+      console.error(err)
+      toast.error('Gagal memproses Excel: ' + err.message, { id: toastId })
+    }
+    setExportingExcel(false)
+  }
+
   return (
     <div className="space-y-6 max-w-7xl">
-      <div>
-        <div className="flex items-center gap-2.5">
-          <BarChart3 className="w-6 h-6 text-[#5482B4]" />
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight">Laporan Statistik</h1>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <BarChart3 className="w-6 h-6 text-[#5482B4]" />
+            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Laporan Statistik</h1>
+          </div>
+          <p className="text-sm text-slate-500 mt-1">Kompilasi dan visualisasi data kehadiran, keuangan, dan kas siswa terintegrasi.</p>
         </div>
-        <p className="text-sm text-slate-500 mt-1">Visualisasi data kehadiran, keuangan, dan kas siswa dengan grafik animasi.</p>
+
+        {/* Action Export Buttons */}
+        <div className="flex flex-wrap gap-2.5">
+          <button
+            onClick={handleExportPDF}
+            disabled={loading || exportingPdf}
+            className="flex items-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-black rounded-xl transition-all shadow-md shadow-rose-600/10 hover:shadow-rose-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {exportingPdf ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Printer className="w-4 h-4" />
+            )}
+            Cetak PDF Resmi
+          </button>
+          
+          <button
+            onClick={handleExportExcel}
+            disabled={loading || exportingExcel}
+            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-black rounded-xl transition-all shadow-md shadow-emerald-600/10 hover:shadow-emerald-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {exportingExcel ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <FileSpreadsheet className="w-4 h-4" />
+            )}
+            Ekspor Excel
+          </button>
+
+          <button
+            onClick={fetchReportsData}
+            disabled={loading}
+            className="flex items-center justify-center w-10 h-10 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors disabled:opacity-50"
+            title="Refresh Data"
+          >
+            {loading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Tab Navigation */}
@@ -67,7 +477,7 @@ export default function ReportsClient({ user }: Props) {
             onClick={() => setActiveTab('attendance')}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
               activeTab === 'attendance'
-                ? 'bg-[#5482B4] text-white'
+                ? 'bg-[#5482B4] text-white font-black'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
@@ -81,7 +491,7 @@ export default function ReportsClient({ user }: Props) {
             }}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
               activeTab === 'finance'
-                ? 'bg-[#5482B4] text-white'
+                ? 'bg-[#5482B4] text-white font-black'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
@@ -95,7 +505,7 @@ export default function ReportsClient({ user }: Props) {
             }}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
               activeTab === 'kas'
-                ? 'bg-[#5482B4] text-white'
+                ? 'bg-[#5482B4] text-white font-black'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
@@ -103,22 +513,6 @@ export default function ReportsClient({ user }: Props) {
             Kas Siswa
           </button>
         </div>
-      </div>
-
-      {/* Refresh Button */}
-      <div className="flex justify-end">
-        <button
-          onClick={fetchReportsData}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-lg transition-colors disabled:opacity-50"
-        >
-          {loading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <RefreshCw className="w-4 h-4" />
-          )}
-          Refresh Data
-        </button>
       </div>
 
       {/* Content */}
@@ -169,4 +563,3 @@ export default function ReportsClient({ user }: Props) {
     </div>
   )
 }
-
