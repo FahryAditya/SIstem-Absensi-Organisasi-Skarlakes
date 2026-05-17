@@ -129,6 +129,28 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
     return () => window.removeEventListener('keydown', onKey)
   }, [open, isNativeFullscreen])
 
+  // iOS-safe scroll locking & layout viewport protection
+  useEffect(() => {
+    if (!open) return
+    const originalOverflow = document.body.style.overflow
+    const originalPosition = document.body.style.position
+    const originalWidth = document.body.style.width
+    const originalHeight = document.body.style.height
+
+    // Lock scroll to prevent rubber-banding on iOS Safari
+    document.body.style.overflow = 'hidden'
+    document.body.style.position = 'fixed'
+    document.body.style.width = '100%'
+    document.body.style.height = '100%'
+
+    return () => {
+      document.body.style.overflow = originalOverflow
+      document.body.style.position = originalPosition
+      document.body.style.width = originalWidth
+      document.body.style.height = originalHeight
+    }
+  }, [open])
+
   // Sync native fullscreen state
   useEffect(() => {
     const onChange = () => setIsNativeFullscreen(!!document.fullscreenElement)
@@ -232,27 +254,34 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
             style={{ background: 'radial-gradient(circle, rgba(34,197,94,0.08) 0%, transparent 70%)' }} />
 
           {/* ── TOP BAR ───────────────────────────────────────────── */}
-          <div className="relative flex items-center justify-between px-8 py-4 border-b border-white/10 flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse shadow-lg shadow-green-400/50" />
-              <span className="text-white/60 text-sm font-semibold tracking-wide uppercase">
+          <div className="relative flex items-center justify-between px-4 md:px-8 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] pb-3 md:py-4 border-b border-white/10 flex-shrink-0">
+            {/* Left side: Minimal Brand (Mobile) or Mode Presentasi (Desktop) */}
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-green-400 animate-pulse shadow-lg shadow-green-400/50" />
+              {/* Mobile title */}
+              <span className="text-white font-black text-sm md:hidden tracking-tight">
+                Sistem Ekskul
+              </span>
+              {/* Desktop details */}
+              <span className="hidden md:inline text-white/60 text-sm font-semibold tracking-wide uppercase">
                 Mode Presentasi
               </span>
-              <span className="text-white/30 text-sm">·</span>
-              <span className="text-white/50 text-xs">
+              <span className="hidden md:inline text-white/30 text-sm">·</span>
+              <span className="hidden md:inline text-white/50 text-xs">
                 {formatDate(now, 'EEEE, dd MMMM yyyy')}
               </span>
             </div>
 
-            {/* Center: App name */}
-            <div className="absolute left-1/2 -translate-x-1/2 text-center">
+            {/* Center: App name (Desktop only to prevent mobile overlap) */}
+            <div className="hidden md:block absolute left-1/2 -translate-x-1/2 text-center">
               <div className="text-white font-black text-lg tracking-tight">Sistem Ekskul</div>
               <div className="text-white/40 text-xs font-medium">Skarlakes V18.0.1 Artemis</div>
             </div>
 
-            <div className="flex items-center gap-3">
+            {/* Right side: Clock & Actions */}
+            <div className="flex items-center gap-2 md:gap-3">
               {/* Live clock */}
-              <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-white/80 text-sm">
+              <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2.5 py-1.5 md:px-4 md:py-2 rounded-xl text-white/80 text-xs md:text-sm">
                 <Clock className="w-3.5 h-3.5 text-white/50" />
                 <LiveClock />
               </div>
@@ -260,21 +289,21 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
               {/* Native fullscreen toggle */}
               <button
                 onClick={toggleNativeFullscreen}
-                className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/5 border border-white/10
+                className="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 rounded-xl bg-white/5 border border-white/10
                   hover:bg-white/10 text-white/60 hover:text-white transition-all"
                 title={isNativeFullscreen ? 'Keluar Fullscreen (F)' : 'Fullscreen Penuh (F)'}
               >
-                {isNativeFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                {isNativeFullscreen ? <Minimize2 className="w-3.5 h-3.5 md:w-4 md:h-4" /> : <Maximize2 className="w-3.5 h-3.5 md:w-4 md:h-4" />}
               </button>
 
               {/* Close */}
               <button
                 onClick={handleClose}
-                className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/5 border border-white/10
+                className="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 rounded-xl bg-white/5 border border-white/10
                   hover:bg-red-500/20 hover:border-red-500/30 text-white/60 hover:text-red-400 transition-all"
                 title="Tutup (Esc)"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5 md:w-4 md:h-4" />
               </button>
             </div>
           </div>
@@ -311,13 +340,13 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
                     </div>
 
                     {card.isCurrency ? (
-                      <div className="font-black text-white leading-none">
-                        <AnimatedCounter value={card.value} isCurrency={true} className="text-3xl xl:text-4xl" />
+                      <div className="font-black text-white leading-none truncate">
+                        <AnimatedCounter value={card.value} isCurrency={true} className="text-2xl sm:text-3xl xl:text-4xl block truncate" />
                       </div>
                     ) : (
-                      <div className="flex items-end gap-1 leading-none">
-                        <AnimatedCounter value={card.value} className="text-6xl xl:text-7xl font-black text-white tracking-tighter" />
-                        {card.suffix && <span className="text-2xl font-bold text-white/60 mb-2 ml-1">{card.suffix}</span>}
+                      <div className="flex items-end gap-1 leading-none truncate">
+                        <AnimatedCounter value={card.value} className="text-5xl sm:text-6xl xl:text-7xl font-black text-white tracking-tighter block truncate" />
+                        {card.suffix && <span className="text-xl sm:text-2xl font-bold text-white/60 mb-1.5 ml-1 flex-shrink-0">{card.suffix}</span>}
                       </div>
                     )}
 
@@ -361,7 +390,7 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
                     <TrendingUp className="w-5 h-5 text-[#5482B4]" />
                     <h3 className="text-base font-black text-white tracking-tight">Kehadiran 7 Hari Terakhir</h3>
                   </div>
-                  <div className="flex-1 min-h-0">
+                  <div className="w-full h-[220px] md:h-[260px] min-h-0 relative">
                     {charts?.kehadiranMingguan && charts.kehadiranMingguan.some(d => d.hadir + d.tidak_hadir > 0) ? (
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={charts.kehadiranMingguan} barSize={20} barGap={4} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
@@ -393,7 +422,7 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
                     <Wallet className="w-5 h-5 text-amber-400" />
                     <h3 className="text-base font-black text-white tracking-tight">Kas Bersih 6 Bulan Terakhir</h3>
                   </div>
-                  <div className="flex-1 min-h-0">
+                  <div className="w-full h-[220px] md:h-[260px] min-h-0 relative">
                     {charts?.kasPerBulan && charts.kasPerBulan.some(d => d.total !== 0) ? (
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={charts.kasPerBulan} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
@@ -428,7 +457,7 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
           </div>
 
           {/* ── BOTTOM BAR ────────────────────────────────────────── */}
-          <div className="relative flex items-center justify-between px-8 py-3 border-t border-white/10 flex-shrink-0">
+          <div className="relative flex flex-col md:flex-row items-center justify-between gap-3 px-4 md:px-8 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] border-t border-white/10 flex-shrink-0">
             <div className="flex items-center gap-3">
               {orgs.map(o => (
                 <span key={o} className="text-xs font-bold px-3 py-1 rounded-full bg-white/10 text-white/60 border border-white/10">

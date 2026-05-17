@@ -114,6 +114,28 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
 
   useEffect(() => { setIsBrowser(true) }, [])
 
+  // iOS-safe scroll locking & layout viewport protection
+  useEffect(() => {
+    if (!open) return
+    const originalOverflow = document.body.style.overflow
+    const originalPosition = document.body.style.position
+    const originalWidth = document.body.style.width
+    const originalHeight = document.body.style.height
+
+    // Lock scroll to prevent rubber-banding on iOS Safari
+    document.body.style.overflow = 'hidden'
+    document.body.style.position = 'fixed'
+    document.body.style.width = '100%'
+    document.body.style.height = '100%'
+
+    return () => {
+      document.body.style.overflow = originalOverflow
+      document.body.style.position = originalPosition
+      document.body.style.width = originalWidth
+      document.body.style.height = originalHeight
+    }
+  }, [open])
+
   // Load PDFJS CDN dynamically to keep production build lightweight & stable
   useEffect(() => {
     if (!open) return
@@ -383,16 +405,16 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
           <div className="absolute bottom-0 left-1/4 w-96 h-96 rounded-full pointer-events-none bg-cyan-500/5 blur-[80px]" />
 
           {/* HEADER */}
-          <div className="relative flex items-center justify-between px-8 py-4 border-b border-white/10 flex-shrink-0 z-20">
-            <div className="flex items-center gap-3">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#5482B4] animate-pulse shadow-lg shadow-blue-500/50" />
-              <span className="text-white/60 text-sm font-semibold tracking-wide uppercase">
-                Presentasi File Instan
+          <div className="relative flex items-center justify-between px-4 md:px-8 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] pb-3 md:py-4 border-b border-white/10 flex-shrink-0 z-20">
+            <div className="flex items-center gap-1.5 md:gap-3">
+              <div className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-[#5482B4] animate-pulse shadow-lg shadow-blue-500/50" />
+              <span className="text-white/60 text-xs md:text-sm font-semibold tracking-wide uppercase">
+                <span className="hidden xs:inline">Presentasi</span> File
               </span>
               {fileName && (
                 <>
                   <span className="text-white/30 text-sm">·</span>
-                  <span className="text-[#C2E8FF] text-xs font-bold bg-[#5482B4]/20 border border-[#5482B4]/30 px-2.5 py-1 rounded-lg max-w-[200px] truncate" title={fileName}>
+                  <span className="text-[#C2E8FF] text-[10px] md:text-xs font-bold bg-[#5482B4]/20 border border-[#5482B4]/30 px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg max-w-[80px] sm:max-w-[200px] truncate" title={fileName}>
                     📄 {fileName}
                   </span>
                 </>
@@ -409,24 +431,24 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 md:gap-3">
               {/* PDF Zoom controls */}
               {fileType === 'pdf' && (
-                <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl px-1 py-0.5">
-                  <button onClick={() => setZoom(z => Math.max(0.6, z - 0.2))} className="p-1.5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg transition-colors" title="Zoom Out">
-                    <ZoomOut className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-0.5 md:gap-1 bg-white/5 border border-white/10 rounded-xl px-1 py-0.5">
+                  <button onClick={() => setZoom(z => Math.max(0.6, z - 0.2))} className="p-1 md:p-1.5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg transition-colors" title="Zoom Out">
+                    <ZoomOut className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   </button>
-                  <span className="text-white/70 text-xs font-mono font-bold px-1.5">
+                  <span className="text-white/70 text-[10px] md:text-xs font-mono font-bold px-1">
                     {Math.round(zoom * 100)}%
                   </span>
-                  <button onClick={() => setZoom(z => Math.min(2.4, z + 0.2))} className="p-1.5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg transition-colors" title="Zoom In">
-                    <ZoomIn className="w-3.5 h-3.5" />
+                  <button onClick={() => setZoom(z => Math.min(2.4, z + 0.2))} className="p-1 md:p-1.5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg transition-colors" title="Zoom In">
+                    <ZoomIn className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   </button>
                 </div>
               )}
 
-              {/* Time display */}
-              <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-sm">
+              {/* Time display (desktop only) */}
+              <div className="hidden sm:flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-sm">
                 <Clock className="w-3.5 h-3.5 text-white/50 animate-pulse" />
                 <LiveClock />
               </div>
@@ -434,33 +456,33 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
               {/* Fullscreen control */}
               <button
                 onClick={toggleNativeFullscreen}
-                className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/5 border border-white/10
+                className="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 rounded-xl bg-white/5 border border-white/10
                   hover:bg-white/10 text-white/60 hover:text-white transition-all duration-150"
                 title={isNativeFullscreen ? 'Keluar Fullscreen (F)' : 'Fullscreen Penuh (F)'}
               >
-                {isNativeFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                {isNativeFullscreen ? <Minimize2 className="w-3.5 h-3.5 md:w-4 md:h-4" /> : <Maximize2 className="w-3.5 h-3.5 md:w-4 md:h-4" />}
               </button>
 
               {/* Reset file button */}
               {slides.length > 0 && (
                 <button
                   onClick={resetPresentation}
-                  className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/5 border border-white/10
+                  className="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 rounded-xl bg-white/5 border border-white/10
                     hover:bg-white/10 text-[#7EA0C5] hover:text-white transition-all duration-150"
                   title="Ganti File Baru"
                 >
-                  <RotateCcw className="w-4 h-4" />
+                  <RotateCcw className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 </button>
               )}
 
               {/* Close */}
               <button
                 onClick={handleClose}
-                className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/5 border border-white/10
+                className="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 rounded-xl bg-white/5 border border-white/10
                   hover:bg-red-500/20 hover:border-red-500/30 text-white/60 hover:text-red-400 transition-all duration-150"
                 title="Tutup (Esc)"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5 md:w-4 md:h-4" />
               </button>
             </div>
           </div>
@@ -653,7 +675,7 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
           </div>
 
           {/* FOOTER BAR */}
-          <div className="relative flex items-center justify-between px-8 py-3 border-t border-white/10 flex-shrink-0 z-20">
+          <div className="relative flex flex-col md:flex-row items-center justify-between gap-3 px-4 md:px-8 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] border-t border-white/10 flex-shrink-0 z-20">
             <div className="text-white/40 text-xs font-semibold">
               Format: <span className="text-[#7EA0C5] font-black uppercase">{fileType || '-'}</span>
               {fileSize && <span className="text-white/20 mx-2">·</span>}
