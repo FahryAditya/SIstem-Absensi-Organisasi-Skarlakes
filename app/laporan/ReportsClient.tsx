@@ -10,7 +10,6 @@ import {
   ShieldAlert, 
   RefreshCcwDot,
   FileSpreadsheet,
-  FileText,
   Printer
 } from 'lucide-react'
 import AttendanceCharts from '@/components/charts/AttendanceCharts'
@@ -32,6 +31,31 @@ const formatDate = (date: Date, formatStr: string) => {
 const formatRupiah = (val: number | null | undefined) => {
   if (val === null || val === undefined) return 'Rp 0'
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val)
+}
+
+// Convert month-year string (e.g. "Des 2025" or "Mei 2026") into numeric value for chronological filtering
+const parseMonthYearToValue = (monthYearStr: string) => {
+  if (!monthYearStr) return 0
+  const parts = monthYearStr.trim().split(' ')
+  if (parts.length < 2) return 0
+  const monthName = parts[0].toLowerCase()
+  const year = parseInt(parts[1]) || 0
+  
+  const monthMap: Record<string, number> = {
+    des: 12, dec: 12, nov: 11, okt: 10, oct: 10, sep: 9, sept: 9,
+    agu: 8, agust: 8, ags: 8, jul: 7, juli: 7, jun: 6, juni: 6,
+    mei: 5, may: 5, apr: 4, april: 4, mar: 3, maret: 3, feb: 2, febr: 2,
+    jan: 1
+  }
+  
+  let monthNum = 1
+  for (const key in monthMap) {
+    if (monthName.startsWith(key)) {
+      monthNum = monthMap[key]
+      break
+    }
+  }
+  return year * 12 + monthNum
 }
 
 // Convert image url to base64 securely on client-side
@@ -64,6 +88,10 @@ export default function ReportsClient({ user }: Props) {
   const [activeTab, setActiveTab] = useState<'attendance' | 'finance' | 'kas'>('attendance')
   const [exportingPdf, setExportingPdf] = useState(false)
   const [exportingExcel, setExportingExcel] = useState(false)
+  
+  // Date range filters
+  const [startMonth, setStartMonth] = useState<string>('')
+  const [endMonth, setEndMonth] = useState<string>('')
 
   const fetchReportsData = useCallback(async () => {
     setLoading(true)
@@ -97,6 +125,14 @@ export default function ReportsClient({ user }: Props) {
   useEffect(() => {
     fetchReportsData()
   }, [fetchReportsData])
+
+  // Automatically initialize month filters when data is fetched
+  useEffect(() => {
+    if (data?.keuanganBulanan && data.keuanganBulanan.length > 0) {
+      setStartMonth(data.keuanganBulanan[0].bulan)
+      setEndMonth(data.keuanganBulanan[data.keuanganBulanan.length - 1].bulan)
+    }
+  }, [data])
 
   // PDF Export Generation
   const handleExportPDF = async () => {
@@ -181,10 +217,10 @@ export default function ReportsClient({ user }: Props) {
       doc.text('LAPORAN DATA KINERJA & KEUANGAN EKSTRAKURIKULER', 105, currentY, { align: 'center' })
       
       currentY += 5
-      doc.setFont('Helvetica', 'normal')
+      doc.setFont('Helvetica', 'bold')
       doc.setFontSize(9)
-      doc.setTextColor(100, 100, 100)
-      doc.text(`Tahun Ajaran ${new Date().getFullYear()}/${new Date().getFullYear() + 1}`, 105, currentY, { align: 'center' })
+      doc.setTextColor(5, 38, 89)
+      doc.text(`Periode Laporan: ${startMonth} s/d ${endMonth}`, 105, currentY, { align: 'center' })
 
       // Metadata Info Box
       currentY += 8
@@ -206,14 +242,28 @@ export default function ReportsClient({ user }: Props) {
       doc.text(`Akses Data : ${data.orgs.map((o: string) => o.toUpperCase()).join(', ')}`, 110, currentY + 10.5)
       doc.text(`Dokumen    : 100% Client-Side Automated (Artemis)`, 110, currentY + 14.5)
 
+      // Get comparative values for filtering
+      const startVal = parseMonthYearToValue(startMonth)
+      const endVal = parseMonthYearToValue(endMonth)
+      const currentYear = new Date().getFullYear()
+
       // ── SECTION 1: KEHADIRAN ANGOTA TAHUNAN ────────────────────
       currentY += 25
       doc.setFont('Helvetica', 'bold')
       doc.setFontSize(10.5)
       doc.setTextColor(5, 38, 89)
-      doc.text('1. Laporan Statistik Kehadiran Bulanan (Tahunan)', 15, currentY)
+      doc.text('1. Laporan Statistik Kehadiran Bulanan', 15, currentY)
 
-      const attendanceRows = (data.kehadiranTahunan || []).map((item: any) => [
+      // Filter attendance records based on startMonth and endMonth
+      const filteredAttendance = (data.kehadiranTahunan || []).filter((item: any) => {
+        const itemVal = parseMonthYearToValue(`${item.month} ${currentYear}`)
+        if (startVal && endVal) {
+          return itemVal >= startVal && itemVal <= endVal
+        }
+        return true
+      })
+
+      const attendanceRows = filteredAttendance.map((item: any) => [
         item.month,
         `${item.hadir} Sesi`,
         `${item.tidak_hadir} Sesi`,
@@ -235,7 +285,6 @@ export default function ReportsClient({ user }: Props) {
       // Update Y Position
       currentY = (doc as any).lastAutoTable.finalY + 10
 
-      // Add a page break if not enough space for Section 2
       if (currentY > 210) {
         doc.addPage()
         currentY = 20
@@ -245,9 +294,18 @@ export default function ReportsClient({ user }: Props) {
       doc.setFont('Helvetica', 'bold')
       doc.setFontSize(10.5)
       doc.setTextColor(5, 38, 89)
-      doc.text('2. Laporan Transaksi Buku Kas Keuangan (6 Bulan Terakhir)', 15, currentY)
+      doc.text('2. Laporan Transaksi Rincian Keuangan Buku Kas', 15, currentY)
 
-      const financeRows = (data.keuanganBulanan || []).map((item: any) => [
+      // Filter finance records based on startMonth and endMonth
+      const filteredFinance = (data.keuanganBulanan || []).filter((item: any) => {
+        const itemVal = parseMonthYearToValue(item.bulan)
+        if (startVal && endVal) {
+          return itemVal >= startVal && itemVal <= endVal
+        }
+        return true
+      })
+
+      const financeRows = filteredFinance.map((item: any) => [
         item.bulan,
         formatRupiah(item.pemasukan),
         formatRupiah(item.pengeluaran),
@@ -268,7 +326,6 @@ export default function ReportsClient({ user }: Props) {
 
       currentY = (doc as any).lastAutoTable.finalY + 10
 
-      // Add page break for Section 3 & Signatures if close to page end
       if (currentY > 200) {
         doc.addPage()
         currentY = 25
@@ -278,9 +335,8 @@ export default function ReportsClient({ user }: Props) {
       doc.setFont('Helvetica', 'bold')
       doc.setFontSize(10.5)
       doc.setTextColor(5, 38, 89)
-      doc.text('3. Daftar Anggota Teraktif & Pembayar Kas Teladan', 15, currentY)
+      doc.text('3. Rangkuman Anggota Teraktif & Pembayar Kas Teladan', 15, currentY)
 
-      // Merge data kas
       const allTopStudents = [
         ...(data.kasSiswa?.programming || []),
         ...(data.kasSiswa?.english || []),
@@ -308,43 +364,16 @@ export default function ReportsClient({ user }: Props) {
           alternateRowStyles: { fillColor: [248, 250, 253] },
           margin: { left: 15, right: 15 }
         })
-        currentY = (doc as any).lastAutoTable.finalY + 15
       } else {
         doc.setFont('Helvetica', 'normal')
         doc.setFontSize(9)
         doc.text('Belum ada data kontribusi anggota terdaftar.', 15, currentY + 6)
-        currentY += 15
       }
 
-      // Make sure signature section is never cut off
-      if (currentY > 230) {
-        doc.addPage()
-        currentY = 25
-      }
-
-      // ── SIGNATURES (KOLOM TANDA TANGAN) ─────────────────────────
-      currentY += 5
-      doc.setFont('Helvetica', 'normal')
-      doc.setFontSize(9.5)
-      doc.setTextColor(15, 23, 42)
-      
-      // Left side: Kepala Sekolah
-      doc.text('Mengetahui,', 30, currentY)
-      doc.text('Kepala Sekolah SMK Airlangga,', 30, currentY + 5)
-      doc.text('___________________________', 30, currentY + 28)
-      doc.setFont('Helvetica', 'bold')
-      doc.text('Agus Budianto, M.Pd.', 30, currentY + 33)
-
-      // Right side: Pembina Ekskul
-      doc.setFont('Helvetica', 'normal')
-      doc.text(`Balikpapan, ${formatDate(new Date(), 'dd MMMM yyyy')}`, 130, currentY)
-      doc.text('Pembina Ekstrakurikuler,', 130, currentY + 5)
-      doc.text('___________________________', 130, currentY + 28)
-      doc.setFont('Helvetica', 'bold')
-      doc.text(user.nama, 130, currentY + 33)
+      // Note: Tanda tangan resmi pembina dan kepala sekolah dihapus sesuai permintaan user.
 
       // Save PDF document
-      doc.save(`Laporan_Resmi_Airlangga_${formatDate(new Date(), 'yyyy-MM-dd')}.pdf`)
+      doc.save(`Laporan_Resmi_Airlangga_${startMonth.replace(' ', '_')}_to_${endMonth.replace(' ', '_')}.pdf`)
       toast.success('Laporan PDF Resmi berhasil diterbitkan! 📄🎉', { id: toastId })
     } catch (err: any) {
       console.error(err)
@@ -363,16 +392,36 @@ export default function ReportsClient({ user }: Props) {
     const toastId = toast.loading('Menyiapkan dan menyusun Laporan Excel (XLSX)...')
 
     try {
-      // 1. Sheet 1: Kehadiran Tahunan
-      const attendanceData = (data.kehadiranTahunan || []).map((item: any) => ({
+      const startVal = parseMonthYearToValue(startMonth)
+      const endVal = parseMonthYearToValue(endMonth)
+      const currentYear = new Date().getFullYear()
+
+      // 1. Sheet 1: Kehadiran Tahunan (Filtered)
+      const filteredAttendance = (data.kehadiranTahunan || []).filter((item: any) => {
+        const itemVal = parseMonthYearToValue(`${item.month} ${currentYear}`)
+        if (startVal && endVal) {
+          return itemVal >= startVal && itemVal <= endVal
+        }
+        return true
+      })
+
+      const attendanceData = filteredAttendance.map((item: any) => ({
         'Bulan': item.month,
         'Hadir (Sesi)': item.hadir,
         'Absen / Tidak Hadir (Sesi)': item.tidak_hadir,
         'Persentase Tingkat Kehadiran': `${item.persentase}%`
       }))
 
-      // 2. Sheet 2: Buku Kas Keuangan
-      const financeData = (data.keuanganBulanan || []).map((item: any) => ({
+      // 2. Sheet 2: Buku Kas Keuangan (Filtered)
+      const filteredFinance = (data.keuanganBulanan || []).filter((item: any) => {
+        const itemVal = parseMonthYearToValue(item.bulan)
+        if (startVal && endVal) {
+          return itemVal >= startVal && itemVal <= endVal
+        }
+        return true
+      })
+
+      const financeData = filteredFinance.map((item: any) => ({
         'Bulan Periode': item.bulan,
         'Pemasukan (Rp)': item.pemasukan,
         'Pengeluaran (Rp)': item.pengeluaran,
@@ -418,7 +467,7 @@ export default function ReportsClient({ user }: Props) {
 
   return (
     <div className="space-y-6 max-w-7xl">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
             <BarChart3 className="w-6 h-6 text-[#5482B4]" />
@@ -427,8 +476,35 @@ export default function ReportsClient({ user }: Props) {
           <p className="text-sm text-slate-500 mt-1">Kompilasi dan visualisasi data kehadiran, keuangan, dan kas siswa terintegrasi.</p>
         </div>
 
-        {/* Action Export Buttons */}
-        <div className="flex flex-wrap gap-2.5">
+        {/* Action Export & Filters Panel */}
+        <div className="flex flex-wrap items-center gap-3">
+          
+          {/* Month Period Pickers */}
+          {data?.keuanganBulanan && data.keuanganBulanan.length > 0 && (
+            <div className="flex items-center gap-2 bg-slate-100 border border-slate-200/80 px-3 py-2 rounded-xl">
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Periode:</span>
+              <select
+                value={startMonth}
+                onChange={(e) => setStartMonth(e.target.value)}
+                className="bg-transparent text-xs font-black text-slate-700 outline-none cursor-pointer border-none p-0 focus:ring-0 focus:outline-none"
+              >
+                {data.keuanganBulanan.map((m: any) => (
+                  <option key={m.bulan} value={m.bulan}>{m.bulan}</option>
+                ))}
+              </select>
+              <span className="text-slate-400 text-xs font-bold">s/d</span>
+              <select
+                value={endMonth}
+                onChange={(e) => setEndMonth(e.target.value)}
+                className="bg-transparent text-xs font-black text-slate-700 outline-none cursor-pointer border-none p-0 focus:ring-0 focus:outline-none"
+              >
+                {data.keuanganBulanan.map((m: any) => (
+                  <option key={m.bulan} value={m.bulan}>{m.bulan}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <button
             onClick={handleExportPDF}
             disabled={loading || exportingPdf}
