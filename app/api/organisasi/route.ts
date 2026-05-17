@@ -77,17 +77,69 @@ export async function POST(req: NextRequest) {
   if (tipe === 'mpk' && !canAccessMpk(ctx.userRole))
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
 
+  const namaTrimmed = data.nama.trim()
+
+  // ── Cegah duplikat nama (case-insensitive) dalam organisasi yang sama ──────
+  if (tipe === 'osis') {
+    const duplikat = await prisma.anggotaOsis.findFirst({
+      where: { nama: { equals: namaTrimmed, mode: 'insensitive' } },
+    })
+    if (duplikat) {
+      return NextResponse.json(
+        { error: `Anggota "${duplikat.nama}" sudah terdaftar di OSIS. Periksa data yang sudah ada.` },
+        { status: 409 }
+      )
+    }
+
+    // Cek duplikat NIS jika diisi
+    if (data.nis && data.nis.trim() !== '') {
+      const duplikatNis = await prisma.anggotaOsis.findFirst({
+        where: { nis: data.nis.trim() },
+      })
+      if (duplikatNis) {
+        return NextResponse.json(
+          { error: `NIS "${data.nis}" sudah digunakan oleh "${duplikatNis.nama}" di OSIS.` },
+          { status: 409 }
+        )
+      }
+    }
+  }
+
+  if (tipe === 'mpk') {
+    const duplikat = await prisma.anggotaMpk.findFirst({
+      where: { nama: { equals: namaTrimmed, mode: 'insensitive' } },
+    })
+    if (duplikat) {
+      return NextResponse.json(
+        { error: `Anggota "${duplikat.nama}" sudah terdaftar di MPK. Periksa data yang sudah ada.` },
+        { status: 409 }
+      )
+    }
+
+    if (data.nis && data.nis.trim() !== '') {
+      const duplikatNis = await prisma.anggotaMpk.findFirst({
+        where: { nis: data.nis.trim() },
+      })
+      if (duplikatNis) {
+        return NextResponse.json(
+          { error: `NIS "${data.nis}" sudah digunakan oleh "${duplikatNis.nama}" di MPK.` },
+          { status: 409 }
+        )
+      }
+    }
+  }
+
   let anggota: Record<string, unknown>
   if (tipe === 'osis') {
-    anggota = await prisma.anggotaOsis.create({ data })
+    anggota = await prisma.anggotaOsis.create({ data: { ...data, nama: namaTrimmed } })
   } else {
-    anggota = await prisma.anggotaMpk.create({ data })
+    anggota = await prisma.anggotaMpk.create({ data: { ...data, nama: namaTrimmed } })
   }
 
   await createLog({
     userId: ctx.userId, userNama: ctx.userNama, aksi: 'CREATE',
     tabel: `anggota_${tipe}`, recordId: (anggota as { id: number }).id,
-    deskripsi: `${ctx.userNama} menambahkan anggota "${data.nama}" ke ${tipe.toUpperCase()}`,
+    deskripsi: `${ctx.userNama} menambahkan anggota "${namaTrimmed}" ke ${tipe.toUpperCase()}`,
     dataBaru: data, ipAddress: getIp(req),
   })
 
@@ -108,21 +160,75 @@ export async function PUT(req: NextRequest) {
   if (tipe === 'mpk' && !canAccessMpk(ctx.userRole))
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
 
+  const namaTrimmed = data.nama.trim()
+
   let existing: Record<string, unknown> | null = null
   let updated: Record<string, unknown>
 
   if (tipe === 'osis') {
     existing = await prisma.anggotaOsis.findUnique({ where: { id } })
-    updated = await prisma.anggotaOsis.update({ where: { id }, data })
+    if (!existing) return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
+
+    // Cek duplikat nama (kecuali record sendiri)
+    const duplikat = await prisma.anggotaOsis.findFirst({
+      where: { nama: { equals: namaTrimmed, mode: 'insensitive' }, NOT: { id } },
+    })
+    if (duplikat) {
+      return NextResponse.json(
+        { error: `Anggota "${duplikat.nama}" sudah terdaftar di OSIS.` },
+        { status: 409 }
+      )
+    }
+
+    // Cek duplikat NIS (kecuali record sendiri)
+    if (data.nis && data.nis.trim() !== '') {
+      const duplikatNis = await prisma.anggotaOsis.findFirst({
+        where: { nis: data.nis.trim(), NOT: { id } },
+      })
+      if (duplikatNis) {
+        return NextResponse.json(
+          { error: `NIS "${data.nis}" sudah digunakan oleh "${duplikatNis.nama}" di OSIS.` },
+          { status: 409 }
+        )
+      }
+    }
+
+    updated = await prisma.anggotaOsis.update({ where: { id }, data: { ...data, nama: namaTrimmed } })
   } else {
     existing = await prisma.anggotaMpk.findUnique({ where: { id } })
-    updated = await prisma.anggotaMpk.update({ where: { id }, data })
+    if (!existing) return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
+
+    // Cek duplikat nama (kecuali record sendiri)
+    const duplikat = await prisma.anggotaMpk.findFirst({
+      where: { nama: { equals: namaTrimmed, mode: 'insensitive' }, NOT: { id } },
+    })
+    if (duplikat) {
+      return NextResponse.json(
+        { error: `Anggota "${duplikat.nama}" sudah terdaftar di MPK.` },
+        { status: 409 }
+      )
+    }
+
+    // Cek duplikat NIS (kecuali record sendiri)
+    if (data.nis && data.nis.trim() !== '') {
+      const duplikatNis = await prisma.anggotaMpk.findFirst({
+        where: { nis: data.nis.trim(), NOT: { id } },
+      })
+      if (duplikatNis) {
+        return NextResponse.json(
+          { error: `NIS "${data.nis}" sudah digunakan oleh "${duplikatNis.nama}" di MPK.` },
+          { status: 409 }
+        )
+      }
+    }
+
+    updated = await prisma.anggotaMpk.update({ where: { id }, data: { ...data, nama: namaTrimmed } })
   }
 
   await createLog({
     userId: ctx.userId, userNama: ctx.userNama, aksi: 'UPDATE',
     tabel: `anggota_${tipe}`, recordId: id,
-    deskripsi: `${ctx.userNama} mengubah data anggota "${data.nama || (existing as { nama?: string })?.nama}" di ${tipe.toUpperCase()}`,
+    deskripsi: `${ctx.userNama} mengubah data anggota "${namaTrimmed}" di ${tipe.toUpperCase()}`,
     dataLama: existing as Record<string, unknown>, dataBaru: data, ipAddress: getIp(req),
   })
 

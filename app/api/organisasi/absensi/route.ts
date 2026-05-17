@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
 import { canAccessOsis, canAccessMpk } from '@/lib/auth'
 import { jsonWithPrivateCache } from '@/lib/api-cache'
+import { withRetryTransaction } from '@/lib/db-transaction'
 import { z } from 'zod'
 
 function getCtx(req: NextRequest) {
@@ -76,55 +77,67 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
 
   const tanggalDate = new Date(tanggal)
-  const anggotaIds = rows.map(r => r.anggota_id)
+  const anggotaKey = organisasi === 'osis' ? 'anggota_osis_id' : 'anggota_mpk_id'
 
-  // Upsert all via manual resilient upsert (safe from race condition)
-  await Promise.all(rows.map(async row => {
-    const baseData = {
-      organisasi_type: organisasi,
-      tanggal: tanggalDate,
-      status: row.status,
-      uang_kas: row.uang_kas,
-      keterangan: row.keterangan,
-    }
+  // ── Semua upsert dalam satu transaction dengan retry otomatis. ──────────
+  // RepeatableRead memastikan dua admin yang submit bersamaan tidak akan
+  // membaca snapshot stale dan menghasilkan INSERT ganda. Jika terjadi
+  // konflik serialisasi, transaksi di-retry otomatis (maks 3x).
+  await withRetryTransaction(async (tx) => {
+    for (const row of rows) {
+      const whereData: Record<string, unknown> = {
+        [anggotaKey]: row.anggota_id,
+        tanggal: tanggalDate,
+      }
 
-    const anggotaKey = organisasi === 'osis' ? 'anggota_osis_id' : 'anggota_mpk_id'
-    const whereData = { [anggotaKey]: row.anggota_id, tanggal: tanggalDate }
+      const baseData = {
+        organisasi_type: organisasi,
+        tanggal: tanggalDate,
+        status: row.status,
+        uang_kas: row.uang_kas,
+        keterangan: row.keterangan,
+      }
 
-    // Manual resilient upsert karena Prisma tidak mendukung .upsert() pada kolom opsional (nullable)
-    let existing = await prisma.absensiOrganisasi.findFirst({ where: whereData })
+      // Cari record yang sudah ada dalam snapshot transaksi yang sama
+      const existing = await tx.absensiOrganisasi.findFirst({ where: whereData })
 
-    if (existing) {
-      return prisma.absensiOrganisasi.update({
-        where: { id: existing.id },
-        data: { ...baseData, updated_by: ctx.userId }
-      })
-    } else {
-      try {
-        return await prisma.absensiOrganisasi.create({
-          data: { ...baseData, [anggotaKey]: row.anggota_id, created_by: ctx.userId }
+      if (existing) {
+        // Record sudah ada — update langsung
+        await tx.absensiOrganisasi.update({
+          where: { id: existing.id },
+          data: { ...baseData, updated_by: ctx.userId },
         })
-      } catch (error: any) {
-        if (error.code === 'P2002') {
-          // Tabrakan (Race Condition) terdeteksi dan digagalkan oleh Database (Unique Constraint)!
-          // Kita ambil ulang data yang baru saja terbuat dan lakukan update.
-          existing = await prisma.absensiOrganisasi.findFirst({ where: whereData })
-          if (existing) {
-            return prisma.absensiOrganisasi.update({
-              where: { id: existing.id },
-              data: { ...baseData, updated_by: ctx.userId }
-            })
+      } else {
+        // Record belum ada — coba create; jika admin lain create duluan
+        // (P2002 dari DB unique constraint), fallback ke update.
+        try {
+          await tx.absensiOrganisasi.create({
+            data: { ...baseData, [anggotaKey]: row.anggota_id, created_by: ctx.userId },
+          })
+        } catch (e: any) {
+          if (e?.code === 'P2002') {
+            // Tabrakan terdeteksi: ambil record yang baru saja dibuat oleh admin lain
+            const concurrent = await tx.absensiOrganisasi.findFirst({ where: whereData })
+            if (concurrent) {
+              await tx.absensiOrganisasi.update({
+                where: { id: concurrent.id },
+                data: { ...baseData, updated_by: ctx.userId },
+              })
+            }
+          } else {
+            throw e
           }
         }
-        throw error
       }
     }
-  }))
+  })
 
   await createLog({
     userId: ctx.userId, userNama: ctx.userNama, aksi: 'UPDATE',
-    tabel: `absensi_${organisasi}`, deskripsi: `${ctx.userNama} menyimpan absensi ${organisasi.toUpperCase()} tanggal ${tanggal} (${rows.length} anggota)`,
-    dataBaru: { tanggal, organisasi, jumlah: rows.length }, ipAddress: getIp(req),
+    tabel: `absensi_${organisasi}`,
+    deskripsi: `${ctx.userNama} menyimpan absensi ${organisasi.toUpperCase()} tanggal ${tanggal} (${rows.length} anggota)`,
+    dataBaru: { tanggal, organisasi, jumlah: rows.length },
+    ipAddress: getIp(req),
   })
 
   return NextResponse.json({ success: true, count: rows.length })
