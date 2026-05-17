@@ -10,7 +10,7 @@ import { formatDate } from '@/lib/utils'
 import { canManageSiswaData } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import { useDebounce } from '@/lib/hooks'
-import { Plus, Search, Pencil, Trash2, Users, Loader2, Filter, Contact } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, Users, Loader2, Filter, Contact, Zap } from 'lucide-react'
 import Select from '@/components/ui/Select'
 
 const TINGKAT_OPTIONS = [
@@ -30,7 +30,7 @@ const JURUSAN_OPTIONS = [
 ]
 
 interface Siswa {
-  id: number; nis: string | null; nama: string; kelas: string | null; ekskul: string; created_at: string
+  id: number; nis: string | null; nama: string; kelas: string | null; ekskul: string; created_at: string; xp: number
 }
 
 interface Props {
@@ -60,6 +60,12 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
   const [selectedIds, setSelectedIds] = useState<(string | number)[]>([])
   const [bulkDeleting, setBulkDeleting] = useState(false)
   const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false)
+
+  // XP awarding states
+  const [xpModalTarget, setXpModalTarget] = useState<Siswa | null>(null)
+  const [fXpAmount, setFXpAmount] = useState<number>(20)
+  const [fXpActivity, setFXpActivity] = useState<'tugas' | 'proyek' | 'manual'>('tugas')
+  const [xpSaving, setXpSaving] = useState(false)
 
   // Form state
   const [fNama, setFNama] = useState('')
@@ -161,6 +167,37 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
     setBulkDeleting(false); setBulkDeleteConfirmOpen(false); setSelectedIds([]); load()
   }, [selectedIds, load])
 
+  const openXpModal = useCallback((s: Siswa) => {
+    setXpModalTarget(s)
+    setFXpAmount(20)
+    setFXpActivity('tugas')
+  }, [])
+
+  const handleAwardXp = useCallback(async () => {
+    if (!xpModalTarget) return
+    setXpSaving(true)
+    try {
+      const res = await fetch('/api/siswa/xp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          siswaId: xpModalTarget.id,
+          xpToAdd: fXpAmount,
+          activity: fXpActivity
+        })
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Gagal memberikan XP')
+      toast.success(`Berhasil memberikan +${fXpAmount} XP ke ${xpModalTarget.nama}`)
+      setXpModalTarget(null)
+      clearJsonCache()
+      load()
+    } catch (e: any) {
+      toast.error(e.message)
+    }
+    setXpSaving(false)
+  }, [xpModalTarget, fXpAmount, fXpActivity, load])
+
   const columns = useMemo(() => [
     { key: 'no', label: 'No', render: (s: Siswa) => {
       const idx = data.indexOf(s)
@@ -170,17 +207,23 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
     { key: 'nama', label: 'Nama Siswa', render: (s: Siswa) => <span className="font-semibold text-slate-800">{s.nama}</span> },
     { key: 'kelas', label: 'Kelas', render: (s: Siswa) => <span className="text-slate-500 text-xs">{s.kelas || '-'}</span> },
     { key: 'ekskul', label: 'Ekskul', render: (s: Siswa) => <OrgBadge org={s.ekskul} /> },
+    { key: 'xp', label: 'XP Keaktifan', render: (s: Siswa) => (
+      <span className="inline-flex items-center gap-1 font-bold font-mono text-xs text-[#052659] bg-[#C2E8FF]/40 border border-[#C2E8FF] px-2.5 py-0.5 rounded-lg shadow-sm">
+        <Zap className="w-3 h-3 text-yellow-500 fill-yellow-400" /> {s.xp || 0} XP
+      </span>
+    )},
     { key: 'created_at', label: 'Terdaftar', render: (s: Siswa) => <span className="text-slate-400 text-xs">{formatDate(s.created_at)}</span> },
     {
       key: 'actions', label: '',
       render: (s: Siswa) => (
         <div className="flex items-center gap-1">
+          <button onClick={() => openXpModal(s)} className="btn-icon text-amber-500 hover:bg-amber-50" title="Beri Poin XP"><Zap className="w-3.5 h-3.5" /></button>
           <button onClick={() => openEdit(s)} className="btn-icon text-indigo-500 hover:bg-indigo-50"><Pencil className="w-3.5 h-3.5" /></button>
           <button onClick={() => setDeleteTarget(s)} className="btn-icon text-red-400 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /></button>
         </div>
       )
     },
-  ], [data, page, openEdit])
+  ], [data, page, openEdit, openXpModal])
 
   return (
     <div className="space-y-5">
@@ -343,6 +386,104 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
         onConfirm={handleBulkDelete}
         onCancel={() => setBulkDeleteConfirmOpen(false)}
       />
+
+      {/* Modal Beri XP */}
+      <Modal
+        open={!!xpModalTarget}
+        title="Beri Poin Keaktifan (XP)"
+        onClose={() => setXpModalTarget(null)}
+        size="sm"
+        footer={
+          <div className="flex gap-2 justify-end">
+            <button onClick={() => setXpModalTarget(null)} className="btn-secondary">Batal</button>
+            <button onClick={handleAwardXp} disabled={xpSaving} className="btn-primary">
+              {xpSaving ? <><Loader2 className="w-4 h-4 animate-spin" />Mengirim...</> : 'Beri XP'}
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between">
+            <div>
+              <h4 className="text-xs font-bold text-[#011025]">{xpModalTarget?.nama}</h4>
+              <p className="text-[10px] text-slate-400 font-semibold uppercase">{xpModalTarget?.kelas} • {xpModalTarget?.ekskul}</p>
+            </div>
+            <div className="font-mono text-xs font-bold text-[#052659] bg-[#C2E8FF]/30 border border-[#C2E8FF] px-2 py-0.5 rounded-lg shadow-sm">
+              Current: ⚡ {xpModalTarget?.xp || 0} XP
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="label">Kategori Kegiatan</label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setFXpActivity('tugas')
+                  setFXpAmount(20)
+                }}
+                className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all ${
+                  fXpActivity === 'tugas'
+                    ? 'border-[#5482B4] bg-[#C2E8FF]/20 text-[#052659]'
+                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                <span>📝</span>
+                Tugas
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setFXpActivity('proyek')
+                  setFXpAmount(50)
+                }}
+                className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all ${
+                  fXpActivity === 'proyek'
+                    ? 'border-[#5482B4] bg-[#C2E8FF]/20 text-[#052659]'
+                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                <span>💻</span>
+                Proyek
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setFXpActivity('manual')
+                }}
+                className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all ${
+                  fXpActivity === 'manual'
+                    ? 'border-[#5482B4] bg-[#C2E8FF]/20 text-[#052659]'
+                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                <span>⚡</span>
+                Manual
+              </button>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="label">Jumlah Poin XP</label>
+            {fXpActivity !== 'manual' ? (
+              <div className="p-3 bg-[#C2E8FF]/10 border border-[#C2E8FF]/30 rounded-xl flex items-center justify-between">
+                <span className="text-xs text-slate-500 font-medium">Preset Poin Terpilih:</span>
+                <span className="text-base font-mono font-black text-[#052659]">+{fXpAmount} XP</span>
+              </div>
+            ) : (
+              <input
+                type="number"
+                min="1"
+                max="1000"
+                value={fXpAmount}
+                onChange={e => setFXpAmount(parseInt(e.target.value) || 0)}
+                className="input font-mono"
+                placeholder="Misal: 15"
+              />
+            )}
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

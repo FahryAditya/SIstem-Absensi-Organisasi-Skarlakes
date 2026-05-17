@@ -113,9 +113,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Akses ditolak untuk ekskul English' }, { status: 403 })
   }
 
+  // Fetch existing absensi to calculate XP differences
+  const existingAbsensi = await prisma.absensi.findMany({
+    where: {
+      tanggal: tanggalDate,
+      siswa_id: { in: siswaIds }
+    },
+    select: { siswa_id: true, status: true }
+  })
+  const existingMap = Object.fromEntries(existingAbsensi.map(a => [a.siswa_id, a.status]))
+
   // Upsert all via database lock (safe from race condition)
   const results = await Promise.all(rows.map(async (row) => {
-    return prisma.absensi.upsert({
+    const prevStatus = existingMap[row.siswa_id]
+    let xpDiff = 0
+    if (prevStatus === 'hadir' && row.status !== 'hadir') xpDiff = -10
+    else if (prevStatus !== 'hadir' && row.status === 'hadir') xpDiff = 10
+
+    const upserted = await prisma.absensi.upsert({
       where: {
         siswa_id_tanggal: {
           siswa_id: row.siswa_id,
@@ -137,6 +152,16 @@ export async function POST(req: NextRequest) {
         created_by: ctx.userId
       }
     })
+
+    // Adjust XP dynamically
+    if (xpDiff !== 0) {
+      await prisma.siswa.update({
+        where: { id: row.siswa_id },
+        data: { xp: { increment: xpDiff } }
+      })
+    }
+
+    return upserted
   }))
 
   // Log
@@ -169,11 +194,22 @@ export async function PUT(req: NextRequest) {
   if (existing.siswa.ekskul === 'english' && !canAccessEnglish(ctx.userRole))
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
 
+  let xpDiff = 0
+  if (existing.status === 'hadir' && data.status && data.status !== 'hadir') xpDiff = -10
+  else if (existing.status !== 'hadir' && data.status === 'hadir') xpDiff = 10
+
   const updated = await prisma.absensi.update({
     where: { id },
     data: { ...data, updated_by: ctx.userId },
     include: { siswa: true }
   })
+
+  if (xpDiff !== 0) {
+    await prisma.siswa.update({
+      where: { id: existing.siswa_id },
+      data: { xp: { increment: xpDiff } }
+    })
+  }
 
   await createLog({
     userId: ctx.userId, userNama: ctx.userNama, aksi: 'UPDATE',

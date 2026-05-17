@@ -45,6 +45,8 @@ export async function GET(req: NextRequest) {
         kasEkskulTotal,
         kasOrgTotal,
         pengeluaranTotalData,
+        leaderboardProgramming,
+        leaderboardEnglish,
       ] = await Promise.all([
         prisma.siswa.count(),
         prisma.siswa.count({ where: { ekskul: 'programming' } }),
@@ -77,6 +79,18 @@ export async function GET(req: NextRequest) {
           where: userRole !== 'administrator' ? { organisasi_type: { in: orgs as any[] } } : {},
           _sum: { nominal: true }
         }) : Promise.resolve({ _sum: { nominal: 0 } }),
+        prisma.siswa.findMany({
+          where: { ekskul: 'programming' },
+          orderBy: { xp: 'desc' },
+          take: 10,
+          select: { id: true, nama: true, kelas: true, xp: true }
+        }),
+        prisma.siswa.findMany({
+          where: { ekskul: 'english' },
+          orderBy: { xp: 'desc' },
+          take: 10,
+          select: { id: true, nama: true, kelas: true, xp: true }
+        })
       ])
 
       const totalPemasukan = (kasEkskulTotal._sum?.uang_kas || 0) + (kasOrgTotal._sum?.uang_kas || 0)
@@ -103,6 +117,8 @@ export async function GET(req: NextRequest) {
         totalPemasukan,
         totalPengeluaran,
         totalKas: totalPemasukan - totalPengeluaran,
+        leaderboardProgramming,
+        leaderboardEnglish,
       }
     })
 

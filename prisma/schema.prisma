@@ -131,6 +131,7 @@ model Siswa {
   nama        String         @db.VarChar(100)
   kelas       String?        @db.VarChar(20)
   ekskul      OrganisasiType
+  xp          Int            @default(0)
   created_at  DateTime       @default(now())
   updated_at  DateTime       @updatedAt
   created_by  Int
@@ -140,6 +141,7 @@ model Siswa {
   absensi     Absensi[]
 
   @@index([ekskul])
+  @@index([xp])
   @@index([nama])
   @@index([kelas])
   @@index([created_at])

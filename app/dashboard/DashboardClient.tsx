@@ -14,7 +14,7 @@ import Select from '@/components/ui/Select'
 import PresentationMode from '@/components/PresentationMode'
 import FilePresentationMode from '@/components/FilePresentationMode'
 import {
-  Users, CheckCircle2, Wallet, UserPlus, LogOut, Clock, CalendarDays, PlusCircle, LayoutList, HandCoins, Loader2, UploadCloud, TrendingUp, Activity, X, Megaphone, Sparkles, PlusCircle as PlusCircleIcon, Zap, ArrowUpDown, MousePointerClick, RefreshCw, Trash2
+  Users, CheckCircle2, Wallet, UserPlus, LogOut, Clock, CalendarDays, PlusCircle, LayoutList, HandCoins, Loader2, UploadCloud, TrendingUp, Activity, X, Megaphone, Sparkles, PlusCircle as PlusCircleIcon, Zap, ArrowUpDown, MousePointerClick, RefreshCw, Trash2, Trophy
 } from 'lucide-react'
 
 // Lazy load Recharts for better performance
@@ -46,6 +46,8 @@ interface StatsData {
   totalPengeluaran: number
   totalKas: number
   orgs: string[]
+  leaderboardProgramming?: { id: number; nama: string; kelas: string; xp: number }[]
+  leaderboardEnglish?: { id: number; nama: string; kelas: string; xp: number }[]
 }
 
 interface ChartData {
@@ -106,9 +108,15 @@ export default function DashboardClient({ user }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const orgs = stats?.orgs || []
+  const [activeLeaderboardTab, setActiveLeaderboardTab] = useState<'programming' | 'english'>('programming')
 
   useEffect(() => {
     if (orgs.length > 0 && !quickOrg) setQuickOrg(orgs[0])
+    if (orgs.includes('programming')) {
+      setActiveLeaderboardTab('programming')
+    } else if (orgs.includes('english')) {
+      setActiveLeaderboardTab('english')
+    }
   }, [orgs, quickOrg])
 
   async function fetchDashboardData() {
@@ -603,6 +611,173 @@ export default function DashboardClient({ user }: Props) {
           )}
         </div>
       </div>
+
+      {/* ── Gamification Leaderboard ─────────────────────────── */}
+      {(orgs.includes('programming') || orgs.includes('english')) && (
+        <div className="card p-5 relative overflow-hidden shadow-[0_0_20px_rgba(84,130,180,0.1)] border-t-2 border-t-[#5482B4]">
+          {/* Glowing neon bg accents */}
+          <div className="absolute -top-12 -right-12 w-32 h-32 bg-[#5482B4]/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-[#C2E8FF]/20 rounded-full blur-2xl pointer-events-none" />
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 relative z-10">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-gradient-to-br from-[#052659] to-[#5482B4] text-white rounded-xl shadow-lg shadow-[#052659]/15">
+                <Trophy className="w-5 h-5 text-yellow-300 animate-pulse" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-[#011025]">Gamification Leaderboard</h3>
+                <p className="text-xs text-[#7EA0C5]">Peringkat 10 besar siswa dengan XP & keaktifan tertinggi</p>
+              </div>
+            </div>
+
+            {/* Interactive Tabs */}
+            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+              {orgs.includes('programming') && (
+                <button
+                  type="button"
+                  onClick={() => setActiveLeaderboardTab('programming')}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 ${
+                    activeLeaderboardTab === 'programming'
+                      ? 'bg-white text-[#052659] shadow-sm'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  Programming
+                </button>
+              )}
+              {orgs.includes('english') && (
+                <button
+                  type="button"
+                  onClick={() => setActiveLeaderboardTab('english')}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 ${
+                    activeLeaderboardTab === 'english'
+                      ? 'bg-white text-[#052659] shadow-sm'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  English Club
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Leaderboard content */}
+          {(() => {
+            const currentList = activeLeaderboardTab === 'programming'
+              ? stats?.leaderboardProgramming || []
+              : stats?.leaderboardEnglish || []
+
+            if (loading) {
+              return (
+                <div className="py-12 flex items-center justify-center text-sm text-slate-400 gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Memuat peringkat...
+                </div>
+              )
+            }
+
+            if (currentList.length === 0) {
+              return (
+                <div className="py-12 text-center border-2 border-dashed border-slate-100 rounded-2xl">
+                  <Sparkles className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                  <p className="text-sm text-slate-400 font-medium">Belum ada data keaktifan siswa saat ini.</p>
+                  <p className="text-xs text-slate-300 mt-0.5">Siswa akan mendapatkan +10 XP otomatis dari absensi hadir!</p>
+                </div>
+              )
+            }
+
+            const maxXP = Math.max(...currentList.map(s => s.xp), 100)
+
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+                {/* Podium Top 3 */}
+                <div className="flex flex-col justify-center space-y-3.5 bg-gradient-to-br from-slate-50 to-[#C2E8FF]/10 border border-slate-200/60 p-4.5 rounded-2xl">
+                  <div className="text-xs font-extrabold text-[#052659] uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-yellow-500" /> Top 3 Champions
+                  </div>
+                  {currentList.slice(0, 3).map((siswa, idx) => {
+                    const rankStyles = [
+                      {
+                        bg: 'from-amber-400 to-yellow-500 shadow-yellow-400/20 text-white',
+                        border: 'border-yellow-400/30',
+                        medal: '🥇',
+                        glow: 'shadow-[0_0_15px_rgba(234,179,8,0.25)] border-2 border-yellow-400',
+                        badgeText: 'text-yellow-600 bg-yellow-50'
+                      },
+                      {
+                        bg: 'from-slate-300 to-slate-400 shadow-slate-400/20 text-slate-900',
+                        border: 'border-slate-300/30',
+                        medal: '🥈',
+                        glow: 'border-2 border-slate-300',
+                        badgeText: 'text-slate-600 bg-slate-100'
+                      },
+                      {
+                        bg: 'from-amber-600 to-amber-700 shadow-amber-600/20 text-white',
+                        border: 'border-amber-600/30',
+                        medal: '🥉',
+                        glow: 'border-2 border-amber-600',
+                        badgeText: 'text-amber-700 bg-amber-50'
+                      }
+                    ][idx] || { bg: 'bg-slate-200 text-slate-700', border: 'border-slate-200', medal: '🎗️', glow: '', badgeText: 'text-slate-500 bg-slate-50' }
+
+                    return (
+                      <div key={siswa.id} className={`flex items-center justify-between p-3 bg-white rounded-xl shadow-sm ${rankStyles.glow} transition-transform hover:-translate-y-0.5 duration-300`}>
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-lg shadow ${rankStyles.bg}`}>
+                            {rankStyles.medal}
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="text-sm font-black text-[#011025] leading-tight truncate">{siswa.nama}</h4>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase">{siswa.kelas}</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end shrink-0">
+                          <span className="text-sm font-black font-mono text-[#052659] flex items-center gap-0.5">
+                            <Zap className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400 animate-bounce" /> {siswa.xp} <span className="text-[10px] text-slate-400 font-bold font-sans uppercase">XP</span>
+                          </span>
+                          <span className="text-[9px] text-[#7EA0C5] font-semibold">Peringkat {idx + 1}</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Rankings 4 - 10 */}
+                <div className="flex flex-col space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                  {currentList.slice(3).map((siswa, idx) => {
+                    const relativePct = Math.round((siswa.xp / maxXP) * 100)
+                    return (
+                      <div key={siswa.id} className="flex flex-col p-2.5 bg-white border border-slate-100 hover:border-slate-200 rounded-xl transition-all duration-300">
+                        <div className="flex items-center justify-between gap-3 min-w-0 mb-1.5">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="text-xs font-bold text-slate-400 font-mono w-4 text-center shrink-0">
+                              #{idx + 4}
+                            </span>
+                            <div className="min-w-0">
+                              <h4 className="text-xs font-extrabold text-[#011025] leading-tight truncate">{siswa.nama}</h4>
+                              <span className="text-[9px] text-slate-400 font-medium uppercase">{siswa.kelas}</span>
+                            </div>
+                          </div>
+                          <div className="shrink-0 flex items-center gap-0.5 font-mono text-xs font-bold text-slate-700">
+                            <Zap className="w-3 h-3 text-yellow-500 fill-yellow-400" /> {siswa.xp} XP
+                          </div>
+                        </div>
+                        
+                        {/* Elegant relative XP progress bar */}
+                        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-[#5482B4] to-[#C2E8FF] rounded-full transition-all duration-1000"
+                            style={{ width: `${relativePct}%` }}
+                          />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })()}
+        </div>
+      )}
 
       {/* Recent activity log (administrator only) */}
       {user.role === 'administrator' && (
