@@ -46,7 +46,8 @@ export function isAdministrator(role: string) {
 }
 
 export function getAccessibleOrgs(role: string): string[] {
-  switch (role) {
+  const cleanRole = (role || '').trim().toLowerCase()
+  switch (cleanRole) {
     case 'administrator':      return ['programming', 'english', 'osis', 'mpk']
     case 'admin_programming':  return ['programming']
     case 'admin_english':      return ['english']

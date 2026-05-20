@@ -9,6 +9,7 @@ import * as XLSX from 'xlsx'
 import { formatCurrency, formatDate, formatDateTime, ORG_LABELS, OrgType } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl, clientQueryClient } from '@/lib/client-cache'
+import { pusherClient } from '@/lib/pusher-client'
 import TextType from '@/components/TextType'
 import Select from '@/components/ui/Select'
 import PresentationMode from '@/components/PresentationMode'
@@ -164,6 +165,15 @@ export default function DashboardClient({ user }: Props) {
 
   useEffect(() => {
     fetchDashboardData()
+
+    if (pusherClient) {
+      const channel = pusherClient.subscribe('absensi')
+      channel.bind('absensi-updated', (data: any) => {
+        const who = data.userNama ? `${data.userNama} ` : ''
+        toast.success(`Absensi/Anggota diperbarui oleh ${who}! Sinkronisasi statistik...`, { id: 'realtime-absensi' })
+        fetchDashboardData(true)
+      })
+    }
     
     async function checkUpdates() {
       try {
@@ -188,6 +198,12 @@ export default function DashboardClient({ user }: Props) {
     }
     
     checkUpdates()
+
+    return () => {
+      if (pusherClient) {
+        pusherClient.unsubscribe('absensi')
+      }
+    }
   }, [user.role])
 
   async function handleDismissUpdate() {

@@ -242,17 +242,27 @@ export default function WawancaraClient({ user }: Props) {
     
     // CASE 1: Pusher is configured - use real-time
     if (pusherClient) {
-      console.log('Using Pusher for chat...')
-      const channel = pusherClient.subscribe(`chat-${activeSession.id}`)
-      channel.bind('incoming-chat', (data: ChatMessage) => {
+      console.log('Using Pusher for chat and queue...')
+      const chatChannel = pusherClient.subscribe(`chat-${activeSession.id}`)
+      chatChannel.bind('incoming-chat', (data: ChatMessage) => {
         setChats((prev) => {
           if (prev.some((c) => c.id === data.id)) return prev
           if (data.sender.id !== user.id) setUnreadCount(prevCount => prevCount + 1)
           return [...prev, data]
         })
       })
+
+      const queueChannel = pusherClient.subscribe(`wawancara-${activeSession.id}`)
+      queueChannel.bind('queue-updated', (payload: any) => {
+        if (payload.action === 'add') {
+          toast.success(`Peserta baru masuk antrian: ${payload.data.nama}`, { id: 'new-queue-member' })
+        }
+        load(true)
+      })
+
       return () => {
         pusherClient!.unsubscribe(`chat-${activeSession.id}`)
+        pusherClient!.unsubscribe(`wawancara-${activeSession.id}`)
       }
     } 
     
@@ -286,7 +296,7 @@ export default function WawancaraClient({ user }: Props) {
     }, 4000)
 
     return () => clearInterval(pollId)
-  }, [activeSession?.id, !!pusherClient, chats.length, user.id])
+  }, [activeSession?.id, !!pusherClient, chats.length, user.id, load])
 
   function openCreate() {
     setEditingSessionId(null)
@@ -498,12 +508,26 @@ export default function WawancaraClient({ user }: Props) {
   }
 
   async function saveManualPeserta() {
-    if (!fAddNama.trim()) {
-      toast.error('Nama wajib diisi')
+    const trimmedNama = fAddNama.trim()
+    if (!trimmedNama) {
+      toast.error('Nama tidak boleh kosong atau hanya berisi spasi')
       return
     }
-    if (!/^[a-zA-Z\s.']*$/.test(fAddNama)) {
-      toast.error('Nama hanya boleh berisi huruf dan simbol . \'')
+    if (trimmedNama.length > 50) {
+      toast.error('Nama terlalu panjang (maksimal 50 karakter)')
+      return
+    }
+    if (/\d/.test(trimmedNama)) {
+      toast.error('Nama tidak boleh mengandung angka (seperti Fahry123 atau 1234Fahry)')
+      return
+    }
+    if (/(.)\1{3,}/i.test(trimmedNama)) {
+      toast.error('Nama tidak boleh mengandung pengulangan karakter berturut-turut (spam)')
+      return
+    }
+    const namaRegex = /^[A-Za-z\s.'-]+$/
+    if (!namaRegex.test(trimmedNama)) {
+      toast.error('Nama hanya boleh berisi huruf, spasi, titik, dan tanda hubung/apostrof')
       return
     }
     setSaving(true)

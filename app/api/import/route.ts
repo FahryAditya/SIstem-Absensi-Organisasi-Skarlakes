@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
 import { getAccessibleOrgs } from '@/lib/auth-shared'
+import { pusherServer } from '@/lib/pusher-server'
 import { z } from 'zod'
 
 function getCtx(req: NextRequest) {
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
         },
         select: { nama: true, nis: true },
       })
-      const existingNameSet = new Set(existingByName.map(e => e.nama.toLowerCase()))
+      const existingNameSet = new Set(existingByName.map((e: any) => e.nama.toLowerCase()))
 
       // Pre-filter berdasarkan NIS jika tersedia
       const incomingNisList = data.map(d => d.nis?.trim()).filter((n): n is string => !!n && n !== '')
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest) {
           where: { ekskul: org, nis: { in: incomingNisList } },
           select: { nis: true },
         })
-        existingNisSet = new Set(existingByNis.map(e => (e.nis || '').toLowerCase()))
+        existingNisSet = new Set(existingByNis.map((e: any) => (e.nis || '').toLowerCase()))
       }
 
       const uniqueData = data.filter(item => {
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest) {
         where: { nama: { in: incomingNames, mode: 'insensitive' } },
         select: { nama: true, nis: true },
       })
-      const existingNameSet = new Set(existingByName.map(e => e.nama.toLowerCase()))
+      const existingNameSet = new Set(existingByName.map((e: any) => e.nama.toLowerCase()))
 
       const incomingNisList = filteredData.map(d => d.nis?.trim()).filter((n): n is string => !!n && n !== '')
       let existingNisSet = new Set<string>()
@@ -117,7 +118,7 @@ export async function POST(req: NextRequest) {
           where: { nis: { in: incomingNisList } },
           select: { nis: true },
         })
-        existingNisSet = new Set(existingByNis.map(e => (e.nis || '').toLowerCase()))
+        existingNisSet = new Set(existingByNis.map((e: any) => (e.nis || '').toLowerCase()))
       }
 
       const uniqueData = filteredData.filter(item => {
@@ -157,7 +158,7 @@ export async function POST(req: NextRequest) {
         where: { nama: { in: incomingNames, mode: 'insensitive' } },
         select: { nama: true, nis: true },
       })
-      const existingNameSet = new Set(existingByName.map(e => e.nama.toLowerCase()))
+      const existingNameSet = new Set(existingByName.map((e: any) => e.nama.toLowerCase()))
 
       const incomingNisList = filteredData.map(d => d.nis?.trim()).filter((n): n is string => !!n && n !== '')
       let existingNisSet = new Set<string>()
@@ -166,7 +167,7 @@ export async function POST(req: NextRequest) {
           where: { nis: { in: incomingNisList } },
           select: { nis: true },
         })
-        existingNisSet = new Set(existingByNis.map(e => (e.nis || '').toLowerCase()))
+        existingNisSet = new Set(existingByNis.map((e: any) => (e.nis || '').toLowerCase()))
       }
 
       const uniqueData = filteredData.filter(item => {
@@ -204,6 +205,18 @@ export async function POST(req: NextRequest) {
       deskripsi: `${ctx.userNama} berhasil import ${insertedCount} data ke ${org.toUpperCase()}${skippedCount > 0 ? ` (${skippedCount} duplikat dilewati)` : ''}`,
       ipAddress: getIp(req),
     })
+
+    if (pusherServer && insertedCount > 0) {
+      try {
+        await pusherServer.trigger('absensi', 'absensi-updated', {
+          org,
+          count: insertedCount,
+          userNama: ctx.userNama,
+        })
+      } catch (err) {
+        console.error('Failed to trigger Pusher absensi-updated from import:', err)
+      }
+    }
 
     return NextResponse.json({
       success: true,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { canAccessMpk, canAccessOsis, getSessionFromRequest } from '@/lib/auth'
 import type { AntrianWawancara } from '@prisma/client'
+import { pusherServer } from '@/lib/pusher-server'
 import { z } from 'zod'
 
 async function updateIpInfo(antrianId: number, sesiId: number, ip: string) {
@@ -72,9 +73,35 @@ function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number)
   return 2 * r * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
+function validateNama(nama: string): string | null {
+  const trimmed = nama.trim()
+  if (!trimmed) {
+    return 'Nama tidak boleh kosong atau hanya berisi spasi'
+  }
+  if (trimmed.length > 50) {
+    return 'Nama terlalu panjang (maksimal 50 karakter)'
+  }
+  if (/\d/.test(trimmed)) {
+    return 'Nama tidak boleh mengandung angka (seperti Fahry123 atau 1234Fahry)'
+  }
+  if (/(.)\1{3,}/i.test(trimmed)) {
+    return 'Nama tidak boleh mengandung pengulangan karakter berturut-turut (spam)'
+  }
+  const namaRegex = /^[A-Za-z\s.'-]+$/
+  if (!namaRegex.test(trimmed)) {
+    return 'Nama hanya boleh berisi huruf, spasi, titik, dan tanda hubung/apostrof'
+  }
+  return null
+}
+
 export async function POST(req: NextRequest) {
   const parsed = enqueueSchema.safeParse(await req.json())
   if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
+
+  const valError = validateNama(parsed.data.nama)
+  if (valError) {
+    return NextResponse.json({ error: valError }, { status: 400 })
+  }
 
   const ctx = await getCtx(req)
   const isAdmin = canAccessOsis(ctx.userRole) || canAccessMpk(ctx.userRole)
@@ -211,6 +238,17 @@ export async function POST(req: NextRequest) {
     ;(async () => { try { await updateIpInfo(created.id, sesi.id, ip) } catch {} })()
   }
 
+  if (pusherServer) {
+    try {
+      await pusherServer.trigger(`wawancara-${sesi.id}`, 'queue-updated', {
+        action: 'add',
+        data: created,
+      })
+    } catch (err) {
+      console.error('Failed to trigger Pusher for wawancara antrian add:', err)
+    }
+  }
+
   return NextResponse.json({ data: created }, { status: 201 })
 }
 
@@ -243,6 +281,18 @@ export async function PATCH(req: NextRequest) {
   }
 
   const data = await prisma.antrianWawancara.update({ where: { id }, data: { status } })
+
+  if (pusherServer) {
+    try {
+      await pusherServer.trigger(`wawancara-${existing.sesi.id}`, 'queue-updated', {
+        action: 'update',
+        data,
+      })
+    } catch (err) {
+      console.error('Failed to trigger Pusher for wawancara antrian update:', err)
+    }
+  }
+
   return NextResponse.json({ data })
 }
 
@@ -266,6 +316,23 @@ export async function DELETE(req: NextRequest) {
   const result = await prisma.antrianWawancara.deleteMany({
     where: { id: { in: ids } },
   })
+
+  if (pusherServer) {
+    try {
+      const activeSesi = await prisma.sesiWawancara.findFirst({
+        where: { status: 'ACTIVE' },
+        orderBy: { created_at: 'desc' }
+      })
+      if (activeSesi) {
+        await pusherServer.trigger(`wawancara-${activeSesi.id}`, 'queue-updated', {
+          action: 'delete',
+          ids,
+        })
+      }
+    } catch (err) {
+      console.error('Failed to trigger Pusher for wawancara antrian delete:', err)
+    }
+  }
 
   return NextResponse.json({ success: true, count: result.count })
 }

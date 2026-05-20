@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
+import { pusherClient } from '@/lib/pusher-client'
 import { Loader2, MessageSquareText, Send, UserRoundCheck } from 'lucide-react'
 
 
@@ -27,6 +28,7 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
   const [jurusan, setJurusan] = useState('AKL')
   const [organisasi, setOrganisasi] = useState<'osis'|'mpk'>('osis')
   const [queueNumber, setQueueNumber] = useState<number | null>(null)
+  const [myQueue, setMyQueue] = useState<any>(null)
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null)
   const [geoError, setGeoError] = useState('')
 
@@ -46,6 +48,44 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
   }, [sesiId, token])
 
   useEffect(() => {
+    const activeSesiId = sesiId || session?.id
+    if (!activeSesiId) return
+    const saved = localStorage.getItem(`queue-${activeSesiId}`)
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        setQueueNumber(parsed.nomor_antrian)
+        setMyQueue(parsed)
+      } catch {}
+    }
+  }, [sesiId, session?.id])
+
+  useEffect(() => {
+    if (!myQueue || !session?.id || !pusherClient) return
+
+    const channel = pusherClient.subscribe(`wawancara-${session.id}`)
+    
+    channel.bind('queue-updated', (payload: any) => {
+      if (payload.action === 'update' && payload.data.id === myQueue.id) {
+        setMyQueue(payload.data)
+        localStorage.setItem(`queue-${session.id}`, JSON.stringify(payload.data))
+        if (payload.data.status === 'WAWANCARA') {
+          toast.success('📣 Nama Anda sedang dipanggil! Silakan menuju ke ruang wawancara.', { duration: 15000 })
+        }
+      } else if (payload.action === 'delete' && payload.ids.includes(myQueue.id)) {
+        setMyQueue(null)
+        setQueueNumber(null)
+        localStorage.removeItem(`queue-${session.id}`)
+        toast.error('Antrian Anda telah dihapus oleh admin.')
+      }
+    })
+
+    return () => {
+      pusherClient?.unsubscribe(`wawancara-${session.id}`)
+    }
+  }, [myQueue?.id, session?.id])
+
+  useEffect(() => {
     if (!navigator.geolocation) {
       setGeoError('HP/browser tidak mendukung GPS. Gunakan browser lain dan izinkan lokasi.')
       return
@@ -61,9 +101,26 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
   }, [])
 
   async function submit() {
+    const trimmedNama = nama.trim()
+    if (!trimmedNama) {
+      toast.error('Nama tidak boleh kosong atau hanya berisi spasi')
+      return
+    }
+    if (trimmedNama.length > 50) {
+      toast.error('Nama terlalu panjang (maksimal 50 karakter)')
+      return
+    }
+    if (/\d/.test(trimmedNama)) {
+      toast.error('Nama tidak boleh mengandung angka (seperti Fahry123 atau 1234Fahry)')
+      return
+    }
+    if (/(.)\1{3,}/i.test(trimmedNama)) {
+      toast.error('Nama tidak boleh mengandung pengulangan karakter berturut-turut (spam)')
+      return
+    }
     const namaRegex = /^[A-Za-z\s.'-]+$/
-    if (!nama.trim() || !namaRegex.test(nama)) {
-      toast.error('Nama hanya boleh berisi huruf, spasi, titik, dan apostrof')
+    if (!namaRegex.test(trimmedNama)) {
+      toast.error('Nama hanya boleh berisi huruf, spasi, titik, dan tanda hubung/apostrof')
       return
     }
     if (!coords) {
@@ -92,6 +149,11 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
       return
     }
     setQueueNumber(json.data.nomor_antrian)
+    setMyQueue(json.data)
+    const activeSesiId = session?.id || sesiId
+    if (activeSesiId) {
+      localStorage.setItem(`queue-${activeSesiId}`, JSON.stringify(json.data))
+    }
     toast.success(json.data.status_validasi === 'SAH_DICURIGAI' ? 'Masuk antrian dengan flag verifikasi' : 'Berhasil masuk antrian')
     clearJsonCache()
     setSaving(false)
@@ -126,10 +188,38 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
           </div>
         ) : queueNumber ? (
           <div className="p-8 text-center">
-            <UserRoundCheck className="w-14 h-14 text-green-600 mx-auto mb-4" />
-            <div className="text-sm font-bold text-slate-500">Nomor Antrian</div>
-            <div className="text-6xl font-black font-mono text-slate-900 mt-1">#{queueNumber}</div>
-            <p className="text-sm text-slate-500 mt-4">Tunggu sampai nama Anda dipanggil oleh admin OSIS & MPK.</p>
+            {myQueue?.status === 'WAWANCARA' ? (
+              <div className="space-y-4 animate-bounce">
+                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto text-red-600 shadow-lg shadow-red-100/50">
+                  <span className="text-2xl animate-pulse">📣</span>
+                </div>
+                <div className="text-base font-extrabold text-red-600 tracking-wider">NAMA ANDA SEDANG DIPANGGIL!</div>
+                <div className="text-6xl font-black font-mono text-slate-900">#{queueNumber}</div>
+                <p className="text-sm text-slate-700 font-semibold mt-4 bg-red-50 border border-red-100 p-3 rounded-2xl">
+                  Silakan segera menuju ke meja/ruang wawancara sekarang.
+                </p>
+              </div>
+            ) : myQueue?.status === 'SELESAI_WAWANCARA' ? (
+              <div className="space-y-4">
+                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto text-green-600 shadow-lg shadow-green-100/50">
+                  <span className="text-2xl">🏆</span>
+                </div>
+                <div className="text-base font-extrabold text-green-600 tracking-wider">WAWANCARA SELESAI!</div>
+                <div className="text-6xl font-black font-mono text-slate-950">#{queueNumber}</div>
+                <p className="text-sm text-slate-500 mt-4 bg-green-50 border border-green-100 p-3 rounded-2xl">
+                  Terima kasih telah mengikuti sesi wawancara OSIS & MPK. Anda boleh meninggalkan ruangan.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <UserRoundCheck className="w-14 h-14 text-indigo-600 mx-auto mb-4 animate-pulse" />
+                <div className="text-sm font-bold text-slate-500">Nomor Antrian Anda</div>
+                <div className="text-6xl font-black font-mono text-slate-900 mt-1">#{queueNumber}</div>
+                <p className="text-sm text-slate-500 mt-4 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                  Tunggu sampai nama Anda dipanggil oleh admin OSIS & MPK. Layar ini akan terupdate otomatis secara real-time!
+                </p>
+              </div>
+            )}
           </div>
         ) : (
           <div className="p-6 space-y-4 fade-in">

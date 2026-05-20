@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAccessibleOrgs } from '@/lib/auth-shared'
 import { createLog, getIp } from '@/lib/log'
+import { pusherServer } from '@/lib/pusher-server'
 import { z } from 'zod'
 
 function getCtx(req: NextRequest) {
@@ -100,6 +101,19 @@ export async function POST(req: NextRequest) {
       ipAddress: getIp(req),
     })
 
+    if (pusherServer) {
+      try {
+        await pusherServer.trigger('absensi', 'absensi-updated', {
+          org,
+          type: 'kas',
+          nominal,
+          userNama: ctx.userNama,
+        })
+      } catch (err) {
+        console.error('Failed to trigger Pusher for pengeluaran:', err)
+      }
+    }
+
     return NextResponse.json({ success: true, message: 'Pengeluaran kas berhasil dicatat' })
   } catch (e: any) {
     console.error('[PENGELUARAN POST ERROR]', e)
@@ -139,6 +153,19 @@ export async function DELETE(req: NextRequest) {
       deskripsi: `${ctx.userNama} MENGHAPUS/MEMBATALKAN pengeluaran kas ${expense.organisasi_type.toUpperCase()} sebesar Rp ${expense.nominal.toLocaleString('id-ID')}. Ket: ${expense.keterangan}`,
       ipAddress: getIp(req),
     })
+
+    if (pusherServer) {
+      try {
+        await pusherServer.trigger('absensi', 'absensi-updated', {
+          org: expense.organisasi_type,
+          type: 'kas',
+          nominal: -expense.nominal,
+          userNama: ctx.userNama,
+        })
+      } catch (err) {
+        console.error('Failed to trigger Pusher for pengeluaran deletion:', err)
+      }
+    }
 
     return NextResponse.json({ success: true, message: 'Transaksi pengeluaran berhasil dibatalkan/dihapus' })
   } catch (e: any) {

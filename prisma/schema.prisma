@@ -117,6 +117,7 @@ model User {
 
   last_seen_update_id Int?
   updates_created     SystemUpdate[] @relation("UpdateCreatedBy")
+  dokumentasi_foto    DokumentasiFoto[] @relation("FotoCreatedBy")
 
   @@index([created_at])
   @@map("users")
@@ -440,4 +441,27 @@ model SystemUpdate {
   @@map("system_updates")
   @@index([created_at])
   @@index([update_type])
+}
+
+// ============================================================
+// TABLE: dokumentasi_foto (dokumentasi foto kegiatan admin)
+// ============================================================
+model DokumentasiFoto {
+  id              Int            @id @default(autoincrement())
+  organisasi_type OrganisasiType
+  judul           String         @db.VarChar(150)
+  deskripsi       String?        @db.Text
+  image_url       String         @db.VarChar(255)
+  public_id       String?        @db.VarChar(100)
+  tanggal         DateTime       @db.Date
+  created_by      Int
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+
+  creator         User           @relation("FotoCreatedBy", fields: [created_by], references: [id])
+
+  @@map("dokumentasi_foto")
+  @@index([organisasi_type])
+  @@index([tanggal])
+  @@index([created_at])
 }

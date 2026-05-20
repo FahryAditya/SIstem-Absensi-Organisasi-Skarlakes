@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
 import { canAccessEnglish, canAccessProgramming } from '@/lib/auth'
+import { pusherServer } from '@/lib/pusher-server'
 import { z } from 'zod'
 
 function getCtx(req: NextRequest) {
@@ -183,6 +184,18 @@ export async function POST(req: NextRequest) {
     ipAddress: getIp(req),
   })
 
+  if (pusherServer) {
+    try {
+      await pusherServer.trigger('absensi', 'absensi-updated', {
+        tanggal,
+        count: results.length,
+        userNama: ctx.userNama,
+      })
+    } catch (err) {
+      console.error('Failed to trigger Pusher absensi-updated:', err)
+    }
+  }
+
   return NextResponse.json({ success: true, count: results.length })
 }
 
@@ -228,6 +241,20 @@ export async function PUT(req: NextRequest) {
     dataBaru: { status: updated.status, uang_kas: updated.uang_kas },
     ipAddress: getIp(req),
   })
+
+  if (pusherServer) {
+    try {
+      await pusherServer.trigger('absensi', 'absensi-updated', {
+        tanggal: existing.tanggal.toISOString().split('T')[0],
+        count: 1,
+        siswaNama: existing.siswa.nama,
+        status: updated.status,
+        userNama: ctx.userNama,
+      })
+    } catch (err) {
+      console.error('Failed to trigger Pusher absensi-updated:', err)
+    }
+  }
 
   return NextResponse.json({ data: updated })
 }

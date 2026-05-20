@@ -4,6 +4,7 @@ import { createLog, getIp } from '@/lib/log'
 import { canAccessOsis, canAccessMpk } from '@/lib/auth'
 import { jsonWithPrivateCache } from '@/lib/api-cache'
 import { withRetryTransaction } from '@/lib/db-transaction'
+import { pusherServer } from '@/lib/pusher-server'
 import { z } from 'zod'
 
 function getCtx(req: NextRequest) {
@@ -139,6 +140,19 @@ export async function POST(req: NextRequest) {
     dataBaru: { tanggal, organisasi, jumlah: rows.length },
     ipAddress: getIp(req),
   })
+
+  if (pusherServer) {
+    try {
+      await pusherServer.trigger('absensi', 'absensi-updated', {
+        organisasi,
+        tanggal,
+        count: rows.length,
+        userNama: ctx.userNama,
+      })
+    } catch (err) {
+      console.error('Failed to trigger Pusher absensi-updated for organisasi:', err)
+    }
+  }
 
   return NextResponse.json({ success: true, count: rows.length })
 }

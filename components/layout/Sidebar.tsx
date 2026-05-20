@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -7,7 +8,7 @@ import { ROLE_LABELS } from '@/lib/auth-shared'
 import Image from 'next/image'
 import {
   LayoutDashboard, Users, ClipboardList, Building2, UserCog,
-  Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode, UserX, Megaphone, BarChart3
+  Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode, UserX, Megaphone, BarChart3, Camera
 } from 'lucide-react'
 import AnimatedList from '../AnimatedList'
 
@@ -38,6 +39,7 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
   items.push({ type: 'link', href: '/laporan', label: 'Laporan Statistik', icon: BarChart3 })
   items.push({ type: 'link', href: '/kas', label: 'Buku Kas', icon: Wallet })
   items.push({ type: 'link', href: '/pengeluaran', label: 'Pengeluaran Kas', icon: HandCoins })
+  items.push({ type: 'link', href: '/dokumentasi', label: 'Dokumentasi Foto', icon: Camera })
 
   if (role === 'administrator' || role === 'admin_programming' || role === 'admin_english') {
     items.push({ type: 'section', label: 'Ekstrakurikuler' })
@@ -94,11 +96,26 @@ function RoleBadge({ role }: { role: string }) {
 
 export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: SidebarProps) {
   const pathname = usePathname()
-  const navItems = getFlattenedNavItems(user.role, !!isCollapsed)
+  const cleanRole = (user.role || '').trim().toLowerCase()
+  const navItems = getFlattenedNavItems(cleanRole, !!isCollapsed)
+
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const isActive = (href: string) => {
     const base = href.split('?')[0]
     return pathname.startsWith(base)
+  }
+
+  if (!mounted) {
+    return (
+      <aside className={cn(
+        "hidden lg:flex flex-col bg-[#011025] border-r border-[#5482B4]/15 h-screen sticky top-0 shadow-sm transition-all duration-300 ease-in-out",
+        isCollapsed ? "w-16" : "w-60"
+      )} />
+    )
   }
 
   const renderSidebarItem = (item: SidebarItem, index: number) => {
@@ -185,7 +202,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
 
        <div className="px-4 py-4 border-t border-[#5482B4]/15 flex-shrink-0 bg-[#011025]/80 backdrop-blur-sm">
         <div className="flex items-center gap-2.5">
-          {user.role === 'administrator' ? (
+          {cleanRole === 'administrator' ? (
             <div className="relative w-8 h-8 rounded-full overflow-hidden shadow-sm border border-[#5482B4]/30 flex-shrink-0">
               <Image 
                 src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" 

@@ -136,40 +136,55 @@ export async function GET(req: NextRequest) {
         kasOrgBulanan,
         pengeluaranBulanan,
       ] = await Promise.all([
-        ekskulOrgs.length ? prisma.absensi.groupBy({
-          by: ['tanggal', 'status'],
-          where: {
-            tanggal: { gte: start7 },
-            siswa: { ekskul: { in: ekskulOrgs } }
-          },
-          _count: { _all: true }
-        }) : Promise.resolve([]),
+        ekskulOrgs.length ? prisma.$queryRaw`
+          SELECT 
+            TO_CHAR(a.tanggal, 'YYYY-MM-DD') AS tanggal, 
+            a.status::text AS status, 
+            COUNT(*)::int AS count
+          FROM absensi a
+          INNER JOIN siswa s ON a.siswa_id = s.id
+          WHERE a.tanggal >= ${start7} AND s.ekskul::text = ANY(${ekskulOrgs})
+          GROUP BY TO_CHAR(a.tanggal, 'YYYY-MM-DD'), a.status
+        ` : Promise.resolve([]),
 
-        ekskulOrgs.length ? prisma.absensi.groupBy({
-          by: ['tanggal'],
-          where: {
-            tanggal: { gte: subMonths(startOfMonth(today), 5) },
-            siswa: { ekskul: { in: ekskulOrgs } }
-          },
-          _sum: { uang_kas: true }
-        }) : Promise.resolve([]),
+        ekskulOrgs.length ? prisma.$queryRaw`
+          SELECT 
+            TO_CHAR(a.tanggal, 'YYYY-MM') AS bulan, 
+            SUM(a.uang_kas)::int AS total
+          FROM absensi a
+          INNER JOIN siswa s ON a.siswa_id = s.id
+          WHERE a.tanggal >= ${subMonths(startOfMonth(today), 5)} AND s.ekskul::text = ANY(${ekskulOrgs})
+          GROUP BY TO_CHAR(a.tanggal, 'YYYY-MM')
+        ` : Promise.resolve([]),
 
-        orgOrgs.length ? prisma.absensiOrganisasi.groupBy({
-          by: ['tanggal'],
-          where: {
-            tanggal: { gte: subMonths(startOfMonth(today), 5) },
-            organisasi_type: { in: orgOrgs as ('osis' | 'mpk')[] }
-          },
-          _sum: { uang_kas: true }
-        }) : Promise.resolve([]),
+        orgOrgs.length ? prisma.$queryRaw`
+          SELECT 
+            TO_CHAR(tanggal, 'YYYY-MM') AS bulan, 
+            SUM(uang_kas)::int AS total
+          FROM absensi_organisasi
+          WHERE tanggal >= ${subMonths(startOfMonth(today), 5)} AND organisasi_type::text = ANY(${orgOrgs})
+          GROUP BY TO_CHAR(tanggal, 'YYYY-MM')
+        ` : Promise.resolve([]),
 
-        orgs.length ? (prisma as any).pengeluaranKas.findMany({
-          where: {
-            tanggal: { gte: subMonths(startOfMonth(today), 5) },
-            ...(userRole !== 'administrator' ? { organisasi_type: { in: orgs as any[] } } : {})
-          },
-          select: { tanggal: true, nominal: true }
-        }) : Promise.resolve([]),
+        orgs.length ? (
+          userRole === 'administrator' 
+            ? prisma.$queryRaw`
+                SELECT 
+                  TO_CHAR(tanggal, 'YYYY-MM') AS bulan, 
+                  SUM(nominal)::int AS total
+                FROM pengeluaran_kas
+                WHERE tanggal >= ${subMonths(startOfMonth(today), 5)}
+                GROUP BY TO_CHAR(tanggal, 'YYYY-MM')
+              `
+            : prisma.$queryRaw`
+                SELECT 
+                  TO_CHAR(tanggal, 'YYYY-MM') AS bulan, 
+                  SUM(nominal)::int AS total
+                FROM pengeluaran_kas
+                WHERE tanggal >= ${subMonths(startOfMonth(today), 5)} AND organisasi_type::text = ANY(${orgs})
+                GROUP BY TO_CHAR(tanggal, 'YYYY-MM')
+              `
+        ) : Promise.resolve([]),
       ])
 
       // Process kehadiran mingguan
@@ -177,12 +192,12 @@ export async function GET(req: NextRequest) {
         const d = subDays(today, 6 - i)
         const dStr = format(d, 'yyyy-MM-dd')
         const dayStats = (absensiMingguEkskul as any[]).filter(
-          a => format(a.tanggal, 'yyyy-MM-dd') === dStr
+          a => a.tanggal === dStr
         )
         return {
           day: format(d, 'EEE'),
-          hadir: dayStats.find(s => s.status === 'hadir')?._count?._all || 0,
-          tidak_hadir: dayStats.find(s => s.status !== 'hadir' && s.status !== 'kas_saja')?._count?._all || 0,
+          hadir: dayStats.find(s => s.status === 'hadir')?.count || 0,
+          tidak_hadir: dayStats.find(s => s.status !== 'hadir' && s.status !== 'kas_saja')?.count || 0,
         }
       })
 
@@ -191,15 +206,12 @@ export async function GET(req: NextRequest) {
       const kasPerBulan = months.map(m => {
         const mStr = format(m, 'yyyy-MM')
         const ekskulTotal = (kasEkskulBulanan as any[])
-          .filter(a => format(a.tanggal, 'yyyy-MM') === mStr)
-          .reduce((s, a) => s + (a._sum?.uang_kas || 0), 0)
+          .find(a => a.bulan === mStr)?.total || 0
         const orgTotal = (kasOrgBulanan as any[])
-          .filter(a => format(a.tanggal, 'yyyy-MM') === mStr)
-          .reduce((s, a) => s + (a._sum?.uang_kas || 0), 0)
-        const pengeluaranTotal = (pengeluaranBulanan as { tanggal: Date; nominal: number }[])
-          .filter(a => format(a.tanggal, 'yyyy-MM') === mStr)
-          .reduce((s, a) => s + (a.nominal || 0), 0)
-        return { bulan: format(m, 'MMM'), total: ekskulTotal + orgTotal - pengeluaranTotal }
+          .find(a => a.bulan === mStr)?.total || 0
+        const pengeluaranTotal = (pengeluaranBulanan as any[])
+          .find(a => a.bulan === mStr)?.total || 0
+        return { bulan: format(m, 'MMM'), total: (ekskulTotal + orgTotal) - pengeluaranTotal }
       })
 
       return { kehadiranMingguan, kasPerBulan }
@@ -233,10 +245,13 @@ export async function GET(req: NextRequest) {
       const since30 = subDays(new Date(), 29)
 
       // 1) Total per aksi (all time summary)
-      const totalPerAksi = await prisma.logAktivitas.groupBy({
-        by: ['aksi'],
-        _count: { _all: true },
-      })
+      const totalPerAksi: { aksi: string; count: number }[] = await prisma.$queryRaw`
+        SELECT 
+          aksi::text AS aksi, 
+          COUNT(*)::int AS count
+        FROM log_aktivitas
+        GROUP BY aksi
+      `
 
       // 2) Daily breakdown for last 30 days
       // Gunakan created_at::date cast via raw untuk hasil yang lebih efisien
@@ -267,7 +282,7 @@ export async function GET(req: NextRequest) {
         return entry
       })
 
-      const grandTotal = totalPerAksi.reduce((s: number, r: any) => s + (r._count._all as number), 0)
+      const grandTotal = totalPerAksi.reduce((s: number, r: any) => s + r.count, 0)
       const METHOD_MAP: Record<string, string> = {
         CREATE: 'POST', UPDATE: 'PUT', DELETE: 'DELETE', LOGIN: 'GET', LOGOUT: 'GET',
       }
@@ -277,7 +292,7 @@ export async function GET(req: NextRequest) {
         perAksi: totalPerAksi.map((r: any) => ({
           aksi: r.aksi,
           method: METHOD_MAP[r.aksi] || 'GET',
-          count: r._count._all,
+          count: r.count,
         })),
         daily30,
       }
