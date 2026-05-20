@@ -46,8 +46,13 @@ export async function GET(req: NextRequest) {
       })
     ])
 
-    const absMap = Object.fromEntries(existingAbsensi.map(a => [a.siswa_id, a]))
-    const rows = siswaList.map(s => ({
+    const absMap = Object.fromEntries(
+      existingAbsensi.map((a: { siswa_id: number; status: string; uang_kas: number; keterangan: string | null }) => [
+        a.siswa_id,
+        a
+      ])
+    )
+    const rows = siswaList.map((s: { id: number; nama: string; kelas: string | null; ekskul: string }) => ({
       siswa_id: s.id,
       nama: s.nama,
       kelas: s.kelas,
@@ -121,7 +126,9 @@ export async function POST(req: NextRequest) {
     },
     select: { siswa_id: true, status: true }
   })
-  const existingMap = Object.fromEntries(existingAbsensi.map(a => [a.siswa_id, a.status]))
+  const existingMap = Object.fromEntries(
+    existingAbsensi.map((a: { siswa_id: number; status: string }) => [a.siswa_id, a.status])
+  )
 
   // Upsert all via database lock (safe from race condition)
   const results = await Promise.all(rows.map(async (row) => {
@@ -165,7 +172,9 @@ export async function POST(req: NextRequest) {
   }))
 
   // Log
-  const siswaMap = Object.fromEntries(siswaList.map(s => [s.id, s.nama]))
+  const siswaMap = Object.fromEntries(
+    siswaList.map((s: { id: number; nama: string }) => [s.id, s.nama])
+  )
   const summary = rows.map(r => `${siswaMap[r.siswa_id] || r.siswa_id}: ${r.status}`).join(', ')
   await createLog({
     userId: ctx.userId, userNama: ctx.userNama, aksi: 'UPDATE',

@@ -119,12 +119,14 @@ export default function DashboardClient({ user }: Props) {
     }
   }, [orgs, quickOrg])
 
-  async function fetchDashboardData() {
+  async function fetchDashboardData(forceRefresh = false) {
     setLoading(true)
     setLoadingCharts(true)
     setLoadingLogs(true)
     setLoadingRequestStats(true)
-    clearDashboardCache() 
+    if (forceRefresh) {
+      clearDashboardCache() 
+    }
     try {
       const [d, c] = await Promise.all([
         fetchJsonCachedUrl<StatsData>('/api/dashboard?part=stats'),
@@ -224,7 +226,7 @@ export default function DashboardClient({ user }: Props) {
       toast.success('Anggota berhasil ditambahkan')
       setQuickName(''); setQuickJabatan('Anggota')
       clearJsonCache()
-      fetchDashboardData()
+      fetchDashboardData(true)
     } catch (e: any) {
       toast.error(e.message)
     }
@@ -271,7 +273,7 @@ export default function DashboardClient({ user }: Props) {
       if (!res.ok) throw new Error(apiJson.error)
       toast.success(`Berhasil import ${apiJson.count} data`)
       clearJsonCache()
-      fetchDashboardData()
+      fetchDashboardData(true)
     } catch (err: any) {
       toast.error(err.message)
     }

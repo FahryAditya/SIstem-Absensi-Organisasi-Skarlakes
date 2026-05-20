@@ -240,18 +240,22 @@ export async function GET(req: NextRequest) {
 
       // 2) Daily breakdown for last 30 days
       // Gunakan created_at::date cast via raw untuk hasil yang lebih efisien
-      const dailyRaw = await prisma.logAktivitas.groupBy({
-        by: ['aksi', 'created_at'],
-        where: { created_at: { gte: since30 } },
-        _count: { _all: true },
-        orderBy: { created_at: 'asc' },
-      })
+      const dailyRaw: { aksi: string; date: string; count: number }[] = await prisma.$queryRaw`
+        SELECT 
+          aksi::text, 
+          TO_CHAR(created_at, 'YYYY-MM-DD') AS date, 
+          COUNT(*)::int AS count
+        FROM log_aktivitas
+        WHERE created_at >= ${since30}
+        GROUP BY aksi, TO_CHAR(created_at, 'YYYY-MM-DD')
+        ORDER BY date ASC
+      `
 
       const dayMap: Record<string, Record<string, number>> = {}
       for (const row of dailyRaw) {
-        const d = format(row.created_at, 'yyyy-MM-dd')
+        const d = row.date
         if (!dayMap[d]) dayMap[d] = {}
-        dayMap[d][row.aksi] = (dayMap[d][row.aksi] || 0) + (row._count._all as number)
+        dayMap[d][row.aksi] = row.count
       }
 
       const AKSI_TYPES = ['CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT']
@@ -263,14 +267,14 @@ export async function GET(req: NextRequest) {
         return entry
       })
 
-      const grandTotal = totalPerAksi.reduce((s, r) => s + (r._count._all as number), 0)
+      const grandTotal = totalPerAksi.reduce((s: number, r: any) => s + (r._count._all as number), 0)
       const METHOD_MAP: Record<string, string> = {
         CREATE: 'POST', UPDATE: 'PUT', DELETE: 'DELETE', LOGIN: 'GET', LOGOUT: 'GET',
       }
 
       return {
         grandTotal,
-        perAksi: totalPerAksi.map(r => ({
+        perAksi: totalPerAksi.map((r: any) => ({
           aksi: r.aksi,
           method: METHOD_MAP[r.aksi] || 'GET',
           count: r._count._all,

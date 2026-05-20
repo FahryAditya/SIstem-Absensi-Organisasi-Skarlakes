@@ -64,6 +64,7 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
   }
   items.push({ type: 'link', href: '/import', label: 'Import Excel', icon: Download })
   items.push({ type: 'link', href: '/export', label: 'Export Data', icon: Download })
+  items.push({ type: 'link', href: '/ambil-siswa', label: 'Ambil Siswa', icon: ScrollText })
   
   if (role === 'administrator') {
     items.push({ type: 'link', href: '/update-sistem', label: 'Update Sistem', icon: Megaphone })
