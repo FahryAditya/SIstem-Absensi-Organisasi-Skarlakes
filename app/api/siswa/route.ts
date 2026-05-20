@@ -66,8 +66,38 @@ export async function POST(req: NextRequest) {
   if (!canManageSiswaEkskul(ctx.userRole, ekskul))
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
 
+  // ── Cegah duplikat: cek nama yang sama (case-insensitive) di ekskul yang sama ──
+  const namaTrimmed = parsed.data.nama.trim()
+
+  const duplikat = await prisma.siswa.findFirst({
+    where: {
+      ekskul,
+      nama: { equals: namaTrimmed, mode: 'insensitive' },
+    },
+  })
+
+  if (duplikat) {
+    return NextResponse.json(
+      { error: `Siswa "${duplikat.nama}" sudah terdaftar di ekskul ${ekskul}. Gunakan nama yang berbeda atau periksa data yang sudah ada.` },
+      { status: 409 }
+    )
+  }
+
+  // ── Cek duplikat NIS jika NIS diisi ──────────────────────────────────────
+  if (parsed.data.nis && parsed.data.nis.trim() !== '') {
+    const duplikatNis = await prisma.siswa.findFirst({
+      where: { ekskul, nis: parsed.data.nis.trim() },
+    })
+    if (duplikatNis) {
+      return NextResponse.json(
+        { error: `NIS "${parsed.data.nis}" sudah digunakan oleh siswa "${duplikatNis.nama}" di ekskul ${ekskul}.` },
+        { status: 409 }
+      )
+    }
+  }
+
   const siswa = await prisma.siswa.create({
-    data: { ...parsed.data, created_by: ctx.userId }
+    data: { ...parsed.data, nama: namaTrimmed, created_by: ctx.userId },
   })
 
   await createLog({
@@ -98,7 +128,40 @@ export async function PUT(req: NextRequest) {
   if (!canManageSiswaEkskul(ctx.userRole, parsed.data.ekskul))
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
 
-  const updated = await prisma.siswa.update({ where: { id }, data: parsed.data })
+  const namaTrimmed = parsed.data.nama.trim()
+
+  // ── Cegah duplikat nama saat update (kecuali record sendiri) ─────────────
+  const duplikat = await prisma.siswa.findFirst({
+    where: {
+      ekskul: parsed.data.ekskul,
+      nama: { equals: namaTrimmed, mode: 'insensitive' },
+      NOT: { id },
+    },
+  })
+  if (duplikat) {
+    return NextResponse.json(
+      { error: `Siswa "${duplikat.nama}" sudah terdaftar di ekskul ${parsed.data.ekskul}.` },
+      { status: 409 }
+    )
+  }
+
+  // ── Cek duplikat NIS saat update ─────────────────────────────────────────
+  if (parsed.data.nis && parsed.data.nis.trim() !== '') {
+    const duplikatNis = await prisma.siswa.findFirst({
+      where: { ekskul: parsed.data.ekskul, nis: parsed.data.nis.trim(), NOT: { id } },
+    })
+    if (duplikatNis) {
+      return NextResponse.json(
+        { error: `NIS "${parsed.data.nis}" sudah digunakan oleh siswa "${duplikatNis.nama}".` },
+        { status: 409 }
+      )
+    }
+  }
+
+  const updated = await prisma.siswa.update({
+    where: { id },
+    data: { ...parsed.data, nama: namaTrimmed },
+  })
 
   await createLog({
     userId: ctx.userId, userNama: ctx.userNama, aksi: 'UPDATE',
@@ -117,9 +180,9 @@ export async function DELETE(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const idStr = searchParams.get('id')
   const idsStr = searchParams.get('ids')
-  
+
   let idsToDelete: number[] = []
-  
+
   if (idStr) {
     const id = parseInt(idStr)
     if (id) idsToDelete.push(id)
