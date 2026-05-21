@@ -1,6 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
-  // Aktifkan output yang lebih kecil untuk production
+  provider      = "prisma-client-js"
   binaryTargets = ["native"]
 }
 
@@ -10,9 +9,308 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// ============================================================
-// ENUMS
-// ============================================================
+model User {
+  id                  Int                   @id @default(autoincrement())
+  nama                String                @db.VarChar(100)
+  email               String                @unique @db.VarChar(150)
+  password            String                @db.VarChar(255)
+  role                Role
+  created_at          DateTime              @default(now())
+  updated_at          DateTime              @updatedAt
+  last_seen_update_id Int?
+  absensi_dibuat      Absensi[]             @relation("AbsensiCreatedBy")
+  absensi_diubah      Absensi[]             @relation("AbsensiUpdatedBy")
+  chat_wawancara      ChatWawancara[]
+  dokumentasi_foto    DokumentasiFoto[]     @relation("FotoCreatedBy")
+  penilaian_wawancara HasilWawancaraTable[] @relation("WawancaraAssessedBy")
+  override_wawancara  HasilWawancaraTable[] @relation("WawancaraOverriddenBy")
+  log_aktivitas       LogAktivitas[]
+  pengeluaran_kas     PengeluaranKas[]
+  qr_wawancara        QrWawancara[]
+  sesi_wawancara      SesiWawancara[]
+  siswa_dibuat        Siswa[]               @relation("SiswaCreatedBy")
+  updates_created     SystemUpdate[]        @relation("UpdateCreatedBy")
+
+  @@index([created_at])
+  @@map("users")
+}
+
+model Siswa {
+  id         Int            @id @default(autoincrement())
+  nis        String?        @db.VarChar(20)
+  nama       String         @db.VarChar(100)
+  kelas      String?        @db.VarChar(20)
+  ekskul     OrganisasiType
+  xp         Int            @default(0)
+  created_at DateTime       @default(now())
+  updated_at DateTime       @updatedAt
+  created_by Int
+  absensi    Absensi[]
+  creator    User           @relation("SiswaCreatedBy", fields: [created_by], references: [id])
+
+  @@index([ekskul])
+  @@index([xp])
+  @@index([nama])
+  @@index([kelas])
+  @@index([created_at])
+  @@map("siswa")
+}
+
+model Absensi {
+  id         Int           @id @default(autoincrement())
+  siswa_id   Int
+  tanggal    DateTime      @db.Date
+  status     StatusAbsensi @default(hadir)
+  uang_kas   Int           @default(0)
+  keterangan String?       @db.VarChar(200)
+  created_by Int
+  updated_by Int?
+  created_at DateTime      @default(now())
+  updated_at DateTime      @updatedAt
+  creator    User          @relation("AbsensiCreatedBy", fields: [created_by], references: [id])
+  siswa      Siswa         @relation(fields: [siswa_id], references: [id], onDelete: Cascade)
+  updater    User?         @relation("AbsensiUpdatedBy", fields: [updated_by], references: [id])
+
+  @@unique([siswa_id, tanggal])
+  @@index([tanggal])
+  @@index([siswa_id])
+  @@map("absensi")
+}
+
+model AnggotaOsis {
+  id         Int                 @id @default(autoincrement())
+  nis        String?             @db.VarChar(20)
+  nama       String              @db.VarChar(100)
+  kelas      String?             @db.VarChar(20)
+  jabatan    String?             @db.VarChar(100)
+  created_at DateTime            @default(now())
+  updated_at DateTime            @updatedAt
+  absensi    AbsensiOrganisasi[]
+
+  @@index([nama])
+  @@index([kelas])
+  @@index([created_at])
+  @@map("anggota_osis")
+}
+
+model AnggotaMpk {
+  id         Int                 @id @default(autoincrement())
+  nis        String?             @db.VarChar(20)
+  nama       String              @db.VarChar(100)
+  kelas      String?             @db.VarChar(20)
+  jabatan    String?             @db.VarChar(100)
+  created_at DateTime            @default(now())
+  updated_at DateTime            @updatedAt
+  absensi    AbsensiOrganisasi[]
+
+  @@index([nama])
+  @@index([kelas])
+  @@index([created_at])
+  @@map("anggota_mpk")
+}
+
+model AbsensiOrganisasi {
+  id              Int            @id @default(autoincrement())
+  organisasi_type OrganisasiType
+  anggota_osis_id Int?
+  anggota_mpk_id  Int?
+  tanggal         DateTime       @db.Date
+  status          StatusAbsensi  @default(hadir)
+  uang_kas        Int            @default(0)
+  keterangan      String?        @db.VarChar(200)
+  created_by      Int
+  updated_by      Int?
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+  anggota_mpk     AnggotaMpk?    @relation(fields: [anggota_mpk_id], references: [id], onDelete: Cascade)
+  anggota_osis    AnggotaOsis?   @relation(fields: [anggota_osis_id], references: [id], onDelete: Cascade)
+
+  @@unique([anggota_osis_id, tanggal])
+  @@unique([anggota_mpk_id, tanggal])
+  @@index([tanggal])
+  @@index([organisasi_type])
+  @@map("absensi_organisasi")
+}
+
+model LogAktivitas {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  user_nama  String   @db.VarChar(100)
+  aksi       AksiLog
+  tabel      String   @db.VarChar(50)
+  record_id  String?  @db.VarChar(50)
+  deskripsi  String
+  data_lama  Json?
+  data_baru  Json?
+  ip_address String?  @db.VarChar(45)
+  created_at DateTime @default(now())
+  user       User     @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+  @@index([tabel])
+  @@index([created_at])
+  @@map("log_aktivitas")
+}
+
+model PengeluaranKas {
+  id              Int            @id @default(autoincrement())
+  organisasi_type OrganisasiType
+  nominal         Int
+  keterangan      String         @db.VarChar(255)
+  tanggal         DateTime       @default(now())
+  created_by      Int
+  created_at      DateTime       @default(now())
+  creator         User           @relation(fields: [created_by], references: [id])
+
+  @@index([organisasi_type])
+  @@index([tanggal])
+  @@map("pengeluaran_kas")
+}
+
+model SesiWawancara {
+  id              Int                @id @default(autoincrement())
+  organisasi_type OrganisasiType
+  status          StatusWawancara    @default(SCHEDULED)
+  jadwal_mulai    DateTime?
+  jadwal_selesai  DateTime?
+  finalized_at    DateTime?
+  locked_at       DateTime?
+  created_by      Int
+  created_at      DateTime           @default(now())
+  updated_at      DateTime           @updatedAt
+  antrian         AntrianWawancara[]
+  chat            ChatWawancara[]
+  qr_codes        QrWawancara[]
+  creator         User               @relation(fields: [created_by], references: [id])
+
+  @@index([organisasi_type])
+  @@index([status])
+  @@map("sesi_wawancara")
+}
+
+model AntrianWawancara {
+  id              Int                  @id @default(autoincrement())
+  sesi_id         Int
+  qr_id           Int?
+  nama            String               @db.VarChar(50)
+  kelas           String               @db.VarChar(20)
+  nomor_antrian   Int
+  status          StatusAntrian        @default(MENUNGGU)
+  scan_token      String?              @db.VarChar(80)
+  ip_address      String?              @db.VarChar(45)
+  ip_country      String?              @db.VarChar(80)
+  ip_isp          String?              @db.VarChar(150)
+  ip_status       StatusIpScan         @default(TIDAK_DIKETAHUI)
+  gps_lat         Float?
+  gps_lng         Float?
+  jarak_meter     Float?
+  status_validasi StatusValidasiScan   @default(SAH)
+  alasan_validasi String?              @db.VarChar(255)
+  user_agent      String?              @db.VarChar(255)
+  created_at      DateTime             @default(now())
+  updated_at      DateTime             @updatedAt
+  qr              QrWawancara?         @relation(fields: [qr_id], references: [id])
+  sesi            SesiWawancara        @relation(fields: [sesi_id], references: [id], onDelete: Cascade)
+  hasil_wawancara HasilWawancaraTable?
+
+  @@unique([sesi_id, nomor_antrian])
+  @@index([qr_id])
+  @@index([status_validasi])
+  @@index([scan_token])
+  @@index([sesi_id, status_validasi, kelas])
+  @@index([sesi_id, nama, kelas])
+  @@index([created_at])
+  @@map("antrian_wawancara")
+}
+
+model QrWawancara {
+  id          Int                @id @default(autoincrement())
+  sesi_id     Int
+  token       String             @unique @db.VarChar(80)
+  aktif       Boolean            @default(true)
+  valid_from  DateTime           @default(now())
+  valid_until DateTime
+  created_by  Int
+  created_at  DateTime           @default(now())
+  antrian     AntrianWawancara[]
+  creator     User               @relation(fields: [created_by], references: [id])
+  sesi        SesiWawancara      @relation(fields: [sesi_id], references: [id], onDelete: Cascade)
+
+  @@index([sesi_id])
+  @@index([valid_until])
+  @@map("qr_wawancara")
+}
+
+model HasilWawancaraTable {
+  id              Int                 @id @default(autoincrement())
+  antrian_id      Int                 @unique
+  interviewer_id  Int
+  override_by     Int?
+  keterangan      KeteranganWawancara
+  hasil           HasilWawancara
+  persentase      Float
+  catatan         String?
+  override_alasan String?
+  override_at     DateTime?
+  created_at      DateTime            @default(now())
+  updated_at      DateTime            @updatedAt
+  antrian         AntrianWawancara    @relation(fields: [antrian_id], references: [id], onDelete: Cascade)
+  interviewer     User                @relation("WawancaraAssessedBy", fields: [interviewer_id], references: [id])
+  overrider       User?               @relation("WawancaraOverriddenBy", fields: [override_by], references: [id])
+
+  @@index([interviewer_id])
+  @@index([hasil])
+  @@index([created_at])
+  @@map("hasil_wawancara")
+}
+
+model ChatWawancara {
+  id         Int           @id @default(autoincrement())
+  sesi_id    Int
+  sender_id  Int
+  pesan      String
+  created_at DateTime      @default(now())
+  sender     User          @relation(fields: [sender_id], references: [id])
+  sesi       SesiWawancara @relation(fields: [sesi_id], references: [id], onDelete: Cascade)
+
+  @@index([sesi_id])
+  @@index([sesi_id, created_at])
+  @@index([created_at])
+  @@map("chat_wawancara")
+}
+
+model SystemUpdate {
+  id          Int        @id @default(autoincrement())
+  version     String     @db.VarChar(50)
+  content     String
+  update_type UpdateType @default(update)
+  created_at  DateTime   @default(now())
+  created_by  Int
+  creator     User       @relation("UpdateCreatedBy", fields: [created_by], references: [id])
+
+  @@index([created_at])
+  @@index([update_type])
+  @@map("system_updates")
+}
+
+model DokumentasiFoto {
+  id              Int            @id @default(autoincrement())
+  organisasi_type OrganisasiType
+  judul           String         @db.VarChar(150)
+  deskripsi       String?
+  image_url       String         @db.VarChar(255)
+  public_id       String?        @db.VarChar(100)
+  tanggal         DateTime       @db.Date
+  created_by      Int
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+  creator         User           @relation("FotoCreatedBy", fields: [created_by], references: [id])
+
+  @@index([organisasi_type])
+  @@index([tanggal])
+  @@index([created_at])
+  @@map("dokumentasi_foto")
+}
 
 enum Role {
   administrator
@@ -89,379 +387,4 @@ enum UpdateType {
   update
   pengumuman
   perbaikan
-}
-
-// ============================================================
-// TABLE: users
-// ============================================================
-model User {
-  id         Int      @id @default(autoincrement())
-  nama       String   @db.VarChar(100)
-  email      String   @unique @db.VarChar(150)
-  password   String   @db.VarChar(255)
-  role       Role
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  // Relations
-  absensi_dibuat  Absensi[]       @relation("AbsensiCreatedBy")
-  absensi_diubah  Absensi[]       @relation("AbsensiUpdatedBy")
-  siswa_dibuat    Siswa[]         @relation("SiswaCreatedBy")
-  log_aktivitas   LogAktivitas[]
-  pengeluaran_kas PengeluaranKas[]
-  sesi_wawancara  SesiWawancara[]
-  qr_wawancara    QrWawancara[]
-  penilaian_wawancara HasilWawancaraTable[] @relation("WawancaraAssessedBy")
-  override_wawancara HasilWawancaraTable[] @relation("WawancaraOverriddenBy")
-  chat_wawancara ChatWawancara[]
-
-  last_seen_update_id Int?
-  updates_created     SystemUpdate[] @relation("UpdateCreatedBy")
-  dokumentasi_foto    DokumentasiFoto[] @relation("FotoCreatedBy")
-
-  @@index([created_at])
-  @@map("users")
-}
-
-// ============================================================
-// TABLE: siswa (untuk ekskul)
-// ============================================================
-model Siswa {
-  id          Int            @id @default(autoincrement())
-  nis         String?        @db.VarChar(20)
-  nama        String         @db.VarChar(100)
-  kelas       String?        @db.VarChar(20)
-  ekskul      OrganisasiType
-  xp          Int            @default(0)
-  created_at  DateTime       @default(now())
-  updated_at  DateTime       @updatedAt
-  created_by  Int
-  creator     User           @relation("SiswaCreatedBy", fields: [created_by], references: [id])
-
-  // Relations
-  absensi     Absensi[]
-
-  @@index([ekskul])
-  @@index([xp])
-  @@index([nama])
-  @@index([kelas])
-  @@index([created_at])
-  @@map("siswa")
-}
-
-// ============================================================
-// TABLE: absensi (untuk ekskul: programming & english)
-// ============================================================
-model Absensi {
-  id           Int           @id @default(autoincrement())
-  siswa_id     Int
-  tanggal      DateTime      @db.Date
-  status       StatusAbsensi @default(hadir)
-  uang_kas     Int           @default(0)
-  keterangan   String?       @db.VarChar(200)
-  created_by   Int
-  updated_by   Int?
-  created_at   DateTime      @default(now())
-  updated_at   DateTime      @updatedAt
-
-  // Relations
-  siswa        Siswa         @relation(fields: [siswa_id], references: [id], onDelete: Cascade)
-  creator      User          @relation("AbsensiCreatedBy", fields: [created_by], references: [id])
-  updater      User?         @relation("AbsensiUpdatedBy", fields: [updated_by], references: [id])
-
-  @@unique([siswa_id, tanggal])
-  @@index([tanggal])
-  @@index([siswa_id])
-  @@map("absensi")
-}
-
-// ============================================================
-// TABLE: anggota_osis (OSIS - dipisah dari MPK)
-// ============================================================
-model AnggotaOsis {
-  id         Int      @id @default(autoincrement())
-  nis        String?  @db.VarChar(20)
-  nama       String   @db.VarChar(100)
-  kelas      String?  @db.VarChar(20)
-  jabatan    String?  @db.VarChar(100)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  absensi    AbsensiOrganisasi[]
-
-  @@index([nama])
-  @@index([kelas])
-  @@index([created_at])
-  @@map("anggota_osis")
-}
-
-// ============================================================
-// TABLE: anggota_mpk (MPK - dipisah dari OSIS)
-// ============================================================
-model AnggotaMpk {
-  id         Int      @id @default(autoincrement())
-  nis        String?  @db.VarChar(20)
-  nama       String   @db.VarChar(100)
-  kelas      String?  @db.VarChar(20)
-  jabatan    String?  @db.VarChar(100)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  absensi    AbsensiOrganisasi[]
-
-  @@index([nama])
-  @@index([kelas])
-  @@index([created_at])
-  @@map("anggota_mpk")
-}
-
-// ============================================================
-// TABLE: absensi_organisasi (untuk OSIS & MPK)
-// Polymorphic: organisasi_type menentukan OSIS atau MPK
-// ============================================================
-model AbsensiOrganisasi {
-  id               Int            @id @default(autoincrement())
-  organisasi_type  OrganisasiType // 'osis' atau 'mpk'
-  anggota_osis_id  Int?
-  anggota_mpk_id   Int?
-  tanggal          DateTime       @db.Date
-  status           StatusAbsensi  @default(hadir)
-  uang_kas         Int            @default(0)
-  keterangan       String?        @db.VarChar(200)
-  created_by       Int
-  updated_by       Int?
-  created_at       DateTime       @default(now())
-  updated_at       DateTime       @updatedAt
-
-  // Relations
-  anggota_osis     AnggotaOsis?   @relation(fields: [anggota_osis_id], references: [id], onDelete: Cascade)
-  anggota_mpk      AnggotaMpk?    @relation(fields: [anggota_mpk_id], references: [id], onDelete: Cascade)
-
-  @@unique([anggota_osis_id, tanggal])
-  @@unique([anggota_mpk_id, tanggal])
-  @@index([tanggal])
-  @@index([organisasi_type])
-  @@map("absensi_organisasi")
-}
-
-// ============================================================
-// TABLE: log_aktivitas (audit trail)
-// ============================================================
-model LogAktivitas {
-  id            Int      @id @default(autoincrement())
-  user_id       Int
-  user_nama     String   @db.VarChar(100)
-  aksi          AksiLog
-  tabel         String   @db.VarChar(50)
-  record_id     String?  @db.VarChar(50)
-  deskripsi     String   @db.Text
-  data_lama     Json?
-  data_baru     Json?
-  ip_address    String?  @db.VarChar(45)
-  created_at    DateTime @default(now())
-
-  // Relations
-  user          User     @relation(fields: [user_id], references: [id])
-
-  @@index([user_id])
-  @@index([tabel])
-  @@index([created_at])
-  @@map("log_aktivitas")
-}
-
-// ============================================================
-// TABLE: pengeluaran_kas (tarik kas organisasi)
-// ============================================================
-model PengeluaranKas {
-  id              Int            @id @default(autoincrement())
-  organisasi_type OrganisasiType
-  nominal         Int
-  keterangan      String         @db.VarChar(255)
-  tanggal         DateTime       @default(now())
-  created_by      Int
-  created_at      DateTime       @default(now())
-
-  // Relations
-  creator         User           @relation(fields: [created_by], references: [id])
-
-  @@index([organisasi_type])
-  @@index([tanggal])
-  @@map("pengeluaran_kas")
-}
-
-// ============================================================
-// TABLE: sesi_wawancara (kontrol dari Super Admin)
-// ============================================================
-model SesiWawancara {
-  id              Int             @id @default(autoincrement())
-  organisasi_type OrganisasiType  // osis atau mpk
-  status          StatusWawancara @default(SCHEDULED)
-  jadwal_mulai    DateTime?
-  jadwal_selesai  DateTime?
-  finalized_at    DateTime?
-  locked_at       DateTime?
-  created_by      Int
-  created_at      DateTime        @default(now())
-  updated_at      DateTime        @updatedAt
-
-  // Relations
-  creator         User               @relation(fields: [created_by], references: [id])
-  antrian         AntrianWawancara[]
-  chat            ChatWawancara[]
-  qr_codes        QrWawancara[]
-
-  @@index([organisasi_type])
-  @@index([status])
-  @@map("sesi_wawancara")
-}
-
-// ============================================================
-// TABLE: antrian_wawancara (peserta scan QR)
-// ============================================================
-model AntrianWawancara {
-  id              Int            @id @default(autoincrement())
-  sesi_id         Int
-  qr_id           Int?
-  nama            String         @db.VarChar(50)
-  kelas           String         @db.VarChar(20)
-  nomor_antrian   Int
-  status          StatusAntrian  @default(MENUNGGU)
-  scan_token      String?        @db.VarChar(80)
-  ip_address      String?        @db.VarChar(45)
-  ip_country      String?        @db.VarChar(80)
-  ip_isp          String?        @db.VarChar(150)
-  ip_status       StatusIpScan   @default(TIDAK_DIKETAHUI)
-  gps_lat         Float?
-  gps_lng         Float?
-  jarak_meter     Float?
-  status_validasi StatusValidasiScan @default(SAH)
-  alasan_validasi String?        @db.VarChar(255)
-  user_agent      String?        @db.VarChar(255)
-  created_at      DateTime       @default(now())
-  updated_at      DateTime       @updatedAt
-
-  // Relations
-  sesi            SesiWawancara   @relation(fields: [sesi_id], references: [id], onDelete: Cascade)
-  qr              QrWawancara?    @relation(fields: [qr_id], references: [id])
-  hasil_wawancara HasilWawancaraTable?
-
-  @@unique([sesi_id, nomor_antrian])
-  @@index([qr_id])
-  @@index([status_validasi])
-  @@index([scan_token])
-  @@index([sesi_id, status_validasi, kelas])
-  @@index([sesi_id, nama, kelas])
-  @@index([created_at])
-  @@map("antrian_wawancara")
-}
-
-// ============================================================
-// TABLE: qr_wawancara (token QR absensi wawancara)
-// ============================================================
-model QrWawancara {
-  id          Int      @id @default(autoincrement())
-  sesi_id     Int
-  token       String   @unique @db.VarChar(80)
-  aktif       Boolean  @default(true)
-  valid_from  DateTime @default(now())
-  valid_until DateTime
-  created_by  Int
-  created_at  DateTime @default(now())
-
-  sesi        SesiWawancara @relation(fields: [sesi_id], references: [id], onDelete: Cascade)
-  creator     User          @relation(fields: [created_by], references: [id])
-  antrian     AntrianWawancara[]
-
-  @@index([sesi_id])
-  @@index([valid_until])
-  @@map("qr_wawancara")
-}
-
-// ============================================================
-// TABLE: hasil_wawancara (penilaian)
-// ============================================================
-model HasilWawancaraTable {
-  id             Int            @id @default(autoincrement())
-  antrian_id     Int            @unique
-  interviewer_id Int
-  override_by    Int?
-  keterangan     KeteranganWawancara
-  hasil          HasilWawancara
-  persentase     Float
-  catatan        String?        @db.Text
-  override_alasan String?       @db.Text
-  override_at    DateTime?
-  created_at     DateTime       @default(now())
-  updated_at     DateTime       @updatedAt
-
-  // Relations
-  antrian        AntrianWawancara @relation(fields: [antrian_id], references: [id], onDelete: Cascade)
-  interviewer    User             @relation("WawancaraAssessedBy", fields: [interviewer_id], references: [id])
-  overrider      User?            @relation("WawancaraOverriddenBy", fields: [override_by], references: [id])
-
-  @@map("hasil_wawancara")
-  @@index([interviewer_id])
-  @@index([hasil])
-  @@index([created_at])
-}
-
-// ============================================================
-// TABLE: chat_wawancara (live chat internal saat sesi aktif)
-// ============================================================
-model ChatWawancara {
-  id         Int      @id @default(autoincrement())
-  sesi_id    Int
-  sender_id  Int
-  pesan      String   @db.Text
-  created_at DateTime @default(now())
-
-  sesi       SesiWawancara @relation(fields: [sesi_id], references: [id], onDelete: Cascade)
-  sender     User          @relation(fields: [sender_id], references: [id])
-
-  @@index([sesi_id])
-  @@index([sesi_id, created_at])
-  @@index([created_at])
-  @@map("chat_wawancara")
-}
-
-// ============================================================
-// TABLE: system_updates (notifikasi pembaruan)
-// ============================================================
-model SystemUpdate {
-  id          Int        @id @default(autoincrement())
-  version     String     @db.VarChar(50)
-  content     String     @db.Text
-  update_type UpdateType @default(update)
-  created_at  DateTime   @default(now())
-  created_by  Int
-
-  // Relations
-  creator     User       @relation("UpdateCreatedBy", fields: [created_by], references: [id])
-
-  @@map("system_updates")
-  @@index([created_at])
-  @@index([update_type])
-}
-
-// ============================================================
-// TABLE: dokumentasi_foto (dokumentasi foto kegiatan admin)
-// ============================================================
-model DokumentasiFoto {
-  id              Int            @id @default(autoincrement())
-  organisasi_type OrganisasiType
-  judul           String         @db.VarChar(150)
-  deskripsi       String?        @db.Text
-  image_url       String         @db.VarChar(255)
-  public_id       String?        @db.VarChar(100)
-  tanggal         DateTime       @db.Date
-  created_by      Int
-  created_at      DateTime       @default(now())
-  updated_at      DateTime       @updatedAt
-
-  creator         User           @relation("FotoCreatedBy", fields: [created_by], references: [id])
-
-  @@map("dokumentasi_foto")
-  @@index([organisasi_type])
-  @@index([tanggal])
-  @@index([created_at])
 }
