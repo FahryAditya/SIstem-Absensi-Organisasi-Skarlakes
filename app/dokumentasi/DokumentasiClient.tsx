@@ -3,8 +3,8 @@
 import { useEffect, useState, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import { getAccessibleOrgs } from '@/lib/auth-shared'
-import { 
-  Camera, Plus, Calendar, User, Search, Trash2, X, Maximize2, 
+import {
+  Camera, Plus, Calendar, User, Search, Trash2, X, Maximize2,
   ChevronLeft, ChevronRight, Eye, ImageIcon, UploadCloud, Info, AlertCircle, Download
 } from 'lucide-react'
 import Image from 'next/image'
@@ -45,7 +45,7 @@ export default function DokumentasiClient({ user }: Props) {
   const [newJudul, setNewJudul] = useState('')
   const [newDeskripsi, setNewDeskripsi] = useState('')
   const [newTanggal, setNewTanggal] = useState(new Date().toISOString().split('T')[0])
-  
+
   // Tentukan default organisasi berdasarkan role
   const accessibleOrgs = useMemo(() => getAccessibleOrgs(user.role), [user.role])
   const [newOrg, setNewOrg] = useState(accessibleOrgs[0] || 'osis')
@@ -143,7 +143,7 @@ export default function DokumentasiClient({ user }: Props) {
       const json = await res.json()
 
       if (!res.ok) throw new Error(json.error || 'Gagal mengunggah dokumentasi')
-      
+
       toast.success('Berhasil mengunggah dokumentasi foto!')
 
       // Reset form
@@ -152,7 +152,7 @@ export default function DokumentasiClient({ user }: Props) {
       setSelectedFile(null)
       setFilePreview(null)
       setShowUploadModal(false)
-      
+
       fetchPhotos()
     } catch (error: any) {
       toast.error(error.message)
@@ -175,7 +175,7 @@ export default function DokumentasiClient({ user }: Props) {
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Gagal menghapus dokumentasi')
-      
+
       toast.success('Dokumentasi foto berhasil dihapus')
       setDeleteTarget(null)
       fetchPhotos()
@@ -249,7 +249,7 @@ export default function DokumentasiClient({ user }: Props) {
 
   return (
     <div className="space-y-6">
-      
+
 
 
       {/* ─── TOP FILTER PANEL ─── */}
@@ -264,7 +264,7 @@ export default function DokumentasiClient({ user }: Props) {
               <p className="text-xs text-slate-400">Total {photos.length} kegiatan terdokumentasi</p>
             </div>
           </div>
-          
+
           <button
             onClick={() => setShowUploadModal(true)}
             className="flex items-center justify-center gap-2 bg-[#052659] hover:bg-[#041d44] text-white px-4 py-2.5 rounded-2xl text-xs font-black shadow-lg shadow-[#052659]/10 transition-all duration-200 active:scale-95"
@@ -291,17 +291,16 @@ export default function DokumentasiClient({ user }: Props) {
                 className="w-full pl-9 pr-4 py-2.5 text-xs border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
               />
             </div>
-            
+
             {/* ORGANISASI SELECT (INTERAKTIF PILLS) */}
             <div className="flex flex-wrap gap-2 items-center">
               <button
                 type="button"
                 onClick={() => setSelectedOrg('all')}
-                className={`px-3.5 py-2 rounded-2xl text-xs font-black transition-all duration-200 active:scale-95 ${
-                  selectedOrg === 'all'
+                className={`px-3.5 py-2 rounded-2xl text-xs font-black transition-all duration-200 active:scale-95 ${selectedOrg === 'all'
                     ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10'
                     : 'bg-slate-100 hover:bg-slate-200/70 text-slate-600'
-                }`}
+                  }`}
               >
                 Semua
               </button>
@@ -309,11 +308,10 @@ export default function DokumentasiClient({ user }: Props) {
                 <button
                   type="button"
                   onClick={() => setSelectedOrg('osis')}
-                  className={`px-3.5 py-2 rounded-2xl text-xs font-black transition-all duration-200 active:scale-95 flex items-center gap-1.5 ${
-                    selectedOrg === 'osis'
+                  className={`px-3.5 py-2 rounded-2xl text-xs font-black transition-all duration-200 active:scale-95 flex items-center gap-1.5 ${selectedOrg === 'osis'
                       ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20'
                       : 'bg-blue-50 hover:bg-blue-100/70 text-blue-700'
-                  }`}
+                    }`}
                 >
                   OSIS
                 </button>
@@ -322,11 +320,10 @@ export default function DokumentasiClient({ user }: Props) {
                 <button
                   type="button"
                   onClick={() => setSelectedOrg('mpk')}
-                  className={`px-3.5 py-2 rounded-2xl text-xs font-black transition-all duration-200 active:scale-95 flex items-center gap-1.5 ${
-                    selectedOrg === 'mpk'
+                  className={`px-3.5 py-2 rounded-2xl text-xs font-black transition-all duration-200 active:scale-95 flex items-center gap-1.5 ${selectedOrg === 'mpk'
                       ? 'bg-red-500 text-white shadow-lg shadow-red-500/20'
                       : 'bg-red-50 hover:bg-red-100/70 text-red-700'
-                }`}
+                    }`}
                 >
                   MPK
                 </button>
@@ -335,11 +332,10 @@ export default function DokumentasiClient({ user }: Props) {
                 <button
                   type="button"
                   onClick={() => setSelectedOrg('programming')}
-                  className={`px-3.5 py-2 rounded-2xl text-xs font-black transition-all duration-200 active:scale-95 flex items-center gap-1.5 ${
-                    selectedOrg === 'programming'
+                  className={`px-3.5 py-2 rounded-2xl text-xs font-black transition-all duration-200 active:scale-95 flex items-center gap-1.5 ${selectedOrg === 'programming'
                       ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20'
                       : 'bg-orange-50 hover:bg-orange-100/70 text-orange-700'
-                  }`}
+                    }`}
                 >
                   Programming
                 </button>
@@ -348,11 +344,10 @@ export default function DokumentasiClient({ user }: Props) {
                 <button
                   type="button"
                   onClick={() => setSelectedOrg('english')}
-                  className={`px-3.5 py-2 rounded-2xl text-xs font-black transition-all duration-200 active:scale-95 flex items-center gap-1.5 ${
-                    selectedOrg === 'english'
+                  className={`px-3.5 py-2 rounded-2xl text-xs font-black transition-all duration-200 active:scale-95 flex items-center gap-1.5 ${selectedOrg === 'english'
                       ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20'
                       : 'bg-sky-50 hover:bg-sky-100/70 text-sky-700'
-                  }`}
+                    }`}
                 >
                   English Club
                 </button>
@@ -420,13 +415,13 @@ export default function DokumentasiClient({ user }: Props) {
             }
 
             return (
-              <div 
+              <div
                 key={photo.id}
                 className="group bg-white border border-slate-200/60 rounded-3xl overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.02)] hover:shadow-lg hover:border-indigo-500/20 hover:-translate-y-1 transition-all duration-300 flex flex-col"
               >
                 {/* Image Cover */}
                 <div className="relative aspect-[4/3] overflow-hidden bg-slate-900">
-                  <Image 
+                  <Image
                     src={photo.image_url}
                     alt={photo.judul}
                     fill
@@ -501,17 +496,17 @@ export default function DokumentasiClient({ user }: Props) {
       {showUploadModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowUploadModal(false)} />
-          
+
           <div className="bg-white border border-slate-200 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl relative z-10 animate-scale-up">
-            
+
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Camera className="w-5 h-5 text-indigo-600" />
                 <span className="text-sm font-extrabold text-slate-800">Unggah Dokumentasi Baru</span>
               </div>
-              <button 
-                onClick={() => setShowUploadModal(false)} 
+              <button
+                onClick={() => setShowUploadModal(false)}
                 className="w-7 h-7 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center transition-colors"
               >
                 <X className="w-4 h-4 text-slate-400" />
@@ -520,23 +515,22 @@ export default function DokumentasiClient({ user }: Props) {
 
             {/* Modal Body / Form */}
             <form onSubmit={handleUploadSubmit} className="p-6 space-y-4">
-              
+
               {/* IMAGE DRAG & DROP ZONE */}
-              <div 
+              <div
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 onClick={() => document.getElementById('image-uploader-input')?.click()}
-                className={`border-2 border-dashed rounded-2xl aspect-[16/9] flex flex-col items-center justify-center p-5 text-center cursor-pointer transition-all ${
-                  dragOver 
-                    ? 'border-indigo-500 bg-indigo-50/30' 
-                    : filePreview 
-                      ? 'border-slate-200 bg-slate-50' 
+                className={`border-2 border-dashed rounded-2xl aspect-[16/9] flex flex-col items-center justify-center p-5 text-center cursor-pointer transition-all ${dragOver
+                    ? 'border-indigo-500 bg-indigo-50/30'
+                    : filePreview
+                      ? 'border-slate-200 bg-slate-50'
                       : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
-                }`}
+                  }`}
               >
-                <input 
-                  type="file" 
+                <input
+                  type="file"
                   id="image-uploader-input"
                   accept="image/*"
                   onChange={(e) => {
@@ -548,10 +542,10 @@ export default function DokumentasiClient({ user }: Props) {
 
                 {filePreview ? (
                   <div className="relative w-full h-full rounded-lg overflow-hidden">
-                    <Image 
-                      src={filePreview} 
-                      alt="Uploader Preview" 
-                      fill 
+                    <Image
+                      src={filePreview}
+                      alt="Uploader Preview"
+                      fill
                       className="object-contain"
                       unoptimized
                     />
@@ -582,15 +576,14 @@ export default function DokumentasiClient({ user }: Props) {
                     </span>
                   )}
                 </div>
-                <input 
+                <input
                   type="text"
                   placeholder="Contoh: Rapat Koordinasi Anggota Baru"
                   value={newJudul}
                   onChange={(e) => setNewJudul(e.target.value)}
                   maxLength={100}
-                  className={`w-full px-3 py-2 text-xs border rounded-xl focus:outline-none focus:ring-2 ${
-                    newJudul.length >= 100 ? 'border-red-400 focus:ring-red-500/20' : 'border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-500'
-                  }`}
+                  className={`w-full px-3 py-2 text-xs border rounded-xl focus:outline-none focus:ring-2 ${newJudul.length >= 100 ? 'border-red-400 focus:ring-red-500/20' : 'border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-500'
+                    }`}
                 />
                 {newJudul.length >= 100 && (
                   <p className="text-[10px] text-red-500 font-bold mt-1">Batas maksimal judul adalah 100 karakter!</p>
@@ -605,11 +598,10 @@ export default function DokumentasiClient({ user }: Props) {
                     <button
                       type="button"
                       onClick={() => setNewOrg('osis')}
-                      className={`px-3 py-2.5 rounded-2xl border text-xs font-black text-center transition-all duration-200 flex flex-col items-center justify-center gap-1.5 ${
-                        newOrg === 'osis'
+                      className={`px-3 py-2.5 rounded-2xl border text-xs font-black text-center transition-all duration-200 flex flex-col items-center justify-center gap-1.5 ${newOrg === 'osis'
                           ? 'bg-blue-50 border-blue-500 text-blue-700 ring-2 ring-blue-500/10 scale-[1.02]'
                           : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600 hover:bg-slate-50/50'
-                      }`}
+                        }`}
                     >
                       <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-sm" />
                       OSIS
@@ -619,11 +611,10 @@ export default function DokumentasiClient({ user }: Props) {
                     <button
                       type="button"
                       onClick={() => setNewOrg('mpk')}
-                      className={`px-3 py-2.5 rounded-2xl border text-xs font-black text-center transition-all duration-200 flex flex-col items-center justify-center gap-1.5 ${
-                        newOrg === 'mpk'
+                      className={`px-3 py-2.5 rounded-2xl border text-xs font-black text-center transition-all duration-200 flex flex-col items-center justify-center gap-1.5 ${newOrg === 'mpk'
                           ? 'bg-red-50 border-red-500 text-red-700 ring-2 ring-red-500/10 scale-[1.02]'
                           : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600 hover:bg-slate-50/50'
-                      }`}
+                        }`}
                     >
                       <span className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm" />
                       MPK
@@ -633,11 +624,10 @@ export default function DokumentasiClient({ user }: Props) {
                     <button
                       type="button"
                       onClick={() => setNewOrg('programming')}
-                      className={`px-3 py-2.5 rounded-2xl border text-xs font-black text-center transition-all duration-200 flex flex-col items-center justify-center gap-1.5 ${
-                        newOrg === 'programming'
+                      className={`px-3 py-2.5 rounded-2xl border text-xs font-black text-center transition-all duration-200 flex flex-col items-center justify-center gap-1.5 ${newOrg === 'programming'
                           ? 'bg-orange-50 border-orange-500 text-orange-700 ring-2 ring-orange-500/10 scale-[1.02]'
                           : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600 hover:bg-slate-50/50'
-                      }`}
+                        }`}
                     >
                       <span className="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-sm" />
                       Programming
@@ -647,13 +637,14 @@ export default function DokumentasiClient({ user }: Props) {
                     <button
                       type="button"
                       onClick={() => setNewOrg('english')}
-                      className={`px-3 py-2.5 rounded-2xl border text-xs font-black text-center transition-all duration-200 flex flex-col items-center justify-center gap-1.5 ${
-                        newOrg === 'english'
+                      className={`px-3 py-2.5 rounded-2xl border text-xs font-black text-center transition-all duration-200 flex flex-col items-center justify-center gap-1.5 ${newOrg === 'english'
                           ? 'bg-sky-50 border-sky-500 text-sky-700 ring-2 ring-sky-500/10 scale-[1.02]'
                           : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600 hover:bg-slate-50/50'
-                      }`}
+                        }`}
                     >
                       <span className="w-2.5 h-2.5 rounded-full bg-sky-500 shadow-sm" />
+
+
                       English Club
                     </button>
                   )}
@@ -663,7 +654,7 @@ export default function DokumentasiClient({ user }: Props) {
               {/* INPUT: TANGGAL */}
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-slate-500 uppercase">Tanggal Kegiatan</label>
-                <input 
+                <input
                   type="date"
                   value={newTanggal}
                   onChange={(e) => setNewTanggal(e.target.value)}
@@ -681,15 +672,14 @@ export default function DokumentasiClient({ user }: Props) {
                     </span>
                   )}
                 </div>
-                <textarea 
+                <textarea
                   placeholder="Tulis detail singkat kegiatan..."
                   value={newDeskripsi}
                   onChange={(e) => setNewDeskripsi(e.target.value)}
                   rows={2}
                   maxLength={300}
-                  className={`w-full px-3 py-2 text-xs border rounded-xl focus:outline-none focus:ring-2 resize-none ${
-                    newDeskripsi.length >= 300 ? 'border-red-400 focus:ring-red-500/20' : 'border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-500'
-                  }`}
+                  className={`w-full px-3 py-2 text-xs border rounded-xl focus:outline-none focus:ring-2 resize-none ${newDeskripsi.length >= 300 ? 'border-red-400 focus:ring-red-500/20' : 'border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-500'
+                    }`}
                 />
                 {newDeskripsi.length >= 300 && (
                   <p className="text-[10px] text-red-500 font-bold mt-1">Batas maksimal deskripsi adalah 300 karakter!</p>
@@ -730,7 +720,7 @@ export default function DokumentasiClient({ user }: Props) {
       {/* ─── LIGHTBOX VIEW ─── */}
       {activeLightboxPhoto && (
         <div className="fixed inset-0 z-50 bg-black/95 flex flex-col justify-between">
-          
+
           {/* Header Lightbox */}
           <div className="p-4 flex items-center justify-between text-white relative z-10 bg-gradient-to-b from-black/60 to-transparent">
             <div>
@@ -747,7 +737,7 @@ export default function DokumentasiClient({ user }: Props) {
               >
                 <Download className="w-4 h-4" />
               </button>
-              <button 
+              <button
                 onClick={() => setActiveLightboxIndex(null)}
                 className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
               >
@@ -758,7 +748,7 @@ export default function DokumentasiClient({ user }: Props) {
 
           {/* Body Viewer */}
           <div className="flex-1 flex items-center justify-center relative px-10">
-            
+
             {/* Left Button */}
             <button
               onClick={handlePrevLightbox}
@@ -769,7 +759,7 @@ export default function DokumentasiClient({ user }: Props) {
 
             {/* HD image */}
             <div className="relative w-full h-[70vh]">
-              <Image 
+              <Image
                 src={activeLightboxPhoto.image_url}
                 alt={activeLightboxPhoto.judul}
                 fill
@@ -813,11 +803,11 @@ export default function DokumentasiClient({ user }: Props) {
       {/* ─── CUSTOM DELETE CONFIRMATION MODAL ─── */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-fade-in" 
-            onClick={() => setDeleteTarget(null)} 
+          <div
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+            onClick={() => setDeleteTarget(null)}
           />
-          
+
           <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full overflow-hidden shadow-2xl relative z-10 animate-scale-up p-6 space-y-6">
             <div className="flex flex-col items-center text-center space-y-3">
               <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center border border-red-100 text-red-500 shadow-sm">
