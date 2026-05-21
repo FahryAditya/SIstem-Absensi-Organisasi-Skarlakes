@@ -441,16 +441,28 @@ export default function AmbilSiswaClient({ user }: Props) {
 
               {/* Show input field if "Lainnya" is selected or if a custom value is input */}
               {(!PREDEFINED_ACTIVITIES.includes(judulKegiatan) || judulKegiatan === '') && (
-                <div className="relative animate-fadeIn">
+                <div className="relative animate-fadeIn space-y-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-slate-400">Judul Kegiatan Kustom</span>
+                    {judulKegiatan.length > 0 && (
+                      <span className={`text-[10px] font-bold ${judulKegiatan.length >= 100 ? 'text-red-500' : 'text-slate-400'}`}>
+                        {judulKegiatan.length}/100
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="text"
                     value={judulKegiatan}
                     onChange={(e) => setJudulKegiatan(e.target.value)}
                     placeholder="Ketik judul kegiatan kustom Anda di sini..."
+                    maxLength={100}
                     className={`input focus:ring-2 focus:ring-offset-1 transition-all ${
-                      activeTheme ? activeTheme.ring : 'focus:ring-indigo-500'
+                      judulKegiatan.length >= 100 ? 'border-red-400 focus:ring-red-500/20' : (activeTheme ? activeTheme.ring : 'focus:ring-indigo-500')
                     }`}
                   />
+                  {judulKegiatan.length >= 100 && (
+                    <p className="text-[10px] text-red-500 font-bold mt-1">Batas maksimal judul kegiatan adalah 100 karakter!</p>
+                  )}
                 </div>
               )}
             </div>
@@ -503,6 +515,7 @@ export default function AmbilSiswaClient({ user }: Props) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari berdasarkan nama atau kelas..."
+                maxLength={50}
                 className="input pl-9 pr-4 py-1.5 text-sm bg-white"
               />
             </div>
