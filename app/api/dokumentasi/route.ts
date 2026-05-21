@@ -4,6 +4,8 @@ import { getAccessibleOrgs } from '@/lib/auth-shared'
 import { createLog, getIp } from '@/lib/log'
 import { v2 as cloudinary } from 'cloudinary'
 
+export const dynamic = 'force-dynamic'
+
 // Konfigurasi Cloudinary secara aman jika kredensial diisi
 const cloudName = process.env.CLOUDINARY_CLOUD_NAME
 const apiKey = process.env.CLOUDINARY_API_KEY
@@ -57,12 +59,25 @@ export async function GET(req: NextRequest) {
           mode: 'insensitive',
         },
       }),
-      ...((dateStart || dateEnd) && {
-        tanggal: {
-          ...(dateStart && { gte: new Date(dateStart) }),
-          ...(dateEnd && { lte: new Date(dateEnd) }),
-        },
-      }),
+    }
+
+    if (dateStart || dateEnd) {
+      const tanggalFilter: any = {}
+      if (dateStart) {
+        const startDateObj = new Date(dateStart)
+        if (!isNaN(startDateObj.getTime())) {
+          tanggalFilter.gte = startDateObj
+        }
+      }
+      if (dateEnd) {
+        const endDateObj = new Date(dateEnd)
+        if (!isNaN(endDateObj.getTime())) {
+          tanggalFilter.lte = endDateObj
+        }
+      }
+      if (Object.keys(tanggalFilter).length > 0) {
+        where.tanggal = tanggalFilter
+      }
     }
 
     const photos = await prisma.dokumentasiFoto.findMany({
@@ -78,7 +93,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ data: photos })
   } catch (error: any) {
     console.error('Failed to get photos:', error)
-    return NextResponse.json({ error: 'Gagal memuat dokumentasi foto' }, { status: 500 })
+    return NextResponse.json({ error: 'Gagal memuat dokumentasi foto: ' + error.message }, { status: 500 })
   }
 }
 
@@ -99,6 +114,11 @@ export async function POST(req: NextRequest) {
 
     if (!file || !judul || !organisasiType || !tanggalStr) {
       return NextResponse.json({ error: 'Semua kolom wajib diisi' }, { status: 400 })
+    }
+
+    const tanggalVal = new Date(tanggalStr)
+    if (isNaN(tanggalVal.getTime())) {
+      return NextResponse.json({ error: 'Format tanggal tidak valid' }, { status: 400 })
     }
 
     // Pastikan user memiliki hak akses mengunggah ke organisasi ini
@@ -140,7 +160,7 @@ export async function POST(req: NextRequest) {
         deskripsi,
         image_url: imageUrl,
         public_id: publicId,
-        tanggal: new Date(tanggalStr),
+        tanggal: tanggalVal,
         created_by: userId,
       },
       include: {
