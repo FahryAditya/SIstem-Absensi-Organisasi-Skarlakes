@@ -2,23 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAccessibleOrgs } from '@/lib/auth-shared'
 import { createLog, getIp } from '@/lib/log'
-import { v2 as cloudinary } from 'cloudinary'
+import cloudinary, { isCloudinaryConfigured } from '@/lib/cloudinary'
 
 export const dynamic = 'force-dynamic'
 
-// Konfigurasi Cloudinary secara aman jika kredensial diisi
-const cloudName = process.env.CLOUDINARY_CLOUD_NAME
-const apiKey = process.env.CLOUDINARY_API_KEY
-const apiSecret = process.env.CLOUDINARY_API_SECRET
-const isCloudinaryConfigured = !!(cloudName && apiKey && apiSecret)
 
-if (isCloudinaryConfigured) {
-  cloudinary.config({
-    cloud_name: cloudName,
-    api_key: apiKey,
-    api_secret: apiSecret,
-  })
-}
 
 function getCtx(req: NextRequest) {
   return {
