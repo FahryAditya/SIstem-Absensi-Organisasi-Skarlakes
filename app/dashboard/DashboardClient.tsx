@@ -13,6 +13,7 @@ import { clearJsonCache, fetchJsonCachedUrl, clientQueryClient } from '@/lib/cli
 import { pusherClient } from '@/lib/pusher-client'
 import TextType from '@/components/TextType'
 import Select from '@/components/ui/Select'
+import { LevelBadge } from '@/components/ui/LevelBadge'
 import PresentationMode from '@/components/PresentationMode'
 import FilePresentationMode from '@/components/FilePresentationMode'
 import {
@@ -758,7 +759,10 @@ export default function DashboardClient({ user }: Props) {
                           </div>
                           <div className="min-w-0">
                             <h4 className="text-sm font-black text-[#011025] leading-tight truncate">{siswa.nama}</h4>
-                            <span className="text-[10px] text-slate-400 font-bold uppercase">{siswa.kelas}</span>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-[10px] text-slate-400 font-bold uppercase">{siswa.kelas}</span>
+                              <LevelBadge exp={siswa.xp} size="sm" />
+                            </div>
                           </div>
                         </div>
                         <div className="flex flex-col items-end shrink-0">
@@ -785,7 +789,10 @@ export default function DashboardClient({ user }: Props) {
                             </span>
                             <div className="min-w-0">
                               <h4 className="text-xs font-extrabold text-[#011025] leading-tight truncate">{siswa.nama}</h4>
-                              <span className="text-[9px] text-slate-400 font-medium uppercase">{siswa.kelas}</span>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className="text-[9px] text-slate-400 font-medium uppercase">{siswa.kelas}</span>
+                                <LevelBadge exp={siswa.xp} size="sm" />
+                              </div>
                             </div>
                           </div>
                           <div className="shrink-0 flex items-center gap-0.5 font-mono text-xs font-bold text-slate-700">

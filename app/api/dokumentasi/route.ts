@@ -2,21 +2,32 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAccessibleOrgs } from '@/lib/auth-shared'
 import { createLog, getIp } from '@/lib/log'
-import { v2 as cloudinary } from 'cloudinary'
+import cloudinary, { isCloudinaryConfigured } from '@/lib/cloudinary'
 
-// Konfigurasi Cloudinary secara aman jika kredensial diisi
-const cloudName = process.env.CLOUDINARY_CLOUD_NAME
-const apiKey = process.env.CLOUDINARY_API_KEY
-const apiSecret = process.env.CLOUDINARY_API_SECRET
-const isCloudinaryConfigured = !!(cloudName && apiKey && apiSecret)
+export const dynamic = 'force-dynamic'
 
-if (isCloudinaryConfigured) {
-  cloudinary.config({
-    cloud_name: cloudName,
-    api_key: apiKey,
-    api_secret: apiSecret,
-  })
+async function ensureDokumentasiFotoTable() {
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "dokumentasi_foto" (
+      "id"              SERIAL PRIMARY KEY,
+      "organisasi_type" TEXT NOT NULL,
+      "judul"           VARCHAR(150) NOT NULL,
+      "deskripsi"       TEXT,
+      "image_url"       VARCHAR(255) NOT NULL,
+      "public_id"       VARCHAR(100),
+      "tanggal"         DATE NOT NULL,
+      "created_by"      INTEGER NOT NULL REFERENCES "users"("id"),
+      "created_at"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updated_at"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE INDEX IF NOT EXISTS "dokumentasi_foto_organisasi_type_idx" ON "dokumentasi_foto"("organisasi_type");
+    CREATE INDEX IF NOT EXISTS "dokumentasi_foto_tanggal_idx" ON "dokumentasi_foto"("tanggal");
+    CREATE INDEX IF NOT EXISTS "dokumentasi_foto_created_at_idx" ON "dokumentasi_foto"("created_at");
+  `)
 }
+
+
 
 function getCtx(req: NextRequest) {
   return {
@@ -29,6 +40,8 @@ function getCtx(req: NextRequest) {
 // ─── 1. GET: Ambil Daftar Foto ────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
   try {
+    await ensureDokumentasiFotoTable()
+
     const { userRole } = getCtx(req)
     const { searchParams } = new URL(req.url)
     const orgFilter = searchParams.get('org') || ''
@@ -57,12 +70,25 @@ export async function GET(req: NextRequest) {
           mode: 'insensitive',
         },
       }),
-      ...((dateStart || dateEnd) && {
-        tanggal: {
-          ...(dateStart && { gte: new Date(dateStart) }),
-          ...(dateEnd && { lte: new Date(dateEnd) }),
-        },
-      }),
+    }
+
+    if (dateStart || dateEnd) {
+      const tanggalFilter: any = {}
+      if (dateStart) {
+        const startDateObj = new Date(dateStart)
+        if (!isNaN(startDateObj.getTime())) {
+          tanggalFilter.gte = startDateObj
+        }
+      }
+      if (dateEnd) {
+        const endDateObj = new Date(dateEnd)
+        if (!isNaN(endDateObj.getTime())) {
+          tanggalFilter.lte = endDateObj
+        }
+      }
+      if (Object.keys(tanggalFilter).length > 0) {
+        where.tanggal = tanggalFilter
+      }
     }
 
     const photos = await prisma.dokumentasiFoto.findMany({
@@ -78,13 +104,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ data: photos })
   } catch (error: any) {
     console.error('Failed to get photos:', error)
-    return NextResponse.json({ error: 'Gagal memuat dokumentasi foto' }, { status: 500 })
+    return NextResponse.json({ error: 'Gagal memuat dokumentasi foto: ' + error.message }, { status: 500 })
   }
 }
 
 // ─── 2. POST: Upload Foto Baru ───────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
+    await ensureDokumentasiFotoTable()
+
     const { userId, userNama, userRole } = getCtx(req)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -99,6 +127,11 @@ export async function POST(req: NextRequest) {
 
     if (!file || !judul || !organisasiType || !tanggalStr) {
       return NextResponse.json({ error: 'Semua kolom wajib diisi' }, { status: 400 })
+    }
+
+    const tanggalVal = new Date(tanggalStr)
+    if (isNaN(tanggalVal.getTime())) {
+      return NextResponse.json({ error: 'Format tanggal tidak valid' }, { status: 400 })
     }
 
     // Pastikan user memiliki hak akses mengunggah ke organisasi ini
@@ -140,7 +173,7 @@ export async function POST(req: NextRequest) {
         deskripsi,
         image_url: imageUrl,
         public_id: publicId,
-        tanggal: new Date(tanggalStr),
+        tanggal: tanggalVal,
         created_by: userId,
       },
       include: {
@@ -173,6 +206,8 @@ export async function POST(req: NextRequest) {
 // ─── 3. DELETE: Hapus Foto ──────────────────────────────────────────────────
 export async function DELETE(req: NextRequest) {
   try {
+    await ensureDokumentasiFotoTable()
+
     const { userId, userNama, userRole } = getCtx(req)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

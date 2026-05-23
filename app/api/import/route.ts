@@ -25,6 +25,12 @@ const schema = z.object({
   data: z.array(itemSchema).min(1, 'Data tidak boleh kosong'),
 })
 
+function buildInsensitiveNameOrWhere(names: string[]) {
+  return names.map((nama) => ({
+    nama: { equals: nama, mode: 'insensitive' as const },
+  }))
+}
+
 export async function POST(req: NextRequest) {
   try {
     const ctx = getCtx(req)
@@ -52,7 +58,9 @@ export async function POST(req: NextRequest) {
       const existingByName = await prisma.siswa.findMany({
         where: {
           ekskul: org,
-          nama: { in: incomingNames, mode: 'insensitive' },
+          ...(incomingNames.length > 0
+            ? { OR: buildInsensitiveNameOrWhere(incomingNames) }
+            : {}),
         },
         select: { nama: true, nis: true },
       })
@@ -106,7 +114,11 @@ export async function POST(req: NextRequest) {
 
       // Pre-filter nama yang sudah ada
       const existingByName = await prisma.anggotaOsis.findMany({
-        where: { nama: { in: incomingNames, mode: 'insensitive' } },
+        where: {
+          ...(incomingNames.length > 0
+            ? { OR: buildInsensitiveNameOrWhere(incomingNames) }
+            : {}),
+        },
         select: { nama: true, nis: true },
       })
       const existingNameSet = new Set(existingByName.map((e: any) => e.nama.toLowerCase()))
@@ -155,7 +167,11 @@ export async function POST(req: NextRequest) {
       const incomingNames = filteredData.map(d => d.nama.trim()).filter(Boolean)
 
       const existingByName = await prisma.anggotaMpk.findMany({
-        where: { nama: { in: incomingNames, mode: 'insensitive' } },
+        where: {
+          ...(incomingNames.length > 0
+            ? { OR: buildInsensitiveNameOrWhere(incomingNames) }
+            : {}),
+        },
         select: { nama: true, nis: true },
       })
       const existingNameSet = new Set(existingByName.map((e: any) => e.nama.toLowerCase()))

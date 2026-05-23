@@ -265,6 +265,7 @@ export default function DokumentasiClient({ user }: Props) {
             </div>
           </div>
           
+          {/* 
           <button
             onClick={() => setShowUploadModal(true)}
             className="flex items-center justify-center gap-2 bg-[#052659] hover:bg-[#041d44] text-white px-4 py-2.5 rounded-2xl text-xs font-black shadow-lg shadow-[#052659]/10 transition-all duration-200 active:scale-95"
@@ -272,6 +273,7 @@ export default function DokumentasiClient({ user }: Props) {
             <Plus className="w-4 h-4" />
             Tambah Dokumentasi
           </button>
+          */}
         </div>
 
         <hr className="border-slate-100" />
@@ -402,6 +404,7 @@ export default function DokumentasiClient({ user }: Props) {
           <p className="text-xs text-slate-400 mt-2">
             Silakan unggah foto kegiatan perdana Anda untuk mendokumentasikan aktivitas organisasi.
           </p>
+          {/*
           <button
             onClick={() => setShowUploadModal(true)}
             className="mt-5 inline-flex items-center gap-2 bg-[#052659] text-white text-xs font-bold px-4 py-2 rounded-xl"
@@ -409,6 +412,7 @@ export default function DokumentasiClient({ user }: Props) {
             <Plus className="w-4 h-4" />
             Unggah Sekarang
           </button>
+          */}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">

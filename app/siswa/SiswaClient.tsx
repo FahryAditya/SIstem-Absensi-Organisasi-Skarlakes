@@ -12,6 +12,8 @@ import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import { useDebounce } from '@/lib/hooks'
 import { Plus, Search, Pencil, Trash2, Users, Loader2, Contact, Zap, Award, Mail, Image as ImageIcon } from 'lucide-react'
 import Select from '@/components/ui/Select'
+import { LevelBadge } from '@/components/ui/LevelBadge'
+import { ExpProgressBar } from '@/components/ui/ExpProgressBar'
 
 const TINGKAT_OPTIONS = [
   { value: 'X', label: 'Kelas X' },
@@ -256,10 +258,14 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
     ) },
     { key: 'kelas', label: 'Kelas', render: (s: Siswa) => <span className="text-slate-500 text-xs">{s.kelas || '-'}</span> },
     { key: 'ekskul', label: 'Ekskul', render: (s: Siswa) => <OrgBadge org={s.ekskul} /> },
-    { key: 'xp', label: 'XP Keaktifan', render: (s: Siswa) => (
-      <span className="inline-flex items-center gap-1 font-bold font-mono text-xs text-[#052659] bg-[#C2E8FF]/40 border border-[#C2E8FF] px-2.5 py-0.5 rounded-lg shadow-sm">
-        <Zap className="w-3 h-3 text-yellow-500 fill-yellow-400" /> {s.xp || 0} XP
-      </span>
+    { key: 'xp', label: 'Level & Progress', render: (s: Siswa) => (
+      <div className="flex flex-col gap-1.5 max-w-[170px] min-w-[140px]">
+        <div className="flex justify-between items-center">
+          <LevelBadge exp={s.xp || 0} size="sm" />
+          <span className="font-mono text-[10px] font-bold text-[#052659]">{s.xp || 0} EXP</span>
+        </div>
+        <ExpProgressBar exp={s.xp || 0} showLabels={false} />
+      </div>
     )},
     { key: 'created_at', label: 'Terdaftar', render: (s: Siswa) => <span className="text-slate-400 text-xs">{formatDate(s.created_at)}</span> },
     {
@@ -540,14 +546,15 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
         }
       >
         <div className="space-y-4">
-          <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between">
-            <div>
-              <h4 className="text-xs font-bold text-[#011025]">{xpModalTarget?.nama}</h4>
-              <p className="text-[10px] text-slate-400 font-semibold uppercase">{xpModalTarget?.kelas} • {xpModalTarget?.ekskul}</p>
+          <div className="p-4 bg-slate-50 border border-slate-200/60 rounded-2xl space-y-3 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-xs font-bold text-[#011025]">{xpModalTarget?.nama}</h4>
+                <p className="text-[10px] text-slate-400 font-semibold uppercase">{xpModalTarget?.kelas} • {xpModalTarget?.ekskul}</p>
+              </div>
+              <LevelBadge exp={xpModalTarget?.xp || 0} size="sm" />
             </div>
-            <div className="font-mono text-xs font-bold text-[#052659] bg-[#C2E8FF]/30 border border-[#C2E8FF] px-2 py-0.5 rounded-lg shadow-sm">
-              Current: ⚡ {xpModalTarget?.xp || 0} XP
-            </div>
+            <ExpProgressBar exp={xpModalTarget?.xp || 0} />
           </div>
 
           <div className="form-group">
