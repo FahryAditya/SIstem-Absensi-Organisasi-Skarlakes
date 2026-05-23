@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { getAccessibleOrgs } from '@/lib/auth'
 import { format, subDays, startOfMonth, subMonths, startOfYear } from 'date-fns'
 
+export const dynamic = 'force-dynamic'
+
 function getCtx(req: NextRequest) {
   return {
     userId: parseInt(req.headers.get('x-user-id') || '0'),
