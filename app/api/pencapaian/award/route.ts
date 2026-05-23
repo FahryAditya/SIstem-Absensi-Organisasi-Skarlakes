@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
-import { getLevel } from '@/lib/gamification'
-import { sendLevelUpEmail, sendAchievementEmail } from '@/lib/email'
+import { updateExp } from '@/lib/exp'
 import {
-  canAccessProgramming,
   canAccessEnglish,
+  canAccessMpk,
   canAccessOsis,
-  canAccessMpk
+  canAccessProgramming,
 } from '@/lib/auth'
 import { z } from 'zod'
 
@@ -20,9 +19,9 @@ function getCtx(req: NextRequest) {
 }
 
 const awardSchema = z.object({
-  pencapaianId: z.number(),
-  memberId: z.number(),
-  tipe: z.enum(['ekskul', 'osis', 'mpk'])
+  pencapaianId: z.number().int().positive(),
+  memberId: z.number().int().positive(),
+  tipe: z.enum(['ekskul', 'osis', 'mpk']),
 })
 
 export async function POST(req: NextRequest) {
@@ -36,172 +35,211 @@ export async function POST(req: NextRequest) {
   const { pencapaianId, memberId, tipe } = parsed.data
 
   try {
-    // 1. Fetch Achievement
-    const pencapaian = await prisma.pencapaian.findUnique({
-      where: { id: pencapaianId }
-    })
+    const pencapaian = await prisma.pencapaian.findUnique({ where: { id: pencapaianId } })
     if (!pencapaian) {
       return NextResponse.json({ error: 'Pencapaian tidak ditemukan' }, { status: 404 })
     }
 
-    // Auth verification based on achievement's organization
-    const org = pencapaian.organisasi
-    if (org === 'programming' && !canAccessProgramming(ctx.userRole)) {
+    if (pencapaian.organisasi === 'programming' && !canAccessProgramming(ctx.userRole)) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
-    if (org === 'english' && !canAccessEnglish(ctx.userRole)) {
+    if (pencapaian.organisasi === 'english' && !canAccessEnglish(ctx.userRole)) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
-    if (org === 'osis' && !canAccessOsis(ctx.userRole)) {
+    if (pencapaian.organisasi === 'osis' && !canAccessOsis(ctx.userRole)) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
-    if (org === 'mpk' && !canAccessMpk(ctx.userRole)) {
+    if (pencapaian.organisasi === 'mpk' && !canAccessMpk(ctx.userRole)) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 
-    let awardedName = ''
-    let awardedEmail = 'siswa@skarlakes.sch.id' // fallback
-    let oldXp = 0
-    let newXp = 0
+    const tipeAnggota = tipe === 'ekskul'
+      ? 'siswa'
+      : tipe === 'osis'
+        ? 'anggota_osis'
+        : 'anggota_mpk'
 
-    // 2. Perform award logic based on type
-    if (tipe === 'ekskul') {
-      const siswa = await prisma.siswa.findUnique({ where: { id: memberId } })
-      if (!siswa) return NextResponse.json({ error: 'Siswa tidak ditemukan' }, { status: 404 })
-
-      // Check if already awarded
-      const alreadyAwarded = await prisma.siswaPencapaian.findUnique({
-        where: {
-          siswa_id_pencapaian_id: { siswa_id: memberId, pencapaian_id: pencapaianId }
+    const result = await prisma.$transaction(async (tx) => {
+      if (tipeAnggota === 'siswa') {
+        const siswa = await tx.siswa.findUnique({ where: { id: memberId } })
+        if (!siswa) throw new Error('Siswa tidak ditemukan')
+        if (pencapaian.organisasi !== 'semua' && siswa.ekskul !== pencapaian.organisasi) {
+          throw new Error('Pencapaian tidak sesuai organisasi siswa')
         }
+
+        const alreadyAwarded = await tx.siswaPencapaian.findUnique({
+          where: {
+            pencapaian_id_siswa_id: { pencapaian_id: pencapaianId, siswa_id: memberId },
+          },
+        })
+        if (alreadyAwarded) {
+          throw new Error(`Siswa "${siswa.nama}" sudah memiliki pencapaian ini`)
+        }
+
+        await tx.siswaPencapaian.create({
+          data: {
+            pencapaian_id: pencapaianId,
+            tipe_anggota: 'siswa',
+            siswa_id: memberId,
+          },
+        })
+
+        const expResult = await updateExp({
+          tipeAnggota,
+          targetId: memberId,
+          selisih: pencapaian.exp_reward,
+          alasan: `Pencapaian: ${pencapaian.nama}`,
+          adminId: ctx.userId,
+          organisasi: pencapaian.organisasi === 'semua' ? siswa.ekskul : pencapaian.organisasi,
+          tx,
+        })
+
+        return { nama: siswa.nama, email: siswa.email, expResult }
+      }
+
+      if (tipeAnggota === 'anggota_osis') {
+        const anggota = await tx.anggotaOsis.findUnique({ where: { id: memberId } })
+        if (!anggota) throw new Error('Anggota OSIS tidak ditemukan')
+        if (pencapaian.organisasi !== 'semua' && pencapaian.organisasi !== 'osis') {
+          throw new Error('Pencapaian tidak sesuai organisasi OSIS')
+        }
+
+        const alreadyAwarded = await tx.siswaPencapaian.findUnique({
+          where: {
+            pencapaian_id_anggota_osis_id: {
+              pencapaian_id: pencapaianId,
+              anggota_osis_id: memberId,
+            },
+          },
+        })
+        if (alreadyAwarded) {
+          throw new Error(`Anggota "${anggota.nama}" sudah memiliki pencapaian ini`)
+        }
+
+        await tx.siswaPencapaian.create({
+          data: {
+            pencapaian_id: pencapaianId,
+            tipe_anggota: 'anggota_osis',
+            anggota_osis_id: memberId,
+          },
+        })
+
+        const expResult = await updateExp({
+          tipeAnggota,
+          targetId: memberId,
+          selisih: pencapaian.exp_reward,
+          alasan: `Pencapaian: ${pencapaian.nama}`,
+          adminId: ctx.userId,
+          organisasi: 'osis',
+          tx,
+        })
+
+        return { nama: anggota.nama, email: anggota.email, expResult }
+      }
+
+      const anggota = await tx.anggotaMpk.findUnique({ where: { id: memberId } })
+      if (!anggota) throw new Error('Anggota MPK tidak ditemukan')
+      if (pencapaian.organisasi !== 'semua' && pencapaian.organisasi !== 'mpk') {
+        throw new Error('Pencapaian tidak sesuai organisasi MPK')
+      }
+
+      const alreadyAwarded = await tx.siswaPencapaian.findUnique({
+        where: {
+          pencapaian_id_anggota_mpk_id: {
+            pencapaian_id: pencapaianId,
+            anggota_mpk_id: memberId,
+          },
+        },
       })
       if (alreadyAwarded) {
-        return NextResponse.json({ error: `Siswa "${siswa.nama}" sudah memiliki pencapaian ini` }, { status: 409 })
+        throw new Error(`Anggota "${anggota.nama}" sudah memiliki pencapaian ini`)
       }
 
-      awardedName = siswa.nama
-      oldXp = siswa.xp
-      newXp = oldXp + pencapaian.exp_reward
-
-      // DB Transaction for atomicity
-      await prisma.$transaction([
-        prisma.siswaPencapaian.create({
-          data: { siswa_id: memberId, pencapaian_id: pencapaianId }
-        }),
-        prisma.siswa.update({
-          where: { id: memberId },
-          data: { xp: { increment: pencapaian.exp_reward } }
-        })
-      ])
-    } else if (tipe === 'osis') {
-      const anggota = await prisma.anggotaOsis.findUnique({ where: { id: memberId } })
-      if (!anggota) return NextResponse.json({ error: 'Anggota OSIS tidak ditemukan' }, { status: 404 })
-
-      const alreadyAwarded = await prisma.osisPencapaian.findUnique({
-        where: {
-          anggota_osis_id_pencapaian_id: { anggota_osis_id: memberId, pencapaian_id: pencapaianId }
-        }
+      await tx.siswaPencapaian.create({
+        data: {
+          pencapaian_id: pencapaianId,
+          tipe_anggota: 'anggota_mpk',
+          anggota_mpk_id: memberId,
+        },
       })
-      if (alreadyAwarded) {
-        return NextResponse.json({ error: `Anggota "${anggota.nama}" sudah memiliki pencapaian ini` }, { status: 409 })
-      }
 
-      awardedName = anggota.nama
-      oldXp = anggota.xp
-      newXp = oldXp + pencapaian.exp_reward
-
-      await prisma.$transaction([
-        prisma.osisPencapaian.create({
-          data: { anggota_osis_id: memberId, pencapaian_id: pencapaianId }
-        }),
-        prisma.anggotaOsis.update({
-          where: { id: memberId },
-          data: { xp: { increment: pencapaian.exp_reward } }
-        })
-      ])
-    } else if (tipe === 'mpk') {
-      const anggota = await prisma.anggotaMpk.findUnique({ where: { id: memberId } })
-      if (!anggota) return NextResponse.json({ error: 'Anggota MPK tidak ditemukan' }, { status: 404 })
-
-      const alreadyAwarded = await prisma.mpkPencapaian.findUnique({
-        where: {
-          anggota_mpk_id_pencapaian_id: { anggota_mpk_id: memberId, pencapaian_id: pencapaianId }
-        }
+      const expResult = await updateExp({
+        tipeAnggota,
+        targetId: memberId,
+        selisih: pencapaian.exp_reward,
+        alasan: `Pencapaian: ${pencapaian.nama}`,
+        adminId: ctx.userId,
+        organisasi: 'mpk',
+        tx,
       })
-      if (alreadyAwarded) {
-        return NextResponse.json({ error: `Anggota "${anggota.nama}" sudah memiliki pencapaian ini` }, { status: 409 })
-      }
 
-      awardedName = anggota.nama
-      oldXp = anggota.xp
-      newXp = oldXp + pencapaian.exp_reward
+      return { nama: anggota.nama, email: anggota.email, expResult }
+    })
 
-      await prisma.$transaction([
-        prisma.mpkPencapaian.create({
-          data: { anggota_mpk_id: memberId, pencapaian_id: pencapaianId }
-        }),
-        prisma.anggotaMpk.update({
-          where: { id: memberId },
-          data: { xp: { increment: pencapaian.exp_reward } }
-        })
-      ])
-    }
+    await sendAchievementNotification({
+      nama: result.nama,
+      email: result.email,
+      pencapaianNama: pencapaian.nama,
+      expReward: pencapaian.exp_reward,
+    })
 
-    // 3. Level up verification
-    const oldLevel = getLevel(oldXp)
-    const newLevel = getLevel(newXp)
-    const levelUpTriggered = newLevel > oldLevel
-
-    // Get the tier names
-    const getLevelTierName = (lv: number) => {
-      if (lv === 1) return 'Beginner'
-      if (lv === 2) return 'Intermediate'
-      if (lv === 3) return 'Advanced'
-      if (lv === 4) return 'Expert'
-      return 'Master'
-    }
-
-    // 4. Trigger Emails asynchronously without blocking response
-    try {
-      await sendAchievementEmail(
-        awardedName,
-        awardedEmail,
-        pencapaian.nama_pencapaian,
-        pencapaian.icon,
-        pencapaian.deskripsi,
-        pencapaian.exp_reward
-      )
-      if (levelUpTriggered) {
-        await sendLevelUpEmail(awardedName, awardedEmail, newLevel, getLevelTierName(newLevel))
-      }
-    } catch (mailErr) {
-      console.error('[AWARD EMAIL TRIGGER ERROR]', mailErr)
-    }
-
-    // Log the action
     await createLog({
       userId: ctx.userId,
       userNama: ctx.userNama,
       aksi: 'UPDATE',
       tabel: tipe === 'ekskul' ? 'siswa' : `anggota_${tipe}`,
       recordId: memberId,
-      deskripsi: `${ctx.userNama} memberikan pencapaian "${pencapaian.nama_pencapaian}" ke "${awardedName}" (${tipe.toUpperCase()}) (+${pencapaian.exp_reward} EXP). ${levelUpTriggered ? `LEVEL UP ke Level ${newLevel}! 🎉` : ''}`,
-      dataLama: { xp: oldXp },
-      dataBaru: { xp: newXp },
-      ipAddress: getIp(req)
+      deskripsi: `${ctx.userNama} memberikan pencapaian "${pencapaian.nama}" ke "${result.nama}" (${tipe.toUpperCase()}) (+${pencapaian.exp_reward} EXP).`,
+      dataLama: { level: result.expResult.levelLama },
+      dataBaru: { xp: result.expResult.xpBaru, level: result.expResult.levelBaru },
+      ipAddress: getIp(req),
     })
 
     return NextResponse.json({
       success: true,
-      awardedTo: awardedName,
-      oldXp,
-      newXp,
-      oldLevel,
-      newLevel,
-      levelUp: levelUpTriggered
+      awardedTo: result.nama,
+      xp: result.expResult.xpBaru,
+      level: result.expResult.levelBaru,
+      levelUp: result.expResult.levelNaik,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    const status = message.includes('sudah memiliki') ? 409 : message.includes('tidak ditemukan') ? 404 : 500
     console.error('[AWARD PENCAPAIAN ERROR]', error)
-    return NextResponse.json({ error: 'Gagal memberikan pencapaian: ' + error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Gagal memberikan pencapaian: ' + message }, { status })
+  }
+}
+
+async function sendAchievementNotification(params: {
+  nama: string
+  email?: string | null
+  pencapaianNama: string
+  expReward: number
+}) {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey || !params.email) return
+
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM_EMAIL || 'SKARLAKE ARTEMIS <noreply@skarlake.sch.id>',
+        to: [params.email],
+        subject: `Pencapaian Baru: ${params.pencapaianNama}`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
+            <h2>Pencapaian Baru ARTEMIS</h2>
+            <p>Halo <strong>${params.nama}</strong>, kamu mendapat pencapaian <strong>${params.pencapaianNama}</strong>.</p>
+            <p>Reward: <strong>+${params.expReward} EXP</strong></p>
+          </div>
+        `,
+      }),
+    })
+  } catch (error) {
+    console.error('[AWARD EMAIL ERROR]', error)
   }
 }

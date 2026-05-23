@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
 import { updateExp } from '@/lib/exp'
 import { isAdministrator } from '@/lib/auth'
+import { TxClient } from '@/lib/db-transaction'
 import { z } from 'zod'
 
 function getCtx(req: NextRequest) {
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
     const notifications: { nama: string; email: string; pencapaianNama: string; expReward: number }[] = []
     const { pencapaian_id, penerima, override_duplikat } = parsed.data
 
-    const pencapaian = await prisma.$transaction(async (tx) => {
+    const pencapaian = await prisma.$transaction(async (tx: TxClient) => {
       const item = await tx.pencapaian.findUnique({ where: { id: pencapaian_id } })
       if (!item) return null
 
