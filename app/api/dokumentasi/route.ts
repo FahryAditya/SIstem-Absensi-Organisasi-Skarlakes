@@ -11,10 +11,11 @@ let isTableChecked = false
 async function ensureDokumentasiFotoTable() {
   if (isTableChecked) return
   try {
+    // ── (Re)create table: enforces the enum type on organisasi_type ────────────
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS "dokumentasi_foto" (
         "id"              SERIAL PRIMARY KEY,
-        "organisasi_type" TEXT NOT NULL,
+        "organisasi_type" VARCHAR(20) NOT NULL,
         "judul"           VARCHAR(150) NOT NULL,
         "deskripsi"       TEXT,
         "image_url"       VARCHAR(255) NOT NULL,
@@ -25,6 +26,32 @@ async function ensureDokumentasiFotoTable() {
         "updated_at"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
     `)
+    // ── Migrate column from TEXT → VARCHAR(20) so it matches OrganisasiType ────
+    // The original migration created the column as bare TEXT, which makes a
+    // Prisma enum filter (`{ in: ["programming", "english"] as OrganisasiType[] }`)
+    // blow up with "operator does not exist: text = \"OrganisasiType\"".
+    // Re-type it: VARCHAR(20) is compatible with Prisma's enum representation.
+    await prisma.$executeRawUnsafe(`
+      DO $$
+      BEGIN
+        -- If the column exists, up-cast it from TEXT/NATIVE ENUM → VARCHAR(20)
+        IF EXISTS (
+          SELECT 1 FROM pg_attribute
+          WHERE attrelid = 'dokumentasi_foto'::regclass
+            AND attname    = 'organisasi_type'
+            AND NOT attisdropped
+        ) THEN
+          ALTER TABLE "dokumentasi_foto"
+            ALTER COLUMN "organisasi_type" TYPE VARCHAR(20)
+            USING "organisasi_type"::VARCHAR;
+        ELSE
+          -- Column is missing entirely – add it fresh
+          ALTER TABLE "dokumentasi_foto"
+            ADD COLUMN "organisasi_type" VARCHAR(20) NOT NULL DEFAULT 'programming';
+        END IF;
+      END $$;
+    `)
+
     await prisma.$executeRawUnsafe('CREATE INDEX IF NOT EXISTS "dokumentasi_foto_organisasi_type_idx" ON "dokumentasi_foto"("organisasi_type");')
     await prisma.$executeRawUnsafe('CREATE INDEX IF NOT EXISTS "dokumentasi_foto_tanggal_idx" ON "dokumentasi_foto"("tanggal");')
     await prisma.$executeRawUnsafe('CREATE INDEX IF NOT EXISTS "dokumentasi_foto_created_at_idx" ON "dokumentasi_foto"("created_at");')
