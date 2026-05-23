@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="71ce81bd-3670-402f-b34b-fd6f10307967" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/prisma/schema.prisma" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/google65a931532649ffe2.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/railway/.env.railway" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/railway/DEPLOYMENT_GUIDE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/railway/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/railway/railway-postgresql-init.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/railway/railway.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/railway/seed-railway.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scratch/check_abs_org.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scratch/check_counts.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scratch/check_logs.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scratch/check_siswa.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scratch/list_updates.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scratch/list_updates_v2.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scratch/test_export_logic.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/script/users.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/add-indexes.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/seed.ts" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 4,
+  "fromUser": false
+}]]></component>
+  <component name="ProjectId" id="3E7zEVEZZiycDI7UK4YHqi5alM8" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "review",
+    "js.debugger.nextJs.config.created.client": "true",
+    "js.debugger.nextJs.config.created.server": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "C:/Users/ACER/Desktop/Sistem Ekstrakurikuler",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "npm.Next.js: server-side.executor": "Debug",
+    "to.speed.mode.migration.done": "true",
+    "ts.external.directory.path": "C:\\Users\\ACER\\Desktop\\Sistem Ekstrakurikuler\\node_modules\\typescript\\lib",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RunManager" selected="npm.Next.js: server-side">
+    <configuration name="Next.js: debug client-side" type="JavascriptDebugType" uri="http://localhost:3000/">
+      <method v="2" />
+    </configuration>
+    <configuration name="Next.js: server-side" type="js.build_tools.npm">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-WS-261.24374.125" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="71ce81bd-3670-402f-b34b-fd6f10307967" name="Changes" comment="" />
+      <created>1779544286992</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1779544286992</updated>
+      <workItem from="1779544287965" duration="253000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
