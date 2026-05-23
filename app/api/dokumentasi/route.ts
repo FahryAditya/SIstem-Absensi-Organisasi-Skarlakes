@@ -11,11 +11,22 @@ let isTableChecked = false
 async function ensureDokumentasiFotoTable() {
   if (isTableChecked) return
   try {
-    // ── (Re)create table: enforces the enum type on organisasi_type ────────────
+    // ── Step 1: Create the ENUM type if absent ─────────────────────────────────────
+    await prisma.$executeRawUnsafe(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_type WHERE typname = 'OrganisasiType'
+        ) THEN
+          CREATE TYPE "OrganisasiType" AS ENUM ('programming','english','osis','mpk');
+        END IF;
+      END $$;
+    `)
+    // ── Step 2: CREATE TABLE with ENUM column ─────────────────────────────────────
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS "dokumentasi_foto" (
         "id"              SERIAL PRIMARY KEY,
-        "organisasi_type" VARCHAR(20) NOT NULL,
+        "organisasi_type" "OrganisasiType" NOT NULL,
         "judul"           VARCHAR(150) NOT NULL,
         "deskripsi"       TEXT,
         "image_url"       VARCHAR(255) NOT NULL,
@@ -26,28 +37,28 @@ async function ensureDokumentasiFotoTable() {
         "updated_at"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
     `)
-    // ── Migrate column from TEXT → VARCHAR(20) so it matches OrganisasiType ────
-    // The original migration created the column as bare TEXT, which makes a
-    // Prisma enum filter (`{ in: ["programming", "english"] as OrganisasiType[] }`)
-    // blow up with "operator does not exist: text = \"OrganisasiType\"".
-    // Re-type it: VARCHAR(20) is compatible with Prisma's enum representation.
+    // ── Step 3: Upgrade existing column if it was previously VARCHAR/TEXT ───────────
     await prisma.$executeRawUnsafe(`
       DO $$
       BEGIN
-        -- If the column exists, up-cast it from TEXT/NATIVE ENUM → VARCHAR(20)
         IF EXISTS (
           SELECT 1 FROM pg_attribute
           WHERE attrelid = 'dokumentasi_foto'::regclass
             AND attname    = 'organisasi_type'
             AND NOT attisdropped
         ) THEN
+          -- Clean up invalid/null values to 'programming' before altering type to avoid cast errors
+          UPDATE "dokumentasi_foto"
+          SET "organisasi_type" = 'programming'
+          WHERE "organisasi_type" IS NULL 
+             OR "organisasi_type"::text NOT IN ('programming','english','osis','mpk');
+
           ALTER TABLE "dokumentasi_foto"
-            ALTER COLUMN "organisasi_type" TYPE VARCHAR(20)
-            USING "organisasi_type"::VARCHAR;
+            ALTER COLUMN "organisasi_type" TYPE "OrganisasiType"
+            USING "organisasi_type"::text::"OrganisasiType";
         ELSE
-          -- Column is missing entirely – add it fresh
           ALTER TABLE "dokumentasi_foto"
-            ADD COLUMN "organisasi_type" VARCHAR(20) NOT NULL DEFAULT 'programming';
+            ADD COLUMN "organisasi_type" "OrganisasiType" NOT NULL DEFAULT 'programming';
         END IF;
       END $$;
     `)
@@ -58,7 +69,8 @@ async function ensureDokumentasiFotoTable() {
     isTableChecked = true
   } catch (err) {
     console.error('Failed to ensure table dokumentasi_foto:', err)
-    // Don't set isTableChecked = true, so we can retry next time
+    // Don't set isTableChecked = true, so we can retry next time, but throw the error to fail fast
+    throw err
   }
 }
 
