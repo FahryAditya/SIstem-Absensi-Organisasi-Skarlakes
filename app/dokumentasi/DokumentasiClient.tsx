@@ -506,10 +506,10 @@ export default function DokumentasiClient({ user }: Props) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowUploadModal(false)} />
           
-          <div className="bg-white border border-slate-200 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl relative z-10 animate-scale-up">
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-lg w-full max-h-[calc(100vh-2rem)] sm:max-h-[90vh] overflow-y-auto shadow-2xl relative z-10 animate-scale-up">
             
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-20">
               <div className="flex items-center gap-2">
                 <Camera className="w-5 h-5 text-indigo-600" />
                 <span className="text-sm font-extrabold text-slate-800">Unggah Dokumentasi Baru</span>
@@ -531,7 +531,9 @@ export default function DokumentasiClient({ user }: Props) {
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 onClick={() => document.getElementById('image-uploader-input')?.click()}
-                className={`border-2 border-dashed rounded-2xl aspect-[16/9] flex flex-col items-center justify-center p-5 text-center cursor-pointer transition-all ${
+                className={`border-2 border-dashed rounded-2xl flex flex-col items-center justify-center p-5 text-center cursor-pointer transition-all ${
+                  filePreview ? 'aspect-[16/9]' : 'h-32 sm:h-36'
+                } ${
                   dragOver 
                     ? 'border-indigo-500 bg-indigo-50/30' 
                     : filePreview 
