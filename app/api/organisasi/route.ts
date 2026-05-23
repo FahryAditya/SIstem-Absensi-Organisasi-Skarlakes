@@ -25,45 +25,54 @@ const anggotaSchema = z.object({
 
 // GET: list anggota OSIS atau MPK
 export async function GET(req: NextRequest) {
-  const { userRole } = getCtx(req)
-  const { searchParams } = new URL(req.url)
-  const tipe = searchParams.get('tipe') as 'osis' | 'mpk' | null
-  const search = searchParams.get('search') || ''
-  const page = parseInt(searchParams.get('page') || '1')
-  const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 100)
+  try {
+    const ctx = getCtx(req)
+    console.log('GET /api/organisasi context:', ctx)
+    const { userRole } = ctx
+    const { searchParams } = new URL(req.url)
+    const tipe = searchParams.get('tipe') as 'osis' | 'mpk' | null
+    const search = searchParams.get('search') || ''
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 100)
 
-  if (tipe === 'osis' && !canAccessOsis(userRole))
-    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
-  if (tipe === 'mpk' && !canAccessMpk(userRole))
-    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+    console.log('GET /api/organisasi params:', { tipe, search, page, limit })
 
-  const whereSearch = search ? { nama: { contains: search } } : {}
+    if (tipe === 'osis' && !canAccessOsis(userRole))
+      return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+    if (tipe === 'mpk' && !canAccessMpk(userRole))
+      return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
 
-  if (tipe === 'osis') {
-    const [data, total] = await Promise.all([
-      prisma.anggotaOsis.findMany({ where: whereSearch, orderBy: { nama: 'asc' }, skip: (page-1)*limit, take: limit }),
-      prisma.anggotaOsis.count({ where: whereSearch }),
-    ])
-    return jsonWithPrivateCache({ data, total, totalPages: Math.ceil(total/limit) })
+    const whereSearch = search ? { nama: { contains: search } } : {}
+
+    if (tipe === 'osis') {
+      const [data, total] = await Promise.all([
+        prisma.anggotaOsis.findMany({ where: whereSearch, orderBy: { nama: 'asc' }, skip: (page-1)*limit, take: limit }),
+        prisma.anggotaOsis.count({ where: whereSearch }),
+      ])
+      return NextResponse.json({ data, total, totalPages: Math.ceil(total/limit) })
+    }
+
+    if (tipe === 'mpk') {
+      const [data, total] = await Promise.all([
+        prisma.anggotaMpk.findMany({ where: whereSearch, orderBy: { nama: 'asc' }, skip: (page-1)*limit, take: limit }),
+        prisma.anggotaMpk.count({ where: whereSearch }),
+      ])
+      return NextResponse.json({ data, total, totalPages: Math.ceil(total/limit) })
+    }
+
+    // Both (if admin has access to both)
+    const results: Record<string, unknown> = {}
+    if (canAccessOsis(userRole)) {
+      results.osis = await prisma.anggotaOsis.findMany({ where: whereSearch, orderBy: { nama: 'asc' } })
+    }
+    if (canAccessMpk(userRole)) {
+      results.mpk = await prisma.anggotaMpk.findMany({ where: whereSearch, orderBy: { nama: 'asc' } })
+    }
+    return NextResponse.json(results)
+  } catch (error: any) {
+    console.error('GET organisasi error:', error)
+    return NextResponse.json({ error: 'Gagal memuat data organisasi: ' + error.message }, { status: 500 })
   }
-
-  if (tipe === 'mpk') {
-    const [data, total] = await Promise.all([
-      prisma.anggotaMpk.findMany({ where: whereSearch, orderBy: { nama: 'asc' }, skip: (page-1)*limit, take: limit }),
-      prisma.anggotaMpk.count({ where: whereSearch }),
-    ])
-    return jsonWithPrivateCache({ data, total, totalPages: Math.ceil(total/limit) })
-  }
-
-  // Both (if admin has access to both)
-  const results: Record<string, unknown> = {}
-  if (canAccessOsis(userRole)) {
-    results.osis = await prisma.anggotaOsis.findMany({ where: whereSearch, orderBy: { nama: 'asc' } })
-  }
-  if (canAccessMpk(userRole)) {
-    results.mpk = await prisma.anggotaMpk.findMany({ where: whereSearch, orderBy: { nama: 'asc' } })
-  }
-  return jsonWithPrivateCache(results)
 }
 
 export async function POST(req: NextRequest) {
