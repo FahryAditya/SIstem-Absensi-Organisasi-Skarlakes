@@ -132,14 +132,15 @@ model Siswa {
   nama        String         @db.VarChar(100)
   kelas       String?        @db.VarChar(20)
   ekskul      OrganisasiType
-  xp          Int            @default(0)
+  xp          Int            @default(0) @map("exp")
   created_at  DateTime       @default(now())
   updated_at  DateTime       @updatedAt
   created_by  Int
   creator     User           @relation("SiswaCreatedBy", fields: [created_by], references: [id])
 
   // Relations
-  absensi     Absensi[]
+  absensi          Absensi[]
+  siswa_pencapaian SiswaPencapaian[]
 
   @@index([ekskul])
   @@index([xp])
@@ -148,6 +149,7 @@ model Siswa {
   @@index([created_at])
   @@map("siswa")
 }
+
 
 // ============================================================
 // TABLE: absensi (untuk ekskul: programming & english)
@@ -184,10 +186,12 @@ model AnggotaOsis {
   nama       String   @db.VarChar(100)
   kelas      String?  @db.VarChar(20)
   jabatan    String?  @db.VarChar(100)
+  xp         Int      @default(0) @map("exp")
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  absensi    AbsensiOrganisasi[]
+  absensi         AbsensiOrganisasi[]
+  osis_pencapaian OsisPencapaian[]
 
   @@index([nama])
   @@index([kelas])
@@ -204,10 +208,12 @@ model AnggotaMpk {
   nama       String   @db.VarChar(100)
   kelas      String?  @db.VarChar(20)
   jabatan    String?  @db.VarChar(100)
+  xp         Int      @default(0) @map("exp")
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  absensi    AbsensiOrganisasi[]
+  absensi        AbsensiOrganisasi[]
+  mpk_pencapaian MpkPencapaian[]
 
   @@index([nama])
   @@index([kelas])
@@ -464,4 +470,73 @@ model DokumentasiFoto {
   @@index([organisasi_type])
   @@index([tanggal])
   @@index([created_at])
+}
+
+// ============================================================
+// TABLE: pencapaian (master pencapaian)
+// ============================================================
+model Pencapaian {
+  id              Int            @id @default(autoincrement())
+  icon            String         @db.VarChar(100)
+  nama_pencapaian String         @db.VarChar(150)
+  deskripsi       String         @db.Text
+  exp_reward      Int            @default(0)
+  organisasi      OrganisasiType
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+
+  siswa_pencapaian SiswaPencapaian[]
+  osis_pencapaian  OsisPencapaian[]
+  mpk_pencapaian   MpkPencapaian[]
+
+  @@map("pencapaian")
+  @@index([organisasi])
+}
+
+// ============================================================
+// TABLE: siswa_pencapaian (pencapaian untuk Programming & English Club)
+// ============================================================
+model SiswaPencapaian {
+  id            Int        @id @default(autoincrement())
+  siswa_id      Int
+  pencapaian_id Int
+  created_at    DateTime   @default(now())
+
+  siswa         Siswa      @relation(fields: [siswa_id], references: [id], onDelete: Cascade)
+  pencapaian    Pencapaian @relation(fields: [pencapaian_id], references: [id], onDelete: Cascade)
+
+  @@unique([siswa_id, pencapaian_id])
+  @@map("siswa_pencapaian")
+}
+
+// ============================================================
+// TABLE: osis_pencapaian (pencapaian untuk OSIS)
+// ============================================================
+model OsisPencapaian {
+  id              Int        @id @default(autoincrement())
+  anggota_osis_id Int
+  pencapaian_id   Int
+  created_at      DateTime   @default(now())
+
+  anggota_osis    AnggotaOsis @relation(fields: [anggota_osis_id], references: [id], onDelete: Cascade)
+  pencapaian      Pencapaian  @relation(fields: [pencapaian_id], references: [id], onDelete: Cascade)
+
+  @@unique([anggota_osis_id, pencapaian_id])
+  @@map("osis_pencapaian")
+}
+
+// ============================================================
+// TABLE: mpk_pencapaian (pencapaian untuk MPK)
+// ============================================================
+model MpkPencapaian {
+  id             Int        @id @default(autoincrement())
+  anggota_mpk_id Int
+  pencapaian_id  Int
+  created_at     DateTime   @default(now())
+
+  anggota_mpk    AnggotaMpk @relation(fields: [anggota_mpk_id], references: [id], onDelete: Cascade)
+  pencapaian     Pencapaian @relation(fields: [pencapaian_id], references: [id], onDelete: Cascade)
+
+  @@unique([anggota_mpk_id, pencapaian_id])
+  @@map("mpk_pencapaian")
 }

@@ -4,6 +4,8 @@ import { createLog, getIp } from '@/lib/log'
 import { canAccessEnglish, canAccessProgramming } from '@/lib/auth'
 import { pusherServer } from '@/lib/pusher-server'
 import { z } from 'zod'
+import { getLevel, getLevelName } from '@/lib/gamification'
+import { sendLevelUpEmail } from '@/lib/email'
 
 function getCtx(req: NextRequest) {
   return {
@@ -134,9 +136,13 @@ export async function POST(req: NextRequest) {
   // Upsert all via database lock (safe from race condition)
   const results = await Promise.all(rows.map(async (row) => {
     const prevStatus = existingMap[row.siswa_id]
-    let xpDiff = 0
-    if (prevStatus === 'hadir' && row.status !== 'hadir') xpDiff = -10
-    else if (prevStatus !== 'hadir' && row.status === 'hadir') xpDiff = 10
+    
+    const getXpValue = (status: string) => {
+      if (status === 'hadir') return 10
+      if (status === 'tidak_hadir') return -10
+      return 0
+    }
+    const xpDiff = getXpValue(row.status) - (prevStatus ? getXpValue(prevStatus) : 0)
 
     const upserted = await prisma.absensi.upsert({
       where: {
@@ -163,10 +169,22 @@ export async function POST(req: NextRequest) {
 
     // Adjust XP dynamically
     if (xpDiff !== 0) {
-      await prisma.siswa.update({
-        where: { id: row.siswa_id },
-        data: { xp: { increment: xpDiff } }
-      })
+      const siswa = await prisma.siswa.findUnique({ where: { id: row.siswa_id } })
+      if (siswa) {
+        const oldXp = siswa.xp
+        const newXp = Math.max(0, oldXp + xpDiff)
+        const oldLevel = getLevel(oldXp)
+        const newLevel = getLevel(newXp)
+
+        await prisma.siswa.update({
+          where: { id: row.siswa_id },
+          data: { xp: newXp }
+        })
+
+        if (newLevel > oldLevel) {
+          sendLevelUpEmail(siswa.nama, 'siswa@skarlakes.sch.id', newLevel, getLevelName(newLevel)).catch(console.error)
+        }
+      }
     }
 
     return upserted
@@ -217,8 +235,14 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
 
   let xpDiff = 0
-  if (existing.status === 'hadir' && data.status && data.status !== 'hadir') xpDiff = -10
-  else if (existing.status !== 'hadir' && data.status === 'hadir') xpDiff = 10
+  if (data.status) {
+    const getXpValue = (status: string) => {
+      if (status === 'hadir') return 10
+      if (status === 'tidak_hadir') return -10
+      return 0
+    }
+    xpDiff = getXpValue(data.status) - getXpValue(existing.status)
+  }
 
   const updated = await prisma.absensi.update({
     where: { id },
@@ -227,10 +251,19 @@ export async function PUT(req: NextRequest) {
   })
 
   if (xpDiff !== 0) {
+    const oldXp = existing.siswa.xp
+    const newXp = Math.max(0, oldXp + xpDiff)
+    const oldLevel = getLevel(oldXp)
+    const newLevel = getLevel(newXp)
+
     await prisma.siswa.update({
       where: { id: existing.siswa_id },
-      data: { xp: { increment: xpDiff } }
+      data: { xp: newXp }
     })
+
+    if (newLevel > oldLevel) {
+      sendLevelUpEmail(existing.siswa.nama, 'siswa@skarlakes.sch.id', newLevel, getLevelName(newLevel)).catch(console.error)
+    }
   }
 
   await createLog({

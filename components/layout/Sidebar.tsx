@@ -8,7 +8,7 @@ import { ROLE_LABELS } from '@/lib/auth-shared'
 import Image from 'next/image'
 import {
   LayoutDashboard, Users, ClipboardList, Building2, UserCog,
-  Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode, UserX, Megaphone, BarChart3, Camera
+  Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode, UserX, Megaphone, BarChart3
 } from 'lucide-react'
 import AnimatedList from '../AnimatedList'
 
@@ -39,7 +39,6 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
   items.push({ type: 'link', href: '/laporan', label: 'Laporan Statistik', icon: BarChart3 })
   items.push({ type: 'link', href: '/kas', label: 'Buku Kas', icon: Wallet })
   items.push({ type: 'link', href: '/pengeluaran', label: 'Pengeluaran Kas', icon: HandCoins })
-  items.push({ type: 'link', href: '/dokumentasi', label: 'Dokumentasi', icon: Camera })
 
   if (role === 'administrator' || role === 'admin_programming' || role === 'admin_english') {
     items.push({ type: 'section', label: 'Ekstrakurikuler' })

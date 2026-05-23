@@ -13,10 +13,11 @@ import { clearJsonCache, fetchJsonCachedUrl, clientQueryClient } from '@/lib/cli
 import { pusherClient } from '@/lib/pusher-client'
 import TextType from '@/components/TextType'
 import Select from '@/components/ui/Select'
+import { LevelBadge } from '@/components/ui/LevelBadge'
 import PresentationMode from '@/components/PresentationMode'
 import FilePresentationMode from '@/components/FilePresentationMode'
 import {
-  Users, CheckCircle2, Wallet, UserPlus, LogOut, Clock, CalendarDays, PlusCircle, LayoutList, HandCoins, Loader2, UploadCloud, TrendingUp, Activity, X, Megaphone, Sparkles, PlusCircle as PlusCircleIcon, Zap, ArrowUpDown, MousePointerClick, RefreshCw, Trash2, Trophy, Camera
+  Users, CheckCircle2, Wallet, UserPlus, LogOut, Clock, CalendarDays, PlusCircle, LayoutList, HandCoins, Loader2, UploadCloud, TrendingUp, Activity, X, Megaphone, Sparkles, PlusCircle as PlusCircleIcon, Zap, ArrowUpDown, MousePointerClick, RefreshCw, Trash2, Trophy
 } from 'lucide-react'
 
 // Lazy load Recharts for better performance
@@ -407,22 +408,10 @@ export default function DashboardClient({ user }: Props) {
               </div>
             )}
           </div>
-          {/* Tombol Mode Presentasi & Presentasi File & Dokumentasi */}
+          {/* Tombol Mode Presentasi & Presentasi File */}
           <div className="flex-shrink-0 flex flex-col sm:flex-row gap-2">
             <PresentationMode stats={stats} charts={charts} user={user} />
             <FilePresentationMode user={user} />
-            <Link
-              href="/dokumentasi"
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl
-                bg-[#0d9488] text-white shadow-lg shadow-teal-500/20
-                hover:bg-[#0f766e] hover:shadow-xl hover:shadow-teal-500/30
-                hover:-translate-y-0.5 active:scale-95
-                transition-all duration-200 border border-white/10"
-              title="Buka Dokumentasi"
-            >
-              <Camera className="w-4 h-4" />
-              <span>Dokumentasi</span>
-            </Link>
           </div>
         </div>
       </div>
@@ -758,7 +747,10 @@ export default function DashboardClient({ user }: Props) {
                           </div>
                           <div className="min-w-0">
                             <h4 className="text-sm font-black text-[#011025] leading-tight truncate">{siswa.nama}</h4>
-                            <span className="text-[10px] text-slate-400 font-bold uppercase">{siswa.kelas}</span>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-[10px] text-slate-400 font-bold uppercase">{siswa.kelas}</span>
+                              <LevelBadge exp={siswa.xp} size="sm" />
+                            </div>
                           </div>
                         </div>
                         <div className="flex flex-col items-end shrink-0">
@@ -785,7 +777,10 @@ export default function DashboardClient({ user }: Props) {
                             </span>
                             <div className="min-w-0">
                               <h4 className="text-xs font-extrabold text-[#011025] leading-tight truncate">{siswa.nama}</h4>
-                              <span className="text-[9px] text-slate-400 font-medium uppercase">{siswa.kelas}</span>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className="text-[9px] text-slate-400 font-medium uppercase">{siswa.kelas}</span>
+                                <LevelBadge exp={siswa.xp} size="sm" />
+                              </div>
                             </div>
                           </div>
                           <div className="shrink-0 flex items-center gap-0.5 font-mono text-xs font-bold text-slate-700">

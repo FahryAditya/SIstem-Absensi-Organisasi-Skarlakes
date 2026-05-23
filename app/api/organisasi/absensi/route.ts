@@ -6,6 +6,8 @@ import { jsonWithPrivateCache } from '@/lib/api-cache'
 import { withRetryTransaction } from '@/lib/db-transaction'
 import { pusherServer } from '@/lib/pusher-server'
 import { z } from 'zod'
+import { getLevel, getLevelName } from '@/lib/gamification'
+import { sendLevelUpEmail } from '@/lib/email'
 
 function getCtx(req: NextRequest) {
   return {
@@ -91,6 +93,18 @@ export async function POST(req: NextRequest) {
         tanggal: tanggalDate,
       }
 
+      const getXpValue = (status: string) => {
+        if (status === 'hadir') return 10
+        if (status === 'tidak_hadir') return -10
+        return 0
+      }
+
+      // Cari record yang sudah ada dalam snapshot transaksi yang sama
+      const existing = await tx.absensiOrganisasi.findFirst({ where: whereData })
+      
+      const prevStatus = existing?.status || null
+      const xpDiff = getXpValue(row.status) - (prevStatus ? getXpValue(prevStatus) : 0)
+
       const baseData = {
         organisasi_type: organisasi,
         tanggal: tanggalDate,
@@ -98,9 +112,6 @@ export async function POST(req: NextRequest) {
         uang_kas: row.uang_kas,
         keterangan: row.keterangan,
       }
-
-      // Cari record yang sudah ada dalam snapshot transaksi yang sama
-      const existing = await tx.absensiOrganisasi.findFirst({ where: whereData })
 
       if (existing) {
         // Record sudah ada — update langsung
@@ -127,6 +138,45 @@ export async function POST(req: NextRequest) {
             }
           } else {
             throw e
+          }
+        }
+      }
+
+      // Update XP for AnggotaOsis or AnggotaMpk dynamically
+      if (xpDiff !== 0) {
+        if (organisasi === 'osis') {
+          const anggota = await tx.anggotaOsis.findUnique({ where: { id: row.anggota_id } })
+          if (anggota) {
+            const oldXp = anggota.xp
+            const newXp = Math.max(0, oldXp + xpDiff)
+            const oldLevel = getLevel(oldXp)
+            const newLevel = getLevel(newXp)
+
+            await tx.anggotaOsis.update({
+              where: { id: row.anggota_id },
+              data: { xp: newXp }
+            })
+
+            if (newLevel > oldLevel) {
+              sendLevelUpEmail(anggota.nama, 'siswa@skarlakes.sch.id', newLevel, getLevelName(newLevel)).catch(console.error)
+            }
+          }
+        } else {
+          const anggota = await tx.anggotaMpk.findUnique({ where: { id: row.anggota_id } })
+          if (anggota) {
+            const oldXp = anggota.xp
+            const newXp = Math.max(0, oldXp + xpDiff)
+            const oldLevel = getLevel(oldXp)
+            const newLevel = getLevel(newXp)
+
+            await tx.anggotaMpk.update({
+              where: { id: row.anggota_id },
+              data: { xp: newXp }
+            })
+
+            if (newLevel > oldLevel) {
+              sendLevelUpEmail(anggota.nama, 'siswa@skarlakes.sch.id', newLevel, getLevelName(newLevel)).catch(console.error)
+            }
           }
         }
       }
