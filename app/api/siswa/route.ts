@@ -40,6 +40,16 @@ async function ensureSiswaColumns() {
       await prisma.$executeRawUnsafe('ALTER TABLE "siswa" ADD COLUMN IF NOT EXISTS "jabatan" VARCHAR(100);')
     }
 
+    // Check if level column exists
+    const columnsLevel: any[] = await prisma.$queryRaw`
+      SELECT column_name FROM information_schema.columns 
+      WHERE table_name = 'siswa' AND column_name = 'level'
+    `
+    if (columnsLevel.length === 0) {
+      console.log('Adding missing column "level" to "siswa" table...')
+      await prisma.$executeRawUnsafe('ALTER TABLE "siswa" ADD COLUMN IF NOT EXISTS "level" INTEGER DEFAULT 1;')
+    }
+
     isSiswaSchemaChecked = true
   } catch (err) {
     console.error('Failed to ensure columns for table siswa:', err)
