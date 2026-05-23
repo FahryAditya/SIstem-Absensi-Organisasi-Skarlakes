@@ -108,19 +108,23 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
     }
     if (trimmedNama.length > 50) {
       toast.error('Nama terlalu panjang (maksimal 50 karakter)')
+      setNama('')
       return
     }
     if (/\d/.test(trimmedNama)) {
       toast.error('Nama tidak boleh mengandung angka (seperti Fahry123 atau 1234Fahry)')
+      setNama('')
       return
     }
     if (/(.)\1{3,}/i.test(trimmedNama)) {
       toast.error('Nama tidak boleh mengandung pengulangan karakter berturut-turut (spam)')
+      setNama('')
       return
     }
     const namaRegex = /^[A-Za-z\s.'-]+$/
     if (!namaRegex.test(trimmedNama)) {
       toast.error('Nama hanya boleh berisi huruf, spasi, titik, dan tanda hubung/apostrof')
+      setNama('')
       return
     }
     if (!coords) {
@@ -238,8 +242,25 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
               {coords ? 'GPS terbaca. Sistem akan validasi jarak dari sekolah saat submit.' : (geoError || 'Membaca lokasi GPS...')}
             </div>
             <div className="form-group">
-              <label className="label">Nama Lengkap *</label>
-              <input value={nama} onChange={(e) => setNama(e.target.value)} className="input" placeholder="Isi nama lengkap" autoFocus />
+              <div className="flex justify-between items-center">
+                <label className="label">Nama Lengkap *</label>
+                {nama.length > 0 && (
+                  <span className={`text-[10px] font-bold ${nama.length >= 50 ? 'text-red-500' : 'text-slate-400'}`}>
+                    {nama.length}/50
+                  </span>
+                )}
+              </div>
+              <input 
+                value={nama} 
+                onChange={(e) => setNama(e.target.value)} 
+                className={`input ${nama.length >= 50 ? 'border-red-400 focus:ring-red-500/20 focus:border-red-500' : ''}`} 
+                placeholder="Isi nama lengkap" 
+                maxLength={50}
+                autoFocus 
+              />
+              {nama.length >= 50 && (
+                <p className="text-[10px] text-red-500 font-bold mt-1">Batas maksimal nama adalah 50 karakter!</p>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="form-group">

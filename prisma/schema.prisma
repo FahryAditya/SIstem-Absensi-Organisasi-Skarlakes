@@ -322,7 +322,7 @@ model AntrianWawancara {
   id              Int            @id @default(autoincrement())
   sesi_id         Int
   qr_id           Int?
-  nama            String         @db.VarChar(100)
+  nama            String         @db.VarChar(50)
   kelas           String         @db.VarChar(20)
   nomor_antrian   Int
   status          StatusAntrian  @default(MENUNGGU)
