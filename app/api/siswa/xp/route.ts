@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
 import { canAccessProgramming, canAccessEnglish } from '@/lib/auth'
+import { updateExp } from '@/lib/exp'
 import { z } from 'zod'
 
 function getCtx(req: NextRequest) {
@@ -15,8 +16,16 @@ function getCtx(req: NextRequest) {
 const awardXpSchema = z.object({
   siswaId: z.number(),
   xpToAdd: z.number(),
-  activity: z.enum(['tugas', 'proyek', 'manual']),
+  activity: z.enum(['tugas', 'proyek', 'aktif', 'prestasi', 'manual']),
 })
+
+const activityLabels: Record<string, string> = {
+  tugas: 'Kumpul tugas tepat waktu',
+  proyek: 'Publikasi proyek baru',
+  aktif: 'Aktif di pertemuan',
+  prestasi: 'Juara lomba / prestasi',
+  manual: 'Penghargaan manual admin',
+}
 
 export async function POST(req: NextRequest) {
   const ctx = getCtx(req)
@@ -28,15 +37,11 @@ export async function POST(req: NextRequest) {
 
   const { siswaId, xpToAdd, activity } = parsed.data
 
-  // Fetch the student
-  const siswa = await prisma.siswa.findUnique({
-    where: { id: siswaId },
-  })
+  const siswa = await prisma.siswa.findUnique({ where: { id: siswaId } })
   if (!siswa) {
     return NextResponse.json({ error: 'Siswa tidak ditemukan' }, { status: 404 })
   }
 
-  // Validate authorization based on student's organization
   if (siswa.ekskul === 'programming' && !canAccessProgramming(ctx.userRole)) {
     return NextResponse.json({ error: 'Akses ditolak untuk ekskul Programming' }, { status: 403 })
   }
@@ -45,39 +50,30 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Update student's XP
-    const updatedSiswa = await prisma.siswa.update({
-      where: { id: siswaId },
-      data: {
-        xp: {
-          increment: xpToAdd,
-        },
-      },
+    const result = await updateExp({
+      tipeAnggota: 'siswa',
+      targetId: siswaId,
+      selisih: xpToAdd,
+      alasan: activityLabels[activity] ?? activity,
+      adminId: ctx.userId,
+      organisasi: siswa.ekskul,
     })
 
-    // Log the audit trail
-    const activityLabels = {
-      tugas: 'pengumpulan tugas tepat waktu',
-      proyek: 'publikasi proyek baru',
-      manual: 'penghargaan keaktifan manual',
-    }
-    const description = `${ctx.userNama} memberikan +${xpToAdd} XP kepada "${siswa.nama}" untuk ${activityLabels[activity]} (${activity.toUpperCase()}).`
+    const description = `${ctx.userNama} memberikan ${xpToAdd > 0 ? '+' : ''}${xpToAdd} EXP kepada "${siswa.nama}" untuk ${activityLabels[activity] ?? activity}`
 
     await createLog({
-      userId: ctx.userId,
-      userNama: ctx.userNama,
-      aksi: 'UPDATE',
-      tabel: 'siswa',
-      recordId: siswaId,
+      userId: ctx.userId, userNama: ctx.userNama, aksi: 'UPDATE',
+      tabel: 'siswa', recordId: siswaId,
       deskripsi: description,
-      dataLama: { xp: siswa.xp },
-      dataBaru: { xp: updatedSiswa.xp },
+      dataLama: { xp: result.xpBaru - xpToAdd, level: result.levelLama },
+      dataBaru: { xp: result.xpBaru, level: result.levelBaru },
       ipAddress: getIp(req),
     })
 
-    return NextResponse.json({ success: true, xp: updatedSiswa.xp })
-  } catch (error: any) {
+    return NextResponse.json({ success: true, xp: result.xpBaru, level: result.levelBaru, levelNaik: result.levelNaik })
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Unknown error'
     console.error('[AWARD XP ERROR]', error)
-    return NextResponse.json({ error: 'Gagal memberikan XP: ' + error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Gagal memberikan EXP: ' + msg }, { status: 500 })
   }
 }

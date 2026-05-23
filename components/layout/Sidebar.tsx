@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -39,7 +39,7 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
   items.push({ type: 'link', href: '/laporan', label: 'Laporan Statistik', icon: BarChart3 })
   items.push({ type: 'link', href: '/kas', label: 'Buku Kas', icon: Wallet })
   items.push({ type: 'link', href: '/pengeluaran', label: 'Pengeluaran Kas', icon: HandCoins })
-  items.push({ type: 'link', href: '/dokumentasi', label: 'Dokumentasi Foto', icon: Camera })
+  items.push({ type: 'link', href: '/dokumentasi', label: 'Dokumentasi', icon: Camera })
 
   if (role === 'administrator' || role === 'admin_programming' || role === 'admin_english') {
     items.push({ type: 'section', label: 'Ekstrakurikuler' })
@@ -99,23 +99,9 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
   const cleanRole = (user.role || '').trim().toLowerCase()
   const navItems = getFlattenedNavItems(cleanRole, !!isCollapsed)
 
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
   const isActive = (href: string) => {
     const base = href.split('?')[0]
     return pathname.startsWith(base)
-  }
-
-  if (!mounted) {
-    return (
-      <aside className={cn(
-        "hidden lg:flex flex-col bg-[#011025] border-r border-[#5482B4]/15 h-screen sticky top-0 shadow-sm transition-all duration-300 ease-in-out",
-        isCollapsed ? "w-16" : "w-60"
-      )} />
-    )
   }
 
   const renderSidebarItem = (item: SidebarItem, index: number) => {

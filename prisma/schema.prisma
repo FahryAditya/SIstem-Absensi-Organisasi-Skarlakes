@@ -91,6 +91,12 @@ enum UpdateType {
   perbaikan
 }
 
+enum TipeAnggota {
+  siswa
+  anggota_osis
+  anggota_mpk
+}
+
 // ============================================================
 // TABLE: users
 // ============================================================
@@ -131,8 +137,12 @@ model Siswa {
   nis         String?        @db.VarChar(20)
   nama        String         @db.VarChar(100)
   kelas       String?        @db.VarChar(20)
+  email       String?        @db.VarChar(150)
+  foto_url    String?        @db.VarChar(255)
   ekskul      OrganisasiType
+  jabatan     String?        @db.VarChar(100)
   xp          Int            @default(0)
+  level       Int            @default(1)
   created_at  DateTime       @default(now())
   updated_at  DateTime       @updatedAt
   created_by  Int
@@ -140,9 +150,11 @@ model Siswa {
 
   // Relations
   absensi     Absensi[]
+  pencapaian  SiswaPencapaian[]
 
   @@index([ekskul])
   @@index([xp])
+  @@index([level])
   @@index([nama])
   @@index([kelas])
   @@index([created_at])
@@ -183,14 +195,20 @@ model AnggotaOsis {
   nis        String?  @db.VarChar(20)
   nama       String   @db.VarChar(100)
   kelas      String?  @db.VarChar(20)
+  email      String?  @db.VarChar(150)
+  foto_url   String?  @db.VarChar(255)
   jabatan    String?  @db.VarChar(100)
+  xp         Int      @default(0)
+  level      Int      @default(1)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  absensi    AbsensiOrganisasi[]
+  absensi        AbsensiOrganisasi[]
+  pencapaian     SiswaPencapaian[]
 
   @@index([nama])
   @@index([kelas])
+  @@index([xp])
   @@index([created_at])
   @@map("anggota_osis")
 }
@@ -203,14 +221,20 @@ model AnggotaMpk {
   nis        String?  @db.VarChar(20)
   nama       String   @db.VarChar(100)
   kelas      String?  @db.VarChar(20)
+  email      String?  @db.VarChar(150)
+  foto_url   String?  @db.VarChar(255)
   jabatan    String?  @db.VarChar(100)
+  xp         Int      @default(0)
+  level      Int      @default(1)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  absensi    AbsensiOrganisasi[]
+  absensi        AbsensiOrganisasi[]
+  pencapaian     SiswaPencapaian[]
 
   @@index([nama])
   @@index([kelas])
+  @@index([xp])
   @@index([created_at])
   @@map("anggota_mpk")
 }
@@ -322,7 +346,7 @@ model AntrianWawancara {
   id              Int            @id @default(autoincrement())
   sesi_id         Int
   qr_id           Int?
-  nama            String         @db.VarChar(100)
+  nama            String         @db.VarChar(50)
   kelas           String         @db.VarChar(20)
   nomor_antrian   Int
   status          StatusAntrian  @default(MENUNGGU)
@@ -464,4 +488,118 @@ model DokumentasiFoto {
   @@index([organisasi_type])
   @@index([tanggal])
   @@index([created_at])
+}
+
+// ============================================================
+// TABLE: pencapaian (master data achievement)
+// ============================================================
+model Pencapaian {
+  id           Int      @id @default(autoincrement())
+  icon         String   @db.VarChar(100)
+  nama         String   @db.VarChar(150)
+  deskripsi    String   @db.Text
+  exp_reward   Int
+  organisasi   String   @db.VarChar(20)
+  created_at   DateTime @default(now())
+
+  penerima     SiswaPencapaian[]
+
+  @@index([organisasi])
+  @@map("pencapaian")
+}
+
+// ============================================================
+// TABLE: siswa_pencapaian (polymorphic junction)
+// Berlaku untuk: siswa ekskul, anggota_osis, anggota_mpk
+// ============================================================
+model SiswaPencapaian {
+  id             Int          @id @default(autoincrement())
+  pencapaian_id  Int
+  tipe_anggota   TipeAnggota
+  siswa_id       Int?         // FK → siswa.id
+  anggota_osis_id Int?        // FK → anggota_osis.id
+  anggota_mpk_id Int?         // FK → anggota_mpk.id
+  tanggal        DateTime     @default(now())
+
+  pencapaian     Pencapaian   @relation(fields: [pencapaian_id], references: [id], onDelete: Cascade)
+  siswa          Siswa?       @relation(fields: [siswa_id], references: [id], onDelete: Cascade)
+  anggota_osis   AnggotaOsis? @relation(fields: [anggota_osis_id], references: [id], onDelete: Cascade)
+  anggota_mpk    AnggotaMpk?  @relation(fields: [anggota_mpk_id], references: [id], onDelete: Cascade)
+
+  @@unique([pencapaian_id, siswa_id])
+  @@unique([pencapaian_id, anggota_osis_id])
+  @@unique([pencapaian_id, anggota_mpk_id])
+  @@index([pencapaian_id])
+  @@index([tipe_anggota])
+  @@map("siswa_pencapaian")
+}
+
+// ============================================================
+// TABLE: materi_hari_ini
+// Untuk ekskul: materi pelajaran. Untuk OSIS/MPK: notulen rapat
+// ============================================================
+model MateriHariIni {
+  id          Int            @id @default(autoincrement())
+  judul       String         @db.VarChar(255)
+  deskripsi   String         @db.Text
+  tanggal     DateTime       @db.Date
+  organisasi  OrganisasiType
+  // Extra fields untuk OSIS/MPK
+  notulen     String?        @db.Text
+  lokasi      String?        @db.VarChar(200)
+  created_by  Int
+  created_at  DateTime       @default(now())
+  updated_at  DateTime       @updatedAt
+
+  @@index([organisasi])
+  @@index([tanggal])
+  @@map("materi_hari_ini")
+}
+
+// ============================================================
+// TABLE: jadwal_kegiatan
+// Untuk ekskul: jadwal pengajar. Untuk OSIS/MPK: jadwal rapat
+// ============================================================
+model JadwalKegiatan {
+  id            Int            @id @default(autoincrement())
+  judul         String         @db.VarChar(255)
+  tanggal       DateTime       @db.Date
+  waktu         String?        @db.VarChar(10)
+  lokasi        String?        @db.VarChar(200)
+  keterangan    String?        @db.Text
+  organisasi    OrganisasiType
+  wajib_hadir   Boolean        @default(false)
+  created_by    Int
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+
+  @@index([organisasi])
+  @@index([tanggal])
+  @@map("jadwal_kegiatan")
+}
+
+// ============================================================
+// TABLE: exp_log (audit trail semua perubahan EXP)
+// ============================================================
+model ExpLog {
+  id            Int          @id @default(autoincrement())
+  tipe_anggota  TipeAnggota
+  siswa_id      Int?
+  anggota_osis_id Int?
+  anggota_mpk_id  Int?
+  admin_id      Int
+  exp_sebelum   Int
+  exp_sesudah   Int
+  selisih       Int
+  alasan        String       @db.VarChar(500)
+  organisasi    String       @db.VarChar(20)
+  created_at    DateTime     @default(now())
+
+  @@index([tipe_anggota])
+  @@index([siswa_id])
+  @@index([anggota_osis_id])
+  @@index([anggota_mpk_id])
+  @@index([admin_id])
+  @@index([created_at])
+  @@map("exp_log")
 }

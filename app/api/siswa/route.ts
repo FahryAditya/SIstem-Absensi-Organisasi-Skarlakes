@@ -22,6 +22,8 @@ const schema = z.object({
     'Nama hanya boleh berisi huruf'
   ),
   kelas: z.string().nullable().optional(),
+  email: z.string().email('Email tidak valid').nullable().optional(),
+  foto_url: z.string().url('URL foto tidak valid').nullable().optional(),
   ekskul: z.enum(['programming', 'english']),
 })
 

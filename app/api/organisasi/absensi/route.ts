@@ -4,6 +4,7 @@ import { createLog, getIp } from '@/lib/log'
 import { canAccessOsis, canAccessMpk } from '@/lib/auth'
 import { jsonWithPrivateCache } from '@/lib/api-cache'
 import { withRetryTransaction } from '@/lib/db-transaction'
+import { updateExp } from '@/lib/exp'
 import { pusherServer } from '@/lib/pusher-server'
 import { z } from 'zod'
 
@@ -101,6 +102,7 @@ export async function POST(req: NextRequest) {
 
       // Cari record yang sudah ada dalam snapshot transaksi yang sama
       const existing = await tx.absensiOrganisasi.findFirst({ where: whereData })
+      const xpDiff = hitungSelisihExpAbsensi(existing?.status, row.status)
 
       if (existing) {
         // Record sudah ada — update langsung
@@ -130,6 +132,18 @@ export async function POST(req: NextRequest) {
           }
         }
       }
+
+      if (xpDiff !== 0) {
+        await updateExp({
+          tipeAnggota: organisasi === 'osis' ? 'anggota_osis' : 'anggota_mpk',
+          targetId: row.anggota_id,
+          selisih: xpDiff,
+          alasan: xpDiff > 0 ? 'Hadir rapat organisasi' : 'Tidak hadir rapat tanpa izin',
+          adminId: ctx.userId,
+          organisasi,
+          tx,
+        })
+      }
     }
   })
 
@@ -155,4 +169,14 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ success: true, count: rows.length })
+}
+
+function hitungSelisihExpAbsensi(statusLama: string | undefined, statusBaru: string) {
+  const nilaiStatus = (status: string | undefined) => {
+    if (status === 'hadir') return 10
+    if (status === 'tidak_hadir') return -10
+    return 0
+  }
+
+  return nilaiStatus(statusBaru) - nilaiStatus(statusLama)
 }

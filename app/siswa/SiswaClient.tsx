@@ -10,7 +10,7 @@ import { formatDate } from '@/lib/utils'
 import { canManageSiswaData } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import { useDebounce } from '@/lib/hooks'
-import { Plus, Search, Pencil, Trash2, Users, Loader2, Filter, Contact, Zap } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, Users, Loader2, Contact, Zap, Award, Mail, Image as ImageIcon } from 'lucide-react'
 import Select from '@/components/ui/Select'
 
 const TINGKAT_OPTIONS = [
@@ -30,7 +30,13 @@ const JURUSAN_OPTIONS = [
 ]
 
 interface Siswa {
-  id: number; nis: string | null; nama: string; kelas: string | null; ekskul: string; created_at: string; xp: number
+  id: number; nis: string | null; nama: string; kelas: string | null; email: string | null; foto_url: string | null; ekskul: string; created_at: string; xp: number; level: number
+}
+
+interface PencapaianItem {
+  id: number
+  tanggal: string
+  pencapaian: { icon: string; nama: string; deskripsi: string; exp_reward: number }
 }
 
 interface Props {
@@ -72,7 +78,12 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
   const [fNis, setFNis] = useState('')
   const [fTingkat, setFTingkat] = useState('')
   const [fJurusan, setFJurusan] = useState('')
+  const [fEmail, setFEmail] = useState('')
+  const [fFotoUrl, setFFotoUrl] = useState('')
   const [fEkskul, setFEkskul] = useState<'programming' | 'english'>('programming')
+  const [profileTarget, setProfileTarget] = useState<Siswa | null>(null)
+  const [profileAchievements, setProfileAchievements] = useState<PencapaianItem[]>([])
+  const [profileLoading, setProfileLoading] = useState(false)
 
   const canUseEkskulDropdown = canManageSiswaData(user.role)
 
@@ -107,7 +118,7 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
 
   const openAdd = useCallback(() => {
     setEditTarget(null)
-    setFNama(''); setFNis(''); setFTingkat(''); setFJurusan('')
+    setFNama(''); setFNis(''); setFTingkat(''); setFJurusan(''); setFEmail(''); setFFotoUrl('')
     setFEkskul(defaultOrg || 'programming')
     setModalOpen(true)
   }, [defaultOrg])
@@ -120,8 +131,24 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
     const t = ['X', 'XI', 'XII'].includes(parts[0]) ? parts[0] : ''
     setFTingkat(t)
     setFJurusan(t ? parts.slice(1).join(' ') : kls)
+    setFEmail(s.email || '')
+    setFFotoUrl(s.foto_url || '')
     setFEkskul(s.ekskul as 'programming' | 'english')
     setModalOpen(true)
+  }, [])
+
+  const openProfile = useCallback(async (s: Siswa) => {
+    setProfileTarget(s)
+    setProfileLoading(true)
+    try {
+      const res = await fetch(`/api/pencapaian/anggota?tipe_anggota=siswa&target_id=${s.id}`)
+      const json = await res.json()
+      setProfileAchievements(json.data || [])
+    } catch {
+      setProfileAchievements([])
+    } finally {
+      setProfileLoading(false)
+    }
   }, [])
 
   const handleSave = useCallback(async () => {
@@ -132,7 +159,14 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
     }
     setSaving(true)
     const finalKelas = `${fTingkat} ${fJurusan}`.trim()
-    const body = { nama: fNama.trim(), nis: fNis.trim() || undefined, kelas: finalKelas || undefined, ekskul: fEkskul }
+    const body = {
+      nama: fNama.trim(),
+      nis: fNis.trim() || undefined,
+      kelas: finalKelas || undefined,
+      email: fEmail.trim() || undefined,
+      foto_url: fFotoUrl.trim() || undefined,
+      ekskul: fEkskul,
+    }
     const res = await fetch('/api/siswa', {
       method: editTarget ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -143,7 +177,7 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
     toast.success(editTarget ? 'Data siswa diperbarui' : 'Siswa berhasil ditambahkan')
     clearJsonCache()
     setSaving(false); setModalOpen(false); load()
-  }, [fNama, fNis, fTingkat, fJurusan, fEkskul, editTarget, load])
+  }, [fNama, fNis, fTingkat, fJurusan, fEmail, fFotoUrl, fEkskul, editTarget, load])
 
   const handleDelete = useCallback(async () => {
     if (!deleteTarget) return
@@ -204,7 +238,22 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
       return <span className="text-slate-400 font-mono text-xs">{(page - 1) * PAGE_SIZE + idx + 1}</span>
     }},
     { key: 'nis', label: 'NIS', render: (s: Siswa) => <span className="font-mono text-xs text-slate-500">{s.nis || '-'}</span> },
-    { key: 'nama', label: 'Nama Siswa', render: (s: Siswa) => <span className="font-semibold text-slate-800">{s.nama}</span> },
+    { key: 'nama', label: 'Nama Siswa', render: (s: Siswa) => (
+      <button onClick={() => openProfile(s)} className="flex items-center gap-2 text-left">
+        {s.foto_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={s.foto_url} alt={s.nama} className="w-8 h-8 rounded-full object-cover border border-slate-200" />
+        ) : (
+          <span className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center justify-center text-xs font-bold">
+            {s.nama.charAt(0).toUpperCase()}
+          </span>
+        )}
+        <span>
+          <span className="block font-semibold text-slate-800">{s.nama}</span>
+          {s.email && <span className="block text-[10px] text-slate-400">{s.email}</span>}
+        </span>
+      </button>
+    ) },
     { key: 'kelas', label: 'Kelas', render: (s: Siswa) => <span className="text-slate-500 text-xs">{s.kelas || '-'}</span> },
     { key: 'ekskul', label: 'Ekskul', render: (s: Siswa) => <OrgBadge org={s.ekskul} /> },
     { key: 'xp', label: 'XP Keaktifan', render: (s: Siswa) => (
@@ -217,13 +266,14 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
       key: 'actions', label: '',
       render: (s: Siswa) => (
         <div className="flex items-center gap-1">
+          <button onClick={() => openProfile(s)} className="btn-icon text-emerald-500 hover:bg-emerald-50" title="Profil & Pencapaian"><Award className="w-3.5 h-3.5" /></button>
           <button onClick={() => openXpModal(s)} className="btn-icon text-amber-500 hover:bg-amber-50" title="Beri Poin XP"><Zap className="w-3.5 h-3.5" /></button>
           <button onClick={() => openEdit(s)} className="btn-icon text-indigo-500 hover:bg-indigo-50"><Pencil className="w-3.5 h-3.5" /></button>
           <button onClick={() => setDeleteTarget(s)} className="btn-icon text-red-400 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /></button>
         </div>
       )
     },
-  ], [data, page, openEdit, openXpModal])
+  ], [data, page, openEdit, openXpModal, openProfile])
 
   return (
     <div className="space-y-5">
@@ -335,6 +385,33 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
           </div>
 
           <div className="form-group">
+            <label className="label">Email Siswa</label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="email"
+                value={fEmail}
+                onChange={e => setFEmail(e.target.value)}
+                placeholder="Opsional untuk notifikasi"
+                className="input pl-9"
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="label">URL Foto</label>
+            <div className="relative">
+              <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                value={fFotoUrl}
+                onChange={e => setFFotoUrl(e.target.value)}
+                placeholder="https://..."
+                className="input pl-9"
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
             <label className="label">Tingkat & Kejuruan</label>
             <div className="flex gap-3">
               <Select
@@ -365,6 +442,66 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
                 { value: 'english', label: 'English Club' },
               ]}
             />
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={!!profileTarget}
+        title="Profil Siswa"
+        onClose={() => setProfileTarget(null)}
+        size="md"
+      >
+        <div className="space-y-5">
+          <div className="flex items-center gap-4">
+            {profileTarget?.foto_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={profileTarget.foto_url} alt={profileTarget.nama} className="w-16 h-16 rounded-2xl object-cover border border-slate-200" />
+            ) : (
+              <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center justify-center text-2xl font-black">
+                {profileTarget?.nama.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div>
+              <h3 className="text-base font-bold text-slate-900">{profileTarget?.nama}</h3>
+              <p className="text-xs text-slate-500">{profileTarget?.kelas || '-'} · {profileTarget?.ekskul}</p>
+              <p className="text-xs text-slate-500">{profileTarget?.email || 'Email belum diisi'}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <p className="text-[10px] uppercase font-bold text-slate-400">EXP</p>
+              <p className="text-lg font-black text-[#052659]">{profileTarget?.xp || 0}</p>
+            </div>
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <p className="text-[10px] uppercase font-bold text-slate-400">Level</p>
+              <p className="text-lg font-black text-[#052659]">Lv {profileTarget?.level || 1}</p>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Award className="w-4 h-4 text-amber-500" />
+              <h4 className="text-sm font-bold text-slate-900">Pencapaian</h4>
+            </div>
+            {profileLoading ? (
+              <div className="text-sm text-slate-400 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" />Memuat...</div>
+            ) : profileAchievements.length === 0 ? (
+              <p className="text-sm text-slate-400">Belum ada pencapaian.</p>
+            ) : (
+              <div className="space-y-2">
+                {profileAchievements.map(item => (
+                  <div key={item.id} className="rounded-xl border border-amber-100 bg-amber-50/60 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-bold text-slate-900">{item.pencapaian.nama}</p>
+                      <span className="text-xs font-bold text-amber-700">+{item.pencapaian.exp_reward} EXP</span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">{item.pencapaian.deskripsi}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </Modal>

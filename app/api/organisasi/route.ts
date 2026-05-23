@@ -17,6 +17,8 @@ const anggotaSchema = z.object({
   nis: z.string().nullable().optional().refine(val => !val || /^\d+$/.test(val), { message: 'NIS hanya boleh berisi angka' }),
   nama: z.string().min(1, 'Nama wajib diisi').regex(/^[a-zA-Z\s.'\']*$/, 'Nama hanya boleh berisi huruf'),
   kelas: z.string().nullable().optional(),
+  email: z.string().email('Email tidak valid').nullable().optional(),
+  foto_url: z.string().url('URL foto tidak valid').nullable().optional(),
   jabatan: z.string().nullable().optional(),
   tipe: z.enum(['osis', 'mpk']),
 })

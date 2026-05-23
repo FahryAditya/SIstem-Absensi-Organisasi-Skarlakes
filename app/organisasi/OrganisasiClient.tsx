@@ -11,13 +11,14 @@ import { canAccessOsis, canAccessMpk } from '@/lib/auth-shared'
 import { clearJsonCachePrefix, fetchJsonCachedUrl, prefetchJsonCachedUrl } from '@/lib/client-cache'
 import {
   Building2, Plus, Pencil, Trash2, Loader2, Save, Calendar,
-  ClipboardList, CheckCircle2, XCircle, Clock, Heart, Banknote, Contact
+  ClipboardList, CheckCircle2, XCircle, Clock, Heart, Banknote, Contact, Award, Mail, Image as ImageIcon
 } from 'lucide-react'
 import { format } from 'date-fns'
 
-interface Anggota { id: number; nis: string | null; nama: string; kelas: string | null; jabatan: string | null }
+interface Anggota { id: number; nis: string | null; nama: string; kelas: string | null; email: string | null; foto_url: string | null; jabatan: string | null; xp?: number; level?: number }
 interface AbsensiOrg { id: number; organisasi_type: string; anggota_osis?: Anggota; anggota_mpk?: Anggota; tanggal: string; status: string; uang_kas: number; keterangan: string | null }
 interface BulkRow { anggota_id: number; nama: string; jabatan: string | null; status: string; uang_kas: number; keterangan: string }
+interface PencapaianItem { id: number; tanggal: string; pencapaian: { nama: string; deskripsi: string; exp_reward: number } }
 
 const STATUS_OPTIONS = [
   { value: 'hadir', label: 'Hadir', icon: CheckCircle2, color: 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100' },
@@ -52,7 +53,12 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
   const [fNis, setFNis] = useState('')
   const [fTingkat, setFTingkat] = useState('')
   const [fJurusan, setFJurusan] = useState('')
+  const [fEmail, setFEmail] = useState('')
+  const [fFotoUrl, setFFotoUrl] = useState('')
   const [fJabatan, setFJabatan] = useState('Anggota')
+  const [profileTarget, setProfileTarget] = useState<Anggota | null>(null)
+  const [profileAchievements, setProfileAchievements] = useState<PencapaianItem[]>([])
+  const [profileLoading, setProfileLoading] = useState(false)
 
   // Absensi state
   const [bulkDate, setBulkDate] = useState(format(new Date(), 'yyyy-MM-dd'))
@@ -140,7 +146,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
     }
   }, [subTab, absensiMode, loadBulk, loadRiwayat])
 
-  function openAdd() { setEditTarget(null); setFNama(''); setFNis(''); setFTingkat(''); setFJurusan(''); setFJabatan('Anggota'); setModalOpen(true) }
+  function openAdd() { setEditTarget(null); setFNama(''); setFNis(''); setFTingkat(''); setFJurusan(''); setFEmail(''); setFFotoUrl(''); setFJabatan('Anggota'); setModalOpen(true) }
   function openEdit(a: Anggota) { 
     setEditTarget(a); setFNama(a.nama); setFNis(a.nis || ''); 
     const kls = a.kelas || '';
@@ -148,7 +154,24 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
     const t = ['X', 'XI', 'XII'].includes(parts[0]) ? parts[0] : '';
     setFTingkat(t);
     setFJurusan(t ? parts.slice(1).join(' ') : kls);
+    setFEmail(a.email || '');
+    setFFotoUrl(a.foto_url || '');
     setFJabatan(a.jabatan || 'Anggota'); setModalOpen(true) 
+  }
+
+  async function openProfile(a: Anggota) {
+    setProfileTarget(a)
+    setProfileLoading(true)
+    try {
+      const tipe = activeOrg === 'osis' ? 'anggota_osis' : 'anggota_mpk'
+      const res = await fetch(`/api/pencapaian/anggota?tipe_anggota=${tipe}&target_id=${a.id}`)
+      const json = await res.json()
+      setProfileAchievements(json.data || [])
+    } catch {
+      setProfileAchievements([])
+    } finally {
+      setProfileLoading(false)
+    }
   }
 
   async function handleSave() {
@@ -159,7 +182,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
     }
     setSaving(true)
     const finalKelas = `${fTingkat} ${fJurusan}`.trim()
-    const body = { nama: fNama.trim(), nis: fNis || undefined, kelas: finalKelas || undefined, jabatan: fJabatan || undefined, tipe: activeOrg }
+    const body = { nama: fNama.trim(), nis: fNis || undefined, kelas: finalKelas || undefined, email: fEmail || undefined, foto_url: fFotoUrl || undefined, jabatan: fJabatan || undefined, tipe: activeOrg }
     const res = await fetch('/api/organisasi', {
       method: editTarget ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -211,11 +234,25 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
   const anggotaCols = [
     { key: 'no', label: 'No', render: (a: Anggota) => <span className="text-slate-400 font-mono text-xs">{anggota.indexOf(a) + 1 + (page-1)*PAGE_SIZE}</span> },
     { key: 'nis', label: 'NIS', render: (a: Anggota) => <span className="font-mono text-xs text-slate-400">{a.nis || '-'}</span> },
-    { key: 'nama', label: 'Nama', render: (a: Anggota) => <span className="font-semibold text-slate-800">{a.nama}</span> },
+    { key: 'nama', label: 'Nama', render: (a: Anggota) => (
+      <button onClick={() => openProfile(a)} className="flex items-center gap-2 text-left">
+        {a.foto_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={a.foto_url} alt={a.nama} className="w-8 h-8 rounded-full object-cover border border-slate-200" />
+        ) : (
+          <span className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center justify-center text-xs font-bold">{a.nama.charAt(0).toUpperCase()}</span>
+        )}
+        <span>
+          <span className="block font-semibold text-slate-800">{a.nama}</span>
+          {a.email && <span className="block text-[10px] text-slate-400">{a.email}</span>}
+        </span>
+      </button>
+    ) },
     { key: 'kelas', label: 'Kelas', render: (a: Anggota) => <span className="text-xs text-slate-500">{a.kelas || '-'}</span> },
     { key: 'jabatan', label: 'Jabatan', render: (a: Anggota) => <span className="text-xs font-medium text-slate-600">{a.jabatan || '-'}</span> },
     { key: 'actions', label: '', render: (a: Anggota) => (
       <div className="flex gap-1">
+        <button onClick={() => openProfile(a)} className="btn-icon text-emerald-500 hover:bg-emerald-50"><Award className="w-3.5 h-3.5" /></button>
         <button onClick={() => openEdit(a)} className="btn-icon text-indigo-400 hover:bg-indigo-50"><Pencil className="w-3.5 h-3.5" /></button>
         <button onClick={() => setDeleteTarget(a)} className="btn-icon text-red-400 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /></button>
       </div>
@@ -296,6 +333,31 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
                 </div>
               </div>
               <div className="form-group">
+                <label className="label">Email Anggota</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="email"
+                    value={fEmail}
+                    onChange={e => setFEmail(e.target.value)}
+                    placeholder="Opsional untuk notifikasi"
+                    className="input pl-9"
+                  />
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="label">URL Foto</label>
+                <div className="relative">
+                  <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    value={fFotoUrl}
+                    onChange={e => setFFotoUrl(e.target.value)}
+                    placeholder="https://..."
+                    className="input pl-9"
+                  />
+                </div>
+              </div>
+              <div className="form-group">
                 <label className="label">Tingkat & Kejuruan</label>
                 <div className="flex gap-3">
                   <select value={fTingkat} onChange={e => setFTingkat(e.target.value)} className="input sm:w-32 w-28 cursor-pointer font-medium text-slate-700">
@@ -342,6 +404,61 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
           <ConfirmDialog open={!!deleteTarget} title={`Hapus Anggota ${orgLabel}?`}
             message={`"${deleteTarget?.nama}" akan dihapus beserta semua riwayat absensinya.`}
             loading={deleting} onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
+
+          <Modal open={!!profileTarget} title={`Profil ${orgLabel}`} onClose={() => setProfileTarget(null)} size="md">
+            <div className="space-y-5">
+              <div className="flex items-center gap-4">
+                {profileTarget?.foto_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={profileTarget.foto_url} alt={profileTarget.nama} className="w-16 h-16 rounded-2xl object-cover border border-slate-200" />
+                ) : (
+                  <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center justify-center text-2xl font-black">
+                    {profileTarget?.nama.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">{profileTarget?.nama}</h3>
+                  <p className="text-xs text-slate-500">{profileTarget?.kelas || '-'} · {profileTarget?.jabatan || '-'}</p>
+                  <p className="text-xs text-slate-500">{profileTarget?.email || 'Email belum diisi'}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                  <p className="text-[10px] uppercase font-bold text-slate-400">EXP</p>
+                  <p className="text-lg font-black text-[#052659]">{profileTarget?.xp || 0}</p>
+                </div>
+                <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                  <p className="text-[10px] uppercase font-bold text-slate-400">Level</p>
+                  <p className="text-lg font-black text-[#052659]">Lv {profileTarget?.level || 1}</p>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Award className="w-4 h-4 text-amber-500" />
+                  <h4 className="text-sm font-bold text-slate-900">Pencapaian</h4>
+                </div>
+                {profileLoading ? (
+                  <div className="text-sm text-slate-400 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" />Memuat...</div>
+                ) : profileAchievements.length === 0 ? (
+                  <p className="text-sm text-slate-400">Belum ada pencapaian.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {profileAchievements.map(item => (
+                      <div key={item.id} className="rounded-xl border border-amber-100 bg-amber-50/60 p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-sm font-bold text-slate-900">{item.pencapaian.nama}</p>
+                          <span className="text-xs font-bold text-amber-700">+{item.pencapaian.exp_reward} EXP</span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-0.5">{item.pencapaian.deskripsi}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </Modal>
         </div>
       ) : (
         <div className="space-y-4">

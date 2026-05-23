@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import { getAccessibleOrgs } from '@/lib/auth-shared'
 import { 
   Camera, Plus, Calendar, User, Search, Trash2, X, Maximize2, 
-  ChevronLeft, ChevronRight, Eye, ImageIcon, UploadCloud, Info, AlertCircle 
+  ChevronLeft, ChevronRight, Eye, ImageIcon, UploadCloud, Info, AlertCircle, Download
 } from 'lucide-react'
 import Image from 'next/image'
 
@@ -55,6 +55,9 @@ export default function DokumentasiClient({ user }: Props) {
 
   // Lightbox States
   const [activeLightboxIndex, setActiveLightboxIndex] = useState<number | null>(null)
+
+  // Delete Confirmation State
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; title: string } | null>(null)
 
   // Fetch photos
   const fetchPhotos = async () => {
@@ -158,44 +161,49 @@ export default function DokumentasiClient({ user }: Props) {
     }
   }
 
-  // Handle delete
-  const handleDelete = async (id: number, title: string) => {
-    if (!confirm(`Apakah Anda yakin ingin menghapus dokumentasi "${title}"?`)) return
+  // Handle delete (opens modal)
+  const handleDelete = (id: number, title: string) => {
+    setDeleteTarget({ id, title })
+  }
+
+  // Handle actual delete execution
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return
     try {
-      const res = await fetch(`/api/dokumentasi?id=${id}`, {
+      const res = await fetch(`/api/dokumentasi?id=${deleteTarget.id}`, {
         method: 'DELETE',
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Gagal menghapus dokumentasi')
       
       toast.success('Dokumentasi foto berhasil dihapus')
+      setDeleteTarget(null)
       fetchPhotos()
     } catch (e: any) {
       toast.error(e.message)
     }
   }
 
-  // Organisasi Styling & Badge details
   const orgMeta: Record<string, { label: string; badge: string; color: string }> = {
     osis: {
       label: 'OSIS',
-      badge: 'bg-amber-50 border-amber-200/50 text-amber-700',
-      color: 'from-amber-500 to-amber-600',
+      badge: 'bg-blue-50 border-blue-200/50 text-blue-700',
+      color: 'from-blue-500 to-blue-600',
     },
     mpk: {
       label: 'MPK',
-      badge: 'bg-rose-50 border-rose-200/50 text-rose-700',
-      color: 'from-rose-500 to-rose-600',
+      badge: 'bg-red-50 border-red-200/50 text-red-700',
+      color: 'from-red-500 to-red-600',
     },
     programming: {
       label: 'Programming',
-      badge: 'bg-emerald-50 border-emerald-200/50 text-emerald-700',
-      color: 'from-emerald-500 to-emerald-600',
+      badge: 'bg-orange-50 border-orange-200/50 text-orange-700',
+      color: 'from-orange-500 to-orange-600',
     },
     english: {
       label: 'English Club',
-      badge: 'bg-blue-50 border-blue-200/50 text-blue-700',
-      color: 'from-blue-500 to-blue-600',
+      badge: 'bg-sky-50 border-sky-200/50 text-sky-700',
+      color: 'from-sky-500 to-sky-600',
     },
   }
 
@@ -210,6 +218,33 @@ export default function DokumentasiClient({ user }: Props) {
   const handleNextLightbox = () => {
     if (activeLightboxIndex === null) return
     setActiveLightboxIndex(activeLightboxIndex === photos.length - 1 ? 0 : activeLightboxIndex + 1)
+  }
+
+  const handleDownload = async (url: string, judul: string) => {
+    toast.loading('Mengunduh gambar...', { id: 'downloading' })
+    try {
+      const response = await fetch(url)
+      const blob = await response.blob()
+      const blobUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      const cleanTitle = judul.replace(/[^a-zA-Z0-9]/g, '_')
+      link.download = `${cleanTitle}.jpg`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(blobUrl)
+      toast.success('Gambar berhasil diunduh!', { id: 'downloading' })
+    } catch (error) {
+      const link = document.createElement('a')
+      link.href = url
+      link.target = '_blank'
+      link.download = judul
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      toast.success('Membuka gambar di tab baru.', { id: 'downloading' })
+    }
   }
 
   return (
@@ -235,62 +270,112 @@ export default function DokumentasiClient({ user }: Props) {
             className="flex items-center justify-center gap-2 bg-[#052659] hover:bg-[#041d44] text-white px-4 py-2.5 rounded-2xl text-xs font-black shadow-lg shadow-[#052659]/10 transition-all duration-200 active:scale-95"
           >
             <Plus className="w-4 h-4" />
-            Unggah Foto Kegiatan
+            Tambah Dokumentasi
           </button>
         </div>
 
         <hr className="border-slate-100" />
 
         {/* ─── FILTERS ─── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-          
-          {/* SEARCH */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Cari judul kegiatan..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-            />
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-1">
+            {/* SEARCH */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Cari judul kegiatan..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                maxLength={50}
+                className="w-full pl-9 pr-4 py-2.5 text-xs border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              />
+            </div>
+            
+            {/* ORGANISASI SELECT (INTERAKTIF PILLS) */}
+            <div className="flex flex-wrap gap-2 items-center">
+              <button
+                type="button"
+                onClick={() => setSelectedOrg('all')}
+                className={`px-3.5 py-2 rounded-2xl text-xs font-black transition-all duration-200 active:scale-95 ${
+                  selectedOrg === 'all'
+                    ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10'
+                    : 'bg-slate-100 hover:bg-slate-200/70 text-slate-600'
+                }`}
+              >
+                Semua
+              </button>
+              {accessibleOrgs.includes('osis') && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedOrg('osis')}
+                  className={`px-3.5 py-2 rounded-2xl text-xs font-black transition-all duration-200 active:scale-95 flex items-center gap-1.5 ${
+                    selectedOrg === 'osis'
+                      ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20'
+                      : 'bg-blue-50 hover:bg-blue-100/70 text-blue-700'
+                  }`}
+                >
+                  OSIS
+                </button>
+              )}
+              {accessibleOrgs.includes('mpk') && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedOrg('mpk')}
+                  className={`px-3.5 py-2 rounded-2xl text-xs font-black transition-all duration-200 active:scale-95 flex items-center gap-1.5 ${
+                    selectedOrg === 'mpk'
+                      ? 'bg-red-500 text-white shadow-lg shadow-red-500/20'
+                      : 'bg-red-50 hover:bg-red-100/70 text-red-700'
+                }`}
+                >
+                  MPK
+                </button>
+              )}
+              {accessibleOrgs.includes('programming') && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedOrg('programming')}
+                  className={`px-3.5 py-2 rounded-2xl text-xs font-black transition-all duration-200 active:scale-95 flex items-center gap-1.5 ${
+                    selectedOrg === 'programming'
+                      ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20'
+                      : 'bg-orange-50 hover:bg-orange-100/70 text-orange-700'
+                  }`}
+                >
+                  Programming
+                </button>
+              )}
+              {accessibleOrgs.includes('english') && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedOrg('english')}
+                  className={`px-3.5 py-2 rounded-2xl text-xs font-black transition-all duration-200 active:scale-95 flex items-center gap-1.5 ${
+                    selectedOrg === 'english'
+                      ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20'
+                      : 'bg-sky-50 hover:bg-sky-100/70 text-sky-700'
+                  }`}
+                >
+                  English Club
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* ORGANISASI SELECT */}
-          <select
-            value={selectedOrg}
-            onChange={(e) => setSelectedOrg(e.target.value)}
-            className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white"
-          >
-            <option value="all">Semua Organisasi</option>
-            {accessibleOrgs.includes('osis') && <option value="osis">OSIS</option>}
-            {accessibleOrgs.includes('mpk') && <option value="mpk">MPK</option>}
-            {accessibleOrgs.includes('programming') && <option value="programming">Programming</option>}
-            {accessibleOrgs.includes('english') && <option value="english">English Club</option>}
-          </select>
-
-          {/* DATE START */}
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase min-w-[28px]">Dari</span>
+          {/* DATE RANGE */}
+          <div className="flex items-center gap-2 w-full md:w-auto">
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="px-3 py-2 text-xs border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 bg-white"
             />
-          </div>
-
-          {/* DATE END */}
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase min-w-[32px]">Sampai</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase">s/d</span>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="px-3 py-2 text-xs border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 bg-white"
             />
           </div>
-
         </div>
       </div>
 
@@ -349,13 +434,22 @@ export default function DokumentasiClient({ user }: Props) {
                     unoptimized
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-between p-3">
-                    <button
-                      onClick={() => setActiveLightboxIndex(index)}
-                      className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white flex items-center justify-center transition-colors"
-                      title="Lihat Foto"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
+                    <div className="flex gap-1.5">
+                      <button
+                        onClick={() => setActiveLightboxIndex(index)}
+                        className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white flex items-center justify-center transition-colors"
+                        title="Lihat Foto"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDownload(photo.image_url, photo.judul)}
+                        className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white flex items-center justify-center transition-colors"
+                        title="Unduh Foto"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                    </div>
                     {accessibleOrgs.includes(photo.organisasi_type) && (
                       <button
                         onClick={() => handleDelete(photo.id, photo.judul)}
@@ -480,54 +574,126 @@ export default function DokumentasiClient({ user }: Props) {
 
               {/* INPUT: JUDUL */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase">Judul Kegiatan</label>
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase">Judul Kegiatan *</label>
+                  {newJudul.length > 0 && (
+                    <span className={`text-[10px] font-bold ${newJudul.length >= 100 ? 'text-red-500' : 'text-slate-400'}`}>
+                      {newJudul.length}/100
+                    </span>
+                  )}
+                </div>
                 <input 
                   type="text"
                   placeholder="Contoh: Rapat Koordinasi Anggota Baru"
                   value={newJudul}
                   onChange={(e) => setNewJudul(e.target.value)}
+                  maxLength={100}
+                  className={`w-full px-3 py-2 text-xs border rounded-xl focus:outline-none focus:ring-2 ${
+                    newJudul.length >= 100 ? 'border-red-400 focus:ring-red-500/20' : 'border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-500'
+                  }`}
+                />
+                {newJudul.length >= 100 && (
+                  <p className="text-[10px] text-red-500 font-bold mt-1">Batas maksimal judul adalah 100 karakter!</p>
+                )}
+              </div>
+
+              {/* SELECT: ORGANISASI (INTERAKTIF GRID) */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase">Organisasi *</label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {accessibleOrgs.includes('osis') && (
+                    <button
+                      type="button"
+                      onClick={() => setNewOrg('osis')}
+                      className={`px-3 py-2.5 rounded-2xl border text-xs font-black text-center transition-all duration-200 flex flex-col items-center justify-center gap-1.5 ${
+                        newOrg === 'osis'
+                          ? 'bg-blue-50 border-blue-500 text-blue-700 ring-2 ring-blue-500/10 scale-[1.02]'
+                          : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600 hover:bg-slate-50/50'
+                      }`}
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-sm" />
+                      OSIS
+                    </button>
+                  )}
+                  {accessibleOrgs.includes('mpk') && (
+                    <button
+                      type="button"
+                      onClick={() => setNewOrg('mpk')}
+                      className={`px-3 py-2.5 rounded-2xl border text-xs font-black text-center transition-all duration-200 flex flex-col items-center justify-center gap-1.5 ${
+                        newOrg === 'mpk'
+                          ? 'bg-red-50 border-red-500 text-red-700 ring-2 ring-red-500/10 scale-[1.02]'
+                          : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600 hover:bg-slate-50/50'
+                      }`}
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm" />
+                      MPK
+                    </button>
+                  )}
+                  {accessibleOrgs.includes('programming') && (
+                    <button
+                      type="button"
+                      onClick={() => setNewOrg('programming')}
+                      className={`px-3 py-2.5 rounded-2xl border text-xs font-black text-center transition-all duration-200 flex flex-col items-center justify-center gap-1.5 ${
+                        newOrg === 'programming'
+                          ? 'bg-orange-50 border-orange-500 text-orange-700 ring-2 ring-orange-500/10 scale-[1.02]'
+                          : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600 hover:bg-slate-50/50'
+                      }`}
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-sm" />
+                      Programming
+                    </button>
+                  )}
+                  {accessibleOrgs.includes('english') && (
+                    <button
+                      type="button"
+                      onClick={() => setNewOrg('english')}
+                      className={`px-3 py-2.5 rounded-2xl border text-xs font-black text-center transition-all duration-200 flex flex-col items-center justify-center gap-1.5 ${
+                        newOrg === 'english'
+                          ? 'bg-sky-50 border-sky-500 text-sky-700 ring-2 ring-sky-500/10 scale-[1.02]'
+                          : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600 hover:bg-slate-50/50'
+                      }`}
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full bg-sky-500 shadow-sm" />
+                      English Club
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* INPUT: TANGGAL */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase">Tanggal Kegiatan</label>
+                <input 
+                  type="date"
+                  value={newTanggal}
+                  onChange={(e) => setNewTanggal(e.target.value)}
                   className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                {/* SELECT: ORGANISASI */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Organisasi</label>
-                  <select
-                    value={newOrg}
-                    onChange={(e) => setNewOrg(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 bg-white"
-                  >
-                    {accessibleOrgs.includes('osis') && <option value="osis">OSIS</option>}
-                    {accessibleOrgs.includes('mpk') && <option value="mpk">MPK</option>}
-                    {accessibleOrgs.includes('programming') && <option value="programming">Programming</option>}
-                    {accessibleOrgs.includes('english') && <option value="english">English Club</option>}
-                  </select>
-                </div>
-
-                {/* INPUT: TANGGAL */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Tanggal Kegiatan</label>
-                  <input 
-                    type="date"
-                    value={newTanggal}
-                    onChange={(e) => setNewTanggal(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                  />
-                </div>
-              </div>
-
               {/* INPUT: DESKRIPSI */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase">Deskripsi / Keterangan (Opsional)</label>
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase">Deskripsi / Keterangan (Opsional)</label>
+                  {newDeskripsi.length > 0 && (
+                    <span className={`text-[10px] font-bold ${newDeskripsi.length >= 300 ? 'text-red-500' : 'text-slate-400'}`}>
+                      {newDeskripsi.length}/300
+                    </span>
+                  )}
+                </div>
                 <textarea 
                   placeholder="Tulis detail singkat kegiatan..."
                   value={newDeskripsi}
                   onChange={(e) => setNewDeskripsi(e.target.value)}
                   rows={2}
-                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none"
+                  maxLength={300}
+                  className={`w-full px-3 py-2 text-xs border rounded-xl focus:outline-none focus:ring-2 resize-none ${
+                    newDeskripsi.length >= 300 ? 'border-red-400 focus:ring-red-500/20' : 'border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-500'
+                  }`}
                 />
+                {newDeskripsi.length >= 300 && (
+                  <p className="text-[10px] text-red-500 font-bold mt-1">Batas maksimal deskripsi adalah 300 karakter!</p>
+                )}
               </div>
 
               {/* ACTION BUTTONS */}
@@ -573,12 +739,21 @@ export default function DokumentasiClient({ user }: Props) {
               </span>
               <span className="text-xs font-black">{activeLightboxPhoto.judul}</span>
             </div>
-            <button 
-              onClick={() => setActiveLightboxIndex(null)}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-            >
-              <X className="w-5 h-5 text-white" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleDownload(activeLightboxPhoto.image_url, activeLightboxPhoto.judul)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                title="Unduh Foto"
+              >
+                <Download className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => setActiveLightboxIndex(null)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
+            </div>
           </div>
 
           {/* Body Viewer */}
@@ -632,6 +807,49 @@ export default function DokumentasiClient({ user }: Props) {
             </div>
           </div>
 
+        </div>
+      )}
+
+      {/* ─── CUSTOM DELETE CONFIRMATION MODAL ─── */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-fade-in" 
+            onClick={() => setDeleteTarget(null)} 
+          />
+          
+          <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full overflow-hidden shadow-2xl relative z-10 animate-scale-up p-6 space-y-6">
+            <div className="flex flex-col items-center text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center border border-red-100 text-red-500 shadow-sm">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-sm font-extrabold text-slate-800">
+                  Konfirmasi Hapus
+                </h3>
+                <p className="text-xs text-slate-500 leading-relaxed px-2">
+                  Apakah Anda yakin ingin menghapus dokumentasi <span className="font-bold text-slate-700">"{deleteTarget.title}"</span>? Tindakan ini tidak dapat dibatalkan.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="flex-1 px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-xl transition-all"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteConfirm}
+                className="flex-1 px-4 py-2.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-lg shadow-red-600/10 hover:shadow-xl hover:shadow-red-600/20 transition-all active:scale-95"
+              >
+                Hapus
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

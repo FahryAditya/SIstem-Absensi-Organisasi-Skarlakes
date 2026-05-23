@@ -1,8 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import Sidebar from '@/components/layout/Sidebar'
+import dynamic from 'next/dynamic'
 import Topbar from '@/components/layout/Topbar'
+
+const Sidebar = dynamic(() => import('@/components/layout/Sidebar'), {
+  ssr: false,
+  loading: () => (
+    <aside className="hidden lg:flex flex-col bg-[#011025] border-r border-[#5482B4]/15 h-screen sticky top-0 shadow-sm w-60" />
+  )
+})
 
 interface DashboardLayoutProps {
   user: { id: number; nama: string; email: string; role: string }
