@@ -3,8 +3,48 @@ import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
 import { canManageSiswaData, canManageSiswaEkskul } from '@/lib/auth-shared'
 import { z } from 'zod'
-
 export const dynamic = 'force-dynamic'
+
+let isSiswaSchemaChecked = false
+
+async function ensureSiswaColumns() {
+  if (isSiswaSchemaChecked) return
+  try {
+    // Check if email column exists
+    const columns: any[] = await prisma.$queryRaw`
+      SELECT column_name FROM information_schema.columns 
+      WHERE table_name = 'siswa' AND column_name = 'email'
+    `
+    if (columns.length === 0) {
+      console.log('Adding missing column "email" to "siswa" table...')
+      await prisma.$executeRawUnsafe('ALTER TABLE "siswa" ADD COLUMN IF NOT EXISTS "email" VARCHAR(150);')
+    }
+
+    // Check if foto_url column exists
+    const columnsFoto: any[] = await prisma.$queryRaw`
+      SELECT column_name FROM information_schema.columns 
+      WHERE table_name = 'siswa' AND column_name = 'foto_url'
+    `
+    if (columnsFoto.length === 0) {
+      console.log('Adding missing column "foto_url" to "siswa" table...')
+      await prisma.$executeRawUnsafe('ALTER TABLE "siswa" ADD COLUMN IF NOT EXISTS "foto_url" VARCHAR(255);')
+    }
+
+    // Check if jabatan column exists
+    const columnsJabatan: any[] = await prisma.$queryRaw`
+      SELECT column_name FROM information_schema.columns 
+      WHERE table_name = 'siswa' AND column_name = 'jabatan'
+    `
+    if (columnsJabatan.length === 0) {
+      console.log('Adding missing column "jabatan" to "siswa" table...')
+      await prisma.$executeRawUnsafe('ALTER TABLE "siswa" ADD COLUMN IF NOT EXISTS "jabatan" VARCHAR(100);')
+    }
+
+    isSiswaSchemaChecked = true
+  } catch (err) {
+    console.error('Failed to ensure columns for table siswa:', err)
+  }
+}
 
 function getCtx(req: NextRequest) {
   return {
@@ -31,8 +71,11 @@ const schema = z.object({
 
 export async function GET(req: NextRequest) {
   try {
+    await ensureSiswaColumns()
     const { userRole } = getCtx(req)
     const { searchParams } = new URL(req.url)
+... (rest of the file content)
+
     const ekskul = searchParams.get('ekskul') as 'programming' | 'english' | null
     const search = searchParams.get('search') || ''
     
