@@ -8,52 +8,9 @@ export const dynamic = 'force-dynamic'
 let isSiswaSchemaChecked = false
 
 async function ensureSiswaColumns() {
-  if (isSiswaSchemaChecked) return
-  try {
-    // Check if email column exists
-    const columns: any[] = await prisma.$queryRaw`
-      SELECT column_name FROM information_schema.columns 
-      WHERE table_name = 'siswa' AND column_name = 'email'
-    `
-    if (columns.length === 0) {
-      console.log('Adding missing column "email" to "siswa" table...')
-      await prisma.$executeRawUnsafe('ALTER TABLE "siswa" ADD COLUMN IF NOT EXISTS "email" VARCHAR(150);')
-    }
-
-    // Check if foto_url column exists
-    const columnsFoto: any[] = await prisma.$queryRaw`
-      SELECT column_name FROM information_schema.columns 
-      WHERE table_name = 'siswa' AND column_name = 'foto_url'
-    `
-    if (columnsFoto.length === 0) {
-      console.log('Adding missing column "foto_url" to "siswa" table...')
-      await prisma.$executeRawUnsafe('ALTER TABLE "siswa" ADD COLUMN IF NOT EXISTS "foto_url" VARCHAR(255);')
-    }
-
-    // Check if jabatan column exists
-    const columnsJabatan: any[] = await prisma.$queryRaw`
-      SELECT column_name FROM information_schema.columns 
-      WHERE table_name = 'siswa' AND column_name = 'jabatan'
-    `
-    if (columnsJabatan.length === 0) {
-      console.log('Adding missing column "jabatan" to "siswa" table...')
-      await prisma.$executeRawUnsafe('ALTER TABLE "siswa" ADD COLUMN IF NOT EXISTS "jabatan" VARCHAR(100);')
-    }
-
-    // Check if level column exists
-    const columnsLevel: any[] = await prisma.$queryRaw`
-      SELECT column_name FROM information_schema.columns 
-      WHERE table_name = 'siswa' AND column_name = 'level'
-    `
-    if (columnsLevel.length === 0) {
-      console.log('Adding missing column "level" to "siswa" table...')
-      await prisma.$executeRawUnsafe('ALTER TABLE "siswa" ADD COLUMN IF NOT EXISTS "level" INTEGER DEFAULT 1;')
-    }
-
-    isSiswaSchemaChecked = true
-  } catch (err) {
-    console.error('Failed to ensure columns for table siswa:', err)
-  }
+  // Schema is now assumed to be managed or verified via migration.
+  // Dynamic column checking removed to prevent runtime overhead and potential errors.
+  return
 }
 
 function getCtx(req: NextRequest) {
