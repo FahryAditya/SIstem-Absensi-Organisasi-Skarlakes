@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
-import { canManageSiswaData, canManageSiswaEkskul } from '@/lib/auth'
+import { canManageSiswaData, canManageSiswaEkskul } from '@/lib/auth-shared'
 import { z } from 'zod'
+
+export const dynamic = 'force-dynamic'
 
 function getCtx(req: NextRequest) {
   return {
     userId: parseInt(req.headers.get('x-user-id') || '0'),
     userNama: req.headers.get('x-user-nama') || '',
-    userRole: req.headers.get('x-user-role') || '',
+    userRole: (req.headers.get('x-user-role') || '').trim(),
   }
 }
 
@@ -28,34 +30,46 @@ const schema = z.object({
 })
 
 export async function GET(req: NextRequest) {
-  const { userRole } = getCtx(req)
-  const { searchParams } = new URL(req.url)
-  const ekskul = searchParams.get('ekskul') as 'programming' | 'english' | null
-  const search = searchParams.get('search') || ''
-  const page = parseInt(searchParams.get('page') || '1')
-  const limit = parseInt(searchParams.get('limit') || '10')
+  try {
+    const { userRole } = getCtx(req)
+    const { searchParams } = new URL(req.url)
+    const ekskul = searchParams.get('ekskul') as 'programming' | 'english' | null
+    const search = searchParams.get('search') || ''
+    
+    let page = parseInt(searchParams.get('page') || '1')
+    let limit = parseInt(searchParams.get('limit') || '10')
+    if (isNaN(page) || page < 1) page = 1
+    if (isNaN(limit) || limit < 1) limit = 10
 
-  // Role check
-  const accessible: ('programming' | 'english')[] = canManageSiswaData(userRole) ? ['programming', 'english'] : []
-  let ekskulFilter: ('programming' | 'english')[] = accessible
-  if (ekskul && accessible.includes(ekskul)) ekskulFilter = [ekskul]
+    // Role check
+    const accessible: ('programming' | 'english')[] = canManageSiswaData(userRole) ? ['programming', 'english'] : []
+    let ekskulFilter: ('programming' | 'english')[] = accessible
+    if (ekskul && accessible.includes(ekskul)) ekskulFilter = [ekskul]
 
-  const where = {
-    ekskul: { in: ekskulFilter },
-    ...(search ? { nama: { contains: search } } : {}),
+    if (ekskulFilter.length === 0) {
+      return NextResponse.json({ data: [], total: 0, page, totalPages: 0 })
+    }
+
+    const where = {
+      ekskul: { in: ekskulFilter },
+      ...(search ? { nama: { contains: search, mode: 'insensitive' as any } } : {}),
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.siswa.findMany({
+        where,
+        orderBy: [{ ekskul: 'asc' }, { nama: 'asc' }],
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.siswa.count({ where }),
+    ])
+
+    return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / limit) })
+  } catch (error: any) {
+    console.error('GET siswa error:', error)
+    return NextResponse.json({ error: 'Gagal memuat data siswa: ' + error.message }, { status: 500 })
   }
-
-  const [data, total] = await Promise.all([
-    prisma.siswa.findMany({
-      where,
-      orderBy: [{ ekskul: 'asc' }, { nama: 'asc' }],
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-    prisma.siswa.count({ where }),
-  ])
-
-  return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / limit) })
 }
 
 export async function POST(req: NextRequest) {

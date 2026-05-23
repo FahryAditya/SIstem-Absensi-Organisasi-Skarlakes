@@ -6,25 +6,33 @@ import cloudinary, { isCloudinaryConfigured } from '@/lib/cloudinary'
 
 export const dynamic = 'force-dynamic'
 
-async function ensureDokumentasiFotoTable() {
-  await prisma.$executeRawUnsafe(`
-    CREATE TABLE IF NOT EXISTS "dokumentasi_foto" (
-      "id"              SERIAL PRIMARY KEY,
-      "organisasi_type" TEXT NOT NULL,
-      "judul"           VARCHAR(150) NOT NULL,
-      "deskripsi"       TEXT,
-      "image_url"       VARCHAR(255) NOT NULL,
-      "public_id"       VARCHAR(100),
-      "tanggal"         DATE NOT NULL,
-      "created_by"      INTEGER NOT NULL REFERENCES "users"("id"),
-      "created_at"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      "updated_at"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
+let isTableChecked = false
 
-    CREATE INDEX IF NOT EXISTS "dokumentasi_foto_organisasi_type_idx" ON "dokumentasi_foto"("organisasi_type");
-    CREATE INDEX IF NOT EXISTS "dokumentasi_foto_tanggal_idx" ON "dokumentasi_foto"("tanggal");
-    CREATE INDEX IF NOT EXISTS "dokumentasi_foto_created_at_idx" ON "dokumentasi_foto"("created_at");
-  `)
+async function ensureDokumentasiFotoTable() {
+  if (isTableChecked) return
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "dokumentasi_foto" (
+        "id"              SERIAL PRIMARY KEY,
+        "organisasi_type" TEXT NOT NULL,
+        "judul"           VARCHAR(150) NOT NULL,
+        "deskripsi"       TEXT,
+        "image_url"       VARCHAR(255) NOT NULL,
+        "public_id"       VARCHAR(100),
+        "tanggal"         DATE NOT NULL,
+        "created_by"      INTEGER NOT NULL REFERENCES "users"("id"),
+        "created_at"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updated_at"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `)
+    await prisma.$executeRawUnsafe('CREATE INDEX IF NOT EXISTS "dokumentasi_foto_organisasi_type_idx" ON "dokumentasi_foto"("organisasi_type");')
+    await prisma.$executeRawUnsafe('CREATE INDEX IF NOT EXISTS "dokumentasi_foto_tanggal_idx" ON "dokumentasi_foto"("tanggal");')
+    await prisma.$executeRawUnsafe('CREATE INDEX IF NOT EXISTS "dokumentasi_foto_created_at_idx" ON "dokumentasi_foto"("created_at");')
+    isTableChecked = true
+  } catch (err) {
+    console.error('Failed to ensure table dokumentasi_foto:', err)
+    // Don't set isTableChecked = true, so we can retry next time
+  }
 }
 
 
