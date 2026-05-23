@@ -103,8 +103,8 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
       setData(json.data || [])
       setTotal(json.total || 0)
       setTotalPages(json.totalPages || 1)
-    } catch (e) {
-      toast.error('Gagal memuat data siswa')
+    } catch (e: any) {
+      toast.error(e?.message || 'Gagal memuat data siswa')
     }
     setLoading(false)
   }, [page, debouncedSearch, orgFilter])

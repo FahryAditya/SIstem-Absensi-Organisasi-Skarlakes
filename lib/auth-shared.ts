@@ -15,26 +15,31 @@ export const ROLE_LABELS: Record<string, string> = {
 
 // Permission helpers
 export function canAccessProgramming(role: string) {
-  return role === 'administrator' || role === 'admin_programming'
+  const r = (role || '').trim().toLowerCase()
+  return r === 'administrator' || r === 'admin_programming'
 }
 
 export function canAccessEnglish(role: string) {
-  return role === 'administrator' || role === 'admin_english'
+  const r = (role || '').trim().toLowerCase()
+  return r === 'administrator' || r === 'admin_english'
 }
 
 export function canAccessOsis(role: string) {
-  return role === 'administrator' || role === 'admin_osis_mpk'
+  const r = (role || '').trim().toLowerCase()
+  return r === 'administrator' || r === 'admin_osis_mpk'
 }
 
 export function canAccessMpk(role: string) {
-  return role === 'administrator' || role === 'admin_osis_mpk'
+  const r = (role || '').trim().toLowerCase()
+  return r === 'administrator' || r === 'admin_osis_mpk'
 }
 
 export function canManageSiswaData(role: string) {
-  return role === 'administrator'
-    || role === 'admin_programming'
-    || role === 'admin_english'
-    || role === 'admin_osis_mpk'
+  const r = (role || '').trim().toLowerCase()
+  return r === 'administrator'
+    || r === 'admin_programming'
+    || r === 'admin_english'
+    || r === 'admin_osis_mpk'
 }
 
 export function canManageSiswaEkskul(role: string, ekskul: string) {
@@ -42,7 +47,8 @@ export function canManageSiswaEkskul(role: string, ekskul: string) {
 }
 
 export function isAdministrator(role: string) {
-  return role === 'administrator'
+  const r = (role || '').trim().toLowerCase()
+  return r === 'administrator'
 }
 
 export function getAccessibleOrgs(role: string): string[] {

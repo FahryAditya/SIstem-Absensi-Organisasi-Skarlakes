@@ -105,7 +105,8 @@ export default function AmbilSiswaClient({ user }: Props) {
     async function loadStudents() {
       setLoadingStudents(true)
       try {
-        const fetchPromises = selectedOrgs.map(async (org) => {
+        const orgsToLoad = selectedOrgs.filter((org) => accessibleOrgs.includes(org))
+        const fetchPromises = orgsToLoad.map(async (org) => {
           let res
           if (org === 'osis' || org === 'mpk') {
             res = await fetch(`/api/organisasi?tipe=${org}&limit=1000`)
@@ -121,8 +122,13 @@ export default function AmbilSiswaClient({ user }: Props) {
           return list.map((m) => ({ ...m, org }))
         })
 
-        const results = await Promise.all(fetchPromises)
-        const combined = results.flat()
+        const settledResults = await Promise.allSettled(fetchPromises)
+        const failedOrgs: string[] = []
+        const combined = settledResults.flatMap((result, idx) => {
+          if (result.status === 'fulfilled') return result.value
+          failedOrgs.push(orgsToLoad[idx])
+          return []
+        })
         
         // Sort combined list alphabetically by name
         combined.sort((a, b) => a.nama.localeCompare(b.nama))
@@ -130,6 +136,10 @@ export default function AmbilSiswaClient({ user }: Props) {
         setStudents(combined)
         // Reset selected state and select all by default using the unique compound key org-id
         setSelectedSiswaKeys(combined.map(s => `${s.org}-${s.id}`))
+
+        if (failedOrgs.length > 0) {
+          toast.error(`Sebagian data gagal dimuat: ${failedOrgs.join(', ').toUpperCase()}`)
+        }
       } catch (err: any) {
         toast.error(err.message || 'Gagal memuat data siswa')
       } finally {
@@ -138,7 +148,7 @@ export default function AmbilSiswaClient({ user }: Props) {
     }
 
     loadStudents()
-  }, [selectedOrgs])
+  }, [selectedOrgs, accessibleOrgs])
 
   // Filter students based on search query
   const filteredStudents = useMemo(() => {
