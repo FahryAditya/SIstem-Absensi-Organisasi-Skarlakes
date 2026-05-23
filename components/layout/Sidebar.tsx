@@ -28,7 +28,7 @@ type SidebarItem =
 function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[] {
   const items: SidebarItem[] = []
   
-  items.push({ type: 'logo', label: 'Sistem Ekstrakurikuler', version: 'V 18.5.0 Artemis Series (Stable) ' })
+  items.push({ type: 'logo', label: 'Sistem Ekstrakurikuler', version: 'V 18.5.5 Artemis Series (Stable) ' })
   
   if (!isCollapsed) {
     items.push({ type: 'badge', role })
