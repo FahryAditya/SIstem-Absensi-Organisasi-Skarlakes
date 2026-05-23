@@ -74,7 +74,6 @@ export async function GET(req: NextRequest) {
     await ensureSiswaColumns()
     const { userRole } = getCtx(req)
     const { searchParams } = new URL(req.url)
-... (rest of the file content)
 
     const ekskul = searchParams.get('ekskul') as 'programming' | 'english' | null
     const search = searchParams.get('search') || ''
