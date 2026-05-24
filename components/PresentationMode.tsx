@@ -275,7 +275,7 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
             {/* Center: App name (Desktop only to prevent mobile overlap) */}
             <div className="hidden md:block absolute left-1/2 -translate-x-1/2 text-center">
               <div className="text-white font-black text-lg tracking-tight">Sistem Ekskul</div>
-              <div className="text-white/40 text-xs font-medium">Skarlakes V18.5.5 Artemis Series  2 ( Stabel)</div>
+              <div className="text-white/40 text-xs font-medium">Skarlakes V18.5.5 Artemis Series  3 ( Stabel)</div>
             </div>
 
             {/* Right side: Clock & Actions */}
