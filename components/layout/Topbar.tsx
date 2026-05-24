@@ -1,32 +1,40 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import toast from 'react-hot-toast'
-import Image from 'next/image'
-import { Menu, LogOut, ChevronDown, Loader2, Contact } from 'lucide-react'
-import { ROLE_LABELS } from '@/lib/auth-shared'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
+import Image from 'next/image';
+import { Menu, LogOut, ChevronDown, Loader2, Contact, Settings } from 'lucide-react';
+import { ROLE_LABELS } from '@/lib/auth-shared';
+import StaggeredMenu from '@/components/StaggeredMenu';
 
 interface TopbarProps {
-  user: { id: number; nama: string; email: string; role: string }
-  pageTitle: string
-  onMenuClick: () => void
-  isCollapsed: boolean
-  onToggleCollapse: () => void
+  user: { id: number; nama: string; email: string; role: string };
+  pageTitle: string;
+  onMenuClick: () => void;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
 }
 
-export default function Topbar({ user, pageTitle, onMenuClick, isCollapsed, onToggleCollapse }: TopbarProps) {
-  const router = useRouter()
-  const [open, setOpen] = useState(false)
-  const [loggingOut, setLoggingOut] = useState(false)
+export default function Topbar({
+  user,
+  pageTitle,
+  onMenuClick,
+  isCollapsed,
+  onToggleCollapse,
+}: TopbarProps) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false); // profile dropdown
+  const [toolsOpen, setToolsOpen] = useState(false); // tools menu
+  const [loggingOut, setLoggingOut] = useState(false);
 
   async function handleLogout() {
-    setLoggingOut(true)
-    sessionStorage.removeItem('welcome_shown')
-    await fetch('/api/auth/logout', { method: 'POST' })
-    toast.success('Berhasil logout')
-    router.push('/login')
-    router.refresh()
+    setLoggingOut(true);
+    sessionStorage.removeItem('welcome_shown');
+    await fetch('/api/auth/logout', { method: 'POST' });
+    toast.success('Berhasil logout');
+    router.push('/login');
+    router.refresh();
   }
 
   return (
@@ -41,6 +49,10 @@ export default function Topbar({ user, pageTitle, onMenuClick, isCollapsed, onTo
 
       <h1 className="flex-1 text-sm font-bold text-[#011025] truncate">{pageTitle}</h1>
 
+      <button onClick={() => setToolsOpen(true)} className="btn-icon hidden sm:inline-flex" aria-label="Tools">
+        <Settings className="w-5 h-5 text-slate-600" />
+      </button>
+
       <div className="relative">
         <button
           onClick={() => setOpen(!open)}
@@ -48,9 +60,9 @@ export default function Topbar({ user, pageTitle, onMenuClick, isCollapsed, onTo
         >
           {user.role === 'administrator' ? (
             <div className="relative w-7 h-7 rounded-full overflow-hidden shadow-sm border border-[rgba(84,130,180,0.15)]">
-              <Image 
-                src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" 
-                alt="Profile" 
+              <Image
+                src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg"
+                alt="Profile"
                 fill
                 className="object-cover"
               />
@@ -79,18 +91,37 @@ export default function Topbar({ user, pageTitle, onMenuClick, isCollapsed, onTo
                 <div className="text-xs text-[#7EA0C5]">{user.email}</div>
                 <div className="text-[11px] font-semibold text-[#052659] mt-1">{ROLE_LABELS[user.role]}</div>
               </div>
-              <button
-                onClick={handleLogout}
-                disabled={loggingOut}
-                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors mt-0.5 font-medium"
-              >
-                {loggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
-                {loggingOut ? 'Logging out...' : 'Logout'}
-              </button>
             </div>
           </>
         )}
       </div>
+
+      {toolsOpen && (
+        <>
+          <StaggeredMenu
+            isFixed
+            position="right"
+            items={[
+              { label: 'Presentasi File', ariaLabel: 'Presentasi File', link: '#presentasi' },
+              { label: 'Client', ariaLabel: 'Client', link: '#client' },
+              { label: 'Dokumentasi', ariaLabel: 'Dokumentasi', link: '#dokumentasi' },
+              ...(user.role === 'administrator'
+                ? [{ label: 'Logout', ariaLabel: 'Logout', link: '#logout' }]
+                : []),
+            ]}
+            onMenuClose={() => setToolsOpen(false)}
+          />
+          {user.role === 'administrator' && (
+            <button
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="ml-2 btn-icon"
+            >
+              {loggingOut ? <Loader2 className="w-5 h-5 animate-spin" /> : <LogOut className="w-5 h-5" />}
+            </button>
+          )}
+        </>
+      )}
     </header>
-  )
+  );
 }
