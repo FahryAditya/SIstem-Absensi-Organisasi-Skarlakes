@@ -116,10 +116,6 @@ export default function AdminClient({ user }: Props) {
   const [students, setStudents] = useState<any[]>([])
   const [awards, setAwards] = useState<any[]>([])
 
-import { AWARDS_DATA } from '@/lib/awards'
-
-// ... inside AdminClient component ...
-
   useEffect(() => {
     if (!awardOrg) return
     async function fetchData() {
