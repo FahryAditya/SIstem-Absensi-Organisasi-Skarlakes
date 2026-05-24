@@ -29,8 +29,6 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
   const [organisasi, setOrganisasi] = useState<'osis'|'mpk'>('osis')
   const [queueNumber, setQueueNumber] = useState<number | null>(null)
   const [myQueue, setMyQueue] = useState<any>(null)
-  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null)
-  const [geoError, setGeoError] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -85,20 +83,6 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
     }
   }, [myQueue?.id, session?.id])
 
-  useEffect(() => {
-    if (!navigator.geolocation) {
-      setGeoError('HP/browser tidak mendukung GPS. Gunakan browser lain dan izinkan lokasi.')
-      return
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude })
-        setGeoError('')
-      },
-      () => setGeoError('Izin lokasi wajib diaktifkan sebelum submit.'),
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
-    )
-  }, [])
 
   async function submit() {
     const trimmedNama = nama.trim()
@@ -127,10 +111,7 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
       setNama('')
       return
     }
-    if (!coords) {
-      toast.error(geoError || 'Lokasi GPS belum terbaca')
-      return
-    }
+
     setSaving(true)
     const kelasGabungan = `[${organisasi.toUpperCase()}] ${tingkat} ${jurusan}`
     const res = await fetch('/api/wawancara/antrian', {
@@ -142,8 +123,6 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
         nama: nama.trim(),
         kelas: kelasGabungan,
         organisasi,
-        latitude: coords.latitude,
-        longitude: coords.longitude,
       }),
     })
     const json = await res.json()
@@ -238,9 +217,7 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
                 </div>
               </div>
             </div>
-            <div className={`rounded-xl border p-3 text-xs flex items-start gap-2 ${coords ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-amber-50 border-amber-100 text-amber-700'}`}>
-              {coords ? 'GPS terbaca. Sistem akan validasi jarak dari sekolah saat submit.' : (geoError || 'Membaca lokasi GPS...')}
-            </div>
+
             <div className="form-group">
               <div className="flex justify-between items-center">
                 <label className="label">Nama Lengkap *</label>

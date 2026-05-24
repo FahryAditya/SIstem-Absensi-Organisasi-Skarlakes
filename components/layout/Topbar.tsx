@@ -78,11 +78,13 @@ export default function Topbar({
         {open && (
           <>
             <div className="fixed inset-0" onClick={() => setOpen(false)} />
-            <div className="absolute right-0 top-full mt-1.5 w-56 bg-white rounded-xl shadow-xl border border-[rgba(84,130,180,0.15)] py-1.5 z-50 fade-in">
-              <div className="px-4 py-3 border-b border-[rgba(84,130,180,0.15)]">
-                <div className="flex items-center gap-2 mb-1">
-                  <Contact className="w-4 h-4 text-[#5482B4]" />
-                  <div className="text-sm font-bold text-[#011025]">{user.nama}</div>
+            <div className="absolute right-0 top-full mt-2 w-64 bg-white/95 backdrop-blur-xl rounded-2xl shadow-[0_8px_30px_rgb(1,16,37,0.08)] border border-[rgba(84,130,180,0.12)] py-2 z-50 select-dropdown-enter">
+              <div className="px-4 py-3 border-b border-[rgba(84,130,180,0.08)] mb-1">
+                <div className="flex items-center gap-2.5 mb-1.5">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#5482B4]/20 to-[#052659]/10 flex items-center justify-center">
+                    <Contact className="w-4 h-4 text-[#052659]" />
+                  </div>
+                  <div className="text-sm font-black text-[#011025]">{user.nama}</div>
                 </div>
                 <div className="text-xs text-[#7EA0C5]">{user.email}</div>
                 <div className="text-[11px] font-semibold text-[#052659] mt-1">{ROLE_LABELS[user.role]}</div>
@@ -91,9 +93,11 @@ export default function Topbar({
                 <button
                   onClick={handleLogout}
                   disabled={loggingOut}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-red-600 hover:text-red-700 hover:bg-red-50/80 rounded-xl transition-all duration-200"
                 >
-                  {loggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
+                  <div className="w-7 h-7 rounded-lg bg-red-100/50 flex items-center justify-center">
+                    {loggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
+                  </div>
                   {loggingOut ? 'Logging out...' : 'Logout'}
                 </button>
               </div>
