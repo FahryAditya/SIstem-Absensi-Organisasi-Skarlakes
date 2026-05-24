@@ -35,10 +35,12 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
     items.push({ type: 'badge', role })
   }
 
-  items.push({ type: 'section', label: 'Utama' })
-  items.push({ type: 'link', href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard })
+  items.push({ type: 'section', label: 'Dashboard' })
+  items.push({ type: 'link', href: '/dashboard', label: 'Ringkasan Utama', icon: LayoutDashboard })
   items.push({ type: 'link', href: '/leaderboard', label: 'Leaderboard', icon: Trophy })
   items.push({ type: 'link', href: '/pencapaian', label: 'Pencapaian', icon: Star })
+
+  items.push({ type: 'section', label: 'Kegiatan' })
   items.push({ type: 'link', href: '/materi', label: role === 'admin_osis_mpk' ? 'Jadwal Rapat' : 'Materi Hari Ini', icon: BookOpen })
   items.push({ type: 'link', href: '/jadwal', label: role === 'admin_osis_mpk' ? 'Pembawa Materi' : 'Jadwal Pengajar', icon: CalendarDays })
   items.push({ type: 'link', href: '/laporan', label: 'Laporan Statistik', icon: BarChart3 })
@@ -162,18 +164,20 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
             }}
             target={item.target}
             className={cn(
-              'nav-link flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200',
-              active ? 'bg-[#5482B4]/20 text-white border border-[#5482B4]/30 font-extrabold' : 'text-white hover:bg-white/5 hover:text-white',
+              'group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ease-out',
+              active 
+                ? 'bg-gradient-to-r from-[#5482B4]/20 to-transparent text-white border-l-4 border-[#5482B4] font-bold shadow-[0_4px_20px_-5px_rgba(84,130,180,0.3)]' 
+                : 'text-slate-400 hover:text-white hover:bg-white/5 hover:translate-x-1',
               isNonaktif && 'opacity-60 cursor-not-allowed'
             )}
           >
-            <Icon className={cn("w-4 h-4 flex-shrink-0", active ? "text-[#C2E8FF]" : "text-inherit")} />
+            <Icon className={cn("w-5 h-5 transition-transform duration-300 group-hover:scale-110", active ? "text-[#C2E8FF]" : "text-slate-500 group-hover:text-white")} />
             {!isCollapsed && (
-              <span className={cn("flex-1 truncate text-[13px]", active && "font-semibold")}>
+              <span className={cn("flex-1 truncate text-[14px]", active && "font-semibold")}>
                 {item.label}
               </span>
             )}
-            {!isCollapsed && active && <ChevronRight className="w-3 h-3 opacity-40" />}
+            {!isCollapsed && active && <div className="w-1.5 h-1.5 rounded-full bg-[#5482B4] shadow-[0_0_8px_#5482B4]" />}
           </Link>
         )
     }
