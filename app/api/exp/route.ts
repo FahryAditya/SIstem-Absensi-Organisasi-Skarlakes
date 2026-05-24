@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
 import { updateExp } from '@/lib/exp'
-import { isAdministrator } from '@/lib/auth'
+import { isAdministrator, getAccessibleOrgs } from '@/lib/auth'
 import { z } from 'zod'
 
 function getCtx(req: NextRequest) {
@@ -24,7 +24,8 @@ const postSchema = z.object({
 // GET: Riwayat exp_log (filter by tipe + id, atau semua)
 export async function GET(req: NextRequest) {
   const { userRole } = getCtx(req)
-  if (!isAdministrator(userRole)) {
+  const accessible = getAccessibleOrgs(userRole)
+  if (accessible.length === 0) {
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
   }
 
@@ -35,9 +36,11 @@ export async function GET(req: NextRequest) {
   const page = parseInt(searchParams.get('page') || '1')
   const limit = parseInt(searchParams.get('limit') || '20')
 
-  const where: Record<string, unknown> = {}
+  const where: Record<string, unknown> = { organisasi: { in: accessible } }
   if (tipeAnggota) where.tipe_anggota = tipeAnggota
-  if (organisasi) where.organisasi = organisasi
+  if (organisasi && accessible.includes(organisasi)) {
+    where.organisasi = organisasi
+  }
   if (targetId) {
     const tid = parseInt(targetId)
     if (tipeAnggota === 'siswa') where.siswa_id = tid
@@ -61,7 +64,8 @@ export async function GET(req: NextRequest) {
 // POST: Admin tambah/kurangi EXP manual
 export async function POST(req: NextRequest) {
   const ctx = getCtx(req)
-  if (!isAdministrator(ctx.userRole)) {
+  const accessible = getAccessibleOrgs(ctx.userRole)
+  if (accessible.length === 0) {
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
   }
 
@@ -73,6 +77,10 @@ export async function POST(req: NextRequest) {
     }
 
     const { tipe_anggota, target_id, selisih, alasan, organisasi } = parsed.data
+
+    if (!accessible.includes(organisasi)) {
+      return NextResponse.json({ error: 'Anda tidak memiliki akses ke organisasi ini' }, { status: 403 })
+    }
 
     const result = await updateExp({
       tipeAnggota: tipe_anggota,

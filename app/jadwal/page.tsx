@@ -15,10 +15,10 @@ interface JadwalItem {
 }
 
 const ORG_TABS = [
-  { key: 'programming', label: 'Programming', color: 'from-blue-500 to-cyan-500' },
-  { key: 'english', label: 'English Club', color: 'from-emerald-500 to-teal-500' },
-  { key: 'osis', label: 'OSIS', color: 'from-purple-500 to-violet-500' },
-  { key: 'mpk', label: 'MPK', color: 'from-orange-500 to-amber-500' },
+  { key: 'programming', label: 'Programming', color: 'from-blue-500 to-cyan-500', isEkskul: true },
+  { key: 'english', label: 'English Club', color: 'from-emerald-500 to-teal-500', isEkskul: true },
+  { key: 'osis', label: 'OSIS', color: 'from-purple-500 to-violet-500', isEkskul: false },
+  { key: 'mpk', label: 'MPK', color: 'from-orange-500 to-amber-500', isEkskul: false },
 ]
 
 const emptyForm = { judul: '', tanggal: '', waktu: '', lokasi: '', keterangan: '', organisasi: 'programming', wajib_hadir: false }
@@ -92,9 +92,9 @@ export default function JadwalPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <CalendarDays className="w-5 h-5 text-blue-400" />
-              <h1 className="text-2xl font-bold">Jadwal Kegiatan</h1>
+              <h1 className="text-2xl font-bold">{tabInfo.isEkskul ? 'Jadwal Pengajar' : 'Pembawa Materi'}</h1>
             </div>
-            <p className="text-slate-400 text-sm">Jadwal pengajar ekskul & rapat organisasi</p>
+            <p className="text-slate-400 text-sm">{tabInfo.isEkskul ? 'Jadwal pengajar ekstrakurikuler' : 'Jadwal pembawa materi rapat organisasi'}</p>
           </div>
           <button onClick={openCreate}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r ${tabInfo.color} text-white font-medium text-sm hover:opacity-90 transition`}>

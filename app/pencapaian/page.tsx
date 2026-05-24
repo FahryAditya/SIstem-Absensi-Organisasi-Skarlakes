@@ -27,6 +27,7 @@ const emptyForm = { icon: 'star', nama: '', deskripsi: '', exp_reward: 10, organ
 export default function PencapaianPage() {
   const [data, setData] = useState<Pencapaian[]>([])
   const [loading, setLoading] = useState(true)
+  const [userRole, setUserRole] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editItem, setEditItem] = useState<Pencapaian | null>(null)
   const [form, setForm] = useState(emptyForm)
@@ -50,6 +51,15 @@ export default function PencapaianPage() {
   }, [])
 
   useEffect(() => { fetch_(filterOrg || undefined) }, [filterOrg, fetch_])
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(d => setUserRole(d.user?.role || ''))
+      .catch(() => {})
+  }, [])
+
+  const isAdministrator = userRole === 'administrator'
 
   function openCreate() { setForm({ ...emptyForm }); setEditItem(null); setShowModal(true) }
   function openEdit(item: Pencapaian) {
@@ -149,10 +159,12 @@ export default function PencapaianPage() {
             </div>
             <p className="text-slate-400 text-sm">Buat, edit, dan berikan pencapaian ke anggota</p>
           </div>
-          <button onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-medium text-sm hover:opacity-90 transition">
-            <Plus className="w-4 h-4" /> Buat Pencapaian
-          </button>
+          {isAdministrator && (
+            <button onClick={openCreate}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-medium text-sm hover:opacity-90 transition">
+              <Plus className="w-4 h-4" /> Buat Pencapaian
+            </button>
+          )}
         </div>
 
         {/* Filter */}
@@ -189,8 +201,12 @@ export default function PencapaianPage() {
                       <Sparkles className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => openEdit(item)} className="p-1.5 text-slate-400 hover:text-blue-400 transition"><Pencil className="w-3.5 h-3.5" /></button>
-                      <button onClick={() => handleDelete(item.id)} className="p-1.5 text-slate-400 hover:text-red-400 transition"><Trash2 className="w-3.5 h-3.5" /></button>
+                      {isAdministrator && (
+                        <>
+                          <button onClick={() => openEdit(item)} className="p-1.5 text-slate-400 hover:text-blue-400 transition"><Pencil className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => handleDelete(item.id)} className="p-1.5 text-slate-400 hover:text-red-400 transition"><Trash2 className="w-3.5 h-3.5" /></button>
+                        </>
+                      )}
                     </div>
                   </div>
                   <h3 className="font-semibold text-white mb-1">{item.nama}</h3>

@@ -96,7 +96,7 @@ export default function MateriPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               {isEkskul ? <BookOpen className="w-5 h-5 text-blue-400" /> : <FileText className="w-5 h-5 text-purple-400" />}
-              <h1 className="text-2xl font-bold">{isEkskul ? 'Materi Hari Ini' : 'Pembahasan Rapat'}</h1>
+              <h1 className="text-2xl font-bold">{isEkskul ? 'Materi Hari Ini' : 'Jadwal Rapat'}</h1>
             </div>
             <p className="text-slate-400 text-sm">{isEkskul ? 'Dokumentasi materi pertemuan ekskul' : 'Notulen dan agenda rapat organisasi'}</p>
           </div>

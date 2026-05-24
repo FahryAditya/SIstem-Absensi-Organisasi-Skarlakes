@@ -8,7 +8,8 @@ import { ROLE_LABELS } from '@/lib/auth-shared'
 import Image from 'next/image'
 import {
   LayoutDashboard, Users, ClipboardList, Building2, UserCog,
-  Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode, UserX, Megaphone, BarChart3, Camera
+  Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode, UserX, Megaphone, BarChart3, Camera,
+  Trophy, Star, BookOpen, CalendarDays, ClipboardCheck, Zap
 } from 'lucide-react'
 import AnimatedList from '../AnimatedList'
 
@@ -36,7 +37,12 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
 
   items.push({ type: 'section', label: 'Utama' })
   items.push({ type: 'link', href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard })
+  items.push({ type: 'link', href: '/leaderboard', label: 'Leaderboard', icon: Trophy })
+  items.push({ type: 'link', href: '/pencapaian', label: 'Pencapaian', icon: Star })
+  items.push({ type: 'link', href: '/materi', label: role === 'admin_osis_mpk' ? 'Jadwal Rapat' : 'Materi Hari Ini', icon: BookOpen })
+  items.push({ type: 'link', href: '/jadwal', label: role === 'admin_osis_mpk' ? 'Pembawa Materi' : 'Jadwal Pengajar', icon: CalendarDays })
   items.push({ type: 'link', href: '/laporan', label: 'Laporan Statistik', icon: BarChart3 })
+  items.push({ type: 'link', href: '/rekap-absensi', label: 'Rekap Absensi', icon: ClipboardCheck })
   items.push({ type: 'link', href: '/kas', label: 'Buku Kas', icon: Wallet })
   items.push({ type: 'link', href: '/pengeluaran', label: 'Pengeluaran Kas', icon: HandCoins })
   items.push({ type: 'link', href: '/dokumentasi', label: 'Dokumentasi', icon: Camera })
@@ -61,6 +67,7 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
   }
 
   items.push({ type: 'section', label: 'Tools' })
+  items.push({ type: 'link', href: '/admin/exp', label: 'Kelola EXP', icon: Zap })
   if (role === 'administrator') {
     items.push({ type: 'link', href: '/admin', label: 'Kelola User', icon: UserCog })
   }
