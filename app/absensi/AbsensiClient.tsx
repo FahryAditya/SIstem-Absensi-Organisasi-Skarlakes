@@ -7,9 +7,41 @@ import { StatusBadge, OrgBadge } from '@/components/ui/Badges'
 import { formatDate, formatCurrency, STATUS_LABELS } from '@/lib/utils'
 import { canAccessProgramming, canAccessEnglish } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
-import { ClipboardList, Save, Calendar, Filter, Loader2, CheckCircle2, XCircle, Clock, Heart, Banknote, Users } from 'lucide-react'
-import { format } from 'date-fns'
+import { ClipboardList, Save, Calendar, Filter, Loader2, CheckCircle2, XCircle, Clock, Heart, Banknote, Users, Sparkles } from 'lucide-react'
+import { AWARDS_DATA } from '@/lib/awards'
+import Modal from '@/components/ui/Modal'
 import Select from '@/components/ui/Select'
+import toast from 'react-hot-toast'
+
+// ... in AbsensiClient ...
+  const [awardModalOpen, setAwardModalOpen] = useState(false)
+  const [selectedStudent, setSelectedStudent] = useState<{ id: number; nama: string; org: string } | null>(null)
+  const [awardId, setAwardId] = useState<number | null>(null)
+  const [givingAward, setGivingAward] = useState(false)
+
+  async function handleGiveAward() {
+    if (!selectedStudent || !awardId) {
+      toast.error('Pilih penghargaan terlebih dahulu')
+      return
+    }
+    setGivingAward(true)
+    const tipe = selectedStudent.org === 'osis' ? 'anggota_osis' : selectedStudent.org === 'mpk' ? 'anggota_mpk' : 'siswa'
+    const res = await fetch('/api/pencapaian/berikan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pencapaian_id: awardId,
+        penerima: [{ tipe_anggota: tipe, target_id: selectedStudent.id }]
+      })
+    })
+    const json = await res.json()
+    if (!res.ok) toast.error(json.error || 'Gagal')
+    else {
+      toast.success('Penghargaan berhasil diberikan')
+      setAwardModalOpen(false)
+    }
+    setGivingAward(false)
+  }
 
 interface Siswa { id: number; nama: string; kelas: string | null; ekskul: string }
 interface AbsensiRow { siswa_id: number; nama: string; kelas: string | null; ekskul: string; status: string; uang_kas: number; keterangan: string }
@@ -223,7 +255,7 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
                       <th className="th w-40">Keterangan</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-slate-100">
                     {bulkRows.map((row, i) => {
                       const statusOpt = STATUS_OPTIONS.find(s => s.value === row.status)
                       return (
@@ -260,12 +292,18 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
                                 placeholder="0" />
                             </div>
                           </td>
-                          <td className="td">
+                          <td className="td flex gap-2">
                             <input type="text"
                               value={row.keterangan}
                               onChange={e => updateRow(i, 'keterangan', e.target.value)}
-                              className="input py-1.5 text-xs"
+                              className="input py-1.5 text-xs flex-1"
                               placeholder="Opsional..." />
+                            <button onClick={() => { 
+                              setSelectedStudent({ id: row.siswa_id, nama: row.nama, org: bulkOrg })
+                              setAwardModalOpen(true) 
+                            }} className="btn-icon text-yellow-500 hover:bg-yellow-50" title="Beri Penghargaan">
+                              <Sparkles className="w-4 h-4" />
+                            </button>
                           </td>
                         </tr>
                       )
@@ -324,6 +362,29 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
           />
         </div>
       )}
+
+      <Modal open={awardModalOpen} title="Beri Penghargaan" onClose={() => setAwardModalOpen(false)} size="md"
+        footer={
+          <div className="flex gap-2 justify-end">
+            <button onClick={() => setAwardModalOpen(false)} className="btn-secondary">Batal</button>
+            <button onClick={handleGiveAward} disabled={givingAward} className="btn-primary">
+              {givingAward ? 'Mengirim...' : 'Berikan Penghargaan'}
+            </button>
+          </div>
+        }>
+        <div className="space-y-4">
+          <p className="text-xs text-slate-500">Memberikan penghargaan kepada <b>{selectedStudent?.nama}</b></p>
+          <div className="form-group">
+            <label className="label">Jenis Penghargaan *</label>
+            <Select
+              value={awardId ? awardId.toString() : ''}
+              onChange={(val) => setAwardId(parseInt(val))}
+              options={AWARDS_DATA[bulkOrg]?.map(a => ({ value: a.id.toString(), label: a.nama })) || []}
+              placeholder="Pilih Penghargaan"
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
