@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { CalendarDays, Plus, Pencil, Trash2, Clock, MapPin, AlertCircle } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { CalendarDays, Plus, Pencil, Trash2, Clock, MapPin, AlertCircle, ArrowLeft } from 'lucide-react'
 
 interface JadwalItem {
   id: number
@@ -28,6 +29,7 @@ function isUpcoming(tgl: string) {
 }
 
 export default function JadwalPage() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState('programming')
   const [data, setData] = useState<JadwalItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -88,6 +90,11 @@ export default function JadwalPage() {
   return (
     <div className="min-h-screen bg-[#0f1117] text-white p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
+        <div className="mb-4">
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Kembali
+          </button>
+        </div>
         <div className="flex items-center justify-between mb-8">
           <div>
             <div className="flex items-center gap-2 mb-1">

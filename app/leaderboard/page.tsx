@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Trophy, Medal, Star, TrendingUp, Users, Crown } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Trophy, Medal, Star, TrendingUp, Users, Crown, ArrowLeft } from 'lucide-react'
 import { pusherClient } from '@/lib/pusher-client'
 
 interface LeaderboardEntry {
@@ -45,6 +46,7 @@ const LEVEL_COLORS: Record<string, string> = {
 }
 
 export default function LeaderboardPage() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState('programming')
   const [data, setData] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -99,6 +101,11 @@ export default function LeaderboardPage() {
     <div className="min-h-screen bg-[#0f1117] text-white">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
+        <div className="mb-4">
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Kembali
+          </button>
+        </div>
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/30 rounded-full px-4 py-1.5 mb-4">
             <Trophy className="w-4 h-4 text-yellow-400" />

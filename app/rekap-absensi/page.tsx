@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { BarChart3, Flame, CheckCircle2, TrendingUp, Calendar, ChevronDown, ChevronUp } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { BarChart3, Flame, CheckCircle2, TrendingUp, Calendar, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react'
 
 interface RekapData {
   id: number
@@ -34,6 +35,7 @@ const ORG_TABS = [
 ]
 
 export default function RekapAbsensiPage() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState(0)
   const [members, setMembers] = useState<{ id: number; nama: string; kelas?: string | null }[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
@@ -81,6 +83,11 @@ export default function RekapAbsensiPage() {
     <div className="min-h-screen bg-[#0f1117] text-white p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
+        <div className="mb-4">
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Kembali
+          </button>
+        </div>
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-1">
             <BarChart3 className="w-5 h-5 text-blue-400" />

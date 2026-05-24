@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { BookOpen, FileText, Plus, Pencil, Trash2, Calendar, MapPin, ChevronDown } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { BookOpen, FileText, Plus, Pencil, Trash2, Calendar, MapPin, ChevronDown, ArrowLeft } from 'lucide-react'
 
 interface MateriItem {
   id: number
@@ -30,6 +31,7 @@ const ORG_COLORS: Record<string, string> = {
 const emptyForm = { judul: '', deskripsi: '', tanggal: '', organisasi: 'programming', notulen: '', lokasi: '' }
 
 export default function MateriPage() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState('programming')
   const [data, setData] = useState<MateriItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -92,6 +94,11 @@ export default function MateriPage() {
     <div className="min-h-screen bg-[#0f1117] text-white p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
+        <div className="mb-4">
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Kembali
+          </button>
+        </div>
         <div className="flex items-center justify-between mb-8">
           <div>
             <div className="flex items-center gap-2 mb-1">

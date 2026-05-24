@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Trophy, Plus, Pencil, Trash2, Gift, Sparkles, Loader2, CheckSquare, Square } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Trophy, Plus, Pencil, Trash2, Gift, Sparkles, Loader2, CheckSquare, Square, ArrowLeft } from 'lucide-react'
 
 interface Pencapaian {
   id: number
@@ -25,6 +26,7 @@ const ORG_OPTIONS = ['programming', 'english', 'osis', 'mpk', 'semua']
 const emptyForm = { icon: 'star', nama: '', deskripsi: '', exp_reward: 10, organisasi: 'programming' }
 
 export default function PencapaianPage() {
+  const router = useRouter()
   const [data, setData] = useState<Pencapaian[]>([])
   const [loading, setLoading] = useState(true)
   const [userRole, setUserRole] = useState('')
@@ -151,6 +153,11 @@ export default function PencapaianPage() {
     <div className="min-h-screen bg-[#0f1117] text-white p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
+        <div className="mb-4">
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Kembali
+          </button>
+        </div>
         <div className="flex items-center justify-between mb-8">
           <div>
             <div className="flex items-center gap-2 mb-1">
