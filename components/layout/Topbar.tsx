@@ -49,8 +49,8 @@ export default function Topbar({
 
       <h1 className="flex-1 text-sm font-bold text-[#011025] truncate">{pageTitle}</h1>
 
-      <button onClick={() => setToolsOpen(true)} className="btn-icon hidden sm:inline-flex" aria-label="Tools">
-        <Settings className="w-5 h-5 text-slate-600" />
+      <button onClick={() => setToolsOpen(true)} className="btn-icon" aria-label="Tools Menu">
+        <Menu className="w-5 h-5 text-slate-600" />
       </button>
 
       <div className="relative">
@@ -102,8 +102,8 @@ export default function Topbar({
             isFixed
             position="right"
             items={[
+              { label: 'Mode Presentasi', ariaLabel: 'Mode Presentasi', link: '#mode-presentasi' },
               { label: 'Presentasi File', ariaLabel: 'Presentasi File', link: '#presentasi' },
-              { label: 'Client', ariaLabel: 'Client', link: '#client' },
               { label: 'Dokumentasi', ariaLabel: 'Dokumentasi', link: '#dokumentasi' },
               ...(user.role === 'administrator'
                 ? [{ label: 'Logout', ariaLabel: 'Logout', link: '#logout' }]
