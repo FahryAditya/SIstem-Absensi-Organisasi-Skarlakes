@@ -107,7 +107,7 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
       return
     }
     if (trimmedNama.length > 50) {
-      toast.error('Nama terlalu panjang (maksimal 50 karakter)')
+      toast.error('Nama terlalu panjang bangg (maksimal 50 karakter)')
       setNama('')
       return
     }
