@@ -119,12 +119,19 @@ export default function AdminClient({ user }: Props) {
   useEffect(() => {
     if (!awardOrg) return
     async function fetchData() {
-      // Fetch students based on org
-      let endpoint = awardOrg === 'osis' ? '/api/organisasi/osis' : 
-                     awardOrg === 'mpk' ? '/api/organisasi/mpk' : 
-                     `/api/siswa?ekskul=${awardOrg}`
+      // Fetch students based on org using correct parameters
+      let endpoint = (awardOrg === 'osis' || awardOrg === 'mpk') 
+        ? `/api/organisasi?tipe=${awardOrg}` 
+        : `/api/siswa?ekskul=${awardOrg}`
+        
       const studentData = await fetchJsonCachedUrl<{ data?: any[] }>(endpoint)
-      setStudents(studentData.data || [])
+      
+      // Handle the fact that /api/organisasi might return object with keys or just data array
+      let studentsList = studentData.data || []
+      if (awardOrg === 'osis' && (studentData as any).osis) studentsList = (studentData as any).osis
+      if (awardOrg === 'mpk' && (studentData as any).mpk) studentsList = (studentData as any).mpk
+      
+      setStudents(studentsList)
 
       // Use local AWARDS_DATA
       setAwards(AWARDS_DATA[awardOrg] || [])
