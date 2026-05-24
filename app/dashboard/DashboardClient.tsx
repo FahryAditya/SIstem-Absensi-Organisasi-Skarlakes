@@ -408,22 +408,10 @@ export default function DashboardClient({ user }: Props) {
               </div>
             )}
           </div>
-          {/* Tombol Mode Presentasi & Presentasi File & Dokumentasi */}
+          {/* Tombol Mode Presentasi & Presentasi File */}
           <div className="flex-shrink-0 flex flex-col sm:flex-row gap-2">
             <PresentationMode stats={stats} charts={charts} user={user} />
             <FilePresentationMode user={user} />
-            <Link
-              href="/dokumentasi"
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl
-                bg-[#0d9488] text-white shadow-lg shadow-teal-500/20
-                hover:bg-[#0f766e] hover:shadow-xl hover:shadow-teal-500/30
-                hover:-translate-y-0.5 active:scale-95
-                transition-all duration-200 border border-white/10"
-              title="Buka Dokumentasi"
-            >
-              <Camera className="w-4 h-4" />
-              <span>Dokumentasi</span>
-            </Link>
           </div>
         </div>
       </div>
