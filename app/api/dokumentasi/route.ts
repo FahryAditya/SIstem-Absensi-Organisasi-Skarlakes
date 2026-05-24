@@ -191,6 +191,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Cloudinary belum dikonfigurasi pada server.' }, { status: 500 })
     }
 
+    // Validasi ukuran file (maksimal 10MB)
+    const MAX_FILE_SIZE = 10 * 1024 * 1024
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: 'Ukuran file terlalu besar (maksimal 10MB)' }, { status: 400 })
+    }
+
+    // Validasi tipe file (image dan video saja)
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime']
+    if (!validTypes.includes(file.type)) {
+      return NextResponse.json({ error: 'Format file tidak didukung' }, { status: 400 })
+    }
+
+    const isVideo = file.type.startsWith('video/')
+    const resourceType = isVideo ? 'video' : 'image'
+
     let imageUrl = ''
     let publicId = ''
 
@@ -202,14 +217,14 @@ export async function POST(req: NextRequest) {
 
       const uploadResult = await cloudinary.uploader.upload(base64Image, {
         folder: 'artemis_dokumentasi',
-        resource_type: 'image',
+        resource_type: resourceType,
       })
 
       imageUrl = uploadResult.secure_url
       publicId = uploadResult.public_id
     } catch (uploadError: any) {
       console.error('Cloudinary upload error:', uploadError)
-      return NextResponse.json({ error: 'Gagal mengunggah gambar ke cloud storage' }, { status: 500 })
+      return NextResponse.json({ error: `Gagal mengunggah ${isVideo ? 'video' : 'gambar'} ke cloud storage` }, { status: 500 })
     }
 
     // Simpan ke Neon PostgreSQL
@@ -220,6 +235,7 @@ export async function POST(req: NextRequest) {
         deskripsi,
         image_url: imageUrl,
         public_id: publicId,
+        media_type: resourceType,
         tanggal: tanggalVal,
         created_by: userId,
       },
@@ -237,7 +253,7 @@ export async function POST(req: NextRequest) {
       aksi: 'CREATE',
       tabel: 'dokumentasi_foto',
       recordId: newPhoto.id.toString(),
-      deskripsi: `Mengunggah foto dokumentasi kegiatan "${judul}" untuk organisasi ${organisasiType.toUpperCase()}`,
+      deskripsi: `Mengunggah ${resourceType} dokumentasi kegiatan "${judul}" untuk organisasi ${organisasiType.toUpperCase()}`,
       ipAddress: getIp(req),
     })
 

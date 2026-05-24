@@ -322,6 +322,7 @@ model DokumentasiFoto {
   created_by      Int
   created_at      DateTime       @default(now())
   updated_at      DateTime       @updatedAt
+  media_type      String?        @default("image") @db.VarChar(20)
   creator         User           @relation("FotoCreatedBy", fields: [created_by], references: [id])
 
   @@index([organisasi_type])
