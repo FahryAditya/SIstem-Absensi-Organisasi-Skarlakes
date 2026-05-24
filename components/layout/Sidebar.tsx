@@ -173,7 +173,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
           >
             <Icon className={cn("w-5 h-5 transition-transform duration-300 group-hover:scale-110", active ? "text-[#C2E8FF]" : "text-slate-500 group-hover:text-white")} />
             {!isCollapsed && (
-              <span className={cn("flex-1 truncate text-[14px]", active && "font-semibold")}>
+              <span className={cn("flex-1 truncate text-[13px]", active ? "font-semibold text-white" : "font-medium text-slate-300")}>
                 {item.label}
               </span>
             )}
