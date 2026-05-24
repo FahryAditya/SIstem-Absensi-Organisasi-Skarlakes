@@ -119,17 +119,26 @@ export default function AdminClient({ user }: Props) {
   useEffect(() => {
     if (!awardOrg) return
     async function fetchData() {
-      // Fetch students based on org using correct parameters
-      let endpoint = (awardOrg === 'osis' || awardOrg === 'mpk') 
-        ? `/api/organisasi?tipe=${awardOrg}` 
-        : `/api/siswa?ekskul=${awardOrg}`
+      // Fetch students/members based on org
+      let endpoint = ''
+      
+      if (awardOrg === 'osis' || awardOrg === 'mpk') {
+        endpoint = `/api/organisasi?tipe=${awardOrg}`
+      } else {
+        // Set a high limit to get all students
+        endpoint = `/api/siswa?ekskul=${awardOrg}&limit=1000`
+      }
         
-      const studentData = await fetchJsonCachedUrl<{ data?: any[] }>(endpoint)
+      const response = await fetch(endpoint)
+      const studentData = await response.json()
       
       // Handle the fact that /api/organisasi might return object with keys or just data array
-      let studentsList = studentData.data || []
-      if (awardOrg === 'osis' && (studentData as any).osis) studentsList = (studentData as any).osis
-      if (awardOrg === 'mpk' && (studentData as any).mpk) studentsList = (studentData as any).mpk
+      // and /api/siswa returns { data: [] }
+      let studentsList = []
+      if (awardOrg === 'osis' && studentData.osis) studentsList = studentData.osis
+      else if (awardOrg === 'mpk' && studentData.mpk) studentsList = studentData.mpk
+      else if (studentData.data) studentsList = studentData.data
+      else if (Array.isArray(studentData)) studentsList = studentData
       
       setStudents(studentsList)
 
