@@ -244,38 +244,35 @@ async function buildKehadiranRows(orgs: Org[], range: { start: Date; end: Date }
   return rows
 }
 
-async function buildMemberRows(orgs: Org[], kelas: string, nama: string) {
+
+async function buildMemberExportRows(orgs: Org[], kelas: string, nama: string) {
   const rows: Record<string, unknown>[] = []
 
   for (const org of orgs) {
     if (org === 'programming' || org === 'english') {
       const data = await prisma.siswa.findMany({ where: { ekskul: org, ...memberWhere(kelas, nama) }, orderBy: { nama: 'asc' } })
       data.forEach((s) => rows.push({
-        No: rows.length + 1,
+        NAMA: s.nama,
+        KELAS: s.kelas || '-',
         NIS: s.nis || '-',
-        Nama: s.nama,
-        Kelas: s.kelas || '-',
-        Ekskul: ORG_LABELS[org],
-        'Tanggal Daftar': formatDate(s.created_at),
+        GMAIL: s.email || '-',
       }))
     } else {
       const data = org === 'osis'
         ? await prisma.anggotaOsis.findMany({ where: memberWhere(kelas, nama), orderBy: { nama: 'asc' } })
         : await prisma.anggotaMpk.findMany({ where: memberWhere(kelas, nama), orderBy: { nama: 'asc' } })
       data.forEach((a) => rows.push({
-        No: rows.length + 1,
+        NAMA: a.nama,
+        KELAS: a.kelas || '-',
         NIS: a.nis || '-',
-        Nama: a.nama,
-        Kelas: a.kelas || '-',
-        Ekskul: ORG_LABELS[org],
-        Jabatan: a.jabatan || '-',
-        'Tanggal Daftar': formatDate(a.created_at),
+        GMAIL: a.email || '-',
       }))
     }
   }
 
   return rows
 }
+
 
 export async function GET(req: NextRequest) {
   const ctx = getCtx(req)
@@ -343,7 +340,9 @@ export async function GET(req: NextRequest) {
     appendJsonSheet(wb, await buildKehadiranRows(selectedOrgs, range, kelas, nama), 'Kehadiran', [5, 18, 30, 14, 18, 16, 10, 14, 10, 10, 18])
   }
   if (addSiswa) {
-    appendJsonSheet(wb, await buildMemberRows(selectedOrgs, kelas, nama), 'Anggota', [5, 14, 30, 14, 18, 22, 18])
+    // Export member list with custom headers: NAMA, KELAS, NIS, GMAIL
+    const memberExportRows = await buildMemberExportRows(selectedOrgs, kelas, nama);
+    appendJsonSheet(wb, memberExportRows, 'Anggota', [20, 10, 20, 30]);
   }
 
   await createLog({
