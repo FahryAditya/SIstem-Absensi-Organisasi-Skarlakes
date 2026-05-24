@@ -410,6 +410,12 @@ export default function DashboardClient({ user }: Props) {
           </div>
           {/* Tombol Mode Presentasi & Presentasi File */}
           <div className="flex-shrink-0 flex flex-col sm:flex-row gap-2">
+            {user.role === 'administrator' && (
+              <Link href="/admin" className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-xl text-xs font-bold transition-all">
+                <Trophy className="w-4 h-4 text-yellow-300" />
+                Beri Penghargaan
+              </Link>
+            )}
             <PresentationMode stats={stats} charts={charts} user={user} />
             <FilePresentationMode user={user} />
           </div>
