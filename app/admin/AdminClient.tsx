@@ -157,6 +157,9 @@ export default function AdminClient({ user }: Props) {
     setGivingAward(false)
   }
 
+  // Stats by role
+  const roleCount = (role: string) => users.filter(u => u.role === role).length
+
   const columns = [
     { key: 'nama', label: 'Nama', render: (u: UserData) => (
       <div className="flex items-center gap-2.5">
