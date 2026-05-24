@@ -35,6 +35,12 @@ export default function AdminClient({ user }: Props) {
   const [fPassword, setFPassword] = useState('')
   const [fRole, setFRole] = useState<string>('admin_programming')
 
+  const [awardModalOpen, setAwardModalOpen] = useState(false)
+  const [awardOrg, setAwardOrg] = useState<string>('')
+  const [awardStudentId, setAwardStudentId] = useState<number | null>(null)
+  const [awardId, setAwardId] = useState<number | null>(null)
+  const [givingAward, setGivingAward] = useState(false)
+
   const load = useCallback(async () => {
     setLoading(true)
     const json = await fetchJsonCachedUrl<{ data?: UserData[] }>('/api/users')
@@ -106,8 +112,50 @@ export default function AdminClient({ user }: Props) {
     setOptimizeLoading(false)
   }
 
-  // Stats by role
-  const roleCount = (role: string) => users.filter(u => u.role === role).length
+  const [students, setStudents] = useState<any[]>([])
+  const [awards, setAwards] = useState<any[]>([])
+
+  useEffect(() => {
+    if (!awardOrg) return
+    async function fetchData() {
+      // Fetch students based on org
+      let endpoint = awardOrg === 'osis' ? '/api/organisasi/osis' : 
+                     awardOrg === 'mpk' ? '/api/organisasi/mpk' : 
+                     `/api/siswa?ekskul=${awardOrg}`
+      const studentData = await fetchJsonCachedUrl<{ data?: any[] }>(endpoint)
+      setStudents(studentData.data || [])
+
+      // Fetch awards based on org
+      const awardData = await fetchJsonCachedUrl<{ data?: any[] }>(`/api/pencapaian?organisasi=${awardOrg}`)
+      setAwards(awardData.data || [])
+    }
+    fetchData()
+  }, [awardOrg])
+
+  async function handleAwardSubmit() {
+    if (!awardOrg || !awardStudentId || !awardId) {
+      toast.error('Semua field wajib diisi')
+      return
+    }
+    setGivingAward(true)
+    const tipe = awardOrg === 'osis' ? 'anggota_osis' : awardOrg === 'mpk' ? 'anggota_mpk' : 'siswa'
+    const res = await fetch('/api/pencapaian/berikan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pencapaian_id: awardId,
+        penerima: [{ tipe_anggota: tipe, target_id: awardStudentId }]
+      })
+    })
+    const json = await res.json()
+    if (!res.ok) {
+      toast.error(json.error || 'Gagal memberikan penghargaan')
+    } else {
+      toast.success('Penghargaan berhasil diberikan')
+      setAwardModalOpen(false)
+    }
+    setGivingAward(false)
+  }
 
   const columns = [
     { key: 'nama', label: 'Nama', render: (u: UserData) => (
@@ -155,6 +203,10 @@ export default function AdminClient({ user }: Props) {
           <p className="page-sub mt-0.5">Buat, edit, dan hapus akun pengguna sistem</p>
         </div>
         <div className="flex gap-2">
+          <button onClick={() => setAwardModalOpen(true)} className="btn-secondary text-indigo-600 font-semibold">
+            <Sparkles className="w-4 h-4" />
+            Beri Penghargaan
+          </button>
           <button onClick={handleOptimize} disabled={optimizeLoading} className="btn-secondary text-[#5482B4] border-[#5482B4]/20 hover:bg-[#5482B4]/5">
             <span className="flex items-center gap-2 font-semibold">
               {optimizeLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Cpu className="w-4 h-4 text-emerald-500" />}
@@ -244,6 +296,54 @@ export default function AdminClient({ user }: Props) {
       <ConfirmDialog open={!!deleteTarget} title="Hapus User?"
         message={`Akun "${deleteTarget?.nama}" (${ROLE_LABELS[deleteTarget?.role || ''] || deleteTarget?.role}) akan dihapus permanen.`}
         loading={deleting} onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
+
+      {/* Modal Beri Penghargaan */}
+      <Modal open={awardModalOpen} title="Beri Penghargaan" onClose={() => setAwardModalOpen(false)} size="md"
+        footer={
+          <div className="flex gap-2 justify-end">
+            <button onClick={() => setAwardModalOpen(false)} className="btn-secondary">Batal</button>
+            <button onClick={handleAwardSubmit} disabled={givingAward} className="btn-primary">
+              {givingAward ? 'Mengirim...' : 'Berikan Penghargaan'}
+            </button>
+          </div>
+        }>
+        <div className="space-y-4">
+          <div className="form-group">
+            <label className="label">Organisasi *</label>
+            <Select
+              value={awardOrg}
+              onChange={(val) => { setAwardOrg(val); setAwardStudentId(null); setAwardId(null) }}
+              options={[
+                { value: 'osis', label: 'OSIS' },
+                { value: 'mpk', label: 'MPK' },
+                { value: 'english', label: 'English Club' },
+                { value: 'programming', label: 'Programming' },
+              ]}
+              placeholder="Pilih Organisasi"
+            />
+          </div>
+          <div className="form-group">
+            <label className="label">Siswa *</label>
+            <Select
+              value={awardStudentId ? awardStudentId.toString() : ''}
+              onChange={(val) => setAwardStudentId(parseInt(val))}
+              options={students.map(s => ({ value: s.id.toString(), label: s.nama }))}
+              placeholder="Pilih Siswa"
+              disabled={!awardOrg}
+            />
+          </div>
+          <div className="form-group">
+            <label className="label">Jenis Penghargaan *</label>
+            <Select
+              value={awardId ? awardId.toString() : ''}
+              onChange={(val) => setAwardId(parseInt(val))}
+              options={awards.map(a => ({ value: a.id.toString(), label: a.nama }))}
+              placeholder="Pilih Penghargaan"
+              disabled={!awardOrg}
+            />
+          </div>
+        </div>
+      </Modal>
 
       {/* Modal Hasil Optimasi */}
       <Modal

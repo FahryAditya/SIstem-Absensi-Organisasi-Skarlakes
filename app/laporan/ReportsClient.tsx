@@ -417,6 +417,11 @@ export default function ReportsClient({ user }: Props) {
         if (parsed.year === selectedYear) {
           return parsed.monthNum >= startMonthNum && parsed.monthNum <= endMonthNum
         }
+
+
+
+
+
         return false
       })
 
