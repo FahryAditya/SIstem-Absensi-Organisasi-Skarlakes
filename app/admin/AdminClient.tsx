@@ -115,6 +115,10 @@ export default function AdminClient({ user }: Props) {
   const [students, setStudents] = useState<any[]>([])
   const [awards, setAwards] = useState<any[]>([])
 
+import { AWARDS_DATA } from '@/lib/awards'
+
+// ... inside AdminClient component ...
+
   useEffect(() => {
     if (!awardOrg) return
     async function fetchData() {
@@ -125,9 +129,8 @@ export default function AdminClient({ user }: Props) {
       const studentData = await fetchJsonCachedUrl<{ data?: any[] }>(endpoint)
       setStudents(studentData.data || [])
 
-      // Fetch awards based on org
-      const awardData = await fetchJsonCachedUrl<{ data?: any[] }>(`/api/pencapaian?organisasi=${awardOrg}`)
-      setAwards(awardData.data || [])
+      // Use local AWARDS_DATA
+      setAwards(AWARDS_DATA[awardOrg] || [])
     }
     fetchData()
   }, [awardOrg])
