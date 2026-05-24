@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { canAccessProgramming, canAccessEnglish, canAccessOsis, canAccessMpk } from '@/lib/auth'
+import { getAccessibleOrgs } from '@/lib/auth-shared'
 
 function getCtx(req: NextRequest) {
   return { userRole: req.headers.get('x-user-role') || '' }
@@ -16,9 +16,8 @@ export async function GET(req: NextRequest) {
   if (!targetId) return NextResponse.json({ error: 'ID required' }, { status: 400 })
 
   if (tipe === 'siswa') {
-    if (ekskul === 'programming' && !canAccessProgramming(userRole))
-      return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
-    if (ekskul === 'english' && !canAccessEnglish(userRole))
+    const accessible = getAccessibleOrgs(userRole)
+    if (ekskul && !accessible.includes(ekskul))
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
 
     const [absensiList, siswa] = await Promise.all([
@@ -40,7 +39,8 @@ export async function GET(req: NextRequest) {
   }
 
   if (tipe === 'osis') {
-    if (!canAccessOsis(userRole)) return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+    const accessible = getAccessibleOrgs(userRole)
+    if (!accessible.includes('osis')) return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     const [absensiList, anggota] = await Promise.all([
       prisma.absensiOrganisasi.findMany({
         where: { anggota_osis_id: targetId },
@@ -58,7 +58,8 @@ export async function GET(req: NextRequest) {
   }
 
   if (tipe === 'mpk') {
-    if (!canAccessMpk(userRole)) return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+    const accessible = getAccessibleOrgs(userRole)
+    if (!accessible.includes('mpk')) return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     const [absensiList, anggota] = await Promise.all([
       prisma.absensiOrganisasi.findMany({
         where: { anggota_mpk_id: targetId },

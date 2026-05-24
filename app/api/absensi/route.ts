@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
-import { canAccessEnglish, canAccessProgramming } from '@/lib/auth'
+import { getAccessibleOrgs } from '@/lib/auth-shared'
 import { pusherServer } from '@/lib/pusher-server'
 import { updateExp } from '@/lib/exp'
 import { z } from 'zod'
@@ -24,9 +24,7 @@ export async function GET(req: NextRequest) {
   const limit = parseInt(searchParams.get('limit') || '20')
 
   // Build accessible ekskul filter
-  const accessible: string[] = []
-  if (canAccessProgramming(userRole)) accessible.push('programming')
-  if (canAccessEnglish(userRole)) accessible.push('english')
+  const accessible = getAccessibleOrgs(userRole)
 
   let ekskulFilter = accessible
   if (ekskul && accessible.includes(ekskul)) ekskulFilter = [ekskul]
@@ -114,10 +112,9 @@ export async function POST(req: NextRequest) {
   })
 
   for (const s of siswaList) {
-    if (s.ekskul === 'programming' && !canAccessProgramming(ctx.userRole))
-      return NextResponse.json({ error: 'Akses ditolak untuk ekskul Programming' }, { status: 403 })
-    if (s.ekskul === 'english' && !canAccessEnglish(ctx.userRole))
-      return NextResponse.json({ error: 'Akses ditolak untuk ekskul English' }, { status: 403 })
+    const accessible = getAccessibleOrgs(ctx.userRole)
+    if (!accessible.includes(s.ekskul))
+      return NextResponse.json({ error: `Akses ditolak untuk ekskul ${s.ekskul}` }, { status: 403 })
   }
 
   // Fetch existing absensi to calculate XP differences
@@ -221,9 +218,8 @@ export async function PUT(req: NextRequest) {
   })
   if (!existing) return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
 
-  if (existing.siswa.ekskul === 'programming' && !canAccessProgramming(ctx.userRole))
-    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
-  if (existing.siswa.ekskul === 'english' && !canAccessEnglish(ctx.userRole))
+  const accessible = getAccessibleOrgs(ctx.userRole)
+  if (!accessible.includes(existing.siswa.ekskul))
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
 
   const xpDiff = data.status
