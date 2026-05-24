@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
 import { canAccessEnglish, canAccessProgramming } from '@/lib/auth'
+import { pusherServer } from '@/lib/pusher-server'
+import { updateExp } from '@/lib/exp'
 import { z } from 'zod'
 
 function getCtx(req: NextRequest) {
@@ -46,8 +48,13 @@ export async function GET(req: NextRequest) {
       })
     ])
 
-    const absMap = Object.fromEntries(existingAbsensi.map(a => [a.siswa_id, a]))
-    const rows = siswaList.map(s => ({
+    const absMap = Object.fromEntries(
+      existingAbsensi.map((a: { siswa_id: number; status: string; uang_kas: number; keterangan: string | null }) => [
+        a.siswa_id,
+        a
+      ])
+    )
+    const rows = siswaList.map((s: { id: number; nama: string; kelas: string | null; ekskul: string }) => ({
       siswa_id: s.id,
       nama: s.nama,
       kelas: s.kelas,
@@ -113,34 +120,72 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Akses ditolak untuk ekskul English' }, { status: 403 })
   }
 
-  // Upsert all via database lock (safe from race condition)
-  const results = await Promise.all(rows.map(async (row) => {
-    return prisma.absensi.upsert({
-      where: {
-        siswa_id_tanggal: {
-          siswa_id: row.siswa_id,
-          tanggal: tanggalDate
-        }
-      },
-      update: {
-        status: row.status,
-        uang_kas: row.uang_kas,
-        keterangan: row.keterangan,
-        updated_by: ctx.userId
-      },
-      create: {
-        siswa_id: row.siswa_id,
-        tanggal: tanggalDate,
-        status: row.status,
-        uang_kas: row.uang_kas,
-        keterangan: row.keterangan,
-        created_by: ctx.userId
+  // Fetch existing absensi to calculate XP differences
+  const existingAbsensi = await prisma.absensi.findMany({
+    where: {
+      tanggal: tanggalDate,
+      siswa_id: { in: siswaIds }
+    },
+    select: { siswa_id: true, status: true }
+  })
+  const existingMap = Object.fromEntries(
+    existingAbsensi.map((a: { siswa_id: number; status: string }) => [a.siswa_id, a.status])
+  )
+
+  // Upsert absensi dan perubahan EXP dalam satu transaction.
+  const results = await prisma.$transaction(async (tx) => {
+    const saved = []
+
+    for (const row of rows) {
+      const prevStatus = existingMap[row.siswa_id]
+      const xpDiff = hitungSelisihExpAbsensi(prevStatus, row.status)
+
+      const upserted = await tx.absensi.upsert({
+        where: { siswa_id_tanggal: { siswa_id: row.siswa_id, tanggal: tanggalDate } },
+        update: { status: row.status, uang_kas: row.uang_kas, keterangan: row.keterangan, updated_by: ctx.userId },
+        create: { siswa_id: row.siswa_id, tanggal: tanggalDate, status: row.status, uang_kas: row.uang_kas, keterangan: row.keterangan, created_by: ctx.userId },
+      })
+
+      // Update EXP via updateExp() (wajib lewat fungsi ini)
+      if (xpDiff !== 0) {
+        const siswa = siswaList.find((s: { id: number; ekskul: string }) => s.id === row.siswa_id)
+        await updateExp({
+          tipeAnggota: 'siswa',
+          targetId: row.siswa_id,
+          selisih: xpDiff,
+          alasan: xpDiff > 0 ? 'Hadir ekskul' : 'Tidak hadir ekskul',
+          adminId: ctx.userId,
+          organisasi: siswa?.ekskul ?? 'programming',
+          tx,
+        })
       }
-    })
-  }))
+
+      // Streak bonus EXP (cek setelah hadir)
+      if (row.status === 'hadir') {
+        const riwayat = await tx.absensi.findMany({
+          where: { siswa_id: row.siswa_id, status: 'hadir' },
+          orderBy: { tanggal: 'desc' },
+          take: 10,
+        })
+        const streak = riwayat.length
+        const siswa = siswaList.find((s: { id: number; ekskul: string }) => s.id === row.siswa_id)
+        if (streak === 3) {
+          await updateExp({ tipeAnggota: 'siswa', targetId: row.siswa_id, selisih: 15, alasan: 'Streak hadir 3x berturut-turut', adminId: ctx.userId, organisasi: siswa?.ekskul ?? 'programming', tx })
+        } else if (streak === 5) {
+          await updateExp({ tipeAnggota: 'siswa', targetId: row.siswa_id, selisih: 30, alasan: 'Streak hadir 5x berturut-turut', adminId: ctx.userId, organisasi: siswa?.ekskul ?? 'programming', tx })
+        }
+      }
+
+      saved.push(upserted)
+    }
+
+    return saved
+  })
 
   // Log
-  const siswaMap = Object.fromEntries(siswaList.map(s => [s.id, s.nama]))
+  const siswaMap = Object.fromEntries(
+    siswaList.map((s: { id: number; nama: string }) => [s.id, s.nama])
+  )
   const summary = rows.map(r => `${siswaMap[r.siswa_id] || r.siswa_id}: ${r.status}`).join(', ')
   await createLog({
     userId: ctx.userId, userNama: ctx.userNama, aksi: 'UPDATE',
@@ -148,6 +193,18 @@ export async function POST(req: NextRequest) {
     dataBaru: { tanggal, jumlah: rows.length },
     ipAddress: getIp(req),
   })
+
+  if (pusherServer) {
+    try {
+      await pusherServer.trigger('absensi', 'absensi-updated', {
+        tanggal,
+        count: results.length,
+        userNama: ctx.userNama,
+      })
+    } catch (err) {
+      console.error('Failed to trigger Pusher absensi-updated:', err)
+    }
+  }
 
   return NextResponse.json({ success: true, count: results.length })
 }
@@ -169,10 +226,30 @@ export async function PUT(req: NextRequest) {
   if (existing.siswa.ekskul === 'english' && !canAccessEnglish(ctx.userRole))
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
 
-  const updated = await prisma.absensi.update({
-    where: { id },
-    data: { ...data, updated_by: ctx.userId },
-    include: { siswa: true }
+  const xpDiff = data.status
+    ? hitungSelisihExpAbsensi(existing.status, data.status)
+    : 0
+
+  const updated = await prisma.$transaction(async (tx) => {
+    const updatedAbsensi = await tx.absensi.update({
+      where: { id },
+      data: { ...data, updated_by: ctx.userId },
+      include: { siswa: true }
+    })
+
+    if (xpDiff !== 0) {
+      await updateExp({
+        tipeAnggota: 'siswa',
+        targetId: existing.siswa_id,
+        selisih: xpDiff,
+        alasan: xpDiff > 0 ? 'Hadir ekskul (koreksi)' : 'Tidak hadir ekskul (koreksi)',
+        adminId: ctx.userId,
+        organisasi: existing.siswa.ekskul,
+        tx,
+      })
+    }
+
+    return updatedAbsensi
   })
 
   await createLog({
@@ -184,5 +261,29 @@ export async function PUT(req: NextRequest) {
     ipAddress: getIp(req),
   })
 
+  if (pusherServer) {
+    try {
+      await pusherServer.trigger('absensi', 'absensi-updated', {
+        tanggal: existing.tanggal.toISOString().split('T')[0],
+        count: 1,
+        siswaNama: existing.siswa.nama,
+        status: updated.status,
+        userNama: ctx.userNama,
+      })
+    } catch (err) {
+      console.error('Failed to trigger Pusher absensi-updated:', err)
+    }
+  }
+
   return NextResponse.json({ data: updated })
+}
+
+function hitungSelisihExpAbsensi(statusLama: string | undefined, statusBaru: string) {
+  const nilaiStatus = (status: string | undefined) => {
+    if (status === 'hadir') return 10
+    if (status === 'tidak_hadir') return -10
+    return 0
+  }
+
+  return nilaiStatus(statusBaru) - nilaiStatus(statusLama)
 }

@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -7,7 +8,7 @@ import { ROLE_LABELS } from '@/lib/auth-shared'
 import Image from 'next/image'
 import {
   LayoutDashboard, Users, ClipboardList, Building2, UserCog,
-  Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode, UserX, Megaphone, BarChart3
+  Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode, UserX, Megaphone, BarChart3, Camera
 } from 'lucide-react'
 import AnimatedList from '../AnimatedList'
 
@@ -27,22 +28,19 @@ type SidebarItem =
 function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[] {
   const items: SidebarItem[] = []
   
-  // Header / Logo
-  items.push({ type: 'logo', label: 'Sistem Ekstrakurikuler', version: 'V 17.5.1' })
+  items.push({ type: 'logo', label: 'Sistem Ekstrakurikuler', version: 'V 18.0.1 Artemis Series ' })
   
-  // Role Badge
   if (!isCollapsed) {
     items.push({ type: 'badge', role })
   }
 
-  // Utama Section
   items.push({ type: 'section', label: 'Utama' })
   items.push({ type: 'link', href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard })
   items.push({ type: 'link', href: '/laporan', label: 'Laporan Statistik', icon: BarChart3 })
   items.push({ type: 'link', href: '/kas', label: 'Buku Kas', icon: Wallet })
   items.push({ type: 'link', href: '/pengeluaran', label: 'Pengeluaran Kas', icon: HandCoins })
+  items.push({ type: 'link', href: '/dokumentasi', label: 'Dokumentasi', icon: Camera })
 
-  // Ekstrakurikuler Section
   if (role === 'administrator' || role === 'admin_programming' || role === 'admin_english') {
     items.push({ type: 'section', label: 'Ekstrakurikuler' })
     if (role === 'administrator' || role === 'admin_programming') {
@@ -55,7 +53,6 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
     }
   }
 
-  // Organisasi Section
   if (role === 'administrator' || role === 'admin_osis_mpk') {
     items.push({ type: 'section', label: 'Organisasi' })
     items.push({ type: 'link', href: '/organisasi?org=osis', label: 'OSIS', icon: Building2 })
@@ -63,13 +60,13 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
     items.push({ type: 'link', href: '/wawancara', label: 'Wawancara OSIS & MPK', icon: MessagesSquare })
   }
 
-  // Tools Section
   items.push({ type: 'section', label: 'Tools' })
   if (role === 'administrator') {
     items.push({ type: 'link', href: '/admin', label: 'Kelola User', icon: UserCog })
   }
   items.push({ type: 'link', href: '/import', label: 'Import Excel', icon: Download })
   items.push({ type: 'link', href: '/export', label: 'Export Data', icon: Download })
+  items.push({ type: 'link', href: '/ambil-siswa', label: 'Ambil Siswa', icon: ScrollText })
   
   if (role === 'administrator') {
     items.push({ type: 'link', href: '/update-sistem', label: 'Update Sistem', icon: Megaphone })
@@ -84,10 +81,10 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
 
 function RoleBadge({ role }: { role: string }) {
   const colors: Record<string, string> = {
-    administrator: 'bg-[#052659] border-[#5482B4]/30 text-white',
-    admin_programming: 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-[#C2E8FF]',
-    admin_english: 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-[#C2E8FF]',
-    admin_osis_mpk: 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-[#C2E8FF]',
+    administrator: 'bg-[#052659] border-[#5482B4]/30 text-white font-extrabold',
+    admin_programming: 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-white font-extrabold',
+    admin_english: 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-white font-extrabold',
+    admin_osis_mpk: 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-white font-extrabold',
   }
   return (
     <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold ${colors[role] || 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-[#C2E8FF]'}`}>
@@ -99,14 +96,15 @@ function RoleBadge({ role }: { role: string }) {
 
 export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: SidebarProps) {
   const pathname = usePathname()
-  const navItems = getFlattenedNavItems(user.role, !!isCollapsed)
+  const cleanRole = (user.role || '').trim().toLowerCase()
+  const navItems = getFlattenedNavItems(cleanRole, !!isCollapsed)
 
   const isActive = (href: string) => {
     const base = href.split('?')[0]
     return pathname.startsWith(base)
   }
 
-  const renderSidebarItem = (item: SidebarItem, index: number, isSelected: boolean) => {
+  const renderSidebarItem = (item: SidebarItem, index: number) => {
     switch (item.type) {
       case 'logo':
         return (
@@ -118,12 +116,12 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
               {!isCollapsed && (
                 <div className="fade-in whitespace-nowrap">
                   <div className="text-sm font-black text-white tracking-tight">{item.label}</div>
-                  <div className="text-[10px] text-white/50 font-medium">{item.version}</div>
+                  <div className="text-[10px] text-white font-medium">{item.version}</div>
                 </div>
               )}
             </div>
             {onClose && (
-              <button onClick={onClose} className="lg:hidden btn-icon">
+              <button onClick={onClose} className="lg:hidden btn-icon" aria-label="Tutup menu navigasi">
                 <X className="w-4 h-4 text-white/50" />
               </button>
             )}
@@ -137,7 +135,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
         )
       case 'section':
         return !isCollapsed ? (
-          <div className="px-3 pt-4 pb-2 text-[10px] font-bold text-white/30 uppercase tracking-wider">
+          <div className="px-3 pt-4 pb-2 text-[10px] font-black text-white uppercase tracking-wider">
             {item.label}
           </div>
         ) : <div className="h-4" />
@@ -148,6 +146,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
         return (
           <Link
             href={item.href}
+            prefetch={false}
             onClick={(e) => {
               if (isNonaktif) {
                 e.preventDefault()
@@ -158,7 +157,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
             target={item.target}
             className={cn(
               'nav-link flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200',
-              active ? 'bg-[#5482B4]/20 text-white border border-[#5482B4]/30' : 'text-white/60 hover:bg-white/5 hover:text-white',
+              active ? 'bg-[#5482B4]/20 text-white border border-[#5482B4]/30 font-extrabold' : 'text-white hover:bg-white/5 hover:text-white',
               isNonaktif && 'opacity-60 cursor-not-allowed'
             )}
           >
@@ -187,10 +186,9 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
         />
       </div>
 
-      {/* User info */}
        <div className="px-4 py-4 border-t border-[#5482B4]/15 flex-shrink-0 bg-[#011025]/80 backdrop-blur-sm">
         <div className="flex items-center gap-2.5">
-          {user.role === 'administrator' ? (
+          {cleanRole === 'administrator' ? (
             <div className="relative w-8 h-8 rounded-full overflow-hidden shadow-sm border border-[#5482B4]/30 flex-shrink-0">
               <Image 
                 src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" 
@@ -234,4 +232,3 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
     </>
   )
 }
-

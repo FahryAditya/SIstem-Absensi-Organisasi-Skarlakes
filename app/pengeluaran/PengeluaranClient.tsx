@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { HandCoins, Search, Filter, Loader2, Plus, X, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatCurrency, formatDateTime, ORG_LABELS, OrgType } from '@/lib/utils'
-import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
+import { clearJsonCache, fetchJsonCachedUrl, clientQueryClient } from '@/lib/client-cache'
+import Select from '@/components/ui/Select'
 
 interface PengeluaranData {
   id: number
@@ -22,6 +23,7 @@ interface Props {
 
 export default function PengeluaranClient({ user }: Props) {
   const [data, setData] = useState<PengeluaranData[]>([])
+  const [totalKas, setTotalKas] = useState(0)
   const [orgs, setOrgs] = useState<string[]>([])
   const [activeOrg, setActiveOrg] = useState<string>('')
   const [loading, setLoading] = useState(true)
@@ -38,9 +40,10 @@ export default function PengeluaranClient({ user }: Props) {
     if (activeOrg) url += `org=${activeOrg}`
 
     setLoading(true)
-    fetchJsonCachedUrl<{ data?: PengeluaranData[]; orgs?: string[]; activeOrg?: string }>(url)
+    fetchJsonCachedUrl<{ data?: PengeluaranData[]; totalKas?: number; orgs?: string[]; activeOrg?: string }>(url)
       .then(json => {
         setData(json.data || [])
+        setTotalKas(json.totalKas || 0)
         setOrgs(json.orgs || [])
         if (!activeOrg && json.activeOrg) setActiveOrg(json.activeOrg)
         if (!txOrg && json.activeOrg) setTxOrg(json.activeOrg)
@@ -69,6 +72,11 @@ export default function PengeluaranClient({ user }: Props) {
       if (!res.ok) throw new Error(json.error)
       toast.success(json.message || 'Transaksi dihapus')
       clearJsonCache()
+      // Remove any stale /api/dashboard cache entries so the dashboard re-fetches fresh totals
+      clientQueryClient.removeQueries({ predicate: q => {
+        const [, k] = q.queryKey
+        return typeof k === 'string' && k.startsWith('/api/dashboard')
+      } })
       fetchData()
     } catch (err: any) {
       toast.error(err.message)
@@ -81,6 +89,10 @@ export default function PengeluaranClient({ user }: Props) {
     
     let nominalInt = parseInt(txNominal.replace(/\D/g, ''))
     if (isNaN(nominalInt) || nominalInt <= 0) return toast.error('Nominal tidak valid')
+
+    if (nominalInt > totalKas) {
+      if (!confirm(`Nominal tarik (${formatCurrency(nominalInt)}) melebihi saldo kas saat ini (${formatCurrency(totalKas)}). Tetap lanjutkan?`)) return
+    }
 
     setTxLoading(true)
     try {
@@ -99,6 +111,11 @@ export default function PengeluaranClient({ user }: Props) {
       toast.success(json.message || 'Pengeluaran berhasil dicatat')
       setModalOpen(false)
       clearJsonCache()
+      // Remove any stale /api/dashboard cache entries so the dashboard re-fetches fresh totals
+      clientQueryClient.removeQueries({ predicate: q => {
+        const [, k] = q.queryKey
+        return typeof k === 'string' && k.startsWith('/api/dashboard')
+      } })
       fetchData()
     } catch (err: any) {
       toast.error(err.message)
@@ -122,28 +139,45 @@ export default function PengeluaranClient({ user }: Props) {
         </button>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Total Card */}
+        <div className="card p-6 bg-gradient-to-br from-red-500 to-red-600 text-white md:col-span-1 shadow-md">
+          <div className="flex items-center gap-2 text-red-100 mb-2">
+            <HandCoins className="w-5 h-5" />
+            <h2 className="text-sm font-bold">Saldo Kas Tersisa</h2>
+          </div>
+          <div className="text-3xl font-black font-mono">
+            {formatCurrency(totalKas)}
+          </div>
+          <div className="text-xs text-red-100 mt-2 opacity-80">
+            Saldo yang dapat digunakan untuk pengeluaran {activeOrg ? ORG_LABELS[activeOrg as OrgType] : ''}
+          </div>
+        </div>
+
+        {/* Filter Card */}
+        <div className="card p-5 md:col-span-2 flex flex-col justify-center">
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-sm font-bold text-slate-700">Filter Unit / Organisasi</h3>
+          </div>
+          {orgs.length > 1 && (
+            <Select
+              value={activeOrg}
+              onChange={setActiveOrg}
+              placeholder={user.role === 'administrator' ? 'Semua Unit / Organisasi' : undefined}
+              className="w-full sm:w-72"
+              options={orgs.map(o => ({ value: o, label: ORG_LABELS[o as OrgType] }))}
+            />
+          )}
+        </div>
+      </div>
+
       <div className="card p-5">
         <div className="flex items-center gap-2 mb-4">
-          <h3 className="text-sm font-bold text-slate-700">Filter Riwayat</h3>
+          <h3 className="text-sm font-bold text-slate-700">Riwayat Pengeluaran</h3>
         </div>
-        {orgs.length > 1 && (
-          <div className="relative w-full sm:w-64">
-            <Filter className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <select
-              value={activeOrg}
-              onChange={e => setActiveOrg(e.target.value)}
-              className="input pl-9 appearance-none"
-            >
-              {user.role === 'administrator' && <option value="">Semua Unit / Organisasi</option>}
-              {orgs.map(o => (
-                <option key={o} value={o}>{ORG_LABELS[o as OrgType]}</option>
-              ))}
-            </select>
-          </div>
-        )}
 
         {/* Table */}
-        <div className="overflow-x-auto mt-4 rounded-xl border border-slate-200">
+        <div className="overflow-x-auto rounded-xl border border-slate-200">
           <table className="table">
             <thead>
               <tr>
@@ -213,17 +247,13 @@ export default function PengeluaranClient({ user }: Props) {
             <form onSubmit={handleTransaction} className="p-5 space-y-4">
               <div className="form-group">
                 <label className="label">Unit / Organisasi</label>
-                <select 
-                  value={txOrg} 
-                  onChange={e => setTxOrg(e.target.value)} 
-                  className="input bg-slate-50"
+                <Select
+                  value={txOrg}
+                  onChange={setTxOrg}
+                  placeholder="Pilih Unit"
                   required
-                >
-                  <option value="" disabled>Pilih Unit</option>
-                  {orgs.map(o => (
-                    <option key={o} value={o}>{ORG_LABELS[o as OrgType]}</option>
-                  ))}
-                </select>
+                  options={orgs.map(o => ({ value: o, label: ORG_LABELS[o as OrgType] }))}
+                />
               </div>
 
               <div className="form-group">

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAccessibleOrgs } from '@/lib/auth-shared'
 import { createLog, getIp } from '@/lib/log'
+import { pusherServer } from '@/lib/pusher-server'
 import { z } from 'zod'
 
 function getCtx(req: NextRequest) {
@@ -29,17 +30,26 @@ export async function GET(req: NextRequest) {
       ? {} 
       : { organisasi_type: org as any }
 
-    const data = await (prisma as any).pengeluaranKas.findMany({
-      where: whereCondition,
-      include: { creator: { select: { nama: true } } },
-      orderBy: { tanggal: 'desc' }
-    })
+    const [data, totalKasData, totalPengeluaran] = await Promise.all([
+      (prisma as any).pengeluaranKas.findMany({
+        where: whereCondition,
+        include: { creator: { select: { nama: true } } },
+        orderBy: { tanggal: 'desc' }
+      }),
+      org === 'programming' || org === 'english' 
+        ? prisma.absensi.aggregate({ where: { siswa: { ekskul: org as any } }, _sum: { uang_kas: true } })
+        : prisma.absensiOrganisasi.aggregate({ where: { organisasi_type: org as any }, _sum: { uang_kas: true } }),
+      prisma.pengeluaranKas.aggregate({ where: { organisasi_type: org as any }, _sum: { nominal: true } })
+    ])
+
+    const balance = (totalKasData._sum?.uang_kas || 0) - (totalPengeluaran._sum?.nominal || 0)
 
     return NextResponse.json({
       data: data.map((d: any) => ({
         ...d,
         creator_nama: d.creator.nama
       })),
+      totalKas: balance,
       orgs: accessible,
       activeOrg: org
     })
@@ -91,6 +101,19 @@ export async function POST(req: NextRequest) {
       ipAddress: getIp(req),
     })
 
+    if (pusherServer) {
+      try {
+        await pusherServer.trigger('absensi', 'absensi-updated', {
+          org,
+          type: 'kas',
+          nominal,
+          userNama: ctx.userNama,
+        })
+      } catch (err) {
+        console.error('Failed to trigger Pusher for pengeluaran:', err)
+      }
+    }
+
     return NextResponse.json({ success: true, message: 'Pengeluaran kas berhasil dicatat' })
   } catch (e: any) {
     console.error('[PENGELUARAN POST ERROR]', e)
@@ -130,6 +153,19 @@ export async function DELETE(req: NextRequest) {
       deskripsi: `${ctx.userNama} MENGHAPUS/MEMBATALKAN pengeluaran kas ${expense.organisasi_type.toUpperCase()} sebesar Rp ${expense.nominal.toLocaleString('id-ID')}. Ket: ${expense.keterangan}`,
       ipAddress: getIp(req),
     })
+
+    if (pusherServer) {
+      try {
+        await pusherServer.trigger('absensi', 'absensi-updated', {
+          org: expense.organisasi_type,
+          type: 'kas',
+          nominal: -expense.nominal,
+          userNama: ctx.userNama,
+        })
+      } catch (err) {
+        console.error('Failed to trigger Pusher for pengeluaran deletion:', err)
+      }
+    }
 
     return NextResponse.json({ success: true, message: 'Transaksi pengeluaran berhasil dibatalkan/dihapus' })
   } catch (e: any) {

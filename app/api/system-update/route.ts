@@ -37,15 +37,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
   }
 
-  const { version, content } = await req.json()
+  const { version, content, update_type } = await req.json()
   if (!version || !content) {
     return NextResponse.json({ error: 'Versi dan konten wajib diisi' }, { status: 400 })
   }
+
+  const validTypes = ['update', 'pengumuman', 'perbaikan']
+  const resolvedType = validTypes.includes(update_type) ? update_type : 'update'
 
   const update = await prisma.systemUpdate.create({
     data: {
       version,
       content,
+      update_type: resolvedType as any,
       created_by: ctx.userId
     }
   })
@@ -62,4 +66,26 @@ export async function POST(req: NextRequest) {
   })
 
   return NextResponse.json({ data: update }, { status: 201 })
+}
+
+export async function DELETE(req: NextRequest) {
+  const ctx = getCtx(req)
+  if (ctx.userRole !== 'administrator') {
+    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+  }
+
+  await prisma.systemUpdate.deleteMany()
+
+  await createLog({
+    userId: ctx.userId,
+    userNama: ctx.userNama,
+    aksi: 'DELETE',
+    tabel: 'system_updates',
+    recordId: 0,
+    deskripsi: `${ctx.userNama} membersihkan seluruh riwayat update sistem`,
+    dataBaru: {},
+    ipAddress: getIp(req),
+  })
+
+  return NextResponse.json({ message: 'Riwayat update berhasil dibersihkan' })
 }

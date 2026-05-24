@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
+import { pusherClient } from '@/lib/pusher-client'
 import { Loader2, MessageSquareText, Send, UserRoundCheck } from 'lucide-react'
-import { motion } from 'framer-motion'
+
 
 interface Props {
   sesiId: string
@@ -27,6 +28,7 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
   const [jurusan, setJurusan] = useState('AKL')
   const [organisasi, setOrganisasi] = useState<'osis'|'mpk'>('osis')
   const [queueNumber, setQueueNumber] = useState<number | null>(null)
+  const [myQueue, setMyQueue] = useState<any>(null)
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null)
   const [geoError, setGeoError] = useState('')
 
@@ -46,6 +48,44 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
   }, [sesiId, token])
 
   useEffect(() => {
+    const activeSesiId = sesiId || session?.id
+    if (!activeSesiId) return
+    const saved = localStorage.getItem(`queue-${activeSesiId}`)
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        setQueueNumber(parsed.nomor_antrian)
+        setMyQueue(parsed)
+      } catch {}
+    }
+  }, [sesiId, session?.id])
+
+  useEffect(() => {
+    if (!myQueue || !session?.id || !pusherClient) return
+
+    const channel = pusherClient.subscribe(`wawancara-${session.id}`)
+    
+    channel.bind('queue-updated', (payload: any) => {
+      if (payload.action === 'update' && payload.data.id === myQueue.id) {
+        setMyQueue(payload.data)
+        localStorage.setItem(`queue-${session.id}`, JSON.stringify(payload.data))
+        if (payload.data.status === 'WAWANCARA') {
+          toast.success('📣 Nama Anda sedang dipanggil! Silakan menuju ke ruang wawancara.', { duration: 15000 })
+        }
+      } else if (payload.action === 'delete' && payload.ids.includes(myQueue.id)) {
+        setMyQueue(null)
+        setQueueNumber(null)
+        localStorage.removeItem(`queue-${session.id}`)
+        toast.error('Antrian Anda telah dihapus oleh admin.')
+      }
+    })
+
+    return () => {
+      pusherClient?.unsubscribe(`wawancara-${session.id}`)
+    }
+  }, [myQueue?.id, session?.id])
+
+  useEffect(() => {
     if (!navigator.geolocation) {
       setGeoError('HP/browser tidak mendukung GPS. Gunakan browser lain dan izinkan lokasi.')
       return
@@ -61,9 +101,30 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
   }, [])
 
   async function submit() {
+    const trimmedNama = nama.trim()
+    if (!trimmedNama) {
+      toast.error('Nama tidak boleh kosong atau hanya berisi spasi')
+      return
+    }
+    if (trimmedNama.length > 50) {
+      toast.error('Nama terlalu panjang (maksimal 50 karakter)')
+      setNama('')
+      return
+    }
+    if (/\d/.test(trimmedNama)) {
+      toast.error('Nama tidak boleh mengandung angka (seperti Fahry123 atau 1234Fahry)')
+      setNama('')
+      return
+    }
+    if (/(.)\1{3,}/i.test(trimmedNama)) {
+      toast.error('Nama tidak boleh mengandung pengulangan karakter berturut-turut (spam)')
+      setNama('')
+      return
+    }
     const namaRegex = /^[A-Za-z\s.'-]+$/
-    if (!nama.trim() || !namaRegex.test(nama)) {
-      toast.error('Nama hanya boleh berisi huruf, spasi, titik, dan apostrof')
+    if (!namaRegex.test(trimmedNama)) {
+      toast.error('Nama hanya boleh berisi huruf, spasi, titik, dan tanda hubung/apostrof')
+      setNama('')
       return
     }
     if (!coords) {
@@ -92,6 +153,11 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
       return
     }
     setQueueNumber(json.data.nomor_antrian)
+    setMyQueue(json.data)
+    const activeSesiId = session?.id || sesiId
+    if (activeSesiId) {
+      localStorage.setItem(`queue-${activeSesiId}`, JSON.stringify(json.data))
+    }
     toast.success(json.data.status_validasi === 'SAH_DICURIGAI' ? 'Masuk antrian dengan flag verifikasi' : 'Berhasil masuk antrian')
     clearJsonCache()
     setSaving(false)
@@ -99,11 +165,8 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
 
   return (
     <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <motion.div 
-        initial={{ y: 30, opacity: 0 }} 
-        animate={{ y: 0, opacity: 1 }} 
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-md bg-white border border-slate-200/60 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden"
+      <div
+        className="w-full max-w-md bg-white border border-slate-200/60 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden slide-up"
       >
         <div className="p-6 border-b border-slate-100/50 bg-white/50 backdrop-blur-sm">
           <div className="flex items-center gap-3">
@@ -129,13 +192,41 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
           </div>
         ) : queueNumber ? (
           <div className="p-8 text-center">
-            <UserRoundCheck className="w-14 h-14 text-green-600 mx-auto mb-4" />
-            <div className="text-sm font-bold text-slate-500">Nomor Antrian</div>
-            <div className="text-6xl font-black font-mono text-slate-900 mt-1">#{queueNumber}</div>
-            <p className="text-sm text-slate-500 mt-4">Tunggu sampai nama Anda dipanggil oleh admin OSIS & MPK.</p>
+            {myQueue?.status === 'WAWANCARA' ? (
+              <div className="space-y-4 animate-bounce">
+                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto text-red-600 shadow-lg shadow-red-100/50">
+                  <span className="text-2xl animate-pulse">📣</span>
+                </div>
+                <div className="text-base font-extrabold text-red-600 tracking-wider">NAMA ANDA SEDANG DIPANGGIL!</div>
+                <div className="text-6xl font-black font-mono text-slate-900">#{queueNumber}</div>
+                <p className="text-sm text-slate-700 font-semibold mt-4 bg-red-50 border border-red-100 p-3 rounded-2xl">
+                  Silakan segera menuju ke meja/ruang wawancara sekarang.
+                </p>
+              </div>
+            ) : myQueue?.status === 'SELESAI_WAWANCARA' ? (
+              <div className="space-y-4">
+                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto text-green-600 shadow-lg shadow-green-100/50">
+                  <span className="text-2xl">🏆</span>
+                </div>
+                <div className="text-base font-extrabold text-green-600 tracking-wider">WAWANCARA SELESAI!</div>
+                <div className="text-6xl font-black font-mono text-slate-950">#{queueNumber}</div>
+                <p className="text-sm text-slate-500 mt-4 bg-green-50 border border-green-100 p-3 rounded-2xl">
+                  Terima kasih telah mengikuti sesi wawancara OSIS & MPK. Anda boleh meninggalkan ruangan.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <UserRoundCheck className="w-14 h-14 text-indigo-600 mx-auto mb-4 animate-pulse" />
+                <div className="text-sm font-bold text-slate-500">Nomor Antrian Anda</div>
+                <div className="text-6xl font-black font-mono text-slate-900 mt-1">#{queueNumber}</div>
+                <p className="text-sm text-slate-500 mt-4 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                  Tunggu sampai nama Anda dipanggil oleh admin OSIS & MPK. Layar ini akan terupdate otomatis secara real-time!
+                </p>
+              </div>
+            )}
           </div>
         ) : (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 space-y-4">
+          <div className="p-6 space-y-4 fade-in">
             <div className="rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100/60 p-5 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-200/40 to-purple-200/40 blur-3xl -mr-10 -mt-10 rounded-full" />
               <div className="relative">
@@ -151,8 +242,25 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
               {coords ? 'GPS terbaca. Sistem akan validasi jarak dari sekolah saat submit.' : (geoError || 'Membaca lokasi GPS...')}
             </div>
             <div className="form-group">
-              <label className="label">Nama Lengkap *</label>
-              <input value={nama} onChange={(e) => setNama(e.target.value)} className="input" placeholder="Isi nama lengkap" autoFocus />
+              <div className="flex justify-between items-center">
+                <label className="label">Nama Lengkap *</label>
+                {nama.length > 0 && (
+                  <span className={`text-[10px] font-bold ${nama.length >= 50 ? 'text-red-500' : 'text-slate-400'}`}>
+                    {nama.length}/50
+                  </span>
+                )}
+              </div>
+              <input 
+                value={nama} 
+                onChange={(e) => setNama(e.target.value)} 
+                className={`input ${nama.length >= 50 ? 'border-red-400 focus:ring-red-500/20 focus:border-red-500' : ''}`} 
+                placeholder="Isi nama lengkap" 
+                maxLength={50}
+                autoFocus 
+              />
+              {nama.length >= 50 && (
+                <p className="text-[10px] text-red-500 font-bold mt-1">Batas maksimal nama adalah 50 karakter!</p>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="form-group">
@@ -207,9 +315,9 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
               {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
               Masuk Antrian
             </button>
-          </motion.div>
+          </div>
         )}
-      </motion.div>
+        </div>
     </main>
   )
 }

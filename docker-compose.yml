@@ -15,6 +15,21 @@ services:
       DIRECT_URL: ${DIRECT_URL}
       JWT_SECRET: ${JWT_SECRET}
       NODE_ENV: production
+      # Batasi V8 heap agar tidak melebihi RAM VPS 500MB
+      # 300MB untuk heap, sisanya untuk OS + overhead Node
+      NODE_OPTIONS: "--max-old-space-size=300"
+    deploy:
+      resources:
+        limits:
+          memory: 420M      # Hard cap: container tidak boleh lebih dari 420MB
+        reservations:
+          memory: 180M      # Jaminan minimum RAM yang dipesan
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     networks:
       - ekskul_net
 

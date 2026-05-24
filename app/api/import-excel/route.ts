@@ -97,21 +97,37 @@ export async function POST(req: NextRequest) {
       })
       insertedCount = result.count
     } else if (org === 'osis') {
-      const createData = rows.map((item: any) => ({
-        nama: String(item.nama).trim(),
-        kelas: item.kelas ? String(item.kelas).trim() : '',
-        nis: item.nis ? String(item.nis).trim() : '',
-        jabatan: item.jabatan ? String(item.jabatan).trim() : 'Anggota',
-      }))
+      const filteredRows = rows.filter((item: any) => {
+        const k = item.kelas ? String(item.kelas).trim().toUpperCase() : ''
+        return !k.startsWith('[MPK]')
+      })
+      const createData = filteredRows.map((item: any) => {
+        const rawKelas = item.kelas ? String(item.kelas).trim() : ''
+        const cleanKelas = rawKelas.replace(/^\[(OSIS|MPK)\]\s*/i, '')
+        return {
+          nama: String(item.nama).trim(),
+          kelas: cleanKelas,
+          nis: item.nis ? String(item.nis).trim() : '',
+          jabatan: item.jabatan ? String(item.jabatan).trim() : 'Anggota',
+        }
+      })
       const result = await prisma.anggotaOsis.createMany({ data: createData, skipDuplicates: true })
       insertedCount = result.count
     } else if (org === 'mpk') {
-      const createData = rows.map((item: any) => ({
-        nama: String(item.nama).trim(),
-        kelas: item.kelas ? String(item.kelas).trim() : '',
-        nis: item.nis ? String(item.nis).trim() : '',
-        jabatan: item.jabatan ? String(item.jabatan).trim() : 'Anggota',
-      }))
+      const filteredRows = rows.filter((item: any) => {
+        const k = item.kelas ? String(item.kelas).trim().toUpperCase() : ''
+        return !k.startsWith('[OSIS]')
+      })
+      const createData = filteredRows.map((item: any) => {
+        const rawKelas = item.kelas ? String(item.kelas).trim() : ''
+        const cleanKelas = rawKelas.replace(/^\[(OSIS|MPK)\]\s*/i, '')
+        return {
+          nama: String(item.nama).trim(),
+          kelas: cleanKelas,
+          nis: item.nis ? String(item.nis).trim() : '',
+          jabatan: item.jabatan ? String(item.jabatan).trim() : 'Anggota',
+        }
+      })
       const result = await prisma.anggotaMpk.createMany({ data: createData, skipDuplicates: true })
       insertedCount = result.count
     }

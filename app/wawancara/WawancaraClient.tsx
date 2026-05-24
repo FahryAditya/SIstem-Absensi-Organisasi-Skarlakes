@@ -12,7 +12,7 @@ import {
   Play, Plus, QrCode, RefreshCcw, Save, Send, ShieldCheck, SquarePen, Users, XCircle, UserX,
   Bell, UserPlus
 } from 'lucide-react'
-import { motion } from 'framer-motion'
+
 import { pusherClient } from '@/lib/pusher-client'
 
 type Org = 'osis' | 'mpk'
@@ -242,17 +242,27 @@ export default function WawancaraClient({ user }: Props) {
     
     // CASE 1: Pusher is configured - use real-time
     if (pusherClient) {
-      console.log('Using Pusher for chat...')
-      const channel = pusherClient.subscribe(`chat-${activeSession.id}`)
-      channel.bind('incoming-chat', (data: ChatMessage) => {
+      console.log('Using Pusher for chat and queue...')
+      const chatChannel = pusherClient.subscribe(`chat-${activeSession.id}`)
+      chatChannel.bind('incoming-chat', (data: ChatMessage) => {
         setChats((prev) => {
           if (prev.some((c) => c.id === data.id)) return prev
           if (data.sender.id !== user.id) setUnreadCount(prevCount => prevCount + 1)
           return [...prev, data]
         })
       })
+
+      const queueChannel = pusherClient.subscribe(`wawancara-${activeSession.id}`)
+      queueChannel.bind('queue-updated', (payload: any) => {
+        if (payload.action === 'add') {
+          toast.success(`Peserta baru masuk antrian: ${payload.data.nama}`, { id: 'new-queue-member' })
+        }
+        load(true)
+      })
+
       return () => {
         pusherClient!.unsubscribe(`chat-${activeSession.id}`)
+        pusherClient!.unsubscribe(`wawancara-${activeSession.id}`)
       }
     } 
     
@@ -286,7 +296,7 @@ export default function WawancaraClient({ user }: Props) {
     }, 4000)
 
     return () => clearInterval(pollId)
-  }, [activeSession?.id, !!pusherClient, chats.length, user.id])
+  }, [activeSession?.id, !!pusherClient, chats.length, user.id, load])
 
   function openCreate() {
     setEditingSessionId(null)
@@ -381,6 +391,44 @@ export default function WawancaraClient({ user }: Props) {
     }
   }
 
+  async function autoSchedule() {
+    setSaving(true)
+    try {
+      const now = new Date()
+      const start = new Date()
+      start.setHours(8, 0, 0, 0)
+      const end = new Date()
+      end.setHours(15, 0, 0, 0)
+
+      if (now.getHours() >= 15) {
+        start.setDate(start.getDate() + 1)
+        end.setDate(end.getDate() + 1)
+      }
+
+      const res = await fetch('/api/wawancara', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          organisasi_type: 'osis',
+          jadwal_mulai: start.toISOString(),
+          jadwal_selesai: end.toISOString(),
+        }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast.error(json.error || 'Gagal membuat jadwal otomatis')
+        return
+      }
+      toast.success('Jadwal wawancara otomatis berhasil dibuat')
+      clearJsonCache()
+      load(true)
+    } catch (err) {
+      toast.error('Terjadi kesalahan koneksi')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function updateSession(id: number, action: 'activate' | 'finish' | 'cancel') {
     setSaving(true)
     try {
@@ -460,12 +508,30 @@ export default function WawancaraClient({ user }: Props) {
   }
 
   async function saveManualPeserta() {
-    if (!fAddNama.trim()) {
-      toast.error('Nama wajib diisi')
+    const trimmedNama = fAddNama.trim()
+    if (!trimmedNama) {
+      toast.error('Nama tidak boleh kosong atau hanya berisi spasi')
       return
     }
-    if (/[^a-zA-Z\s]/.test(fAddNama)) {
-      toast.error('Nama hanya boleh berisi huruf dan spasi')
+    if (trimmedNama.length > 50) {
+      toast.error('Nama terlalu panjang (maksimal 50 karakter)')
+      setFAddNama('')
+      return
+    }
+    if (/\d/.test(trimmedNama)) {
+      toast.error('Nama tidak boleh mengandung angka (seperti Fahry123 atau 1234Fahry)')
+      setFAddNama('')
+      return
+    }
+    if (/(.)\1{3,}/i.test(trimmedNama)) {
+      toast.error('Nama tidak boleh mengandung pengulangan karakter berturut-turut (spam)')
+      setFAddNama('')
+      return
+    }
+    const namaRegex = /^[A-Za-z\s.'-]+$/
+    if (!namaRegex.test(trimmedNama)) {
+      toast.error('Nama hanya boleh berisi huruf, spasi, titik, dan tanda hubung/apostrof')
+      setFAddNama('')
       return
     }
     setSaving(true)
@@ -609,6 +675,7 @@ export default function WawancaraClient({ user }: Props) {
             <Clock className="w-4 h-4 text-indigo-400" />
             {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
           </div>
+          {admin && <button onClick={autoSchedule} disabled={saving} className="btn-secondary text-indigo-600 border-indigo-200 hover:bg-indigo-50"><CalendarClock className="w-4 h-4" />Jadwalkan</button>}
           <button onClick={openAddPeserta} className="btn-secondary"><UserPlus className="w-4 h-4" />Tambah Peserta</button>
           {admin && <button onClick={openCreate} className="btn-primary"><Plus className="w-4 h-4" />Buat/Aktifkan</button>}
         </div>
@@ -675,7 +742,7 @@ export default function WawancaraClient({ user }: Props) {
                 <option value="DITOLAK_VPN">Ditolak VPN</option>
                 <option value="TIDAK_SAH">Tidak Sah</option>
               </select>
-              <input value={kelasDraft} onChange={(e) => setKelasDraft(e.target.value)} className="input py-2" placeholder="Filter kelas, contoh X MPLB 1" />
+              <input value={kelasDraft} onChange={(e) => setKelasDraft(e.target.value)} className="input py-2" placeholder="Filter kelas, contoh X MPLB 1" maxLength={30} />
             </div>
 
             {loading ? (
@@ -692,12 +759,9 @@ export default function WawancaraClient({ user }: Props) {
                     {queue.map((q, index) => {
                       const notes = noteFor(q)
                       return (
-                      <motion.tr 
-                        key={q.id} 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.03, duration: 0.2 }}
-                        className="hover:bg-slate-50/80 transition-colors group"
+                      <tr
+                        key={q.id}
+                        className="hover:bg-slate-50/80 transition-colors group fade-in"
                       >
                         <td className="td font-mono text-slate-400">#{q.nomor_antrian}</td>
                         <td className="td">
@@ -754,7 +818,7 @@ export default function WawancaraClient({ user }: Props) {
                             </div>
                           ) : <span className="text-xs text-slate-400">Terkunci</span>}
                         </td>
-                      </motion.tr>
+                      </tr>
                     )})}
                   </tbody>
                 </table>
@@ -806,8 +870,22 @@ export default function WawancaraClient({ user }: Props) {
                   ))}
                 </div>
                 <div className="flex gap-2">
-                  <input value={chatText} onChange={(e) => setChatText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') sendChat() }} className="input" placeholder="Tulis pesan konsultasi..." />
-                  <button onClick={sendChat} className="btn-primary px-3"><Send className="w-4 h-4" /></button>
+                <div className="flex-1 relative flex items-center">
+                  <input 
+                    value={chatText} 
+                    onChange={(e) => setChatText(e.target.value)} 
+                    onKeyDown={(e) => { if (e.key === 'Enter') sendChat() }} 
+                    className="input pr-12" 
+                    placeholder="Tulis pesan konsultasi..." 
+                    maxLength={250} 
+                  />
+                  {chatText.length > 0 && (
+                    <span className={`absolute right-3 text-[9px] font-bold ${chatText.length >= 250 ? 'text-red-500' : 'text-slate-400'}`}>
+                      {chatText.length}/250
+                    </span>
+                  )}
+                </div>
+                <button onClick={sendChat} className="btn-primary px-3"><Send className="w-4 h-4" /></button>
                 </div>
               </div>
             ) : (
@@ -846,7 +924,26 @@ export default function WawancaraClient({ user }: Props) {
           <div className="form-group"><label className="label">Keterangan *</label><select value={fKet} onChange={(e) => setFKet(e.target.value as any)} className="input"><option value="AKTIF">Aktif</option><option value="KURANG_AKTIF">Kurang Aktif</option></select></div>
           <div className="form-group"><label className="label">Hasil *</label><select value={fHasil} onChange={(e) => setFHasil(e.target.value as any)} className="input"><option value="LOLOS">Lolos</option><option value="TIDAK_LOLOS">Tidak Lolos</option><option value="PENDING">Pending</option></select></div>
           <div className="form-group md:col-span-2"><label className="label">Persentase *</label><input type="number" min={1} max={100} value={fPersen} onChange={(e) => setFPersen(Number(e.target.value))} className="input" /></div>
-          <div className="form-group md:col-span-2"><label className="label">Catatan Pembina / Admin</label><textarea value={fCatatan} onChange={(e) => setFCatatan(e.target.value)} className="input min-h-24" placeholder="Opsional" /></div>
+          <div className="form-group md:col-span-2">
+            <div className="flex justify-between items-center">
+              <label className="label">Catatan Pembina / Admin</label>
+              {fCatatan.length > 0 && (
+                <span className={`text-[10px] font-bold ${fCatatan.length >= 500 ? 'text-red-500' : 'text-slate-400'}`}>
+                  {fCatatan.length}/500
+                </span>
+              )}
+            </div>
+            <textarea 
+              value={fCatatan} 
+              onChange={(e) => setFCatatan(e.target.value)} 
+              className={`input min-h-24 ${fCatatan.length >= 500 ? 'border-red-400 focus:ring-red-500/20' : ''}`} 
+              placeholder="Opsional" 
+              maxLength={500}
+            />
+            {fCatatan.length >= 500 && (
+              <p className="text-[10px] text-red-500 font-bold mt-1">Batas maksimal catatan adalah 500 karakter!</p>
+            )}
+          </div>
         </div>
       </Modal>
 
@@ -856,7 +953,26 @@ export default function WawancaraClient({ user }: Props) {
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
             Hanya Administrator dapat mengubah kandidat Tidak Lolos menjadi Lolos karena pertimbangan pembina. Alasan akan masuk ke Log Aktivitas.
           </div>
-          <div className="form-group"><label className="label">Alasan Override *</label><textarea value={overrideReason} onChange={(e) => setOverrideReason(e.target.value)} className="input min-h-28" placeholder="Contoh: Pertimbangan Pembina" /></div>
+          <div className="form-group">
+            <div className="flex justify-between items-center">
+              <label className="label">Alasan Override *</label>
+              {overrideReason.length > 0 && (
+                <span className={`text-[10px] font-bold ${overrideReason.length >= 200 ? 'text-red-500' : 'text-slate-400'}`}>
+                  {overrideReason.length}/200
+                </span>
+              )}
+            </div>
+            <textarea 
+              value={overrideReason} 
+              onChange={(e) => setOverrideReason(e.target.value)} 
+              className={`input min-h-28 ${overrideReason.length >= 200 ? 'border-red-400 focus:ring-red-500/20' : ''}`} 
+              placeholder="Contoh: Pertimbangan Pembina" 
+              maxLength={200}
+            />
+            {overrideReason.length >= 200 && (
+              <p className="text-[10px] text-red-500 font-bold mt-1">Batas maksimal alasan override adalah 200 karakter!</p>
+            )}
+          </div>
         </div>
       </Modal>
 
@@ -867,13 +983,24 @@ export default function WawancaraClient({ user }: Props) {
             Gunakan fitur ini hanya jika peserta mengalami kendala teknis pada HP (tidak bisa scan QR / GPS bermasalah).
           </div>
           <div className="form-group">
-            <label className="label">Nama Lengkap *</label>
+            <div className="flex justify-between items-center">
+              <label className="label">Nama Lengkap *</label>
+              {fAddNama.length > 0 && (
+                <span className={`text-[10px] font-bold ${fAddNama.length >= 50 ? 'text-red-500' : 'text-slate-400'}`}>
+                  {fAddNama.length}/50
+                </span>
+              )}
+            </div>
             <input 
               value={fAddNama} 
-              onChange={(e) => setFAddNama(e.target.value.replace(/[^a-zA-Z\s]/g, ''))} 
-              className="input" 
-              placeholder="Isi nama lengkap (hanya huruf)" 
+              onChange={(e) => setFAddNama(e.target.value.replace(/[^a-zA-Z\s.'-]/g, ''))} 
+              className={`input ${fAddNama.length >= 50 ? 'border-red-400 focus:ring-red-500/20' : ''}`} 
+              placeholder="Isi nama lengkap" 
+              maxLength={50}
             />
+            {fAddNama.length >= 50 && (
+              <p className="text-[10px] text-red-500 font-bold mt-1">Batas maksimal nama adalah 50 karakter!</p>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="form-group">

@@ -1,14 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
-import { canManageSiswaData, canManageSiswaEkskul } from '@/lib/auth'
+import { canManageSiswaData, canManageSiswaEkskul } from '@/lib/auth-shared'
 import { z } from 'zod'
+export const dynamic = 'force-dynamic'
+
+let isSiswaSchemaChecked = false
+
+async function ensureSiswaColumns() {
+  // Schema is now assumed to be managed or verified via migration.
+  // Dynamic column checking removed to prevent runtime overhead and potential errors.
+  return
+}
 
 function getCtx(req: NextRequest) {
   return {
     userId: parseInt(req.headers.get('x-user-id') || '0'),
     userNama: req.headers.get('x-user-nama') || '',
-    userRole: req.headers.get('x-user-role') || '',
+    userRole: (req.headers.get('x-user-role') || '').trim(),
   }
 }
 
@@ -22,38 +31,54 @@ const schema = z.object({
     'Nama hanya boleh berisi huruf'
   ),
   kelas: z.string().nullable().optional(),
+  email: z.string().email('Email tidak valid').nullable().optional(),
+  foto_url: z.string().url('URL foto tidak valid').nullable().optional(),
   ekskul: z.enum(['programming', 'english']),
 })
 
 export async function GET(req: NextRequest) {
-  const { userRole } = getCtx(req)
-  const { searchParams } = new URL(req.url)
-  const ekskul = searchParams.get('ekskul') as 'programming' | 'english' | null
-  const search = searchParams.get('search') || ''
-  const page = parseInt(searchParams.get('page') || '1')
-  const limit = parseInt(searchParams.get('limit') || '10')
+  try {
+    await ensureSiswaColumns()
+    const { userRole } = getCtx(req)
+    const { searchParams } = new URL(req.url)
 
-  // Role check
-  const accessible: ('programming' | 'english')[] = canManageSiswaData(userRole) ? ['programming', 'english'] : []
-  let ekskulFilter: ('programming' | 'english')[] = accessible
-  if (ekskul && accessible.includes(ekskul)) ekskulFilter = [ekskul]
+    const ekskul = searchParams.get('ekskul') as 'programming' | 'english' | null
+    const search = searchParams.get('search') || ''
+    
+    let page = parseInt(searchParams.get('page') || '1')
+    let limit = parseInt(searchParams.get('limit') || '10')
+    if (isNaN(page) || page < 1) page = 1
+    if (isNaN(limit) || limit < 1) limit = 10
 
-  const where = {
-    ekskul: { in: ekskulFilter },
-    ...(search ? { nama: { contains: search } } : {}),
+    // Role check
+    const accessible: ('programming' | 'english')[] = canManageSiswaData(userRole) ? ['programming', 'english'] : []
+    let ekskulFilter: ('programming' | 'english')[] = accessible
+    if (ekskul && accessible.includes(ekskul)) ekskulFilter = [ekskul]
+
+    if (ekskulFilter.length === 0) {
+      return NextResponse.json({ data: [], total: 0, page, totalPages: 0 })
+    }
+
+    const where = {
+      ekskul: { in: ekskulFilter },
+      ...(search ? { nama: { contains: search, mode: 'insensitive' as any } } : {}),
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.siswa.findMany({
+        where,
+        orderBy: [{ ekskul: 'asc' }, { nama: 'asc' }],
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.siswa.count({ where }),
+    ])
+
+    return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / limit) })
+  } catch (error: any) {
+    console.error('GET siswa error:', error)
+    return NextResponse.json({ error: 'Gagal memuat data siswa: ' + error.message }, { status: 500 })
   }
-
-  const [data, total] = await Promise.all([
-    prisma.siswa.findMany({
-      where,
-      orderBy: [{ ekskul: 'asc' }, { nama: 'asc' }],
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-    prisma.siswa.count({ where }),
-  ])
-
-  return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / limit) })
 }
 
 export async function POST(req: NextRequest) {
@@ -66,8 +91,38 @@ export async function POST(req: NextRequest) {
   if (!canManageSiswaEkskul(ctx.userRole, ekskul))
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
 
+  // ── Cegah duplikat: cek nama yang sama (case-insensitive) di ekskul yang sama ──
+  const namaTrimmed = parsed.data.nama.trim()
+
+  const duplikat = await prisma.siswa.findFirst({
+    where: {
+      ekskul,
+      nama: { equals: namaTrimmed, mode: 'insensitive' },
+    },
+  })
+
+  if (duplikat) {
+    return NextResponse.json(
+      { error: `Siswa "${duplikat.nama}" sudah terdaftar di ekskul ${ekskul}. Gunakan nama yang berbeda atau periksa data yang sudah ada.` },
+      { status: 409 }
+    )
+  }
+
+  // ── Cek duplikat NIS jika NIS diisi ──────────────────────────────────────
+  if (parsed.data.nis && parsed.data.nis.trim() !== '') {
+    const duplikatNis = await prisma.siswa.findFirst({
+      where: { ekskul, nis: parsed.data.nis.trim() },
+    })
+    if (duplikatNis) {
+      return NextResponse.json(
+        { error: `NIS "${parsed.data.nis}" sudah digunakan oleh siswa "${duplikatNis.nama}" di ekskul ${ekskul}.` },
+        { status: 409 }
+      )
+    }
+  }
+
   const siswa = await prisma.siswa.create({
-    data: { ...parsed.data, created_by: ctx.userId }
+    data: { ...parsed.data, nama: namaTrimmed, created_by: ctx.userId },
   })
 
   await createLog({
@@ -98,7 +153,40 @@ export async function PUT(req: NextRequest) {
   if (!canManageSiswaEkskul(ctx.userRole, parsed.data.ekskul))
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
 
-  const updated = await prisma.siswa.update({ where: { id }, data: parsed.data })
+  const namaTrimmed = parsed.data.nama.trim()
+
+  // ── Cegah duplikat nama saat update (kecuali record sendiri) ─────────────
+  const duplikat = await prisma.siswa.findFirst({
+    where: {
+      ekskul: parsed.data.ekskul,
+      nama: { equals: namaTrimmed, mode: 'insensitive' },
+      NOT: { id },
+    },
+  })
+  if (duplikat) {
+    return NextResponse.json(
+      { error: `Siswa "${duplikat.nama}" sudah terdaftar di ekskul ${parsed.data.ekskul}.` },
+      { status: 409 }
+    )
+  }
+
+  // ── Cek duplikat NIS saat update ─────────────────────────────────────────
+  if (parsed.data.nis && parsed.data.nis.trim() !== '') {
+    const duplikatNis = await prisma.siswa.findFirst({
+      where: { ekskul: parsed.data.ekskul, nis: parsed.data.nis.trim(), NOT: { id } },
+    })
+    if (duplikatNis) {
+      return NextResponse.json(
+        { error: `NIS "${parsed.data.nis}" sudah digunakan oleh siswa "${duplikatNis.nama}".` },
+        { status: 409 }
+      )
+    }
+  }
+
+  const updated = await prisma.siswa.update({
+    where: { id },
+    data: { ...parsed.data, nama: namaTrimmed },
+  })
 
   await createLog({
     userId: ctx.userId, userNama: ctx.userNama, aksi: 'UPDATE',
@@ -117,9 +205,9 @@ export async function DELETE(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const idStr = searchParams.get('id')
   const idsStr = searchParams.get('ids')
-  
+
   let idsToDelete: number[] = []
-  
+
   if (idStr) {
     const id = parseInt(idStr)
     if (id) idsToDelete.push(id)

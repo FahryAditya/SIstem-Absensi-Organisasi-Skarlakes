@@ -9,7 +9,8 @@ import { RoleBadge } from '@/components/ui/Badges'
 import { formatDateTime } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
-import { UserCog, Plus, Pencil, Trash2, Loader2, Shield, Mail, User, Lock, Eye, EyeOff, AlertTriangle, Database } from 'lucide-react'
+import { UserCog, Plus, Pencil, Trash2, Loader2, Shield, Mail, User, Lock, Eye, EyeOff, AlertTriangle, Database, Cpu, Sparkles } from 'lucide-react'
+import Select from '@/components/ui/Select'
 
 interface UserData { id: number; nama: string; email: string; role: string; created_at: string }
 interface Props { user: { id: number; nama: string; email: string; role: string } }
@@ -23,6 +24,11 @@ export default function AdminClient({ user }: Props) {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [showPass, setShowPass] = useState(false)
+
+  // Optimize state hooks
+  const [optimizeLoading, setOptimizeLoading] = useState(false)
+  const [optimizeResult, setOptimizeResult] = useState<any>(null)
+  const [optimizeModalOpen, setOptimizeModalOpen] = useState(false)
 
   const [fNama, setFNama] = useState('')
   const [fEmail, setFEmail] = useState('')
@@ -52,6 +58,10 @@ export default function AdminClient({ user }: Props) {
     if (!fNama.trim() || !fEmail.trim()) { toast.error('Nama dan email wajib diisi'); return }
     if (!editTarget && !fPassword) { toast.error('Password wajib diisi untuk user baru'); return }
     if (fPassword && fPassword.length < 6) { toast.error('Password minimal 6 karakter'); return }
+    if (!/^[a-zA-Z\s.']*$/.test(fNama)) {
+      toast.error('Nama hanya boleh berisi huruf dan simbol . \'')
+      return
+    }
     setSaving(true)
 
     const body: Record<string, unknown> = { nama: fNama.trim(), email: fEmail.trim(), role: fRole }
@@ -79,6 +89,21 @@ export default function AdminClient({ user }: Props) {
     toast.success('User dihapus')
     clearJsonCache()
     setDeleting(false); setDeleteTarget(null); load()
+  }
+
+  async function handleOptimize() {
+    setOptimizeLoading(true)
+    try {
+      const res = await fetch('/api/admin/optimize', { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Gagal mengoptimalkan database')
+      setOptimizeResult(json)
+      toast.success('Database dioptimalkan sempurna!')
+      setOptimizeModalOpen(true)
+    } catch (e: any) {
+      toast.error(e.message)
+    }
+    setOptimizeLoading(false)
   }
 
   // Stats by role
@@ -130,6 +155,12 @@ export default function AdminClient({ user }: Props) {
           <p className="page-sub mt-0.5">Buat, edit, dan hapus akun pengguna sistem</p>
         </div>
         <div className="flex gap-2">
+          <button onClick={handleOptimize} disabled={optimizeLoading} className="btn-secondary text-[#5482B4] border-[#5482B4]/20 hover:bg-[#5482B4]/5">
+            <span className="flex items-center gap-2 font-semibold">
+              {optimizeLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Cpu className="w-4 h-4 text-emerald-500" />}
+              Optimalkan DB
+            </span>
+          </button>
           <button onClick={() => window.open('/api/admin/backup', '_blank')} className="btn-secondary">
             <span className="flex items-center gap-2 text-indigo-600 font-semibold">
               <Database className="w-4 h-4" />
@@ -192,11 +223,11 @@ export default function AdminClient({ user }: Props) {
           </div>
           <div className="form-group">
             <label className="label">Role / Hak Akses *</label>
-            <select value={fRole} onChange={e => setFRole(e.target.value)} className="input">
-              {Object.entries(ROLE_LABELS).map(([val, label]) => (
-                <option key={val} value={val}>{label}</option>
-              ))}
-            </select>
+            <Select
+              value={fRole}
+              onChange={setFRole}
+              options={Object.entries(ROLE_LABELS).map(([val, label]) => ({ value: val, label }))}
+            />
           </div>
           <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 flex gap-2.5 text-xs text-amber-700">
             <Shield className="w-4 h-4 flex-shrink-0 mt-0.5"/>
@@ -213,6 +244,67 @@ export default function AdminClient({ user }: Props) {
       <ConfirmDialog open={!!deleteTarget} title="Hapus User?"
         message={`Akun "${deleteTarget?.nama}" (${ROLE_LABELS[deleteTarget?.role || ''] || deleteTarget?.role}) akan dihapus permanen.`}
         loading={deleting} onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
+
+      {/* Modal Hasil Optimasi */}
+      <Modal
+        open={optimizeModalOpen}
+        title="Status Optimasi & Ukuran Database"
+        onClose={() => setOptimizeModalOpen(false)}
+        size="md"
+        footer={
+          <div className="flex gap-2 justify-end">
+            <button onClick={() => setOptimizeModalOpen(false)} className="btn-primary">Selesai</button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <div className="p-4 bg-[#C2E8FF]/20 border border-[#C2E8FF]/40 rounded-2xl">
+            <div className="flex items-center gap-2 text-[#052659] font-black mb-2.5">
+              <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse" />
+              Database Dioptimalkan Sempurna!
+            </div>
+            <p className="text-xs text-[#7EA0C5] leading-relaxed">
+              Query planner PostgreSQL telah disegarkan dengan menjalankan fungsi <code className="bg-white/60 px-1 rounded font-mono">ANALYZE</code>. Indeks relasi kini berjalan dengan efisiensi puncak.
+            </p>
+            <div className="grid grid-cols-3 gap-2 mt-4">
+              <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm text-center">
+                <span className="block text-[10px] text-slate-400 font-bold uppercase">Log Pruned</span>
+                <span className="text-sm font-black font-mono text-slate-700">+{optimizeResult?.summary?.prunedLogs || 0}</span>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm text-center">
+                <span className="block text-[10px] text-slate-400 font-bold uppercase">QR Pruned</span>
+                <span className="text-sm font-black font-mono text-slate-700">+{optimizeResult?.summary?.prunedQrs || 0}</span>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm text-center">
+                <span className="block text-[10px] text-slate-400 font-bold uppercase">Chats Pruned</span>
+                <span className="text-sm font-black font-mono text-slate-700">+{optimizeResult?.summary?.prunedChats || 0}</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-xs font-bold text-[#011025] mb-2">Footprint Ukuran Tabel Live (PostgreSQL)</h4>
+            <div className="border border-slate-100 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-100 text-slate-500">
+                    <th className="p-2.5 font-bold">Nama Tabel</th>
+                    <th className="p-2.5 font-bold text-right">Ukuran Data + Index</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {optimizeResult?.tableSizes?.map((tbl: any) => (
+                    <tr key={tbl.table_name} className="hover:bg-slate-50 transition-colors">
+                      <td className="p-2.5 font-mono text-slate-600 font-semibold">{tbl.table_name}</td>
+                      <td className="p-2.5 text-right font-mono font-bold text-[#052659]">{tbl.total_size}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

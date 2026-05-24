@@ -6,6 +6,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { formatDateTime } from '@/lib/utils'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import { UserX, Trash2, Loader2, Search, Filter, Clock, ArrowLeft } from 'lucide-react'
+import Select from '@/components/ui/Select'
 
 interface HasilWawancara {
   id: number
@@ -228,22 +229,30 @@ export default function HapusPesertaClient({ user }: Props) {
               <Filter className="w-3.5 h-3.5 inline mr-1" />
               Ekskul
             </label>
-            <select value={orgFilter} onChange={(e) => setOrgFilter(e.target.value)} className="input py-2.5">
-              <option value="all">Semua Ekskul</option>
-              <option value="osis">OSIS</option>
-              <option value="mpk">MPK</option>
-            </select>
+            <Select
+              value={orgFilter}
+              onChange={setOrgFilter}
+              options={[
+                { value: 'all', label: 'Semua Ekskul' },
+                { value: 'osis', label: 'OSIS' },
+                { value: 'mpk', label: 'MPK' },
+              ]}
+            />
           </div>
           <div className="w-44">
             <label className="label text-xs font-bold text-slate-600 mb-1.5 block">
               <Clock className="w-3.5 h-3.5 inline mr-1" />
               Status Sesi
             </label>
-            <select value={sessionFilter} onChange={(e) => setSessionFilter(e.target.value)} className="input py-2.5">
-              <option value="all">Semua Sesi</option>
-              <option value="SCHEDULED">Terjadwal</option>
-              <option value="ACTIVE">Aktif</option>
-            </select>
+            <Select
+              value={sessionFilter}
+              onChange={setSessionFilter}
+              options={[
+                { value: 'all', label: 'Semua Sesi' },
+                { value: 'SCHEDULED', label: 'Terjadwal' },
+                { value: 'ACTIVE', label: 'Aktif' },
+              ]}
+            />
           </div>
         </div>
       </div>

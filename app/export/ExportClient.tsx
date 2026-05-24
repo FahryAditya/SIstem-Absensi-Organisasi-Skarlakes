@@ -6,6 +6,7 @@ import { formatDate, ORG_LABELS, OrgType } from '@/lib/utils'
 import { getAccessibleOrgs } from '@/lib/auth-shared'
 import { BarChart3, Calendar, ClipboardList, Database, Download, FileSpreadsheet, Filter, Loader2, Search, ShieldAlert, Trash2, Wallet } from 'lucide-react'
 import { format, startOfMonth } from 'date-fns'
+import Select from '@/components/ui/Select'
 
 interface Props {
   user: { id: number; nama: string; email: string; role: string }
@@ -174,10 +175,13 @@ export default function ExportClient({ user }: Props) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="form-group">
               <label className="label"><Filter className="w-3 h-3 inline mr-1" />Ekskul</label>
-              <select value={orgFilter} onChange={e => setOrgFilter(e.target.value)} className="input" disabled={!isSuperAdmin && orgs.length <= 1}>
-                {isSuperAdmin && <option value="">Semua ekskul</option>}
-                {orgs.map(o => <option key={o} value={o}>{ORG_LABELS[o]}</option>)}
-              </select>
+              <Select
+                value={orgFilter}
+                onChange={setOrgFilter}
+                disabled={!isSuperAdmin && orgs.length <= 1}
+                placeholder={isSuperAdmin ? 'Semua ekskul' : undefined}
+                options={orgs.map(o => ({ value: o, label: ORG_LABELS[o] }))}
+              />
             </div>
             <div className="form-group">
               <label className="label">Kelas</label>
@@ -233,15 +237,19 @@ export default function ExportClient({ user }: Props) {
             <div className="space-y-3">
               <div className="form-group">
                 <label className="label">Ekskul *</label>
-                <select value={clearOrg} onChange={e => { setClearOrg(e.target.value); setClearConfirm('') }} className="input">
-                  {orgs.map(o => <option key={o} value={o}>{ORG_LABELS[o]}</option>)}
-                </select>
+                <Select
+                  value={clearOrg}
+                  onChange={v => { setClearOrg(v); setClearConfirm('') }}
+                  options={orgs.map(o => ({ value: o, label: ORG_LABELS[o] }))}
+                />
               </div>
               <div className="form-group">
                 <label className="label">Data yang Dihapus *</label>
-                <select value={clearType} onChange={e => setClearType(e.target.value as ClearType)} className="input">
-                  {clearOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
+                <Select
+                  value={clearType}
+                  onChange={v => setClearType(v as ClearType)}
+                  options={clearOptions.map(o => ({ value: o.value, label: o.label }))}
+                />
                 <p className="text-xs text-slate-500 mt-1">{clearOptions.find(o => o.value === clearType)?.desc}</p>
               </div>
               <div className="form-group">

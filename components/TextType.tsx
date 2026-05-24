@@ -1,7 +1,6 @@
 'use client';
 
 import { ElementType, useEffect, useRef, useState, createElement, useMemo, useCallback } from 'react';
-import { gsap } from 'gsap';
 
 interface TextTypeProps {
   className?: string;
@@ -68,34 +67,32 @@ const TextType = ({
 
   useEffect(() => {
     if (!startOnVisible || !containerRef.current) return;
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+      setIsVisible(true);
+      return;
+    }
 
-    const observer = new IntersectionObserver(
-      entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            setIsVisible(true);
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
+    try {
+      const observer = new IntersectionObserver(
+        entries => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              setIsVisible(true);
+            }
+          });
+        },
+        { threshold: 0.1 }
+      );
 
-    observer.observe(containerRef.current);
-    return () => observer.disconnect();
+      observer.observe(containerRef.current);
+      return () => observer.disconnect();
+    } catch (e) {
+      setIsVisible(true);
+    }
   }, [startOnVisible]);
 
-  useEffect(() => {
-    if (showCursor && cursorRef.current) {
-      gsap.set(cursorRef.current, { opacity: 1 });
-      gsap.to(cursorRef.current, {
-        opacity: 0,
-        duration: cursorBlinkDuration,
-        repeat: -1,
-        yoyo: true,
-        ease: 'power2.inOut'
-      });
-    }
-  }, [showCursor, cursorBlinkDuration]);
+  // Cursor blink via CSS — no GSAP needed
+  // (handled by className 'animate-cursor-blink' below)
 
   useEffect(() => {
     if (!isVisible) return;
@@ -184,6 +181,7 @@ const TextType = ({
       <span
         ref={cursorRef}
         className={`ml-1 inline-block opacity-100 ${shouldHideCursor ? 'hidden' : ''} ${cursorClassName}`}
+        style={{ animation: `cursorBlink ${cursorBlinkDuration * 2}s step-end infinite` }}
       >
         {cursorCharacter}
       </span>
