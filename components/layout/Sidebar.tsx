@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
 import Image from 'next/image'
 import {
-  LayoutDashboard, Users, ClipboardList, Building2, UserCog,
+  LayoutDashboard, Users, ClipboardList, Building2, UserCog, Mail,
   Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode, UserX, Megaphone, BarChart3, Camera,
   Trophy, Star, BookOpen, CalendarDays, ClipboardCheck, Zap
 } from 'lucide-react'
@@ -68,6 +68,7 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
   }
 
   items.push({ type: 'section', label: 'Tools' })
+  items.push({ type: 'link', href: '/admin/email', label: 'Pengumuman', icon: Mail })
   items.push({ type: 'link', href: '/admin/exp', label: 'Kelola EXP', icon: Zap })
   if (role === 'administrator') {
     items.push({ type: 'link', href: '/admin', label: 'Kelola User', icon: UserCog })
