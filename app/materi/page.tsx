@@ -179,7 +179,7 @@ export default function MateriPage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[#1a1d27] border border-white/10 rounded-2xl w-full max-w-lg p-6">
+          <div className="bg-[#1a1d27] border border-white/10 rounded-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto flex flex-col">
             <h2 className="text-lg font-bold mb-5">{editItem ? 'Edit' : 'Tambah'} {isEkskul ? 'Materi' : 'Notulen Rapat'}</h2>
             <div className="space-y-4">
               <div>

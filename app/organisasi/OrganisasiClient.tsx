@@ -38,6 +38,9 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
   const [activeOrg, setActiveOrg] = useState<'osis' | 'mpk'>(defaultOrg || (canAccessOsis(user.role) ? 'osis' : 'mpk'))
   const [subTab, setSubTab] = useState<'anggota' | 'absensi'>('anggota')
 
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
   // Anggota state
   const [anggota, setAnggota] = useState<Anggota[]>([])
   const [loadingAnggota, setLoadingAnggota] = useState(true)
@@ -258,6 +261,8 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
       </div>
     )},
   ]
+
+  if (!mounted) return null;
 
   return (
     <div className="space-y-5">

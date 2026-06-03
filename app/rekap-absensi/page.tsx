@@ -54,8 +54,8 @@ export default function RekapAbsensiPage() {
     try {
       let url = ''
       if (tab.key === 'siswa') url = `/api/siswa?ekskul=${tab.ekskul}&limit=100`
-      else if (tab.key === 'osis') url = `/api/organisasi?org=osis&limit=100`
-      else url = `/api/organisasi?org=mpk&limit=100`
+      else if (tab.key === 'osis') url = `/api/organisasi?tipe=osis&limit=100`
+      else url = `/api/organisasi?tipe=mpk&limit=100`
       const res = await fetch(url)
       const json = await res.json()
       setMembers(json.data || [])

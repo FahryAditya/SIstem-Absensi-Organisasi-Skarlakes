@@ -13,35 +13,6 @@ import Modal from '@/components/ui/Modal'
 import Select from '@/components/ui/Select'
 import { format } from 'date-fns'
 
-// ... in AbsensiClient ...
-  const [awardModalOpen, setAwardModalOpen] = useState(false)
-  const [selectedStudent, setSelectedStudent] = useState<{ id: number; nama: string; org: string } | null>(null)
-  const [awardId, setAwardId] = useState<number | null>(null)
-  const [givingAward, setGivingAward] = useState(false)
-
-  async function handleGiveAward() {
-    if (!selectedStudent || !awardId) {
-      toast.error('Pilih penghargaan terlebih dahulu')
-      return
-    }
-    setGivingAward(true)
-    const tipe = selectedStudent.org === 'osis' ? 'anggota_osis' : selectedStudent.org === 'mpk' ? 'anggota_mpk' : 'siswa'
-    const res = await fetch('/api/pencapaian/berikan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        pencapaian_id: awardId,
-        penerima: [{ tipe_anggota: tipe, target_id: selectedStudent.id }]
-      })
-    })
-    const json = await res.json()
-    if (!res.ok) toast.error(json.error || 'Gagal')
-    else {
-      toast.success('Penghargaan berhasil diberikan')
-      setAwardModalOpen(false)
-    }
-    setGivingAward(false)
-  }
 
 interface Siswa { id: number; nama: string; kelas: string | null; ekskul: string }
 interface AbsensiRow { siswa_id: number; nama: string; kelas: string | null; ekskul: string; status: string; uang_kas: number; keterangan: string }
@@ -73,6 +44,12 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
   const [bulkRows, setBulkRows] = useState<AbsensiRow[]>([])
   const [loadingBulk, setLoadingBulk] = useState(false)
   const [saving, setSaving] = useState(false)
+
+  // Award state
+  const [awardModalOpen, setAwardModalOpen] = useState(false)
+  const [selectedStudent, setSelectedStudent] = useState<{ id: number; nama: string; org: string } | null>(null)
+  const [awardId, setAwardId] = useState<number | null>(null)
+  const [givingAward, setGivingAward] = useState(false)
 
   // Riwayat state
   const [riwayat, setRiwayat] = useState<AbsensiRecord[]>([])
@@ -144,6 +121,30 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
     toast.success(`✅ Absensi ${bulkRows.length} siswa tersimpan!`, { duration: 4000 })
     clearJsonCache()
     setSaving(false)
+  }
+
+  async function handleGiveAward() {
+    if (!selectedStudent || !awardId) {
+      toast.error('Pilih penghargaan terlebih dahulu')
+      return
+    }
+    setGivingAward(true)
+    const tipe = selectedStudent.org === 'osis' ? 'anggota_osis' : selectedStudent.org === 'mpk' ? 'anggota_mpk' : 'siswa'
+    const res = await fetch('/api/pencapaian/berikan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pencapaian_id: awardId,
+        penerima: [{ tipe_anggota: tipe, target_id: selectedStudent.id }]
+      })
+    })
+    const json = await res.json()
+    if (!res.ok) toast.error(json.error || 'Gagal')
+    else {
+      toast.success('Penghargaan berhasil diberikan')
+      setAwardModalOpen(false)
+    }
+    setGivingAward(false)
   }
 
   const hadirCount = bulkRows.filter(r => r.status === 'hadir').length
