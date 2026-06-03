@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { Zap, Search, Plus, Minus, Send, History } from 'lucide-react'
+import { useEffect, useState, useCallback, useRef } from 'react'
+import { Zap, Search, Plus, Minus, Send, History, ChevronDown, Check } from 'lucide-react'
 import { SessionUser } from '@/lib/auth'
 
 interface AdminExpClientProps {
@@ -52,9 +52,29 @@ export default function AdminExpClient({ user }: AdminExpClientProps) {
   const [reason, setReason] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
+  // Custom searchable dropdown states
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const dropdownContainerRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownContainerRef.current && !dropdownContainerRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
   const loadMembers = useCallback(async (org: string) => {
     setLoadingMembers(true)
     setSelectedMember(null)
+    setSearchQuery('')
+    setIsDropdownOpen(false)
     try {
       const url = org === 'programming' || org === 'english'
         ? `/api/siswa?ekskul=${org}&limit=200`
@@ -126,6 +146,11 @@ export default function AdminExpClient({ user }: AdminExpClientProps) {
     }
   }
 
+  const filteredMembers = members.filter(m => 
+    m.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (m.kelas && m.kelas.toLowerCase().includes(searchQuery.toLowerCase()))
+  )
+
   return (
     <div className="space-y-6">
       {/* Tabs */}
@@ -155,19 +180,106 @@ export default function AdminExpClient({ user }: AdminExpClientProps) {
             </h2>
 
             <div className="space-y-5">
-              <div>
+              <div className="relative" ref={dropdownContainerRef}>
                 <label className="block text-sm font-medium text-slate-400 mb-2">Pilih Anggota</label>
-                <select 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
-                  value={selectedMember?.id || ''}
-                  onChange={(e) => setSelectedMember(members.find(m => m.id === parseInt(e.target.value)) || null)}
+                
+                <button
+                  type="button"
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  disabled={loadingMembers}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 text-left flex items-center justify-between transition-all hover:bg-white/10 hover:border-white/20 disabled:opacity-50"
                 >
-                  <option value="">-- Pilih Anggota --</option>
-                  {members.map(m => (
-                    <option key={m.id} value={m.id}>{m.nama} (Lv{m.level} • {m.xp} EXP)</option>
-                  ))}
-                </select>
-                {loadingMembers && <p className="text-xs text-slate-500 mt-2">Memuat anggota...</p>}
+                  {selectedMember ? (
+                    <div className="flex items-center justify-between w-full pr-2">
+                      <div className="flex items-center gap-2.5">
+                        <span className="font-semibold text-white">{selectedMember.nama}</span>
+                        {selectedMember.kelas && (
+                          <span className="text-xs px-2 py-0.5 rounded bg-white/10 text-slate-300 font-medium">
+                            {selectedMember.kelas}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded font-bold">
+                          Lv.{selectedMember.level}
+                        </span>
+                        <span className="text-xs text-slate-400">{selectedMember.xp} EXP</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-slate-400">
+                      {loadingMembers ? 'Memuat data anggota...' : '-- Pilih Anggota --'}
+                    </span>
+                  )}
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isDropdownOpen && (
+                  <div className="absolute left-0 right-0 mt-2 bg-[#161922] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden backdrop-blur-xl animate-in fade-in duration-200">
+                    <div className="p-2 border-b border-white/5 relative">
+                      <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Cari anggota berdasarkan nama atau kelas..."
+                        className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500 placeholder-slate-500"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                    
+                    <ul className="max-h-60 overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                      {filteredMembers.length === 0 ? (
+                        <li className="px-4 py-6 text-sm text-slate-500 text-center">
+                          Tidak ada anggota yang ditemukan
+                        </li>
+                      ) : (
+                        filteredMembers.map(m => {
+                          const isSelected = selectedMember?.id === m.id
+                          return (
+                            <li key={m.id}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedMember(m)
+                                  setIsDropdownOpen(false)
+                                  setSearchQuery('')
+                                }}
+                                className={`w-full px-4 py-3 text-left hover:bg-white/5 flex items-center justify-between text-sm transition-colors border-b border-white/[0.02] last:border-b-0 ${
+                                  isSelected ? 'bg-blue-500/10 hover:bg-blue-500/15' : ''
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5">
+                                  <span className={`font-medium ${isSelected ? 'text-blue-400' : 'text-white'}`}>
+                                    {m.nama}
+                                  </span>
+                                  {m.kelas && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-slate-400 font-medium">
+                                      {m.kelas}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-xs bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded font-semibold">
+                                      Lv.{m.level}
+                                    </span>
+                                    <span className="text-xs text-slate-500">{m.xp} EXP</span>
+                                  </div>
+                                  {isSelected && <Check className="w-4 h-4 text-blue-400" />}
+                                </div>
+                              </button>
+                            </li>
+                          )
+                        })
+                      )}
+                    </ul>
+                  </div>
+                )}
+
+                {loadingMembers && !isDropdownOpen && (
+                  <p className="text-xs text-slate-500 mt-2 animate-pulse">Memuat anggota...</p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
