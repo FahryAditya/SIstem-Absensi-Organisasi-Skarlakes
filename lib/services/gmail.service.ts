@@ -9,6 +9,23 @@ interface SendEmailOptions {
 }
 
 async function createGmailTransporter() {
+  const debugMode = process.env.NODE_ENV !== 'production' || process.env.GMAIL_SMTP_DEBUG === 'true'
+
+  // Jika GMAIL_APP_PASSWORD diset, gunakan metode App Password yang lebih simpel & andal
+  if (process.env.GMAIL_APP_PASSWORD) {
+    return nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      debug: debugMode,
+      logger: debugMode,
+      auth: {
+        user: process.env.GMAIL_FROM_EMAIL,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
+    })
+  }
+
   const serviceAccountKey = {
     type: 'service_account',
     project_id: process.env.GMAIL_SERVICE_ACCOUNT_EMAIL?.split('@')[1]?.split('.')[0],
@@ -31,6 +48,8 @@ async function createGmailTransporter() {
     host: 'smtp.gmail.com',
     port: 465,
     secure: true,
+    debug: debugMode,
+    logger: debugMode,
     auth: {
       type: 'OAuth2',
       user: process.env.GMAIL_FROM_EMAIL,
