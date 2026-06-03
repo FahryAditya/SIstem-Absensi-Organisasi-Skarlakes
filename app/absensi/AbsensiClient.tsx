@@ -62,6 +62,9 @@ const STATUS_OPTIONS = [
 const PAGE_SIZE = 20
 
 export default function AbsensiClient({ user, defaultOrg }: Props) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
   const [mode, setMode] = useState<'input' | 'riwayat'>('input')
 
   // Input state
@@ -167,6 +170,8 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
     { key: 'keterangan', label: 'Keterangan', render: (a: AbsensiRecord) => <span className="text-slate-400 text-xs">{a.keterangan || '-'}</span> },
     { key: 'creator', label: 'Di-input oleh', render: (a: AbsensiRecord) => <span className="text-slate-500 text-xs">{a.creator?.nama || '-'}</span> },
   ]
+
+  if (!mounted) return null;
 
   return (
     <div className="space-y-5">
