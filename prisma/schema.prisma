@@ -584,3 +584,12 @@ model EmailImportLog {
   @@index([status])
   @@map("email_import_logs")
 }
+
+model EmailSetting {
+  id          Int      @id @default(autoincrement())
+  email       String   @db.VarChar(150)
+  appPassword String   @db.VarChar(255)
+  updated_at  DateTime @updatedAt
+
+  @@map("email_settings")
+}

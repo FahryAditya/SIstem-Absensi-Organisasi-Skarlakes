@@ -31,6 +31,13 @@ export default function AdminClient({ user }: Props) {
   const [optimizeResult, setOptimizeResult] = useState<any>(null)
   const [optimizeModalOpen, setOptimizeModalOpen] = useState(false)
 
+  // Email Setting state
+  const [emailModalOpen, setEmailModalOpen] = useState(false)
+  const [emailLoading, setEmailLoading] = useState(false)
+  const [fEmailSender, setFEmailSender] = useState('')
+  const [fAppPassword, setFAppPassword] = useState('')
+  const [savingEmail, setSavingEmail] = useState(false)
+
   const [fNama, setFNama] = useState('')
   const [fEmail, setFEmail] = useState('')
   const [fPassword, setFPassword] = useState('')
@@ -50,6 +57,47 @@ export default function AdminClient({ user }: Props) {
   }, [])
 
   useEffect(() => { load() }, [load])
+
+  async function openEmailSetting() {
+    setEmailModalOpen(true)
+    setEmailLoading(true)
+    try {
+      const res = await fetch('/api/admin/email-setting')
+      const json = await res.json()
+      if (json.success && json.data) {
+        setFEmailSender(json.data.email)
+        setFAppPassword(json.data.appPassword || '')
+      } else {
+        setFEmailSender('')
+        setFAppPassword('')
+      }
+    } catch (e) {
+      toast.error('Gagal memuat pengaturan email')
+    }
+    setEmailLoading(false)
+  }
+
+  async function handleSaveEmail() {
+    if (!fEmailSender.trim() || !fAppPassword.trim()) {
+      toast.error('Email dan App Password wajib diisi')
+      return
+    }
+    setSavingEmail(true)
+    try {
+      const res = await fetch('/api/admin/email-setting', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: fEmailSender.trim(), appPassword: fAppPassword.trim() })
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Gagal menyimpan')
+      toast.success('Pengaturan email berhasil disimpan')
+      setEmailModalOpen(false)
+    } catch (e: any) {
+      toast.error(e.message)
+    }
+    setSavingEmail(false)
+  }
 
   function openAdd() {
     setEditTarget(null); setFNama(''); setFEmail(''); setFPassword(''); setFRole('admin_programming')
@@ -222,6 +270,12 @@ export default function AdminClient({ user }: Props) {
           <p className="page-sub mt-0.5">Buat, edit, dan hapus akun pengguna sistem</p>
         </div>
         <div className="flex gap-2">
+          {user.role === 'administrator' && (
+            <button onClick={openEmailSetting} className="btn-secondary text-indigo-600 font-semibold">
+              <Mail className="w-4 h-4" />
+              Pengirim Email
+            </button>
+          )}
           <button onClick={() => setAwardModalOpen(true)} className="btn-secondary text-indigo-600 font-semibold">
             <Sparkles className="w-4 h-4" />
             Beri Penghargaan
@@ -422,6 +476,44 @@ export default function AdminClient({ user }: Props) {
               </table>
             </div>
           </div>
+        </div>
+      </Modal>
+
+      {/* Modal Pengaturan Email */}
+      <Modal open={emailModalOpen} title="Pengaturan Email Pengirim" onClose={() => setEmailModalOpen(false)} size="md"
+        footer={
+          <div className="flex gap-2 justify-end">
+            <button onClick={() => setEmailModalOpen(false)} className="btn-secondary">Batal</button>
+            <button onClick={handleSaveEmail} disabled={savingEmail || emailLoading} className="btn-primary">
+              {savingEmail ? 'Menyimpan...' : 'Simpan Perubahan'}
+            </button>
+          </div>
+        }>
+        <div className="space-y-4">
+          {emailLoading ? (
+            <div className="flex flex-col items-center justify-center py-8 text-slate-400">
+              <Loader2 className="w-8 h-8 animate-spin mb-2" />
+              <p className="text-sm">Memuat pengaturan...</p>
+            </div>
+          ) : (
+            <>
+              <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-[11px] text-blue-700 leading-relaxed">
+                <div className="flex gap-2 font-bold mb-1"><Shield className="w-3.5 h-3.5" /> INFORMASI PENTING</div>
+                Gunakan <strong>Sandi Aplikasi (App Password)</strong> Gmail 16-karakter. Jangan gunakan sandi utama akun Google Anda. Email ini akan digunakan oleh seluruh admin untuk mengirimkan pengumuman.
+              </div>
+              <div className="form-group">
+                <label className="label">Alamat Email Gmail *</label>
+                <div className="relative"><Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/>
+                  <input type="email" value={fEmailSender} onChange={e => setFEmailSender(e.target.value)} placeholder="contoh@gmail.com" className="input pl-10" /></div>
+              </div>
+              <div className="form-group">
+                <label className="label">Sandi Aplikasi (16 Karakter) *</label>
+                <div className="relative"><Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/>
+                  <input type="password" value={fAppPassword} onChange={e => setFAppPassword(e.target.value)}
+                    placeholder="xxxx xxxx xxxx xxxx" className="input pl-10" /></div>
+              </div>
+            </>
+          )}
         </div>
       </Modal>
     </div>

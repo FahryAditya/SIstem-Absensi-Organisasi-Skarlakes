@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer'
 import { google } from 'googleapis'
+import { prisma } from '@/lib/prisma'
 
 interface SendEmailOptions {
   to: string[]
@@ -8,24 +9,51 @@ interface SendEmailOptions {
   bcc?: string[]
 }
 
+/**
+ * Ambil konfigurasi email pengirim dari database.
+ * Jika belum diatur di DB, fallback ke environment variables.
+ */
+async function getEmailCredentials(): Promise<{ email: string; appPassword: string | null }> {
+  try {
+    const setting = await prisma.emailSetting.findFirst()
+    if (setting && setting.email && setting.appPassword) {
+      return { email: setting.email, appPassword: setting.appPassword }
+    }
+  } catch (e) {
+    console.warn('Gagal membaca email setting dari DB, fallback ke env:', e)
+  }
+
+  return {
+    email: process.env.GMAIL_FROM_EMAIL || '',
+    appPassword: process.env.GMAIL_APP_PASSWORD || null,
+  }
+}
+
 async function createGmailTransporter() {
   const debugMode = process.env.NODE_ENV !== 'production' || process.env.GMAIL_SMTP_DEBUG === 'true'
 
-  // Jika GMAIL_APP_PASSWORD diset, gunakan metode App Password yang lebih simpel & andal
-  if (process.env.GMAIL_APP_PASSWORD) {
-    return nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      debug: debugMode,
-      logger: debugMode,
-      auth: {
-        user: process.env.GMAIL_FROM_EMAIL,
-        pass: process.env.GMAIL_APP_PASSWORD,
-      },
-    })
+  // 1. Coba ambil kredensial dari database terlebih dahulu
+  const creds = await getEmailCredentials()
+
+  // 2. Jika ada App Password (dari DB atau env), gunakan metode App Password
+  if (creds.appPassword) {
+    return {
+      transporter: nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        debug: debugMode,
+        logger: debugMode,
+        auth: {
+          user: creds.email,
+          pass: creds.appPassword,
+        },
+      }),
+      fromEmail: creds.email,
+    }
   }
 
+  // 3. Fallback: Google Service Account (OAuth2)
   const serviceAccountKey = {
     type: 'service_account',
     project_id: process.env.GMAIL_SERVICE_ACCOUNT_EMAIL?.split('@')[1]?.split('.')[0],
@@ -44,27 +72,30 @@ async function createGmailTransporter() {
   // Dapatkan client authorization
   const authClient = await auth.getClient()
 
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    debug: debugMode,
-    logger: debugMode,
-    auth: {
-      type: 'OAuth2',
-      user: process.env.GMAIL_FROM_EMAIL,
-      serviceClient: serviceAccountKey.client_email,
-      privateKey: serviceAccountKey.private_key,
-    } as any,
-  })
+  return {
+    transporter: nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      debug: debugMode,
+      logger: debugMode,
+      auth: {
+        type: 'OAuth2',
+        user: creds.email || process.env.GMAIL_FROM_EMAIL,
+        serviceClient: serviceAccountKey.client_email,
+        privateKey: serviceAccountKey.private_key,
+      } as any,
+    }),
+    fromEmail: creds.email || process.env.GMAIL_FROM_EMAIL || '',
+  }
 }
 
 export async function sendEmail(options: SendEmailOptions) {
   try {
-    const transporter = await createGmailTransporter()
+    const { transporter, fromEmail } = await createGmailTransporter()
 
     const mailOptions = {
-      from: process.env.GMAIL_FROM_EMAIL,
+      from: fromEmail,
       to: options.to.join(','),
       subject: options.subject,
       html: options.html,
