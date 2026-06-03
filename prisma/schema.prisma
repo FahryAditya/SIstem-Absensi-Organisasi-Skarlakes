@@ -30,6 +30,8 @@ model User {
   sesi_wawancara      SesiWawancara[]
   siswa_dibuat        Siswa[]               @relation("SiswaCreatedBy")
   updates_created     SystemUpdate[]        @relation("UpdateCreatedBy")
+  email_logs          EmailLog[]            @relation("AdminEmailLogs")
+  email_import_logs   EmailImportLog[]      @relation("AdminImportLogs")
 
   @@index([created_at])
   @@map("users")
@@ -52,6 +54,7 @@ model Siswa {
   absensi    Absensi[]
   creator    User              @relation("SiswaCreatedBy", fields: [created_by], references: [id])
   pencapaian SiswaPencapaian[]
+  email_logs EmailLog[]        @relation("SiswaEmailLogs")
 
   @@index([ekskul])
   @@index([xp])
@@ -97,6 +100,7 @@ model AnggotaOsis {
   updated_at DateTime            @updatedAt
   absensi    AbsensiOrganisasi[]
   pencapaian SiswaPencapaian[]
+  email_logs EmailLog[]          @relation("OsisEmailLogs")
 
   @@index([nama])
   @@index([kelas])
@@ -119,6 +123,7 @@ model AnggotaMpk {
   updated_at DateTime            @updatedAt
   absensi    AbsensiOrganisasi[]
   pencapaian SiswaPencapaian[]
+  email_logs EmailLog[]          @relation("MpkEmailLogs")
 
   @@index([nama])
   @@index([kelas])
@@ -505,4 +510,77 @@ enum TipeAnggota {
   siswa
   anggota_osis
   anggota_mpk
+}
+
+model EmailLog {
+  id               Int            @id @default(autoincrement())
+  subject          String         @db.VarChar(255)
+  recipientEmail   String         @db.VarChar(150)
+  recipientName    String         @db.VarChar(100)
+  emailType        String         @db.VarChar(50)  // "pertemuan", "rapat", "masalah", "pembahasan"
+  organizationType OrganisasiType
+  content          String         @db.Text
+  
+  tipe_anggota     TipeAnggota
+  siswa_id         Int?
+  anggota_osis_id  Int?
+  anggota_mpk_id   Int?
+
+  siswa            Siswa?         @relation("SiswaEmailLogs", fields: [siswa_id], references: [id], onDelete: Cascade)
+  anggota_osis     AnggotaOsis?   @relation("OsisEmailLogs", fields: [anggota_osis_id], references: [id], onDelete: Cascade)
+  anggota_mpk      AnggotaMpk?    @relation("MpkEmailLogs", fields: [anggota_mpk_id], references: [id], onDelete: Cascade)
+  
+  admin_id         Int
+  admin            User           @relation("AdminEmailLogs", fields: [admin_id], references: [id], onDelete: Cascade)
+  
+  status           String         @default("sent") @db.VarChar(20) // "sent", "failed"
+  error_message    String?        @db.Text
+  
+  sent_at          DateTime?
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @updatedAt
+
+  @@index([siswa_id])
+  @@index([anggota_osis_id])
+  @@index([anggota_mpk_id])
+  @@index([admin_id])
+  @@index([status])
+  @@index([created_at])
+  @@map("email_logs")
+}
+
+model EmailTemplate {
+  id               Int            @id @default(autoincrement())
+  organizationType OrganisasiType
+  emailType        String         @db.VarChar(50)
+  subject          String         @db.Text
+  bodyTemplate     String         @db.Text // HTML dengan {{placeholder}}
+  description      String?        @db.Text
+  isActive         Boolean        @default(true)
+  created_by       Int
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @updatedAt
+  
+  @@unique([organizationType, emailType])
+  @@index([isActive])
+  @@map("email_templates")
+}
+
+model EmailImportLog {
+  id               Int            @id @default(autoincrement())
+  filename         String         @db.VarChar(255)
+  totalRows        Int
+  successRows      Int
+  failureRows      Int
+  organizationType OrganisasiType
+  admin_id         Int
+  admin            User           @relation("AdminImportLogs", fields: [admin_id], references: [id], onDelete: Cascade)
+  errors           String         @db.Text // JSON array
+  status           String         @default("completed") @db.VarChar(20)
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @updatedAt
+  
+  @@index([admin_id])
+  @@index([status])
+  @@map("email_import_logs")
 }
