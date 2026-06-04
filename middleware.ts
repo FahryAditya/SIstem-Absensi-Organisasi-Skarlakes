@@ -40,7 +40,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Protect admin management - administrator only
-  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/email') && session.role.trim() !== 'administrator') {
+  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/email') && !pathname.startsWith('/admin/exp') && session.role.trim() !== 'administrator') {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 

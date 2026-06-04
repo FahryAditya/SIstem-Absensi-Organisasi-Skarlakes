@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { BookOpen, FileText, Plus, Pencil, Trash2, Calendar, MapPin, ChevronDown, ArrowLeft } from 'lucide-react'
+import { BookOpen, FileText, Plus, Pencil, Trash2, Calendar, MapPin, ChevronDown, ArrowLeft, Loader2 } from 'lucide-react'
+import { getAccessibleOrgs } from '@/lib/auth-shared'
 
 interface MateriItem {
   id: number
@@ -32,18 +33,44 @@ const emptyForm = { judul: '', deskripsi: '', tanggal: '', organisasi: 'programm
 
 export default function MateriPage() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState('programming')
+  const [user, setUser] = useState<any>(null)
+  const [accessibleOrgs, setAccessibleOrgs] = useState<string[]>([])
+  const [activeTab, setActiveTab] = useState('')
   const [data, setData] = useState<MateriItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [authLoading, setAuthLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editItem, setEditItem] = useState<MateriItem | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [expandedId, setExpandedId] = useState<number | null>(null)
 
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await fetch('/api/auth/me')
+        const json = await res.json()
+        if (json.user) {
+          setUser(json.user)
+          const orgs = getAccessibleOrgs(json.user.role)
+          setAccessibleOrgs(orgs)
+          if (orgs.length > 0) setActiveTab(orgs[0])
+        } else {
+          router.push('/login')
+        }
+      } catch {
+        router.push('/login')
+      } finally {
+        setAuthLoading(false)
+      }
+    }
+    fetchUser()
+  }, [router])
+
   const isEkskul = ORG_TABS.find(t => t.key === activeTab)?.isEkskul ?? true
 
   const fetch_ = useCallback(async (org: string) => {
+    if (!org) return
     setLoading(true)
     try {
       const res = await fetch(`/api/materi?organisasi=${org}`)
@@ -52,7 +79,17 @@ export default function MateriPage() {
     } catch { setData([]) } finally { setLoading(false) }
   }, [])
 
-  useEffect(() => { fetch_(activeTab) }, [activeTab, fetch_])
+  useEffect(() => { 
+    if (activeTab) fetch_(activeTab) 
+  }, [activeTab, fetch_])
+
+  const filteredTabs = ORG_TABS.filter(t => accessibleOrgs.includes(t.key))
+
+  if (authLoading) return (
+    <div className="min-h-screen bg-[#0f1117] flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+    </div>
+  )
 
   function openCreate() {
     setForm({ ...emptyForm, organisasi: activeTab })
@@ -117,7 +154,7 @@ export default function MateriPage() {
 
         {/* Tabs */}
         <div className="flex gap-2 flex-wrap mb-6">
-          {ORG_TABS.map(tab => (
+          {filteredTabs.map(tab => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
               className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${activeTab === tab.key ? `bg-gradient-to-r ${ORG_COLORS[tab.key]} text-white border-transparent` : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}>
               {tab.label}

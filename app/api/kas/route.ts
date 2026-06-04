@@ -67,7 +67,8 @@ export async function GET(req: NextRequest) {
           nama: s.nama,
           kelas: s.kelas || '-',
           total_kas: s.absensi.reduce((sum: number, a: any) => sum + (a.uang_kas || 0), 0),
-          terakhir_bayar
+          terakhir_bayar,
+          organisasi: s.ekskul
         }
       })
     } else if (org === 'osis') {
@@ -104,7 +105,8 @@ export async function GET(req: NextRequest) {
           nama: a.nama,
           kelas: a.kelas ? `${a.kelas} ${a.jabatan ? `(${a.jabatan})` : ''}` : (a.jabatan || '-'),
           total_kas: a.absensi.reduce((sum: number, ab: any) => sum + (ab.uang_kas || 0), 0),
-          terakhir_bayar
+          terakhir_bayar,
+          organisasi: 'osis'
         }
       })
     } else if (org === 'mpk') {
@@ -141,7 +143,8 @@ export async function GET(req: NextRequest) {
           nama: a.nama,
           kelas: a.kelas ? `${a.kelas} ${a.jabatan ? `(${a.jabatan})` : ''}` : (a.jabatan || '-'),
           total_kas: a.absensi.reduce((sum: number, ab: any) => sum + (ab.uang_kas || 0), 0),
-          terakhir_bayar
+          terakhir_bayar,
+          organisasi: 'mpk'
         }
       })
     }

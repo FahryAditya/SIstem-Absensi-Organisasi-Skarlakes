@@ -198,6 +198,7 @@ export default function KasClient({ user }: Props) {
     {
       key: 'nama',
       label: 'Nama Anggota',
+      className: 'min-w-[150px]',
       render: (item: KasData) => (
         <div className="py-1">
           <div className="font-bold text-slate-800 text-sm leading-tight">{item.nama}</div>
@@ -206,8 +207,19 @@ export default function KasClient({ user }: Props) {
       )
     },
     {
+      key: 'organisasi',
+      label: 'Organisasi',
+      className: 'hidden sm:table-cell',
+      render: (item: KasData & { organisasi?: string }) => (
+        <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-slate-100 text-slate-600 uppercase tracking-tight">
+          {item.organisasi || activeOrg}
+        </span>
+      )
+    },
+    {
       key: 'total_kas',
       label: 'Total Kas',
+      className: 'min-w-[100px]',
       render: (item: KasData) => (
         <div className="font-mono font-bold text-emerald-600 text-sm">
           {formatCurrency(item.total_kas)}
@@ -217,6 +229,7 @@ export default function KasClient({ user }: Props) {
     {
       key: 'terakhir_bayar',
       label: 'Terakhir Bayar',
+      className: 'hidden md:table-cell min-w-[140px]',
       render: (item: KasData) => (
         <div className="flex items-center gap-1.5 text-slate-500 text-xs">
           <History className="w-3 h-3 text-slate-400" />

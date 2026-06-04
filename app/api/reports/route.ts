@@ -39,11 +39,18 @@ export async function GET(req: NextRequest) {
 
     // Kehadiran Statistics
     if (type === 'all' || type === 'attendance') {
-      const [absensiMingguan, absensiBulanan, absensiTahunan] = await Promise.all([
+      const [absensiSiswaMingguan, absensiOrgMingguan, absensiSiswaBulanan, absensiOrgBulanan, absensiSiswaTahunan, absensiOrgTahunan] = await Promise.all([
         ekskulOrgs.length ? prisma.absensi.findMany({
           where: {
             tanggal: { gte: start7 },
             siswa: { ekskul: { in: ekskulOrgs } }
+          },
+          select: { tanggal: true, status: true }
+        }) : Promise.resolve([]),
+        orgOrgs.length ? prisma.absensiOrganisasi.findMany({
+          where: {
+            tanggal: { gte: start7 },
+            organisasi_type: { in: orgOrgs as any[] }
           },
           select: { tanggal: true, status: true }
         }) : Promise.resolve([]),
@@ -54,6 +61,13 @@ export async function GET(req: NextRequest) {
           },
           select: { tanggal: true, status: true }
         }) : Promise.resolve([]),
+        orgOrgs.length ? prisma.absensiOrganisasi.findMany({
+          where: {
+            tanggal: { gte: start30 },
+            organisasi_type: { in: orgOrgs as any[] }
+          },
+          select: { tanggal: true, status: true }
+        }) : Promise.resolve([]),
         ekskulOrgs.length ? prisma.absensi.findMany({
           where: {
             tanggal: { gte: startYear },
@@ -61,7 +75,18 @@ export async function GET(req: NextRequest) {
           },
           select: { tanggal: true, status: true }
         }) : Promise.resolve([]),
+        orgOrgs.length ? prisma.absensiOrganisasi.findMany({
+          where: {
+            tanggal: { gte: startYear },
+            organisasi_type: { in: orgOrgs as any[] }
+          },
+          select: { tanggal: true, status: true }
+        }) : Promise.resolve([]),
       ])
+
+      const absensiMingguan = [...absensiSiswaMingguan, ...absensiOrgMingguan]
+      const absensiBulanan = [...absensiSiswaBulanan, ...absensiOrgBulanan]
+      const absensiTahunan = [...absensiSiswaTahunan, ...absensiOrgTahunan]
 
       // Weekly attendance
       response.kehadiranMingguan = Array.from({ length: 7 }, (_, i) => {
@@ -111,35 +136,18 @@ export async function GET(req: NextRequest) {
         }
       })
 
-      // Attendance by organization
+      // Attendance by organization (kept for separate view if needed)
       if (orgOrgs.length > 0) {
-        const [absensiOsis, absensiMpk] = await Promise.all([
-          orgOrgs.includes('osis') ? prisma.absensiOrganisasi.findMany({
-            where: {
-              tanggal: { gte: start30 },
-              organisasi_type: 'osis'
-            },
-            select: { tanggal: true, status: true }
-          }) : Promise.resolve([]),
-          orgOrgs.includes('mpk') ? prisma.absensiOrganisasi.findMany({
-            where: {
-              tanggal: { gte: start30 },
-              organisasi_type: 'mpk'
-            },
-            select: { tanggal: true, status: true }
-          }) : Promise.resolve([]),
-        ])
-
         response.kehadiranOrganisasi = {
-          osis: absensiOsis.length > 0 ? {
-            total: absensiOsis.length,
-            hadir: absensiOsis.filter(r => r.status === 'hadir').length,
-            tidak_hadir: absensiOsis.filter(r => r.status !== 'hadir').length,
+          osis: orgOrgs.includes('osis') ? {
+            total: absensiOrgBulanan.filter(a => (a as any).organisasi_type === 'osis').length,
+            hadir: absensiOrgBulanan.filter(a => (a as any).organisasi_type === 'osis' && a.status === 'hadir').length,
+            tidak_hadir: absensiOrgBulanan.filter(a => (a as any).organisasi_type === 'osis' && a.status !== 'hadir').length,
           } : null,
-          mpk: absensiMpk.length > 0 ? {
-            total: absensiMpk.length,
-            hadir: absensiMpk.filter(r => r.status === 'hadir').length,
-            tidak_hadir: absensiMpk.filter(r => r.status !== 'hadir').length,
+          mpk: orgOrgs.includes('mpk') ? {
+            total: absensiOrgBulanan.filter(a => (a as any).organisasi_type === 'mpk').length,
+            hadir: absensiOrgBulanan.filter(a => (a as any).organisasi_type === 'mpk' && a.status === 'hadir').length,
+            tidak_hadir: absensiOrgBulanan.filter(a => (a as any).organisasi_type === 'mpk' && a.status !== 'hadir').length,
           } : null,
         }
       }
@@ -147,7 +155,7 @@ export async function GET(req: NextRequest) {
 
     // Financial Statistics
     if (type === 'all' || type === 'finance') {
-      const [kasEkskulBulanan, kasOrgBulanan, pengeluaranBulanan, kasEkskulTahunan, kasOrgTahunan, pengeluaranTahunan] = await Promise.all([
+      const [kasSiswaBulanan, kasOrgBulanan, pengeluaranBulanan, kasSiswaTahunan, kasOrgTahunan, pengeluaranTahunan] = await Promise.all([
         ekskulOrgs.length ? prisma.absensi.findMany({
           where: {
             tanggal: { gte: start6Months },
@@ -192,14 +200,14 @@ export async function GET(req: NextRequest) {
         }) : Promise.resolve([]),
       ])
 
+      const kasBulanan = [...kasSiswaBulanan, ...kasOrgBulanan]
+      const kasTahunan = [...kasSiswaTahunan, ...kasOrgTahunan]
+
       // Monthly finance (6 months)
       const months6 = Array.from({ length: 6 }, (_, i) => subMonths(today, 5 - i))
       response.keuanganBulanan = months6.map(m => {
         const mStr = format(m, 'yyyy-MM')
-        const ekskulTotal = kasEkskulBulanan
-          .filter((a: any) => format(a.tanggal, 'yyyy-MM') === mStr)
-          .reduce((s: number, a: { uang_kas: number | null }) => s + (a.uang_kas || 0), 0)
-        const orgTotal = kasOrgBulanan
+        const pemasukanTotal = kasBulanan
           .filter((a: any) => format(a.tanggal, 'yyyy-MM') === mStr)
           .reduce((s: number, a: { uang_kas: number | null }) => s + (a.uang_kas || 0), 0)
         const pengeluaranTotal = pengeluaranBulanan
@@ -207,9 +215,9 @@ export async function GET(req: NextRequest) {
           .reduce((s: number, a: { nominal: number | null }) => s + (a.nominal || 0), 0)
         return {
           bulan: format(m, 'MMM yyyy'),
-          pemasukan: ekskulTotal + orgTotal,
+          pemasukan: pemasukanTotal,
           pengeluaran: pengeluaranTotal,
-          saldo: (ekskulTotal + orgTotal) - pengeluaranTotal,
+          saldo: pemasukanTotal - pengeluaranTotal,
         }
       })
 
@@ -217,10 +225,7 @@ export async function GET(req: NextRequest) {
       const months12 = Array.from({ length: 12 }, (_, i) => new Date(today.getFullYear(), i, 1))
       response.keuanganTahunan = months12.map(m => {
         const mStr = format(m, 'yyyy-MM')
-        const ekskulTotal = kasEkskulTahunan
-          .filter((a: any) => format(a.tanggal, 'yyyy-MM') === mStr)
-          .reduce((s: number, a: any) => s + (a.uang_kas || 0), 0)
-        const orgTotal = kasOrgTahunan
+        const pemasukanTotal = kasTahunan
           .filter((a: any) => format(a.tanggal, 'yyyy-MM') === mStr)
           .reduce((s: number, a: any) => s + (a.uang_kas || 0), 0)
         const pengeluaranTotal = pengeluaranTahunan
@@ -228,9 +233,9 @@ export async function GET(req: NextRequest) {
           .reduce((s: number, a: { nominal: number | null }) => s + (a.nominal || 0), 0)
         return {
           bulan: format(m, 'MMM'),
-          pemasukan: ekskulTotal + orgTotal,
+          pemasukan: pemasukanTotal,
           pengeluaran: pengeluaranTotal,
-          saldo: (ekskulTotal + orgTotal) - pengeluaranTotal,
+          saldo: pemasukanTotal - pengeluaranTotal,
         }
       })
 

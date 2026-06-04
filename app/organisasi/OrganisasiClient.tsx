@@ -251,6 +251,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
         </span>
       </button>
     ) },
+    { key: 'organisasi', label: 'Organisasi', render: () => <span className="badge border bg-slate-50 text-slate-500 uppercase text-[10px] font-bold">{activeOrg}</span> },
     { key: 'kelas', label: 'Kelas', render: (a: Anggota) => <span className="text-xs text-slate-500">{a.kelas || '-'}</span> },
     { key: 'jabatan', label: 'Jabatan', render: (a: Anggota) => <span className="text-xs font-medium text-slate-600">{a.jabatan || '-'}</span> },
     { key: 'actions', label: '', render: (a: Anggota) => (
@@ -539,13 +540,14 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
               ) : (
                 <div className="card overflow-hidden overflow-x-auto">
                   <table className="w-full">
-                    <thead><tr className="bg-slate-50 border-b border-slate-200"><th className="th">Nama</th><th className="th">Jabatan</th><th className="th">Tanggal</th><th className="th">Status</th><th className="th">Uang Kas</th><th className="th">Keterangan</th></tr></thead>
+                    <thead><tr className="bg-slate-50 border-b border-slate-200"><th className="th">Nama</th><th className="th">Organisasi</th><th className="th">Jabatan</th><th className="th">Tanggal</th><th className="th">Status</th><th className="th">Uang Kas</th><th className="th">Keterangan</th></tr></thead>
                     <tbody className="divide-y divide-slate-100">
                       {riwayat.map(a => {
                         const angg = activeOrg === 'osis' ? a.anggota_osis : a.anggota_mpk
                         return (
                           <tr key={a.id} className="hover:bg-slate-50">
                             <td className="td font-semibold text-slate-800">{angg?.nama || '-'}</td>
+                            <td className="td text-[10px] font-bold text-slate-400 uppercase">{activeOrg}</td>
                             <td className="td text-xs text-slate-500">{angg?.jabatan || '-'}</td>
                             <td className="td text-xs font-mono text-slate-500">{formatDate(a.tanggal)}</td>
                             <td className="td"><StatusBadge status={a.status}/></td>

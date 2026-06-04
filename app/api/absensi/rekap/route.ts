@@ -34,6 +34,10 @@ export async function GET(req: NextRequest) {
 
     if (!siswa) return NextResponse.json({ error: 'Siswa tidak ditemukan' }, { status: 404 })
 
+    // Double check accessibility based on student's actual organization
+    if (!accessible.includes(siswa.ekskul))
+      return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+
     const stats = hitungStatistik(absensiList)
     return NextResponse.json({ data: { ...siswa, ...stats } })
   }
