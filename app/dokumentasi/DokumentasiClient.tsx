@@ -1,10 +1,12 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Camera, Search, Filter, Plus } from 'lucide-react'
+import { Camera, Search, Filter, Plus, X } from 'lucide-react'
 import DocumentationList from '@/components/documentation/DocumentationList'
+import DocumentationForm from '@/components/documentation/DocumentationForm'
 import { getAccessibleOrgs } from '@/lib/auth-shared'
 import { useRouter } from 'next/navigation'
+import { createPortal } from 'react-dom'
 
 interface Props {
   user: any
@@ -15,6 +17,8 @@ export default function DokumentasiClient({ user }: Props) {
   const accessibleOrgs = getAccessibleOrgs(user.role)
   const [activeTab, setActiveTab] = useState('all')
   const [organizations, setOrganizations] = useState<any[]>([])
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const canAdd = ['administrator', 'admin_programming', 'admin_english', 'admin_osis_mpk'].includes(user.role)
 
@@ -28,6 +32,10 @@ export default function DokumentasiClient({ user }: Props) {
   }, [])
 
   const currentOrg = organizations.find(o => o.tipe === activeTab)
+
+  // For modal, determine which org to use
+  const modalOrgType = activeTab === 'all' ? accessibleOrgs[0] : activeTab
+  const modalOrg = organizations.find(o => o.tipe === modalOrgType)
 
   return (
     <div className="p-6 space-y-8">
@@ -44,7 +52,7 @@ export default function DokumentasiClient({ user }: Props) {
 
         {canAdd && (
           <button
-            onClick={() => router.push('/dashboard/dokumentasi/tambah')}
+            onClick={() => setShowAddModal(true)}
             className="bg-indigo-600 text-white px-6 py-2.5 rounded-2xl text-sm font-black flex items-center gap-2 shadow-lg shadow-indigo-600/10 hover:bg-indigo-700 transition-all active:scale-95"
           >
             <Plus className="w-4 h-4" />
@@ -81,10 +89,52 @@ export default function DokumentasiClient({ user }: Props) {
       </div>
 
       <DocumentationList 
+        key={refreshKey}
         organizationId={currentOrg?.id}
         type={activeTab === 'all' ? undefined : activeTab}
         user={user}
       />
+
+      {/* Add Modal */}
+      {showAddModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative border border-slate-100 slide-up custom-scrollbar">
+            <div className="sticky top-0 bg-white/80 backdrop-blur-md px-8 py-6 border-b border-slate-100 z-10 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-50 rounded-xl border border-indigo-100">
+                  <Camera className="w-5 h-5 text-indigo-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-slate-800 tracking-tight">Tambah Foto Dokumentasi</h2>
+                  <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Unit: {modalOrgType}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowAddModal(false)}
+                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <X className="w-6 h-6 text-slate-400" />
+              </button>
+            </div>
+
+            <div className="p-8">
+              {modalOrg ? (
+                <DocumentationForm 
+                  organizationId={modalOrg.id}
+                  type={modalOrgType as any}
+                  onSubmitSuccess={() => {
+                    setShowAddModal(false)
+                    setRefreshKey(prev => prev + 1)
+                  }}
+                />
+              ) : (
+                <div className="text-center py-10 text-slate-400">Memuat data organisasi...</div>
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }
