@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { canManageDocumentation } from '@/lib/documentation-auth'
 import { createLog, getIp } from '@/lib/log'
 import cloudinary from '@/lib/cloudinary'
+import { serializeDocumentation } from '@/lib/documentation'
 
 function getCtx(req: NextRequest) {
   return {
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Documentation not found' }, { status: 404 })
     }
 
-    return NextResponse.json({ success: true, data: doc })
+    return NextResponse.json({ success: true, data: serializeDocumentation(doc) })
   } catch (error) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
@@ -88,7 +89,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({
       success: true,
       message: 'Dokumentasi berhasil diperbarui',
-      data: updatedDoc
+      data: serializeDocumentation(updatedDoc)
     })
 
   } catch (error: any) {

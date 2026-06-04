@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { Calendar, Tag, User, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 import DocumentationGallery from '@/components/documentation/DocumentationGallery'
+import { getDocumentationPhotoFields } from '@/lib/documentation'
 
 export default async function DokumentasiDetailPage({ params }: { params: { id: string } }) {
   const user = await getUserSession()
@@ -24,6 +25,8 @@ export default async function DokumentasiDetailPage({ params }: { params: { id: 
     notFound()
   }
 
+  const { photoUrl } = getDocumentationPhotoFields(doc.photos)
+
   return (
     <DashboardLayout user={user || guestUser} pageTitle={doc.title}>
       <div className="p-6 max-w-5xl mx-auto space-y-8">
@@ -37,7 +40,7 @@ export default async function DokumentasiDetailPage({ params }: { params: { id: 
 
         <div className="bg-white border border-slate-200 rounded-[2.5rem] shadow-sm p-6 sm:p-8 space-y-8">
           {/* Image Gallery */}
-          <DocumentationGallery photoUrl={doc.photoUrl} title={doc.title} />
+          <DocumentationGallery photoUrl={photoUrl} title={doc.title} />
 
           <div className="space-y-8">
             <div className="space-y-4">
