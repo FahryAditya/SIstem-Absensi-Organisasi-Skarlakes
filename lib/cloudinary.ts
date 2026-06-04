@@ -1,37 +1,107 @@
 import { v2 as cloudinary } from 'cloudinary';
 
-/**
- * Initialise Cloudinary configuration.
- * Supports two ways of providing credentials:
- *   1. Single `CLOUDINARY_URL` env var (e.g. cloudinary://<api_key>:<api_secret>@<cloud_name>)
- *   2. Separate vars: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
- */
-function initCloudinary() {
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-  const apiKey = process.env.CLOUDINARY_API_KEY;
-  const apiSecret = process.env.CLOUDINARY_API_SECRET;
-  const url = process.env.CLOUDINARY_URL;
+type CloudinaryCredentials = {
+  cloud_name: string;
+  api_key: string;
+  api_secret: string;
+};
 
-  // If full URL is supplied, cloudinary library parses it automatically
-  if (url) {
-    cloudinary.config({ cloud_name: '', api_key: '', api_secret: '' }); // will be overridden by URL parsing
-    cloudinary.config({ cloud_name: undefined, api_key: undefined, api_secret: undefined }); // ensure reset
-    // cloudinary library reads CLOUDINARY_URL automatically when config() is called with no args
-    cloudinary.config();
-  } else if (cloudName && apiKey && apiSecret) {
-    cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret });
-  } else {
-    // No configuration – callers should check isConfigured before using
+const ENV_NAME_PATTERN = /^CLOUDINARY_[A-Z_]+$/;
+const CLOUD_NAME_PATTERN = /^[a-zA-Z0-9_-]+$/;
+
+function cleanEnv(value: string | undefined) {
+  const trimmed = value?.trim();
+  if (!trimmed) return '';
+
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+
+  return trimmed;
+}
+
+function validateCloudName(cloudName: string) {
+  if (!cloudName) return 'CLOUDINARY_CLOUD_NAME is empty';
+  if (ENV_NAME_PATTERN.test(cloudName)) {
+    return `CLOUDINARY_CLOUD_NAME is set to "${cloudName}", which looks like an environment variable name`;
+  }
+  if (!CLOUD_NAME_PATTERN.test(cloudName)) {
+    return 'CLOUDINARY_CLOUD_NAME may only contain letters, numbers, hyphens, and underscores';
+  }
+
+  return '';
+}
+
+function getCredentialsFromUrl(urlValue: string): CloudinaryCredentials | null {
+  try {
+    const parsed = new URL(urlValue);
+    if (parsed.protocol !== 'cloudinary:') return null;
+
+    return {
+      api_key: decodeURIComponent(parsed.username),
+      api_secret: decodeURIComponent(parsed.password),
+      cloud_name: parsed.hostname,
+    };
+  } catch {
+    return null;
   }
 }
 
-// Initialise on module load
+function getCloudinaryCredentials(): {
+  credentials: CloudinaryCredentials | null;
+  error: string;
+} {
+  const cloudName = cleanEnv(process.env.CLOUDINARY_CLOUD_NAME);
+  const apiKey = cleanEnv(process.env.CLOUDINARY_API_KEY);
+  const apiSecret = cleanEnv(process.env.CLOUDINARY_API_SECRET);
+  const url = cleanEnv(process.env.CLOUDINARY_URL);
+
+  if (cloudName || apiKey || apiSecret) {
+    if (!cloudName || !apiKey || !apiSecret) {
+      return {
+        credentials: null,
+        error: 'CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET must all be set',
+      };
+    }
+
+    const cloudNameError = validateCloudName(cloudName);
+    if (cloudNameError) return { credentials: null, error: cloudNameError };
+
+    return {
+      credentials: { cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret },
+      error: '',
+    };
+  }
+
+  if (url) {
+    const credentials = getCredentialsFromUrl(url);
+    if (!credentials?.cloud_name || !credentials.api_key || !credentials.api_secret) {
+      return {
+        credentials: null,
+        error: 'CLOUDINARY_URL must use cloudinary://<api_key>:<api_secret>@<cloud_name>',
+      };
+    }
+
+    const cloudNameError = validateCloudName(credentials.cloud_name);
+    if (cloudNameError) return { credentials: null, error: cloudNameError };
+
+    return { credentials, error: '' };
+  }
+
+  return { credentials: null, error: 'Cloudinary environment variables are not set' };
+}
+
+function initCloudinary() {
+  const { credentials } = getCloudinaryCredentials();
+  if (credentials) cloudinary.config(credentials);
+}
+
 initCloudinary();
 
-/** Helper to check whether cloudinary is correctly configured */
-export const isCloudinaryConfigured = !!(
-  (process.env.CLOUDINARY_URL) ||
-  (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET)
-);
+export const cloudinaryConfigError = getCloudinaryCredentials().error;
+export const isCloudinaryConfigured = !cloudinaryConfigError;
 
 export default cloudinary;

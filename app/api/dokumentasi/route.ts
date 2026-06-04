@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAccessibleOrgs } from '@/lib/auth-shared'
 import { createLog, getIp } from '@/lib/log'
-import cloudinary, { isCloudinaryConfigured } from '@/lib/cloudinary'
+import cloudinary, { cloudinaryConfigError, isCloudinaryConfigured } from '@/lib/cloudinary'
 
 export const dynamic = 'force-dynamic'
 
@@ -188,7 +188,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!isCloudinaryConfigured) {
-      return NextResponse.json({ error: 'Cloudinary belum dikonfigurasi pada server.' }, { status: 500 })
+      return NextResponse.json({ error: `Cloudinary belum dikonfigurasi pada server: ${cloudinaryConfigError}` }, { status: 500 })
     }
 
     // Validasi ukuran file (maksimal 10MB)

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import cloudinary, { isCloudinaryConfigured } from '@/lib/cloudinary'
+import cloudinary, { cloudinaryConfigError, isCloudinaryConfigured } from '@/lib/cloudinary'
 
 export async function POST(req: NextRequest) {
   try {
     if (!isCloudinaryConfigured) {
-      return NextResponse.json({ error: 'Cloudinary is not configured' }, { status: 500 })
+      return NextResponse.json({ error: `Cloudinary is not configured: ${cloudinaryConfigError}` }, { status: 500 })
     }
 
     const formData = await req.formData()
