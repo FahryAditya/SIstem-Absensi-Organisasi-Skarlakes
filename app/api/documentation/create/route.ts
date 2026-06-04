@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { title, description, category, dateTaken, photoUrl, publicId, organizationId, type } = body
 
+    // Validate required fields (photos required)
     if (!title || !description || !category || !photoUrl || !organizationId || !type) {
       return NextResponse.json({ error: 'All fields are required' }, { status: 400 })
     }
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'You do not have permission to create documentation for this organization' }, { status: 403 })
     }
 
-    // Validate photoUrl is from Cloudinary (optional but recommended)
+    // Validate photo URLs
     const urls = photoUrl.split(',')
     for (const url of urls) {
       if (!url.trim().includes('cloudinary.com')) {
@@ -39,14 +40,20 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Build photos JSON array
+    const publicIds = publicId ? publicId.split(',') : []
+    const photosArray = urls.map((url: string, i: number) => ({
+      url: url.trim(),
+      publicId: (publicIds[i] || '').trim(),
+    }))
+
     const doc = await prisma.documentation.create({
       data: {
         title,
         description,
         category,
         dateTaken: dateTaken ? new Date(dateTaken) : new Date(),
-        photoUrl,
-        publicId,
+        photos: photosArray,
         type: type as any,
         organizationId: parseInt(organizationId),
         createdBy: userId,

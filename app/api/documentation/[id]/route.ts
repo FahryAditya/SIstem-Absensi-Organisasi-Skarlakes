@@ -65,8 +65,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         description: description ?? undefined,
         category: category ?? undefined,
         dateTaken: dateTaken ? new Date(dateTaken) : undefined,
-        photoUrl: photoUrl ?? undefined,
-        publicId: publicId ?? undefined,
+        // Convert comma‑separated URLs & publicIds into an array of objects for the `photos` JSON field
+        photos: photoUrl ? photoUrl.split(',').map((url: string, i: number) => ({
+          url: url.trim(),
+          publicId: (publicId?.split(',')[i] || '').trim()
+        })) : undefined,
       }
     })
 
