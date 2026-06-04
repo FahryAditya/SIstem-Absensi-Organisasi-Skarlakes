@@ -1,0 +1,56 @@
+import React, { useState } from 'react'
+
+interface Props {
+  type: 'osis' | 'mpk' | 'programming' | 'english'
+  value: string
+  onChange: (value: string) => void
+}
+
+const CATEGORIES: Record<string, string[]> = {
+  osis: ['Jumat Berkah', 'Jumat Religius', 'Jumat Sehat', 'Jumat Kebersihan'],
+  mpk: ['Jumat Berkah', 'Jumat Religius', 'Jumat Sehat', 'Jumat Kebersihan'],
+  programming: ['Pertemuan', 'Kompetisi', 'Workshop', 'Seminar'],
+  english: ['Pertemuan', 'Speaking Session', 'English Day', 'Movie Night'],
+}
+
+export default function CategorySelector({ type, value, onChange }: Props) {
+  const [isCustom, setIsCustom] = useState(!CATEGORIES[type]?.includes(value) && value !== '')
+  const fixedCategories = CATEGORIES[type] || []
+
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value
+    if (val === 'custom') {
+      setIsCustom(true)
+      onChange('')
+    } else {
+      setIsCustom(false)
+      onChange(val)
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <select
+        value={isCustom ? 'custom' : value}
+        onChange={handleSelectChange}
+        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+      >
+        <option value="" disabled>Pilih Kategori</option>
+        {fixedCategories.map((cat) => (
+          <option key={cat} value={cat}>{cat}</option>
+        ))}
+        <option value="custom">Lainnya (Kustom)</option>
+      </select>
+
+      {isCustom && (
+        <input
+          type="text"
+          placeholder="Masukkan kategori kustom..."
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 animate-in fade-in slide-in-from-top-1"
+        />
+      )}
+    </div>
+  )
+}

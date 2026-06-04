@@ -1,24 +1,28 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Camera, Search, Filter } from 'lucide-react'
-import DocumentationList from '@/components/documentation/DocumentationList'
 import { getAccessibleOrgs } from '@/lib/auth-shared'
+import DocumentationList from '@/components/documentation/DocumentationList'
+import { useRouter } from 'next/navigation'
+import { Camera, LayoutDashboard, Plus } from 'lucide-react'
 
 interface Props {
   user: any
 }
 
-export default function DokumentasiClient({ user }: Props) {
+export default function DashboardDokumentasiClient({ user }: Props) {
+  const router = useRouter()
   const accessibleOrgs = getAccessibleOrgs(user.role)
-  const [activeTab, setActiveTab] = useState('all')
+  const [activeTab, setActiveTab] = useState(accessibleOrgs[0] || 'osis')
   const [organizations, setOrganizations] = useState<any[]>([])
 
   useEffect(() => {
     const fetchOrgs = async () => {
-      const res = await fetch('/api/organizations')
+      const res = await fetch('/api/organizations') // I need to create this API too
       const data = await res.json()
-      if (res.ok) setOrganizations(data.data)
+      if (res.ok) {
+        setOrganizations(data.data)
+      }
     }
     fetchOrgs()
   }, [])
@@ -33,25 +37,15 @@ export default function DokumentasiClient({ user }: Props) {
             <Camera className="w-6 h-6 text-indigo-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Dokumentasi Kegiatan</h1>
-            <p className="text-sm text-slate-400 font-medium">Lihat semua kegiatan dan pencapaian organisasi kami.</p>
+            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Manajemen Dokumentasi</h1>
+            <p className="text-sm text-slate-400 font-medium">Kelola galeri kegiatan dan dokumentasi organisasi Anda.</p>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="flex flex-wrap gap-2 p-1.5 bg-slate-100 rounded-2xl w-fit">
-        <button
-          onClick={() => setActiveTab('all')}
-          className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-            activeTab === 'all' 
-              ? 'bg-white text-slate-900 shadow-sm' 
-              : 'text-slate-500 hover:text-slate-700'
-          }`}
-        >
-          Semua
-        </button>
-        {['osis', 'mpk', 'programming', 'english'].map((org) => (
+        {accessibleOrgs.map((org) => (
           <button
             key={org}
             onClick={() => setActiveTab(org)}
@@ -68,8 +62,10 @@ export default function DokumentasiClient({ user }: Props) {
 
       <DocumentationList 
         organizationId={currentOrg?.id}
-        type={activeTab === 'all' ? undefined : activeTab}
+        type={activeTab}
         user={user}
+        onAddClick={() => router.push(`/dashboard/dokumentasi/tambah?org=${activeTab}`)}
+        onEditClick={(doc) => router.push(`/dashboard/dokumentasi/${doc.id}/edit`)}
       />
     </div>
   )

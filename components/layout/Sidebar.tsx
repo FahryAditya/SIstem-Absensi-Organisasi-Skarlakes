@@ -38,7 +38,7 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
   items.push({ type: 'section', label: 'Dashboard' })
   items.push({ type: 'link', href: '/dashboard', label: 'Ringkasan Utama', icon: LayoutDashboard })
   items.push({ type: 'link', href: '/leaderboard', label: 'Leaderboard', icon: Trophy })
-  items.push({ type: 'link', href: '/pencapaian', label: 'Pencapaian', icon: Star })
+  items.push({ type: 'link', href: '/dokumentasi', label: 'Dokumentasi', icon: Camera })
 
   items.push({ type: 'section', label: 'Kegiatan' })
   items.push({ type: 'link', href: '/materi', label: role === 'admin_osis_mpk' ? 'Jadwal Rapat' : 'Materi Hari Ini', icon: BookOpen })
