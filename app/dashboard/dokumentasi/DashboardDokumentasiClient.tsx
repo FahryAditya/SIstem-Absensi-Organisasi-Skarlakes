@@ -1,33 +1,29 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { getAccessibleOrgs } from '@/lib/auth-shared'
 import DocumentationList from '@/components/documentation/DocumentationList'
 import { useRouter } from 'next/navigation'
-import { Camera, LayoutDashboard, Plus } from 'lucide-react'
+import { Camera, Plus } from 'lucide-react'
 
 interface Props {
   user: any
+}
+
+// Static org map
+const ORG_MAP: Record<string, { id: number; nama: string }> = {
+  osis:        { id: 1, nama: 'OSIS' },
+  mpk:         { id: 2, nama: 'MPK' },
+  programming: { id: 3, nama: 'Programming Club' },
+  english:     { id: 4, nama: 'English Club' },
 }
 
 export default function DashboardDokumentasiClient({ user }: Props) {
   const router = useRouter()
   const accessibleOrgs = getAccessibleOrgs(user.role)
   const [activeTab, setActiveTab] = useState(accessibleOrgs[0] || 'osis')
-  const [organizations, setOrganizations] = useState<any[]>([])
 
-  useEffect(() => {
-    const fetchOrgs = async () => {
-      const res = await fetch('/api/organizations') // I need to create this API too
-      const data = await res.json()
-      if (res.ok) {
-        setOrganizations(data.data)
-      }
-    }
-    fetchOrgs()
-  }, [])
-
-  const currentOrg = organizations.find(o => o.tipe === activeTab)
+  const currentOrg = ORG_MAP[activeTab]
 
   return (
     <div className="p-6 space-y-8">
@@ -41,6 +37,14 @@ export default function DashboardDokumentasiClient({ user }: Props) {
             <p className="text-sm text-slate-400 font-medium">Kelola galeri kegiatan dan dokumentasi organisasi Anda.</p>
           </div>
         </div>
+
+        <button
+          onClick={() => router.push(`/dashboard/dokumentasi/tambah?org=${activeTab}`)}
+          className="bg-indigo-600 text-white px-5 py-2.5 rounded-2xl text-sm font-black flex items-center gap-2 shadow-lg shadow-indigo-600/10 hover:bg-indigo-700 transition-all active:scale-95"
+        >
+          <Plus className="w-4 h-4" />
+          Tambah Dokumentasi
+        </button>
       </div>
 
       {/* Tabs */}
@@ -50,8 +54,8 @@ export default function DashboardDokumentasiClient({ user }: Props) {
             key={org}
             onClick={() => setActiveTab(org)}
             className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-              activeTab === org 
-                ? 'bg-white text-slate-900 shadow-sm' 
+              activeTab === org
+                ? 'bg-white text-slate-900 shadow-sm'
                 : 'text-slate-500 hover:text-slate-700'
             }`}
           >
@@ -60,7 +64,7 @@ export default function DashboardDokumentasiClient({ user }: Props) {
         ))}
       </div>
 
-      <DocumentationList 
+      <DocumentationList
         organizationId={currentOrg?.id}
         type={activeTab}
         user={user}

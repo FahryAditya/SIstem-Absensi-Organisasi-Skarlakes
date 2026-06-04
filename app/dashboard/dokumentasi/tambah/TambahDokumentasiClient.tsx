@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import DocumentationForm from '@/components/documentation/DocumentationForm'
 import { Camera, ChevronLeft } from 'lucide-react'
@@ -9,28 +9,31 @@ interface Props {
   user: any
 }
 
+// Static org map — no need to fetch from API
+const ORG_MAP: Record<string, { id: number; nama: string }> = {
+  osis:        { id: 1, nama: 'OSIS' },
+  mpk:         { id: 2, nama: 'MPK' },
+  programming: { id: 3, nama: 'Programming Club' },
+  english:     { id: 4, nama: 'English Club' },
+}
+
+const ORG_LABELS: Record<string, string> = {
+  osis:        'OSIS',
+  mpk:         'MPK',
+  programming: 'Programming Club',
+  english:     'English Club',
+}
+
 export default function TambahDokumentasiClient({ user }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [organizations, setOrganizations] = useState<any[]>([])
-  
-  const orgTypeFromQuery = searchParams.get('org') || 'osis'
 
-  useEffect(() => {
-    const fetchOrgs = async () => {
-      const res = await fetch('/api/organizations')
-      const data = await res.json()
-      if (res.ok) setOrganizations(data.data)
-    }
-    fetchOrgs()
-  }, [])
-
-  const selectedOrg = organizations.find(o => o.tipe === orgTypeFromQuery)
-
-  if (organizations.length === 0) return null
+  const orgType = searchParams.get('org') || 'osis'
+  const org = ORG_MAP[orgType] || ORG_MAP['osis']
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-8">
+      {/* Header */}
       <div className="flex items-center gap-4">
         <button
           onClick={() => router.back()}
@@ -42,14 +45,20 @@ export default function TambahDokumentasiClient({ user }: Props) {
           <div className="p-2 bg-indigo-50 rounded-xl border border-indigo-100 shadow-sm">
             <Camera className="w-5 h-5 text-indigo-600" />
           </div>
-          <h1 className="text-xl font-black text-slate-800 tracking-tight">Tambah Dokumentasi Baru</h1>
+          <div>
+            <h1 className="text-xl font-black text-slate-800 tracking-tight">Tambah Dokumentasi Baru</h1>
+            <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">
+              Unit: {ORG_LABELS[orgType] || orgType}
+            </p>
+          </div>
         </div>
       </div>
 
+      {/* Form Card */}
       <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
-        <DocumentationForm 
-          organizationId={selectedOrg?.id || organizations[0].id}
-          type={orgTypeFromQuery as any}
+        <DocumentationForm
+          organizationId={org.id}
+          type={orgType as any}
           onSubmitSuccess={() => router.push('/dashboard/dokumentasi')}
         />
       </div>

@@ -50,8 +50,7 @@ model Documentation {
   id              Int            @id @default(autoincrement())
   title           String         @db.VarChar(200)
   description     String?        @db.Text
-  photoUrl        String         @db.Text
-  publicId        String?        @db.Text
+  photos          Json           // Store array of {url, publicId}
   category        String         @db.VarChar(100)
   type            OrganisasiType
   organizationId  Int

@@ -7,10 +7,10 @@ interface Props {
 }
 
 const CATEGORIES: Record<string, string[]> = {
-  osis: ['Jumat Berkah', 'Jumat Religius', 'Jumat Sehat', 'Jumat Kebersihan'],
-  mpk: ['Jumat Berkah', 'Jumat Religius', 'Jumat Sehat', 'Jumat Kebersihan'],
-  programming: ['Pertemuan', 'Kompetisi', 'Workshop', 'Seminar'],
-  english: ['Pertemuan', 'Speaking Session', 'English Day', 'Movie Night'],
+  osis: ['Jumat Seni', 'Jumat Olahraga', 'Jumat Religius', 'Rapat Pengurus', 'Kegiatan Sosial', 'Peringatan Hari Besar'],
+  mpk: ['Jumat Seni', 'Jumat Olahraga', 'Jumat Religius', 'Rapat Pengurus', 'Sidang MPK', 'Peringatan Hari Besar'],
+  programming: ['Pertemuan Rutin', 'Webinar', 'Workshop', 'Kompetisi', 'Hackathon', 'Demo Project'],
+  english: ['Pertemuan Rutin', 'Speaking Session', 'Debate Club', 'Listening Class', 'English Day', 'Movie Night'],
 }
 
 export default function CategorySelector({ type, value, onChange }: Props) {
