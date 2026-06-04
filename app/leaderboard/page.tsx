@@ -149,7 +149,7 @@ export default function LeaderboardPage() {
           <>
             {/* TOP 3 Champions */}
             {top3.length > 0 && (
-              <div className="flex flex-col md:grid md:grid-cols-3 gap-4 mb-8">
+              <div className="flex flex-col md:grid md:grid-cols-3 gap-6 md:gap-4 mb-10">
                 {top3.map((entry) => {
                   const realRank = entry.rank - 1 // 0-indexed (0, 1, 2)
                   const style = RANK_STYLES[realRank]
@@ -163,25 +163,25 @@ export default function LeaderboardPage() {
                   return (
                     <div
                       key={entry.id}
-                      className={`relative rounded-2xl border p-5 text-center transition-all duration-300 hover:-translate-y-1 ${style.border} ${style.bg} ${isFirst ? 'md:-mt-4 shadow-2xl scale-105 md:scale-110 z-10' : ''} ${orderClass}`}
+                      className={`relative rounded-2xl border p-6 text-center transition-all duration-300 hover:-translate-y-1 ${style.border} ${style.bg} ${isFirst ? 'md:-mt-4 shadow-2xl scale-105 md:scale-110 z-10' : ''} ${orderClass}`}
                     >
-                      <div className="text-3xl mb-2">{style.medal}</div>
-                      <div className="mb-3">{renderAvatar(entry, 'w-16 h-16', 'text-2xl')}</div>
-                      <div className="font-bold text-white truncate">{entry.nama}</div>
-                      <div className="text-xs text-slate-400 mb-2">{entry.kelas} {entry.jabatan ? `• ${entry.jabatan}` : ''}</div>
-                      <span className={`inline-block text-[10px] px-2 py-0.5 rounded-full border mb-2 ${LEVEL_COLORS[entry.levelName] ?? LEVEL_COLORS['Beginner']}`}>
+                      <div className="text-3xl mb-3">{style.medal}</div>
+                      <div className="mb-4">{renderAvatar(entry, 'w-16 h-16', 'text-2xl')}</div>
+                      <div className="font-bold text-white truncate text-base mb-1">{entry.nama}</div>
+                      <div className="text-xs text-slate-400 mb-3">{entry.kelas} {entry.jabatan ? `• ${entry.jabatan}` : ''}</div>
+                      <span className={`inline-block text-[10px] px-2 py-0.5 rounded-full border mb-4 ${LEVEL_COLORS[entry.levelName] ?? LEVEL_COLORS['Beginner']}`}>
                         Lv{entry.level} {entry.levelName}
                       </span>
-                      <div className={`text-xl font-black ${style.text}`}>{entry.xp.toLocaleString()} EXP</div>
+                      <div className={`text-2xl font-black ${style.text} mb-1`}>{entry.xp.toLocaleString()} <span className="text-xs font-medium opacity-70">EXP</span></div>
                       {/* Progress bar */}
-                      <div className="mt-3">
+                      <div className="mt-4">
                         <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
                           <div
                             className={`h-full bg-gradient-to-r ${activeTabInfo.color} rounded-full transition-all duration-700`}
                             style={{ width: `${entry.progress.persen}%` }}
                           />
                         </div>
-                        <p className="text-[10px] text-slate-500 mt-1">{entry.progress.persen}% ke {entry.progress.nextLevelName ?? 'Max'}</p>
+                        <p className="text-[10px] text-slate-500 mt-2 font-medium">{entry.progress.persen}% ke {entry.progress.nextLevelName ?? 'Max'}</p>
                       </div>
                     </div>
                   )
