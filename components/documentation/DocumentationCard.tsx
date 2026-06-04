@@ -15,7 +15,7 @@ export default function DocumentationCard({ doc, canManage, onEdit, onDelete }: 
     <div className="group bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
       <div className="relative aspect-video overflow-hidden">
         <Image 
-          src={doc.photoUrl} 
+          src={doc.photoUrl.split(',')[0]} 
           alt={doc.title} 
           fill 
           className="object-cover group-hover:scale-105 transition-transform duration-500"

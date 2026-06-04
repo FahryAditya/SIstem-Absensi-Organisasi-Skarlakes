@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { Calendar, Tag, User, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
+import DocumentationGallery from '@/components/documentation/DocumentationGallery'
 
 export default async function DokumentasiDetailPage({ params }: { params: { id: string } }) {
   const user = await getUserSession()
@@ -34,19 +35,11 @@ export default async function DokumentasiDetailPage({ params }: { params: { id: 
           Kembali ke Galeri
         </Link>
 
-        <div className="bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-sm">
-          {/* Main Image */}
-          <div className="relative aspect-[16/9] sm:aspect-[21/9]">
-            <Image 
-              src={doc.photoUrl} 
-              alt={doc.title} 
-              fill 
-              className="object-cover"
-              unoptimized
-            />
-          </div>
+        <div className="bg-white border border-slate-200 rounded-[2.5rem] shadow-sm p-6 sm:p-8 space-y-8">
+          {/* Image Gallery */}
+          <DocumentationGallery photoUrl={doc.photoUrl} title={doc.title} />
 
-          <div className="p-8 sm:p-12 space-y-8">
+          <div className="space-y-8">
             <div className="space-y-4">
               <div className="flex flex-wrap gap-3">
                 <span className="bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 border border-indigo-100">

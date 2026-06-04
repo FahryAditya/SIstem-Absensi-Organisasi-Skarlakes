@@ -32,8 +32,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate photoUrl is from Cloudinary (optional but recommended)
-    if (!photoUrl.includes('cloudinary.com')) {
-      return NextResponse.json({ error: 'Invalid photo URL' }, { status: 400 })
+    const urls = photoUrl.split(',')
+    for (const url of urls) {
+      if (!url.trim().includes('cloudinary.com')) {
+        return NextResponse.json({ error: 'Invalid photo URL' }, { status: 400 })
+      }
     }
 
     const doc = await prisma.documentation.create({

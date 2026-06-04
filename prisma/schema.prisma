@@ -50,8 +50,8 @@ model Documentation {
   id              Int            @id @default(autoincrement())
   title           String         @db.VarChar(200)
   description     String?        @db.Text
-  photoUrl        String         @db.VarChar(255)
-  publicId        String?        @db.VarChar(100)
+  photoUrl        String         @db.Text
+  publicId        String?        @db.Text
   category        String         @db.VarChar(100)
   type            OrganisasiType
   organizationId  Int
