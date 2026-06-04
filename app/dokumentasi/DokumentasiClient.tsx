@@ -1,18 +1,22 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Camera, Search, Filter } from 'lucide-react'
+import { Camera, Search, Filter, Plus } from 'lucide-react'
 import DocumentationList from '@/components/documentation/DocumentationList'
 import { getAccessibleOrgs } from '@/lib/auth-shared'
+import { useRouter } from 'next/navigation'
 
 interface Props {
   user: any
 }
 
 export default function DokumentasiClient({ user }: Props) {
+  const router = useRouter()
   const accessibleOrgs = getAccessibleOrgs(user.role)
   const [activeTab, setActiveTab] = useState('all')
   const [organizations, setOrganizations] = useState<any[]>([])
+
+  const canAdd = ['administrator', 'admin_programming', 'admin_english', 'admin_osis_mpk'].includes(user.role)
 
   useEffect(() => {
     const fetchOrgs = async () => {
@@ -37,6 +41,16 @@ export default function DokumentasiClient({ user }: Props) {
             <p className="text-sm text-slate-400 font-medium">Lihat semua kegiatan dan pencapaian organisasi kami.</p>
           </div>
         </div>
+
+        {canAdd && (
+          <button
+            onClick={() => router.push('/dashboard/dokumentasi/tambah')}
+            className="bg-indigo-600 text-white px-6 py-2.5 rounded-2xl text-sm font-black flex items-center gap-2 shadow-lg shadow-indigo-600/10 hover:bg-indigo-700 transition-all active:scale-95"
+          >
+            <Plus className="w-4 h-4" />
+            Tambah Dokumentasi
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
