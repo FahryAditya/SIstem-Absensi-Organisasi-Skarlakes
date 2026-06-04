@@ -304,12 +304,12 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
                               onChange={e => updateRow(i, 'keterangan', e.target.value)}
                               className="input py-1.5 text-xs flex-1"
                               placeholder="Opsional..." />
-                            <button onClick={() => { 
+                            {/* <button onClick={() => { 
                               setSelectedStudent({ id: row.siswa_id, nama: row.nama, org: bulkOrg })
                               setAwardModalOpen(true) 
                             }} className="btn-icon text-yellow-500 hover:bg-yellow-50" title="Beri Penghargaan">
                               <Sparkles className="w-4 h-4" />
-                            </button>
+                            </button> */}
                           </td>
                         </tr>
                       )

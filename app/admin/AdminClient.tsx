@@ -276,10 +276,10 @@ export default function AdminClient({ user }: Props) {
               Pengirim Email
             </button>
           )}
-          <button onClick={() => setAwardModalOpen(true)} className="btn-secondary text-indigo-600 font-semibold">
+          {/* <button onClick={() => setAwardModalOpen(true)} className="btn-secondary text-indigo-600 font-semibold">
             <Sparkles className="w-4 h-4" />
             Beri Penghargaan
-          </button>
+          </button> */}
           <button onClick={handleOptimize} disabled={optimizeLoading} className="btn-secondary text-[#5482B4] border-[#5482B4]/20 hover:bg-[#5482B4]/5">
             <span className="flex items-center gap-2 font-semibold">
               {optimizeLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Cpu className="w-4 h-4 text-emerald-500" />}
