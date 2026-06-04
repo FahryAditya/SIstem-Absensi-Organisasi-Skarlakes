@@ -149,24 +149,30 @@ export default function LeaderboardPage() {
           <>
             {/* TOP 3 Champions */}
             {top3.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                {[top3[1], top3[0], top3[2]].filter(Boolean).map((entry, displayIdx) => {
-                  const realRank = entry.rank - 1 // 0-indexed
+              <div className="flex flex-col md:grid md:grid-cols-3 gap-4 mb-8">
+                {top3.map((entry) => {
+                  const realRank = entry.rank - 1 // 0-indexed (0, 1, 2)
                   const style = RANK_STYLES[realRank]
                   const isFirst = realRank === 0
+                  
+                  // Order for podium: Rank 2 (order-1), Rank 1 (order-2), Rank 3 (order-3)
+                  // On mobile, they should follow natural rank order: 1, 2, 3
+                  const orderClass = realRank === 0 ? 'order-1 md:order-2' : 
+                                    realRank === 1 ? 'order-2 md:order-1' : 'order-3'
+
                   return (
                     <div
                       key={entry.id}
-                      className={`relative rounded-2xl border p-5 text-center transition-all duration-300 hover:-translate-y-1 ${style.border} ${style.bg} ${isFirst ? 'md:-mt-4 shadow-2xl' : ''}`}
+                      className={`relative rounded-2xl border p-5 text-center transition-all duration-300 hover:-translate-y-1 ${style.border} ${style.bg} ${isFirst ? 'md:-mt-4 shadow-2xl scale-105 md:scale-110 z-10' : ''} ${orderClass}`}
                     >
                       <div className="text-3xl mb-2">{style.medal}</div>
                       <div className="mb-3">{renderAvatar(entry, 'w-16 h-16', 'text-2xl')}</div>
-                      <div className="font-semibold text-white truncate">{entry.nama}</div>
+                      <div className="font-bold text-white truncate">{entry.nama}</div>
                       <div className="text-xs text-slate-400 mb-2">{entry.kelas} {entry.jabatan ? `• ${entry.jabatan}` : ''}</div>
-                      <span className={`inline-block text-xs px-2 py-0.5 rounded-full border mb-2 ${LEVEL_COLORS[entry.levelName] ?? LEVEL_COLORS['Beginner']}`}>
+                      <span className={`inline-block text-[10px] px-2 py-0.5 rounded-full border mb-2 ${LEVEL_COLORS[entry.levelName] ?? LEVEL_COLORS['Beginner']}`}>
                         Lv{entry.level} {entry.levelName}
                       </span>
-                      <div className={`text-xl font-bold ${style.text}`}>{entry.xp.toLocaleString()} EXP</div>
+                      <div className={`text-xl font-black ${style.text}`}>{entry.xp.toLocaleString()} EXP</div>
                       {/* Progress bar */}
                       <div className="mt-3">
                         <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
@@ -175,7 +181,7 @@ export default function LeaderboardPage() {
                             style={{ width: `${entry.progress.persen}%` }}
                           />
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">{entry.progress.persen}% menuju {entry.progress.nextLevelName ?? 'Max'}</p>
+                        <p className="text-[10px] text-slate-500 mt-1">{entry.progress.persen}% ke {entry.progress.nextLevelName ?? 'Max'}</p>
                       </div>
                     </div>
                   )
