@@ -79,10 +79,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Penerima tidak ditemukan di database' }, { status: 404 })
     }
 
+    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
     let successCount = 0
     const results = []
 
-    for (const member of members) {
+    for (let i = 0; i < members.length; i++) {
+      const member = members[i]
       if (!member.email) {
         results.push({
           id: member.id,
@@ -139,6 +142,11 @@ export async function POST(req: NextRequest) {
           status: sendResult.success ? 'sent' : 'failed',
           error: sendResult.success ? null : sendResult.error,
         })
+
+        // Throttle request to avoid spam/rate limit blocks by Google SMTP
+        if (i < members.length - 1) {
+          await sleep(1500)
+        }
       } catch (err: any) {
         console.error(`Gagal mengirim ke ${member.email}:`, err)
         results.push({

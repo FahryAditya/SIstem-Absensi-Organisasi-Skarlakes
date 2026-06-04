@@ -98,10 +98,18 @@ export async function sendEmail(options: SendEmailOptions) {
   try {
     const { transporter, fromEmail, fromName } = await createGmailTransporter()
 
+    // Strip HTML tags to provide a plain text version for spam filters
+    const textAlternative = options.html
+      .replace(/<style([\s\S]*?)<\/style>/gi, '')
+      .replace(/<[^>]+>/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+
     const mailOptions = {
       from: fromName ? `"${fromName}" <${fromEmail}>` : fromEmail,
       to: options.to.join(','),
       subject: options.subject,
+      text: textAlternative,
       html: options.html,
       bcc: options.bcc?.join(','),
     }
