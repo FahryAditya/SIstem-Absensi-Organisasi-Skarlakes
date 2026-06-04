@@ -13,11 +13,12 @@ interface SendEmailOptions {
  * Ambil konfigurasi email pengirim dari database.
  * Jika belum diatur di DB, fallback ke environment variables.
  */
-async function getEmailCredentials(): Promise<{ email: string; appPassword: string | null }> {
+async function getEmailCredentials(): Promise<{ email: string; appPassword: string | null; name: string }> {
+  const defaultName = process.env.GMAIL_FROM_NAME || 'Sistem Ekstrakurikuler'
   try {
     const setting = await prisma.emailSetting.findFirst()
     if (setting && setting.email && setting.appPassword) {
-      return { email: setting.email, appPassword: setting.appPassword }
+      return { email: setting.email, appPassword: setting.appPassword, name: defaultName }
     }
   } catch (e) {
     console.warn('Gagal membaca email setting dari DB, fallback ke env:', e)
@@ -26,6 +27,7 @@ async function getEmailCredentials(): Promise<{ email: string; appPassword: stri
   return {
     email: process.env.GMAIL_FROM_EMAIL || '',
     appPassword: process.env.GMAIL_APP_PASSWORD || null,
+    name: defaultName,
   }
 }
 
@@ -50,6 +52,7 @@ async function createGmailTransporter() {
         },
       }),
       fromEmail: creds.email,
+      fromName: creds.name,
     }
   }
 
@@ -87,15 +90,16 @@ async function createGmailTransporter() {
       } as any,
     }),
     fromEmail: creds.email || process.env.GMAIL_FROM_EMAIL || '',
+    fromName: creds.name,
   }
 }
 
 export async function sendEmail(options: SendEmailOptions) {
   try {
-    const { transporter, fromEmail } = await createGmailTransporter()
+    const { transporter, fromEmail, fromName } = await createGmailTransporter()
 
     const mailOptions = {
-      from: fromEmail,
+      from: fromName ? `"${fromName}" <${fromEmail}>` : fromEmail,
       to: options.to.join(','),
       subject: options.subject,
       html: options.html,
