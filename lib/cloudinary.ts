@@ -59,6 +59,14 @@ function getCloudinaryCredentials(): {
   const apiSecret = cleanEnv(process.env.CLOUDINARY_API_SECRET);
   const url = cleanEnv(process.env.CLOUDINARY_URL);
 
+  if (url) {
+    const credentials = getCredentialsFromUrl(url);
+    const cloudNameError = credentials?.cloud_name ? validateCloudName(credentials.cloud_name) : '';
+    if (credentials?.cloud_name && credentials.api_key && credentials.api_secret && !cloudNameError) {
+      return { credentials, error: '' };
+    }
+  }
+
   if (cloudName || apiKey || apiSecret) {
     if (!cloudName || !apiKey || !apiSecret) {
       return {
@@ -77,18 +85,10 @@ function getCloudinaryCredentials(): {
   }
 
   if (url) {
-    const credentials = getCredentialsFromUrl(url);
-    if (!credentials?.cloud_name || !credentials.api_key || !credentials.api_secret) {
-      return {
-        credentials: null,
-        error: 'CLOUDINARY_URL must use cloudinary://<api_key>:<api_secret>@<cloud_name>',
-      };
-    }
-
-    const cloudNameError = validateCloudName(credentials.cloud_name);
-    if (cloudNameError) return { credentials: null, error: cloudNameError };
-
-    return { credentials, error: '' };
+    return {
+      credentials: null,
+      error: 'CLOUDINARY_URL must use cloudinary://<api_key>:<api_secret>@<cloud_name>',
+    };
   }
 
   return { credentials: null, error: 'Cloudinary environment variables are not set' };
