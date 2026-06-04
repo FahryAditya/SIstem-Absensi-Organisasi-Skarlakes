@@ -55,7 +55,7 @@ export default async function DokumentasiDetailPage({ params }: { params: { id: 
                 </span>
                 <span className="bg-slate-50 text-slate-500 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 border border-slate-100">
                   <Calendar className="w-3.5 h-3.5" />
-                  {new Date(doc.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  {new Date(doc.dateTaken).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </span>
               </div>
 

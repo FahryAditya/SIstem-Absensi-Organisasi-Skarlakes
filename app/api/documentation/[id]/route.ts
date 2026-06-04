@@ -52,7 +52,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
 
     const body = await req.json()
-    const { title, description, category, photoUrl, publicId } = body
+    const { title, description, category, dateTaken, photoUrl, publicId } = body
 
     // If photo changed, we might want to delete old photo from Cloudinary
     // Logic for deleting old photo could go here using doc.publicId
@@ -64,6 +64,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         title: title ?? undefined,
         description: description ?? undefined,
         category: category ?? undefined,
+        dateTaken: dateTaken ? new Date(dateTaken) : undefined,
         photoUrl: photoUrl ?? undefined,
         publicId: publicId ?? undefined,
       }

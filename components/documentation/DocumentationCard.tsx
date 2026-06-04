@@ -61,7 +61,7 @@ export default function DocumentationCard({ doc, canManage, onEdit, onDelete }: 
         <div className="flex items-center justify-between pt-3 border-t border-slate-50 text-[10px] text-slate-400 font-bold uppercase tracking-wide">
           <div className="flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5" />
-            {new Date(doc.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+            {new Date(doc.dateTaken).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
           </div>
           <div className="flex items-center gap-1.5">
             <User className="w-3.5 h-3.5" />

@@ -17,6 +17,7 @@ export default function DocumentationForm({ organizationId, type, initialData, o
   const [title, setTitle] = useState(initialData?.title || '')
   const [description, setDescription] = useState(initialData?.description || '')
   const [category, setCategory] = useState(initialData?.category || '')
+  const [dateTaken, setDateTaken] = useState(initialData?.dateTaken ? new Date(initialData.dateTaken).toISOString().split('T')[0] : new Date().toISOString().split('T')[0])
   const [photoUrl, setPhotoUrl] = useState(initialData?.photoUrl || '')
   const [publicId, setPublicId] = useState(initialData?.publicId || '')
   const [uploading, setUploading] = useState(false)
@@ -81,6 +82,7 @@ export default function DocumentationForm({ organizationId, type, initialData, o
           title,
           description,
           category,
+          dateTaken: new Date(dateTaken).toISOString(),
           photoUrl,
           publicId,
           organizationId,
@@ -165,9 +167,20 @@ export default function DocumentationForm({ organizationId, type, initialData, o
       </div>
 
       {/* Category */}
-      <div className="space-y-1.5">
-        <label className="text-xs font-bold text-slate-500 uppercase">Kategori</label>
-        <CategorySelector type={type} value={category} onChange={setCategory} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-slate-500 uppercase">Kategori</label>
+          <CategorySelector type={type} value={category} onChange={setCategory} />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-slate-500 uppercase">Kapan Diambil</label>
+          <input
+            type="date"
+            value={dateTaken}
+            onChange={(e) => setDateTaken(e.target.value)}
+            className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+          />
+        </div>
       </div>
 
       {/* Description */}

@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { title, description, category, photoUrl, publicId, organizationId, type } = body
+    const { title, description, category, dateTaken, photoUrl, publicId, organizationId, type } = body
 
     if (!title || !description || !category || !photoUrl || !organizationId || !type) {
       return NextResponse.json({ error: 'All fields are required' }, { status: 400 })
@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
         title,
         description,
         category,
+        dateTaken: dateTaken ? new Date(dateTaken) : new Date(),
         photoUrl,
         publicId,
         type: type as any,
