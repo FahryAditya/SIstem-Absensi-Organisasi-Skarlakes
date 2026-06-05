@@ -177,7 +177,7 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
                   <span className="text-2xl animate-pulse">📣</span>
                 </div>
                 <div className="text-base font-extrabold text-red-600 tracking-wider">NAMA ANDA SEDANG DIPANGGIL!</div>
-                <div className="text-6xl font-black font-mono text-white">#{queueNumber}</div>
+                <div className="text-6xl font-black font-mono text-white">{session?.organisasi_type === 'osis' ? 'OS' : 'MP'}{queueNumber}</div>
                 <p className="text-sm text-slate-200 font-semibold mt-4 bg-red-500/10 border border-red-100 p-3 rounded-2xl">
                   Silakan segera menuju ke meja/ruang wawancara sekarang.
                 </p>

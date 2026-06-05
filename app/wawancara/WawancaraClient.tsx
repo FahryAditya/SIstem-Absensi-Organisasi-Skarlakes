@@ -782,7 +782,7 @@ export default function WawancaraClient({ user }: Props) {
                         key={q.id}
                         className="hover:bg-white/5/80 transition-colors group fade-in"
                       >
-                        <td className="td font-mono text-slate-400">#{q.nomor_antrian}</td>
+                        <td className="td font-mono text-slate-400">{(q as any).sesiOrg === 'osis' ? 'OS' : 'MP'}{q.nomor_antrian}</td>
                         <td className="td">
                           <div className="flex items-start justify-between gap-3 min-w-72">
                             <div>

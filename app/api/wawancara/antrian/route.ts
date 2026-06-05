@@ -117,13 +117,14 @@ export async function POST(req: NextRequest) {
 
   const sesi = await prisma.sesiWawancara.findFirst({
     where: { 
-      status: 'ACTIVE'
+      status: 'ACTIVE',
+      organisasi_type: parsed.data.organisasi
     },
     orderBy: { created_at: 'desc' }
   })
   
   if (!sesi) {
-    return NextResponse.json({ error: `Sesi wawancara tidak aktif` }, { status: 400 })
+    return NextResponse.json({ error: `Sesi wawancara ${parsed.data.organisasi.toUpperCase()} tidak aktif` }, { status: 400 })
   }
 
   const nama = parsed.data.nama.trim()
