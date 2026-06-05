@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import Modal from '@/components/ui/Modal'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { formatDateTime } from '@/lib/utils'
-import { isAdministrator } from '@/lib/auth-shared'
+import { isAdministrator, canAccessOsis } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import {
   CalendarClock, CheckCircle2, Clock, Download, Loader2, Lock, MessageSquareText,
@@ -747,23 +747,21 @@ export default function WawancaraClient({ user }: Props) {
               )}
             </div>
 
-            <div className="px-5 py-3 border-b border-white/10 hover:bg-white/10 grid grid-cols-1 sm:grid-cols-4 gap-2">
-              <div className="flex items-center px-3 text-xs font-bold text-slate-400 bg-deep-navy border border-white/10 rounded-xl">
+            <div className="px-5 py-3 border-b border-white/10 hover:bg-white/10 grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="flex items-center px-3 text-xs font-bold text-slate-400 bg-deep-navy border border-white/10 rounded-xl h-[42px]">
                 Organisasi: OSIS & MPK
               </div>
-              <select value={hasilFilter} onChange={(e) => setHasilFilter(e.target.value)} className="input py-2">
-                <option value="">Semua Hasil</option>
-                <option value="LOLOS">Lolos</option>
-                <option value="TIDAK_LOLOS">Tidak Lolos</option>
-              </select>
-              <select value={validasiFilter} onChange={(e) => setValidasiFilter(e.target.value)} className="input py-2">
-                <option value="">Semua Validasi</option>
-                <option value="SAH">Sah</option>
-                <option value="SAH_DICURIGAI">Sah + Flag</option>
-                <option value="DITOLAK_VPN">Ditolak VPN</option>
-                <option value="TIDAK_SAH">Tidak Sah</option>
-              </select>
-              <input value={kelasDraft} onChange={(e) => setKelasDraft(e.target.value)} className="input py-2" placeholder="Filter kelas, contoh X MPLB 1" maxLength={30} />
+              <Select
+                value={hasilFilter}
+                onChange={(val) => setHasilFilter(val)}
+                options={[
+                  { value: '', label: 'Semua Hasil' },
+                  { value: 'LOLOS', label: 'Lolos' },
+                  { value: 'TIDAK_LOLOS', label: 'Tidak Lolos' },
+                  { value: 'PENDING', label: 'Pending' },
+                ]}
+              />
+              <input value={kelasDraft} onChange={(e) => setKelasDraft(e.target.value)} className="input py-2 h-[42px]" placeholder="Filter kelas, contoh X MPLB 1" maxLength={30} />
             </div>
 
             {loading ? (
@@ -826,9 +824,12 @@ export default function WawancaraClient({ user }: Props) {
                               {q.status === 'WAWANCARA' && (
                                 <div className="flex gap-1 items-center">
                                   <span className="text-xs font-semibold text-red-600 px-2 py-1 flex items-center gap-1"><Lock className="w-3 h-3" /> Dikunci</span>
-                                  {admin && (
+                                  {(admin || user.role === 'admin_osis_mpk') && (
                                     <>
-                                      <button onClick={() => setQueueStatus(q.id, 'MENUNGGU')} className="btn-secondary btn-sm px-2" title="Kembalikan ke antrian"><RefreshCcw className="w-3.5 h-3.5" /></button>
+                                      <button onClick={() => setQueueStatus(q.id, 'MENUNGGU')} className="btn-secondary btn-sm px-2 text-red-600 border-red-200 hover:bg-red-50" title="Kembalikan ke antrian">
+                                        <RefreshCcw className="w-3.5 h-3.5" />
+                                        Reset
+                                      </button>
                                       <button onClick={() => openResult(q)} className="btn-primary btn-sm"><SquarePen className="w-3.5 h-3.5" />Lanjutkan</button>
                                     </>
                                   )}
