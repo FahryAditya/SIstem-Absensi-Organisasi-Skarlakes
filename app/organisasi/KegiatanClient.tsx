@@ -34,6 +34,17 @@ interface Pengelompokan {
   siswa: Siswa
 }
 
+const PRESET_NAMES = [
+  'Kegiatan Sekolah Default',
+  'Rapat',
+  'Jumat Seni',
+  'Jumat Religius',
+  'Jumat Pramuka',
+  'Piket Kebersihan & Penyambutan',
+  'Petugas Upacara',
+  'Panitia (Costume)'
+]
+
 export default function KegiatanClient({ user }: { user: any }) {
   const [kegiatan, setKegiatan] = useState<Kegiatan[]>([])
   const [activeKegiatanId, setActiveKegiatanId] = useState<number | null>(null)
@@ -48,6 +59,7 @@ export default function KegiatanClient({ user }: { user: any }) {
   
   // Create Kegiatan Form
   const [fNama, setFNama] = useState('')
+  const [isCustomNama, setIsCustomNama] = useState(false)
   const [fTipe, setFTipe] = useState<TipeKegiatan>('panitia')
   const [fTanggal, setFTanggal] = useState('')
   
@@ -264,7 +276,38 @@ export default function KegiatanClient({ user }: { user: any }) {
       <Modal open={createModal} title="Buat Kegiatan Baru" onClose={() => setCreateModal(false)}
         footer={<div className="flex justify-end gap-2"><button onClick={() => setCreateModal(false)} className="btn-secondary">Batal</button><button onClick={handleCreateKegiatan} disabled={saving} className="btn-primary">{saving && <Loader2 className="w-4 h-4 animate-spin" />}Simpan</button></div>}>
         <div className="space-y-4">
-          <div className="form-group"><label className="label">Nama Kegiatan</label><input value={fNama} onChange={e => setFNama(e.target.value)} placeholder="Contoh: Panitia Lomba Lari" className="input" /></div>
+          <div className="form-group">
+            <label className="label">Judul / Acara Kegiatan</label>
+            <Select 
+              value={isCustomNama ? 'CUSTOM' : fNama} 
+              onChange={(val) => {
+                if (val === 'CUSTOM') {
+                  setIsCustomNama(true)
+                  setFNama('')
+                } else {
+                  setIsCustomNama(false)
+                  setFNama(val)
+                }
+              }} 
+              options={[
+                { value: '', label: '-- Pilih Judul Kegiatan --' },
+                ...PRESET_NAMES.map(name => ({ value: name, label: name })),
+                { value: 'CUSTOM', label: 'Lainnya / Nama Custom...' }
+              ]} 
+            />
+          </div>
+          {isCustomNama && (
+            <div className="form-group slide-up">
+              <label className="label">Masukkan Nama Custom</label>
+              <input 
+                value={fNama} 
+                onChange={e => setFNama(e.target.value)} 
+                placeholder="Tulis nama kegiatan di sini..." 
+                className="input" 
+                autoFocus
+              />
+            </div>
+          )}
           <div className="form-group">
             <label className="label">Jenis Kegiatan</label>
             <Select value={fTipe} onChange={val => setFTipe(val as any)} options={[
