@@ -6,7 +6,7 @@ import Table from '@/components/ui/Table'
 import Modal from '@/components/ui/Modal'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { StatusBadge } from '@/components/ui/Badges'
-import { formatDate, formatCurrency, STATUS_LABELS } from '@/lib/utils'
+import { cn, formatDate, formatCurrency, STATUS_LABELS } from '@/lib/utils'
 import { canAccessOsis, canAccessMpk } from '@/lib/auth-shared'
 import { clearJsonCachePrefix, fetchJsonCachedUrl, prefetchJsonCachedUrl } from '@/lib/client-cache'
 import {
