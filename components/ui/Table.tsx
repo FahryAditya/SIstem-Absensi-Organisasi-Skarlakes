@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Inbox, Loader2 } from 'lucide-react'
 export interface Column<T> {
   key: string
   label: string
-  render?: (item: T) => React.ReactNode
+  render?: (item: T, index: number) => React.ReactNode
   className?: string
   headerClass?: string
 }
@@ -27,9 +27,10 @@ interface TableProps<T> {
 }
 
 const TableRow = memo(function TableRow<T>({ 
-  item, columns, selectable, isSelected, onSelect, itemKey 
+  item, index, columns, selectable, isSelected, onSelect, itemKey 
 }: { 
   item: T, 
+  index: number,
   columns: Column<any>[], 
   selectable?: boolean, 
   isSelected?: boolean, 
@@ -49,7 +50,7 @@ const TableRow = memo(function TableRow<T>({
       )}
       {columns.map(col => (
         <td key={col.key} className={cn('td', col.className)}>
-          {col.render ? col.render(item) : String((item as Record<string, unknown>)[col.key] ?? '')}
+          {col.render ? col.render(item, index) : String((item as Record<string, unknown>)[col.key] ?? '')}
         </td>
       ))}
     </tr>
@@ -123,6 +124,7 @@ export default function Table<T>({
                   <TableRow 
                     key={key}
                     item={item}
+                    index={i}
                     itemKey={key}
                     columns={columns}
                     selectable={selectable}
