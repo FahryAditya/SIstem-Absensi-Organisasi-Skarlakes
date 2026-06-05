@@ -61,8 +61,9 @@ function memberWhere(kelas: string, nama: string) {
 
 async function buildAbsensiRows(orgs: Org[], range: { start: Date; end: Date }, kelas: string, nama: string) {
   const rows: Record<string, unknown>[] = []
+  const uniqueOrgs = Array.from(new Set(orgs))
 
-  for (const org of orgs) {
+  for (const org of uniqueOrgs) {
     if (org === 'programming' || org === 'english') {
       const data = await prisma.absensi.findMany({
         where: { ...dateWhere(range), siswa: { ekskul: org, ...memberWhere(kelas, nama) } },
@@ -89,19 +90,24 @@ async function buildAbsensiRows(orgs: Org[], range: { start: Date; end: Date }, 
             : { anggota_mpk: memberWhere(kelas, nama) }),
         },
         include: { anggota_osis: true, anggota_mpk: true },
-        orderBy: { tanggal: 'asc' },
+        orderBy: [
+          { tanggal: 'asc' },
+          { anggota_osis: { nama: 'asc' } },
+          { anggota_mpk: { nama: 'asc' } }
+        ],
       })
       data.forEach((a) => {
         const anggota = org === 'osis' ? a.anggota_osis : a.anggota_mpk
+        if (!anggota) return // Skip if no member found (data integrity check)
         rows.push({
           No: rows.length + 1,
           Tanggal: formatDate(a.tanggal),
           Ekskul: ORG_LABELS[org],
-          Nama: anggota?.nama || '-',
-          Kelas: anggota?.kelas || '-',
+          Nama: anggota.nama || '-',
+          Kelas: anggota.kelas || '-',
           Status: STATUS_LABELS[a.status] || a.status,
           Keterangan: a.keterangan || '-',
-          Jabatan: anggota?.jabatan || '-',
+          Jabatan: anggota.jabatan || '-',
         })
       })
     }
@@ -112,8 +118,9 @@ async function buildAbsensiRows(orgs: Org[], range: { start: Date; end: Date }, 
 
 async function buildKasRows(orgs: Org[], range: { start: Date; end: Date }, kelas: string, nama: string) {
   const rows: Record<string, unknown>[] = []
+  const uniqueOrgs = Array.from(new Set(orgs))
 
-  for (const org of orgs) {
+  for (const org of uniqueOrgs) {
     if (org === 'programming' || org === 'english') {
       const data = await prisma.absensi.findMany({
         where: { ...dateWhere(range), uang_kas: { not: 0 }, siswa: { ekskul: org, ...memberWhere(kelas, nama) } },
@@ -142,16 +149,21 @@ async function buildKasRows(orgs: Org[], range: { start: Date; end: Date }, kela
             : { anggota_mpk: memberWhere(kelas, nama) }),
         },
         include: { anggota_osis: true, anggota_mpk: true },
-        orderBy: { tanggal: 'asc' },
+        orderBy: [
+          { tanggal: 'asc' },
+          { anggota_osis: { nama: 'asc' } },
+          { anggota_mpk: { nama: 'asc' } }
+        ],
       })
       data.forEach((a) => {
         const anggota = org === 'osis' ? a.anggota_osis : a.anggota_mpk
+        if (!anggota) return
         rows.push({
           No: rows.length + 1,
           Tanggal: formatDate(a.tanggal),
           Ekskul: ORG_LABELS[org],
-          Nama: anggota?.nama || '-',
-          Kelas: anggota?.kelas || '-',
+          Nama: anggota.nama || '-',
+          Kelas: anggota.kelas || '-',
           Jenis: a.uang_kas >= 0 ? 'Pemasukan' : 'Pengeluaran',
           Nominal: formatCurrency(a.uang_kas),
           Keterangan: a.keterangan || 'Setor uang kas',
@@ -162,7 +174,7 @@ async function buildKasRows(orgs: Org[], range: { start: Date; end: Date }, kela
   }
 
   const pengeluaran = await prisma.pengeluaranKas.findMany({
-    where: { organisasi_type: { in: orgs }, ...dateWhere(range) },
+    where: { organisasi_type: { in: uniqueOrgs }, ...dateWhere(range) },
     include: { creator: { select: { nama: true } } },
     orderBy: { tanggal: 'asc' },
   })
@@ -184,8 +196,9 @@ async function buildKasRows(orgs: Org[], range: { start: Date; end: Date }, kela
 
 async function buildKehadiranRows(orgs: Org[], range: { start: Date; end: Date }, kelas: string, nama: string) {
   const rows: Record<string, unknown>[] = []
+  const uniqueOrgs = Array.from(new Set(orgs))
 
-  for (const org of orgs) {
+  for (const org of uniqueOrgs) {
     if (org === 'programming' || org === 'english') {
       const members = await prisma.siswa.findMany({
         where: { ekskul: org, ...memberWhere(kelas, nama) },
@@ -247,8 +260,9 @@ async function buildKehadiranRows(orgs: Org[], range: { start: Date; end: Date }
 
 async function buildMemberExportRows(orgs: Org[], kelas: string, nama: string) {
   const rows: Record<string, unknown>[] = []
+  const uniqueOrgs = Array.from(new Set(orgs))
 
-  for (const org of orgs) {
+  for (const org of uniqueOrgs) {
     if (org === 'programming' || org === 'english') {
       const data = await prisma.siswa.findMany({ where: { ekskul: org, ...memberWhere(kelas, nama) }, orderBy: { nama: 'asc' } })
       data.forEach((s) => rows.push({
@@ -315,7 +329,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Filter tanggal mulai dan akhir wajib diisi dengan benar' }, { status: 400 })
   }
 
-  const selectedOrgs = org ? [org as Org] : accessible
+  const selectedOrgs = Array.from(new Set(org ? [org as Org] : accessible))
   if (selectedOrgs.length === 0 || selectedOrgs.some(o => !accessible.includes(o))) {
     return NextResponse.json({ error: 'Akses export untuk ekskul ini ditolak' }, { status: 403 })
   }

@@ -39,7 +39,10 @@ export async function GET(req: NextRequest) {
       }),
       prisma.absensi.findMany({
         where: {
-          tanggal: new Date(tanggal),
+          tanggal: {
+            gte: new Date(tanggal + 'T00:00:00'),
+            lte: new Date(tanggal + 'T23:59:59')
+          },
           siswa: { ekskul: ekskul as any }
         },
         select: { siswa_id: true, status: true, uang_kas: true, keterangan: true }
@@ -67,7 +70,12 @@ export async function GET(req: NextRequest) {
 
   const where: Record<string, unknown> = {
     siswa: { ekskul: { in: ekskulFilter } },
-    ...(tanggal ? { tanggal: new Date(tanggal) } : {}),
+    ...(tanggal ? { 
+      tanggal: {
+        gte: new Date(tanggal + 'T00:00:00'),
+        lte: new Date(tanggal + 'T23:59:59')
+      } 
+    } : {}),
   }
 
   const [data, total] = await Promise.all([
