@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   const ekskul = searchParams.get('ekskul') as 'programming' | 'english' | null
   const mode = searchParams.get('mode')
   const page = parseInt(searchParams.get('page') || '1')
-  const limit = parseInt(searchParams.get('limit') || '20')
+  const limit = parseInt(searchParams.get('limit') || '100')
 
   // Build accessible ekskul filter
   const accessible = getAccessibleOrgs(userRole)
