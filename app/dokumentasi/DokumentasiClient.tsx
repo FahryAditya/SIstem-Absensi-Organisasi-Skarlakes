@@ -104,7 +104,7 @@ export default function DokumentasiClient({ user }: Props) {
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-deep-navy rounded-[2.5rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative border border-white/10">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-white/90 backdrop-blur-md px-8 py-5 border-b border-white/10 z-10 flex items-center justify-between">
+            <div className="sticky top-0 bg-deep-navy/90 backdrop-blur-md px-8 py-5 border-b border-white/10 z-10 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-persian-blue/10 rounded-xl border border-persian-blue/20">
                   <Camera className="w-5 h-5 text-persian-blue" />

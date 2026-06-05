@@ -284,7 +284,7 @@ export default function ImportClient({ user }: Props) {
               </thead>
               <tbody>
                 {preview.slice(0, 50).map((row, i) => (
-                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-white/5'}>
+                  <tr key={i} className={i % 2 === 0 ? 'bg-white/5' : 'bg-transparent'}>
                     <td className="px-3 py-1.5 text-slate-400 border-b">{i + 1}</td>
                     <td className="px-3 py-1.5 font-medium border-b">{row.nama}</td>
                     <td className="px-3 py-1.5 text-slate-400 border-b">{row.kelas || '-'}</td>

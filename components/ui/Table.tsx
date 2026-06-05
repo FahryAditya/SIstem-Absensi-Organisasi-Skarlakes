@@ -72,7 +72,7 @@ export default function Table<T>({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-white/10 bg-white">
+    <div className="overflow-hidden rounded-xl border border-white/10 bg-deep-navy/40 backdrop-blur-xl">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -157,7 +157,7 @@ export default function Table<T>({
                 <button key={p} onClick={() => onPageChange(p)}
                   className={cn(
                     'w-7 h-7 text-xs rounded-lg font-medium transition-colors',
-                    p === page ? 'bg-persian-blue text-white' : 'text-slate-400 hover:bg-slate-200'
+                    p === page ? 'bg-persian-blue text-white' : 'text-slate-400 hover:bg-white/10 hover:text-white'
                   )}>
                   {p}
                 </button>

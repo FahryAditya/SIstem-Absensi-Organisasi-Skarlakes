@@ -272,7 +272,7 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
       key: 'actions', label: '',
       render: (s: Siswa) => (
         <div className="flex items-center gap-1">
-          <button onClick={() => openProfile(s)} className="btn-icon text-emerald-500 hover:bg-emerald-50" title="Profil & Pencapaian"><Award className="w-3.5 h-3.5" /></button>
+          <button onClick={() => openProfile(s)} className="btn-icon text-emerald-500 hover:bg-emerald-500/10" title="Profil & Pencapaian"><Award className="w-3.5 h-3.5" /></button>
           <button onClick={() => openXpModal(s)} className="btn-icon text-amber-500 hover:bg-amber-500/10" title="Beri Poin XP"><Zap className="w-3.5 h-3.5" /></button>
           <button onClick={() => openEdit(s)} className="btn-icon text-persian-blue/100 hover:bg-persian-blue/10"><Pencil className="w-3.5 h-3.5" /></button>
           <button onClick={() => setDeleteTarget(s)} className="btn-icon text-red-400 hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" /></button>

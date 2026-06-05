@@ -230,7 +230,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
   }
 
   const orgLabel = activeOrg === 'osis' ? 'OSIS' : 'MPK'
-  const orgBgClass = activeOrg === 'osis' ? 'bg-persian-blue/10 border-persian-blue/20 text-blue-300' : 'bg-orange-50 border-orange-100 text-orange-700'
+  const orgBgClass = activeOrg === 'osis' ? 'bg-unit-osis/10 border-unit-osis/20 text-blue-300' : 'bg-unit-mpk/10 border-unit-mpk/20 text-red-400'
   const hadirCount = bulkRows.filter(r => r.status === 'hadir').length
   const totalKasBulk = bulkRows.reduce((s, r) => s + r.uang_kas, 0)
 
@@ -256,7 +256,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
     { key: 'jabatan', label: 'Jabatan', render: (a: Anggota) => <span className="text-xs font-medium text-slate-300">{a.jabatan || '-'}</span> },
     { key: 'actions', label: '', render: (a: Anggota) => (
       <div className="flex gap-1">
-        <button onClick={() => openProfile(a)} className="btn-icon text-emerald-500 hover:bg-emerald-50"><Award className="w-3.5 h-3.5" /></button>
+        <button onClick={() => openProfile(a)} className="btn-icon text-emerald-500 hover:bg-emerald-500/10"><Award className="w-3.5 h-3.5" /></button>
         <button onClick={() => openEdit(a)} className="btn-icon text-blue-400 hover:bg-persian-blue/10"><Pencil className="w-3.5 h-3.5" /></button>
         <button onClick={() => setDeleteTarget(a)} className="btn-icon text-red-400 hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" /></button>
       </div>
@@ -525,9 +525,9 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
                   </div>
                   <div className="px-5 py-3 bg-white/5 border-t flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex gap-4 text-xs font-semibold">
-                      <span className="text-green-600">✓ Hadir: {hadirCount}</span>
+                      <span className="text-green-400">✓ Hadir: {hadirCount}</span>
                       <span className="text-slate-400">Total: {bulkRows.length}</span>
-                      <span className="text-amber-600">Kas: {formatCurrency(totalKasBulk)}</span>
+                      <span className="text-amber-400">Kas: {formatCurrency(totalKasBulk)}</span>
                     </div>
                     <button onClick={handleSaveAbsensi} disabled={savingAbsensi} className="btn-primary">
                       {savingAbsensi ? <><Loader2 className="w-4 h-4 animate-spin"/>Menyimpan...</> : <><Save className="w-4 h-4"/>Simpan Absensi</>}

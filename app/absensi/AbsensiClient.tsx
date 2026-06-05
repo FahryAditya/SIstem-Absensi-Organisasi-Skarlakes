@@ -327,11 +327,11 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
               {/* Summary footer */}
               <div className="px-5 py-3 bg-white/5 border-t border-white/10 flex items-center justify-between flex-wrap gap-3">
                 <div className="flex gap-4 text-xs font-semibold flex-wrap">
-                  <span className="text-green-600">✓ Hadir: {hadirCount}</span>
-                  <span className="text-red-500">✗ Tidak: {tidakCount}</span>
-                  <span className="text-yellow-600">⏱ Izin: {izinCount}</span>
-                  <span className="text-sky-600">♥ Sakit: {sakitCount}</span>
-                  <span className="text-amber-600">Kas: {formatCurrency(totalKas)}</span>
+                  <span className="text-green-400">✓ Hadir: {hadirCount}</span>
+                  <span className="text-red-400">✗ Tidak: {tidakCount}</span>
+                  <span className="text-yellow-400">⏱ Izin: {izinCount}</span>
+                  <span className="text-sky-400">♥ Sakit: {sakitCount}</span>
+                  <span className="text-amber-400">Kas: {formatCurrency(totalKas)}</span>
                 </div>
                 <button onClick={handleSave} disabled={saving} className="btn-primary">
                   {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Menyimpan...</> : <><Save className="w-4 h-4" />Simpan Absensi</>}

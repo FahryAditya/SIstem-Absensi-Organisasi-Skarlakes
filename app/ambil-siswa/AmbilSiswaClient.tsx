@@ -401,7 +401,7 @@ export default function AmbilSiswaClient({ user }: Props) {
                       className="fixed inset-0 z-10" 
                       onClick={() => setIsOpen(false)} 
                     />
-                    <div className="absolute left-0 right-0 mt-2 bg-white/95 backdrop-blur-md border border-white/10 rounded-xl shadow-xl z-20 overflow-hidden py-1.5 animate-fadeIn max-h-60 overflow-y-auto">
+                    <div className="absolute left-0 right-0 mt-2 bg-deep-navy/95 backdrop-blur-md border border-white/10 rounded-xl shadow-xl z-20 overflow-hidden py-1.5 animate-fadeIn max-h-60 overflow-y-auto">
                       <div className="px-3 py-1.5 text-[10px] font-black uppercase text-slate-400 tracking-wider">
                         Kegiatan Sekolah Default
                       </div>
