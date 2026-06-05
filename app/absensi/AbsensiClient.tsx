@@ -24,10 +24,10 @@ interface Props {
 }
 
 const STATUS_OPTIONS = [
-  { value: 'hadir', label: 'Hadir', icon: CheckCircle2, color: 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100' },
-  { value: 'tidak_hadir', label: 'Tidak', icon: XCircle, color: 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100' },
+  { value: 'hadir', label: 'Hadir', icon: CheckCircle2, color: 'bg-green-500/10 text-green-400 border-white/20 hover:bg-green-100' },
+  { value: 'tidak_hadir', label: 'Tidak', icon: XCircle, color: 'bg-red-500/10 text-red-400 border-red-300 hover:bg-red-100' },
   { value: 'izin', label: 'Izin', icon: Clock, color: 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100' },
-  { value: 'sakit', label: 'Sakit', icon: Heart, color: 'bg-sky-50 text-sky-700 border-sky-300 hover:bg-sky-100' },
+  { value: 'sakit', label: 'Sakit', icon: Heart, color: 'bg-sky-500/10 text-sky-400 border-white/20 hover:bg-sky-100' },
 ]
 
 const PAGE_SIZE = 20
@@ -237,7 +237,7 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
                 <div>
                   <span className={cn(
                     "text-sm font-bold",
-                    bulkOrg === 'programming' ? "text-unit-programming" : "text-unit-english"
+                    bulkOrg === 'programming' ? "text-unit-programming" : "text-blue-400"
                   )}>
                     {bulkOrg === 'programming' ? 'Programming' : 'English Club'} — {formatDate(bulkDate)}
                   </span>
@@ -271,7 +271,7 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
                     {bulkRows.map((row, i) => {
                       const statusOpt = STATUS_OPTIONS.find(s => s.value === row.status)
                       return (
-                        <tr key={row.siswa_id} className="hover:bg-white/5/60">
+                        <tr key={row.siswa_id} className="hover:bg-white/10">
                           <td className="td text-slate-400 font-mono text-xs">{i + 1}</td>
                           <td className="td">
                             <div className="font-semibold text-white text-sm">{row.nama}</div>

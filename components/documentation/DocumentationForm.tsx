@@ -164,7 +164,7 @@ export default function DocumentationForm({ organizationId, type, initialData, o
               <button
                 type="button"
                 onClick={() => removePhoto(index)}
-                className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-all shadow-md active:scale-90 opacity-0 group-hover:opacity-100"
+                className="absolute top-2 right-2 p-1.5 bg-red-500/100 hover:bg-red-600 text-white rounded-full transition-all shadow-md active:scale-90 opacity-0 group-hover:opacity-100"
               >
                 <X className="w-3.5 h-3.5" />
               </button>

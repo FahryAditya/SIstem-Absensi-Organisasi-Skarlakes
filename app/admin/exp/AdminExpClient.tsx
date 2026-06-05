@@ -200,7 +200,7 @@ export default function AdminExpClient({ user }: AdminExpClientProps) {
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded font-bold">
+                        <span className="text-xs bg-white/50/20 text-blue-400 px-2 py-0.5 rounded font-bold">
                           Lv.{selectedMember.level}
                         </span>
                         <span className="text-xs text-slate-400">{selectedMember.xp} EXP</span>
@@ -246,7 +246,7 @@ export default function AdminExpClient({ user }: AdminExpClientProps) {
                                   setSearchQuery('')
                                 }}
                                 className={`w-full px-4 py-3 text-left hover:bg-white/5 flex items-center justify-between text-sm transition-colors border-b border-white/[0.02] last:border-b-0 ${
-                                  isSelected ? 'bg-blue-500/10 hover:bg-blue-500/15' : ''
+                                  isSelected ? 'bg-white/50/10 hover:bg-white/50/15' : ''
                                 }`}
                               >
                                 <div className="flex items-center gap-2.5">
@@ -261,7 +261,7 @@ export default function AdminExpClient({ user }: AdminExpClientProps) {
                                 </div>
                                 <div className="flex items-center gap-3">
                                   <div className="flex items-center gap-1.5">
-                                    <span className="text-xs bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded font-semibold">
+                                    <span className="text-xs bg-white/50/10 text-blue-400 px-1.5 py-0.5 rounded font-semibold">
                                       Lv.{m.level}
                                     </span>
                                     <span className="text-xs text-slate-400">{m.xp} EXP</span>
@@ -293,7 +293,7 @@ export default function AdminExpClient({ user }: AdminExpClientProps) {
                       <Plus className="w-4 h-4" /> Tambah
                     </button>
                     <button
-                      className={`flex-1 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition ${!isAdd ? 'bg-red-500/20 text-red-400' : 'text-slate-400 hover:text-white'}`}
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition ${!isAdd ? 'bg-red-500/100/20 text-red-400' : 'text-slate-400 hover:text-white'}`}
                       onClick={() => setIsAdd(false)}
                     >
                       <Minus className="w-4 h-4" /> Kurangi

@@ -165,7 +165,7 @@ export default function KasClient({ user }: Props) {
   // Avatar color based on first char
   function avatarColor(nama: string) {
     const colors = [
-      'bg-blue-500','bg-emerald-500','bg-persian-blue/100','bg-amber-500',
+      'bg-white/50','bg-emerald-500','bg-persian-blue/100','bg-amber-500/100',
       'bg-rose-500','bg-cyan-500','bg-orange-500','bg-persian-blue/100',
     ]
     return colors[(nama.charCodeAt(0) || 0) % colors.length]
@@ -244,7 +244,7 @@ export default function KasClient({ user }: Props) {
         <div className="flex items-center gap-2">
           <button 
             onClick={() => openModal(item.id)}
-            className="p-2 bg-green-50 text-green-600 hover:bg-green-600 hover:text-white rounded-lg transition-all duration-200"
+            className="p-2 bg-green-500/10 text-green-600 hover:bg-green-600 hover:text-white rounded-lg transition-all duration-200"
             title="Setor Kas"
           >
             <Plus className="w-4 h-4" />
@@ -269,7 +269,7 @@ export default function KasClient({ user }: Props) {
             <Plus className="w-4 h-4 mr-1.5" />
             Setor Kas
           </button>
-          <a href="/pengeluaran" className="btn bg-red-50 text-red-600 hover:bg-red-600 hover:text-white border-red-200 whitespace-nowrap shadow-sm">
+          <a href="/pengeluaran" className="btn bg-red-500/10 text-red-600 hover:bg-red-600 hover:text-white border-white/10 whitespace-nowrap shadow-sm">
             <Minus className="w-4 h-4 mr-1.5" />
             Tarik Kas
           </a>
@@ -323,11 +323,11 @@ export default function KasClient({ user }: Props) {
       <div className="card p-5">
         <div className="flex items-center gap-2 mb-4">
           <Wallet className="w-5 h-5 text-amber-500" />
-          <h3 className="text-sm font-bold text-[#001F3F]">Transaksi Manual Cepat</h3>
+          <h3 className="text-sm font-bold text-white">Transaksi Manual Cepat</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-green-50 rounded-lg border border-green-100">
-            <div className="text-xs font-semibold text-green-700 mb-1">Setor Kas</div>
+          <div className="p-4 bg-green-500/10 rounded-lg border border-green-100">
+            <div className="text-xs font-semibold text-green-400 mb-1">Setor Kas</div>
             <p className="text-xs text-slate-300 mb-3">Tambahkan kas untuk anggota secara manual</p>
             <button 
               onClick={() => {
@@ -339,8 +339,8 @@ export default function KasClient({ user }: Props) {
               Setor Kas
             </button>
           </div>
-          <div className="p-4 bg-red-50 rounded-lg border border-red-100">
-            <div className="text-xs font-semibold text-red-700 mb-1">Tarik Kas</div>
+          <div className="p-4 bg-red-500/10 rounded-lg border border-red-100">
+            <div className="text-xs font-semibold text-red-400 mb-1">Tarik Kas</div>
             <p className="text-xs text-slate-300 mb-3">Kurangi kas untuk pengeluaran</p>
             <a 
               href="/pengeluaran"

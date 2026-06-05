@@ -144,7 +144,7 @@ export default function SendEmailForm({ organizationType, members }: SendEmailFo
               onClick={() => setEmailType(type)}
               className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all uppercase ${
                 emailType === type
-                  ? 'bg-blue-500/20 border-blue-500/50 text-blue-400'
+                  ? 'bg-white/50/20 border-blue-500/50 text-blue-400'
                   : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
               }`}
             >
@@ -268,13 +268,13 @@ export default function SendEmailForm({ organizationType, members }: SendEmailFo
                       hasNoEmail 
                         ? 'opacity-40 cursor-not-allowed' 
                         : 'cursor-pointer hover:bg-white/5'
-                    } ${isSelected ? 'bg-blue-500/5' : ''}`}
+                    } ${isSelected ? 'bg-white/50/5' : ''}`}
                   >
                     <div className="flex items-center gap-3">
                       {/* Custom styled checkbox */}
                       <div className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-all ${
                         isSelected 
-                          ? 'bg-blue-500 border-blue-500 text-white' 
+                          ? 'bg-white/50 border-blue-500 text-white' 
                           : 'border-white/20'
                       }`}>
                         {isSelected && <Check className="w-3.5 h-3.5" />}
@@ -297,7 +297,7 @@ export default function SendEmailForm({ organizationType, members }: SendEmailFo
 
                     <div className="flex items-center gap-3 shrink-0">
                       {member.jabatan && (
-                        <span className="text-xs bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full font-medium">
+                        <span className="text-xs bg-white/50/10 text-blue-400 px-2 py-0.5 rounded-full font-medium">
                           {member.jabatan}
                         </span>
                       )}

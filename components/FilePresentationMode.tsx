@@ -401,7 +401,7 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
           />
 
           {/* Glowing layout bubbles */}
-          <div className="absolute top-0 right-1/4 w-96 h-96 rounded-full pointer-events-none bg-blue-500/10 blur-[80px]" />
+          <div className="absolute top-0 right-1/4 w-96 h-96 rounded-full pointer-events-none bg-white/50/10 blur-[80px]" />
           <div className="absolute bottom-0 left-1/4 w-96 h-96 rounded-full pointer-events-none bg-cyan-500/5 blur-[80px]" />
 
           {/* HEADER */}
@@ -479,7 +479,7 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
               <button
                 onClick={handleClose}
                 className="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 rounded-xl bg-white/5 border border-white/10
-                  hover:bg-red-500/20 hover:border-red-500/30 text-white/60 hover:text-red-400 transition-all duration-150"
+                  hover:bg-red-500/100/20 hover:border-red-500/30 text-white/60 hover:text-red-400 transition-all duration-150"
                 title="Tutup (Esc)"
               >
                 <X className="w-3.5 h-3.5 md:w-4 md:h-4" />
@@ -524,13 +524,13 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
 
                   {/* Badges of supported formats */}
                   <div className="flex flex-wrap gap-2.5 justify-center mt-3">
-                    <span className="flex items-center gap-1 px-3 py-1 bg-red-500/10 border border-red-500/25 text-red-400 text-xs font-bold rounded-lg">
+                    <span className="flex items-center gap-1 px-3 py-1 bg-red-500/100/10 border border-red-500/25 text-red-400 text-xs font-bold rounded-lg">
                       <FileText className="w-3.5 h-3.5" /> PDF
                     </span>
-                    <span className="flex items-center gap-1 px-3 py-1 bg-green-500/10 border border-green-500/25 text-green-400 text-xs font-bold rounded-lg">
+                    <span className="flex items-center gap-1 px-3 py-1 bg-green-500/100/10 border border-green-500/25 text-green-400 text-xs font-bold rounded-lg">
                       <FileSpreadsheet className="w-3.5 h-3.5" /> Excel / CSV
                     </span>
-                    <span className="flex items-center gap-1 px-3 py-1 bg-blue-500/10 border border-blue-500/25 text-blue-400 text-xs font-bold rounded-lg">
+                    <span className="flex items-center gap-1 px-3 py-1 bg-white/50/10 border border-blue-500/25 text-blue-400 text-xs font-bold rounded-lg">
                       <FileText className="w-3.5 h-3.5" /> Teks / Markdown
                     </span>
                   </div>

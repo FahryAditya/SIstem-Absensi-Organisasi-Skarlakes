@@ -145,7 +145,7 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
   return (
     <main className="min-h-screen bg-white/5 flex items-center justify-center p-4">
       <div
-        className="w-full max-w-md bg-deep-navy border border-white/10/60 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden slide-up"
+        className="w-full max-w-md bg-deep-navy border border-white/10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden slide-up"
       >
         <div className="p-6 border-b border-white/10/50 bg-white/50 backdrop-blur-sm">
           <div className="flex items-center gap-3">
@@ -178,7 +178,7 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
                 </div>
                 <div className="text-base font-extrabold text-red-600 tracking-wider">NAMA ANDA SEDANG DIPANGGIL!</div>
                 <div className="text-6xl font-black font-mono text-white">#{queueNumber}</div>
-                <p className="text-sm text-slate-200 font-semibold mt-4 bg-red-50 border border-red-100 p-3 rounded-2xl">
+                <p className="text-sm text-slate-200 font-semibold mt-4 bg-red-500/10 border border-red-100 p-3 rounded-2xl">
                   Silakan segera menuju ke meja/ruang wawancara sekarang.
                 </p>
               </div>
@@ -189,7 +189,7 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
                 </div>
                 <div className="text-base font-extrabold text-green-600 tracking-wider">WAWANCARA SELESAI!</div>
                 <div className="text-6xl font-black font-mono text-slate-950">#{queueNumber}</div>
-                <p className="text-sm text-slate-400 mt-4 bg-green-50 border border-green-100 p-3 rounded-2xl">
+                <p className="text-sm text-slate-400 mt-4 bg-green-500/10 border border-green-100 p-3 rounded-2xl">
                   Terima kasih telah mengikuti sesi wawancara OSIS & MPK. Anda boleh meninggalkan ruangan.
                 </p>
               </div>
@@ -212,7 +212,7 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
                 <div className="text-[10px] font-extrabold text-persian-blue uppercase tracking-widest bg-persian-blue/20/50 inline-block px-2 py-0.5 rounded-md mb-2">Sesi Aktif</div>
                 <div className="text-xl font-black text-white mt-1">OSIS & MPK</div>
                 <div className="text-xs font-medium text-slate-400 mt-1 flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500/100 animate-pulse" />
                   Antrian saat ini: <span className="font-bold text-slate-200">{session._count.antrian}</span> peserta
                 </div>
               </div>

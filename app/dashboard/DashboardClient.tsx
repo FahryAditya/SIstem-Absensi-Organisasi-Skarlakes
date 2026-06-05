@@ -69,9 +69,9 @@ interface RequestStatsData {
 }
 
 const AKSI_COLORS: Record<string, string> = {
-  CREATE: 'text-green-600 bg-green-50',
-  UPDATE: 'text-blue-600 bg-blue-50',
-  DELETE: 'text-red-600 bg-red-50',
+  CREATE: 'text-green-600 bg-green-500/10',
+  UPDATE: 'text-blue-600 bg-white/5',
+  DELETE: 'text-red-600 bg-red-500/10',
   LOGIN:  'text-persian-blue bg-persian-blue/10',
   LOGOUT: 'text-slate-300 bg-white/10',
 }
@@ -79,9 +79,9 @@ const AKSI_COLORS: Record<string, string> = {
 // Request stats visual config per aksi
 const REQUEST_META: Record<string, { label: string; method: string; color: string; chartColor: string; icon: React.ElementType; bg: string }> = {
   CREATE: { label: 'Create',  method: 'POST',   color: 'text-emerald-700', chartColor: '#10b981', icon: PlusCircle,         bg: 'bg-emerald-50 border-emerald-200' },
-  UPDATE: { label: 'Update',  method: 'PUT',    color: 'text-blue-700',    chartColor: '#3b82f6', icon: RefreshCw,          bg: 'bg-blue-50   border-blue-200'    },
-  DELETE: { label: 'Delete',  method: 'DELETE', color: 'text-red-700',     chartColor: '#ef4444', icon: Trash2,             bg: 'bg-red-50    border-red-200'     },
-  LOGIN:  { label: 'Login',   method: 'GET',    color: 'text-blue-300',  chartColor: '#1E90FF', icon: MousePointerClick,  bg: 'bg-persian-blue/10 border-blue-200'  },
+  UPDATE: { label: 'Update',  method: 'PUT',    color: 'text-blue-300',    chartColor: '#3b82f6', icon: RefreshCw,          bg: 'bg-white/5   border-white/10'    },
+  DELETE: { label: 'Delete',  method: 'DELETE', color: 'text-red-400',     chartColor: '#ef4444', icon: Trash2,             bg: 'bg-red-500/10    border-white/10'     },
+  LOGIN:  { label: 'Login',   method: 'GET',    color: 'text-blue-300',  chartColor: '#1E90FF', icon: MousePointerClick,  bg: 'bg-persian-blue/10 border-white/10'  },
   LOGOUT: { label: 'Logout',  method: 'GET',    color: 'text-slate-300',   chartColor: '#94a3b8', icon: ArrowUpDown,        bg: 'bg-white/5  border-white/10'   },
 }
 
@@ -350,7 +350,7 @@ export default function DashboardClient({ user }: Props) {
       value: stats.hadirHariIni,
       suffix: 'orang',
       icon: CheckCircle2,
-      color: 'bg-green-50 text-green-600',
+      color: 'bg-green-500/10 text-green-600',
     },
     {
       label: 'Sisa Saldo Kas',
@@ -371,7 +371,7 @@ export default function DashboardClient({ user }: Props) {
       value: formatCurrency(stats.totalPengeluaran),
       isCurrency: true,
       icon: HandCoins,
-      color: 'bg-red-50 text-red-600',
+      color: 'bg-red-500/10 text-red-600',
     },
   ].filter(Boolean) as { label: string; value: number | string; suffix?: string; isCurrency?: boolean; icon: React.ElementType; color: string }[]) : []
 
@@ -543,7 +543,7 @@ export default function DashboardClient({ user }: Props) {
                 <h4 className="text-sm font-bold text-white mb-1">Import Massal (CSV/Excel)</h4>
                 <p className="text-xs text-slate-400 leading-relaxed">
                   Upload file <b>.xlsx</b> atau <b>.csv</b>. Pastikan baris pertama memiliki header: <br/>
-                  <code className="text-[#001F3F] bg-[#93C5FD] px-1 py-0.5 rounded">Nama</code>, <code className="text-[#001F3F] bg-[#93C5FD] px-1 py-0.5 rounded">Kelas</code>, <code className="text-[#001F3F] bg-[#93C5FD] px-1 py-0.5 rounded">NIS</code>{(quickOrg === 'osis' || quickOrg === 'mpk') && <>, <code className="text-[#001F3F] bg-[#93C5FD] px-1 py-0.5 rounded">Jabatan</code></>}.
+                  <code className="text-white bg-[#93C5FD] px-1 py-0.5 rounded">Nama</code>, <code className="text-white bg-[#93C5FD] px-1 py-0.5 rounded">Kelas</code>, <code className="text-white bg-[#93C5FD] px-1 py-0.5 rounded">NIS</code>{(quickOrg === 'osis' || quickOrg === 'mpk') && <>, <code className="text-white bg-[#93C5FD] px-1 py-0.5 rounded">Jabatan</code></>}.
                 </p>
               </div>
               <input
@@ -716,8 +716,8 @@ export default function DashboardClient({ user }: Props) {
             return (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
                 {/* Podium Top 3 */}
-                <div className="flex flex-col justify-center space-y-3.5 bg-gradient-to-br from-slate-50 to-[#93C5FD]/10 border border-white/10/60 p-4.5 rounded-2xl">
-                  <div className="text-xs font-extrabold text-[#001F3F] uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                <div className="flex flex-col justify-center space-y-3.5 bg-gradient-to-br from-slate-50 to-[#93C5FD]/10 border border-white/10 p-4.5 rounded-2xl">
+                  <div className="text-xs font-extrabold text-blue-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-yellow-500" /> Top 3 Champions
                   </div>
                   {currentList.slice(0, 3).map((siswa, idx) => {
@@ -741,7 +741,7 @@ export default function DashboardClient({ user }: Props) {
                         border: 'border-amber-600/30',
                         medal: '🥉',
                         glow: 'border-2 border-amber-600',
-                        badgeText: 'text-amber-700 bg-amber-50'
+                        badgeText: 'text-amber-400 bg-amber-500/10'
                       }
                     ][idx] || { bg: 'bg-slate-200 text-slate-200', border: 'border-white/10', medal: '🎗️', glow: '', badgeText: 'text-slate-400 bg-white/5' }
 
@@ -760,7 +760,7 @@ export default function DashboardClient({ user }: Props) {
                           </div>
                         </div>
                         <div className="flex flex-col items-end shrink-0">
-                          <span className="text-sm font-black font-mono text-[#001F3F] flex items-center gap-0.5">
+                          <span className="text-sm font-black font-mono text-white flex items-center gap-0.5">
                             <Zap className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400 animate-bounce" /> {siswa.xp} <span className="text-[10px] text-slate-400 font-bold font-sans uppercase">XP</span>
                           </span>
                           <span className="text-[9px] text-slate-400 font-semibold">Peringkat {idx + 1}</span>
@@ -819,7 +819,7 @@ export default function DashboardClient({ user }: Props) {
               <Activity className="w-4 h-4 text-persian-blue" />
               <h3 className="text-sm font-bold text-white">Aktivitas Terbaru</h3>
             </div>
-            <a href="/log" className="text-xs font-semibold text-[#001F3F] hover:underline">Lihat semua →</a>
+            <a href="/log" className="text-xs font-semibold text-blue-300 hover:underline">Lihat semua →</a>
           </div>
           {loadingLogs ? (
             <div className="py-8 flex items-center justify-center text-sm text-slate-400 gap-2">
@@ -961,17 +961,17 @@ export default function DashboardClient({ user }: Props) {
               },
               pengumuman: {
                 gradientFrom: '#001F3F', gradientVia: '#001F3F', gradientTo: '#1E90FF',
-                badgeBg: 'bg-blue-50', badgeText: 'text-blue-700',
+                badgeBg: 'bg-white/5', badgeText: 'text-blue-300',
                 badgeLabel: '📢 Pengumuman',
-                iconBg: 'bg-blue-50', iconColor: 'text-[#001F3F]',
+                iconBg: 'bg-white/5', iconColor: 'text-[#001F3F]',
                 btnBg: 'bg-deep-navy hover:bg-[#0f172a] shadow-[#001F3F]/20',
                 descLabel: 'Informasi Penting untuk Seluruh Admin',
               },
               perbaikan: {
                 gradientFrom: '#14532d', gradientVia: '#15803d', gradientTo: '#16a34a',
-                badgeBg: 'bg-green-50', badgeText: 'text-green-700',
+                badgeBg: 'bg-green-500/10', badgeText: 'text-green-400',
                 badgeLabel: '🔧 Perbaikan Sistem',
-                iconBg: 'bg-green-50', iconColor: 'text-green-700',
+                iconBg: 'bg-green-500/10', iconColor: 'text-green-400',
                 btnBg: 'bg-green-600 hover:bg-green-700 shadow-green-500/30',
                 descLabel: 'Bug Fix & Peningkatan Performa',
               },
@@ -1024,7 +1024,7 @@ export default function DashboardClient({ user }: Props) {
                         <h2 className="text-xl font-black text-white leading-tight">
                           Versi {latestUpdate.version}
                         </h2>
-                        <p className="text-[#001F3F] text-xs font-bold mt-1 opacity-70">
+                        <p className="text-white text-xs font-bold mt-1 opacity-70">
                           {cfg.descLabel}
                         </p>
                       </div>
@@ -1044,7 +1044,7 @@ export default function DashboardClient({ user }: Props) {
                     <div className="space-y-4">
                       <div>
                         <TextType as="h2" text={`${greeting}, 👋`} className="text-2xl font-black text-white tracking-tight" typingSpeed={50} loop={false} showCursor={false} />
-                        <TextType as="p" text={user.nama} className="text-[#001F3F] font-bold mt-1 text-lg" typingSpeed={60} initialDelay={800} loop={false} cursorClassName="text-[#001F3F]" />
+                        <TextType as="p" text={user.nama} className="text-white font-bold mt-1 text-lg" typingSpeed={60} initialDelay={800} loop={false} cursorClassName="text-[#001F3F]" />
                       </div>
                       <p className="text-slate-400 text-sm leading-relaxed">
                         Selamat datang kembali! Pantau terus perkembangan dan aktivitas terbaru hari ini.

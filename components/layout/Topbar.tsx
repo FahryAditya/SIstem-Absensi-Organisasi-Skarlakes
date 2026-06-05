@@ -93,7 +93,7 @@ export default function Topbar({
                   disabled={loggingOut}
                   className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-red-400 hover:text-red-300 hover:bg-white/5 rounded-xl transition-all duration-200"
                 >
-                  <div className="w-7 h-7 rounded-lg bg-red-500/10 flex items-center justify-center">
+                  <div className="w-7 h-7 rounded-lg bg-red-500/100/10 flex items-center justify-center">
                     {loggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
                   </div>
                   {loggingOut ? 'Logging out...' : 'Logout'}

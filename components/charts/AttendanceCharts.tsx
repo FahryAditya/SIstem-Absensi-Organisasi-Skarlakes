@@ -49,7 +49,7 @@ export default function AttendanceCharts({ data }: Props) {
       {/* Weekly Attendance Chart */}
       {data.kehadiranMingguan && data.kehadiranMingguan.some(d => d.hadir + d.tidak_hadir > 0) && (
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-[#001F3F] mb-4">Kehadiran 7 Hari Terakhir</h3>
+          <h3 className="text-sm font-bold text-white mb-4">Kehadiran 7 Hari Terakhir</h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={data.kehadiranMingguan} barSize={20} barGap={4}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -69,7 +69,7 @@ export default function AttendanceCharts({ data }: Props) {
       {/* Monthly Attendance Trend */}
       {data.kehadiranBulanan && data.kehadiranBulanan.some(d => d.hadir + d.tidak_hadir > 0) && (
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-[#001F3F] mb-4">Tren Kehadiran 30 Hari</h3>
+          <h3 className="text-sm font-bold text-white mb-4">Tren Kehadiran 30 Hari</h3>
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={data.kehadiranBulanan}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -107,7 +107,7 @@ export default function AttendanceCharts({ data }: Props) {
       {/* Yearly Attendance by Month */}
       {data.kehadiranTahunan && data.kehadiranTahunan.some(d => d.hadir + d.tidak_hadir > 0) && (
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-[#001F3F] mb-4">Kehadiran Tahunan per Bulan</h3>
+          <h3 className="text-sm font-bold text-white mb-4">Kehadiran Tahunan per Bulan</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={data.kehadiranTahunan} barSize={24} barGap={6}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -131,7 +131,7 @@ export default function AttendanceCharts({ data }: Props) {
       {/* Organization Attendance */}
       {data.kehadiranOrganisasi && (data.kehadiranOrganisasi.osis || data.kehadiranOrganisasi.mpk) && (
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-[#001F3F] mb-4">Kehadiran Organisasi (30 Hari)</h3>
+          <h3 className="text-sm font-bold text-white mb-4">Kehadiran Organisasi (30 Hari)</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {data.kehadiranOrganisasi.osis && (
               <div>

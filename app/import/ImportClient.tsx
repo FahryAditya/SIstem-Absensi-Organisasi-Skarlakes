@@ -180,12 +180,12 @@ export default function ImportClient({ user }: Props) {
       </div>
 
       {/* Instruksi */}
-      <div className="card p-4 bg-blue-50/40 border-blue-200">
-        <h3 className="text-sm font-bold text-blue-800 mb-2 flex items-center gap-2">
+      <div className="card p-4 bg-white/5/40 border-white/10">
+        <h3 className="text-sm font-bold text-blue-200 mb-2 flex items-center gap-2">
           <AlertCircle className="w-4 h-4" />
           Panduan Format Excel
         </h3>
-        <ul className="text-xs text-blue-700 space-y-1 ml-1">
+        <ul className="text-xs text-blue-300 space-y-1 ml-1">
           <li>• Kolom <strong>Nama</strong> wajib diisi (deteksi otomatis: "nama", "Nama Siswa", dll)</li>
           <li>• Kolom <strong>Kelas</strong> (opsional): contoh "X DKV", "XI RPL"</li>
           <li>• Kolom <strong>NIS</strong> (opsional): angka NIS/NISN</li>
@@ -212,7 +212,7 @@ export default function ImportClient({ user }: Props) {
                 'py-3 px-4 rounded-lg border text-center text-sm font-semibold transition-all',
                 selectedOrg === org
                   ? 'border-persian-blue/100 bg-persian-blue/10 text-blue-300 ring-2 ring-persian-blue/20'
-                  : 'border-white/10 bg-deep-navy text-slate-300 hover:border-blue-300 hover:bg-white/5'
+                  : 'border-white/10 bg-deep-navy text-slate-300 hover:border-white/20 hover:bg-white/5'
               )}
             >
               {ORG_LABELS[org]}
@@ -228,7 +228,7 @@ export default function ImportClient({ user }: Props) {
           className={cn(
             'border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer',
             file
-              ? 'border-green-300 bg-green-50'
+              ? 'border-white/20 bg-green-500/10'
               : 'border-slate-300 hover:border-blue-400 hover:bg-white/5'
           )}
           onClick={() => document.getElementById('excel-file-input')?.click()}
@@ -243,7 +243,7 @@ export default function ImportClient({ user }: Props) {
           {file ? (
             <div className="space-y-2">
               <CheckCircle className="w-10 h-10 text-green-500 mx-auto" />
-              <p className="text-green-700 font-medium">{fileName}</p>
+              <p className="text-green-400 font-medium">{fileName}</p>
               <p className="text-xs text-slate-400">Klik untuk ganti file</p>
             </div>
           ) : (
@@ -266,7 +266,7 @@ export default function ImportClient({ user }: Props) {
             </h3>
             <button
               onClick={handleReset}
-              className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"
+              className="text-xs text-red-500 hover:text-red-400 flex items-center gap-1"
             >
               <X className="w-3 h-3" /> Reset
             </button>
@@ -341,8 +341,8 @@ export default function ImportClient({ user }: Props) {
           className={cn(
             'p-4 rounded-lg border text-sm',
             result.success
-              ? 'bg-green-50 border-green-200 text-green-700'
-              : 'bg-red-50 border-red-200 text-red-700'
+              ? 'bg-green-500/10 border-white/10 text-green-400'
+              : 'bg-red-500/10 border-white/10 text-red-400'
           )}
         >
           <div className="flex items-center gap-2 font-bold mb-1">

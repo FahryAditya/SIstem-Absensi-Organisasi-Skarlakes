@@ -19,7 +19,7 @@ export function LevelBadge({ exp, size = 'md' }: LevelBadgeProps) {
       gradient: 'from-slate-400 to-slate-500',
     },
     2: {
-      bg: 'bg-blue-50 border-blue-200 text-blue-700 shadow-blue-100/50',
+      bg: 'bg-white/5 border-white/10 text-blue-300 shadow-blue-100/50',
       icon: <Star className="w-3.5 h-3.5 text-blue-500 fill-blue-300" />,
       gradient: 'from-blue-400 to-blue-500',
     },
@@ -34,7 +34,7 @@ export function LevelBadge({ exp, size = 'md' }: LevelBadgeProps) {
       gradient: 'from-persian-blue/100 to-persian-blue',
     },
     5: {
-      bg: 'bg-amber-50 border-amber-200 text-amber-700 shadow-amber-100/50 animate-pulse',
+      bg: 'bg-amber-500/10 border-white/10 text-amber-400 shadow-amber-100/50 animate-pulse',
       icon: <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-300" />,
       gradient: 'from-amber-500 to-amber-600',
     },

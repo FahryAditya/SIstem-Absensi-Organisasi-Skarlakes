@@ -52,7 +52,7 @@ export default function FinanceCharts({ data }: Props) {
       {/* Monthly Finance Chart */}
       {data.keuanganBulanan && data.keuanganBulanan.some(d => d.pemasukan + d.pengeluaran > 0) && (
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-[#001F3F] mb-4">Keuangan 6 Bulan Terakhir</h3>
+          <h3 className="text-sm font-bold text-white mb-4">Keuangan 6 Bulan Terakhir</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={data.keuanganBulanan} barSize={28} barGap={6}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -75,7 +75,7 @@ export default function FinanceCharts({ data }: Props) {
       {/* Monthly Balance Trend */}
       {data.keuanganBulanan && data.keuanganBulanan.some(d => d.saldo !== 0) && (
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-[#001F3F] mb-4">Tren Saldo Kas 6 Bulan</h3>
+          <h3 className="text-sm font-bold text-white mb-4">Tren Saldo Kas 6 Bulan</h3>
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={data.keuanganBulanan}>
               <defs>
@@ -111,7 +111,7 @@ export default function FinanceCharts({ data }: Props) {
       {/* Yearly Finance Chart */}
       {data.keuanganTahunan && data.keuanganTahunan.some(d => d.pemasukan + d.pengeluaran > 0) && (
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-[#001F3F] mb-4">Keuangan Tahunan</h3>
+          <h3 className="text-sm font-bold text-white mb-4">Keuangan Tahunan</h3>
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={data.keuanganTahunan}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -162,7 +162,7 @@ export default function FinanceCharts({ data }: Props) {
       {/* Organization Finance */}
       {data.keuanganOrganisasi && (data.keuanganOrganisasi.osis || data.keuanganOrganisasi.mpk) && (
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-[#001F3F] mb-4">Keuangan Organisasi</h3>
+          <h3 className="text-sm font-bold text-white mb-4">Keuangan Organisasi</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {data.keuanganOrganisasi.osis && (
               <div>

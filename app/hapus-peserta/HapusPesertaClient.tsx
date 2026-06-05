@@ -47,16 +47,16 @@ const statusLabelMap: Record<string, string> = {
 }
 
 const statusStyleMap: Record<string, string> = {
-  MENUNGGU: 'bg-green-50 text-green-700 border-green-200',
-  WAWANCARA: 'bg-red-50 text-red-700 border-red-200',
+  MENUNGGU: 'bg-green-500/10 text-green-400 border-white/10',
+  WAWANCARA: 'bg-red-500/10 text-red-400 border-white/10',
   SELESAI_WAWANCARA: 'bg-white/10 text-slate-300 border-white/10',
 }
 
 const sessionStyleMap: Record<string, string> = {
-  SCHEDULED: 'bg-blue-50 text-blue-700 border-blue-200',
+  SCHEDULED: 'bg-white/5 text-blue-300 border-white/10',
   ACTIVE: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   SELESAI: 'bg-white/10 text-slate-300 border-white/10',
-  DIBATALKAN: 'bg-red-50 text-red-700 border-red-200',
+  DIBATALKAN: 'bg-red-500/10 text-red-400 border-white/10',
 }
 
 export default function HapusPesertaClient({ user }: Props) {
@@ -201,7 +201,7 @@ export default function HapusPesertaClient({ user }: Props) {
             <ArrowLeft className="w-4 h-4" /> Kembali
           </button>
           {selectedIds.length > 0 && (
-            <button onClick={() => setBulkDeleteConfirmOpen(true)} className="btn-secondary text-red-600 border-red-200 hover:bg-red-50">
+            <button onClick={() => setBulkDeleteConfirmOpen(true)} className="btn-secondary text-red-600 border-white/10 hover:bg-red-500/10">
               <Trash2 className="w-4 h-4" /> Hapus Terpilih ({selectedIds.length})
             </button>
           )}
@@ -350,14 +350,14 @@ export default function HapusPesertaClient({ user }: Props) {
                       </td>
                       <td className="td">
                         <div className="text-xs">
-                          <span className={`badge border text-[10px] ${item.status_validasi?.includes('SAH') ? 'bg-green-50 text-green-700 border-green-200' : item.status_validasi === 'DITOLAK_VPN' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-white/5 text-slate-200 border-white/10'}`}>
+                          <span className={`badge border text-[10px] ${item.status_validasi?.includes('SAH') ? 'bg-green-500/10 text-green-400 border-white/10' : item.status_validasi === 'DITOLAK_VPN' ? 'bg-red-500/10 text-red-400 border-white/10' : 'bg-white/5 text-slate-200 border-white/10'}`}>
                             {item.status_validasi?.replace('_', ' ') || '-'}
                           </span>
                         </div>
                       </td>
                       <td className="td">
                         {item.hasil_wawancara ? (
-                          <span className={`badge border text-[10px] ${item.hasil_wawancara.hasil === 'LOLOS' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                          <span className={`badge border text-[10px] ${item.hasil_wawancara.hasil === 'LOLOS' ? 'bg-green-500/10 text-green-400 border-white/10' : 'bg-red-500/10 text-red-400 border-white/10'}`}>
                             {item.hasil_wawancara.hasil}
                           </span>
                         ) : (
@@ -368,7 +368,7 @@ export default function HapusPesertaClient({ user }: Props) {
                         {deletable ? (
                           <button
                             onClick={() => setDeleteTarget(item)}
-                            className="btn-secondary btn-sm text-red-600 hover:bg-red-50"
+                            className="btn-secondary btn-sm text-red-600 hover:bg-red-500/10"
                             title="Hapus peserta"
                           >
                             <Trash2 className="w-3.5 h-3.5" />

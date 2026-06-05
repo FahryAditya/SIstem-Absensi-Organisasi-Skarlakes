@@ -41,7 +41,7 @@ const TableRow = memo(function TableRow<T>({
       {selectable && (
         <td className="td w-10 text-center px-4" onClick={(e) => e.stopPropagation()}>
           <input type="checkbox"
-            className="w-4 h-4 rounded border-blue-300 text-persian-blue focus:ring-persian-blue/100 cursor-pointer"
+            className="w-4 h-4 rounded border-white/20 text-persian-blue focus:ring-persian-blue/100 cursor-pointer"
             checked={isSelected || false}
             onChange={(e) => onSelect?.(e.target.checked, itemKey)}
           />
@@ -80,7 +80,7 @@ export default function Table<T>({
               {selectable && (
                 <th className="th w-10 text-center px-4">
                   <input type="checkbox" 
-                    className="w-4 h-4 rounded border-blue-300 text-persian-blue focus:ring-persian-blue/100 cursor-pointer"
+                    className="w-4 h-4 rounded border-white/20 text-persian-blue focus:ring-persian-blue/100 cursor-pointer"
                     checked={data.length > 0 && selectedKeys?.length === data.length}
                     onChange={(e) => {
                       if (onSelectionChange) {

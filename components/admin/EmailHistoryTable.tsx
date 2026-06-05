@@ -133,7 +133,7 @@ export default function EmailHistoryTable({ organizationType }: EmailHistoryTabl
                       {log.subject}
                     </td>
                     <td className="p-4">
-                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-blue-500/10 text-blue-400">
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-white/50/10 text-blue-400">
                         {log.emailType}
                       </span>
                     </td>
@@ -147,7 +147,7 @@ export default function EmailHistoryTable({ organizationType }: EmailHistoryTabl
                         </span>
                       ) : (
                         <div className="inline-flex flex-col items-center">
-                          <span className="inline-flex items-center gap-1 text-xs text-red-400 font-semibold bg-red-500/10 px-2 py-1 rounded-full" title={log.error_message || ''}>
+                          <span className="inline-flex items-center gap-1 text-xs text-red-400 font-semibold bg-red-500/100/10 px-2 py-1 rounded-full" title={log.error_message || ''}>
                             <XCircle className="w-3.5 h-3.5" /> Gagal
                           </span>
                           {log.error_message && (

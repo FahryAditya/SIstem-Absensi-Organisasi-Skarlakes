@@ -30,9 +30,9 @@ export function ExpProgressBar({ exp, showLabels = true }: ExpProgressBarProps) 
     <div className="w-full flex flex-col gap-1.5">
       {showLabels && (
         <div className="flex justify-between items-baseline text-xs font-semibold">
-          <span className="text-[#001F3F] flex items-center gap-1">
+          <span className="text-white flex items-center gap-1">
             <span>Progress</span>
-            <span className="text-[10px] font-mono bg-white/10 border border-white/10/60 text-slate-400 px-1.5 py-0.5 rounded">
+            <span className="text-[10px] font-mono bg-white/10 border border-white/10 text-slate-400 px-1.5 py-0.5 rounded">
               {Math.round(persen)}%
             </span>
           </span>

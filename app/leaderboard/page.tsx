@@ -25,7 +25,7 @@ interface LeaderboardEntry {
 }
 
 const TABS = [
-  { key: 'programming', label: 'Programming', color: 'from-blue-500 to-cyan-500', bg: 'bg-blue-500/10 border-blue-500/30' },
+  { key: 'programming', label: 'Programming', color: 'from-blue-500 to-cyan-500', bg: 'bg-white/50/10 border-blue-500/30' },
   { key: 'english', label: 'English Club', color: 'from-emerald-500 to-teal-500', bg: 'bg-emerald-500/10 border-emerald-500/30' },
   { key: 'osis', label: 'OSIS', color: 'from-purple-500 to-persian-blue/100', bg: 'bg-purple-500/10 border-purple-500/30' },
   { key: 'mpk', label: 'MPK', color: 'from-orange-500 to-amber-500', bg: 'bg-orange-500/10 border-orange-500/30' },
@@ -39,7 +39,7 @@ const RANK_STYLES = [
 
 const LEVEL_COLORS: Record<string, string> = {
   'Beginner': 'bg-white/50/20 text-slate-300 border-slate-500/30',
-  'Intermediate': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+  'Intermediate': 'bg-white/50/20 text-blue-300 border-blue-500/30',
   'Advanced': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
   'Expert': 'bg-purple-500/20 text-purple-300 border-purple-500/30',
   'Master': 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',

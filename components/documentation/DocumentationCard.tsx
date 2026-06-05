@@ -38,7 +38,7 @@ export default function DocumentationCard({ doc, canManage, onEdit, onDelete }: 
             </button>
             <button
               onClick={() => onDelete?.(doc.id)}
-              className="p-2 bg-red-50/90 backdrop-blur-md rounded-xl text-red-600 hover:bg-red-500 hover:text-white shadow-sm border border-red-100/20"
+              className="p-2 bg-red-500/10/90 backdrop-blur-md rounded-xl text-red-600 hover:bg-red-500/100 hover:text-white shadow-sm border border-red-100/20"
             >
               <Trash2 className="w-4 h-4" />
             </button>

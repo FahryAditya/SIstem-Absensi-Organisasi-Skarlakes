@@ -19,7 +19,7 @@ export default async function ImportMembersPage() {
         </div>
 
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-400">
+          <div className="p-3 bg-white/50/10 rounded-2xl text-blue-400">
             <FileSpreadsheet className="w-6 h-6" />
           </div>
           <div>

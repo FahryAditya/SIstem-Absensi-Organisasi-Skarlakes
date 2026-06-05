@@ -32,7 +32,7 @@ export function RoleBadge({ role }: { role: string }) {
   const map: Record<string, string> = {
     administrator: 'bg-persian-blue/10 text-persian-blue border border-persian-blue/20',
     admin_programming: 'bg-unit-programming/10 text-unit-programming border border-unit-programming/20',
-    admin_english: 'bg-unit-english/10 text-unit-english border border-unit-english/20',
+    admin_english: 'bg-unit-english/10 text-blue-400 border border-unit-english/20',
     admin_osis_mpk: 'bg-unit-osis/10 text-unit-osis border border-unit-osis/20',
   }
   const labels: Record<string, string> = {

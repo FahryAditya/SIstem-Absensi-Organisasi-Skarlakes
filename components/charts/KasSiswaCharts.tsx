@@ -53,7 +53,7 @@ export default function KasSiswaCharts({ data, activeOrg }: Props) {
       {/* Top 20 Kas Siswa by Organization */}
       {orgData && orgData.length > 0 && (
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-[#001F3F] mb-4">Top 20 Kas Siswa - {activeOrg?.toUpperCase() || 'Semua'}</h3>
+          <h3 className="text-sm font-bold text-white mb-4">Top 20 Kas Siswa - {activeOrg?.toUpperCase() || 'Semua'}</h3>
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={orgData} barSize={24} barGap={4} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
@@ -78,7 +78,7 @@ export default function KasSiswaCharts({ data, activeOrg }: Props) {
       {/* Kas Distribution by Range */}
       {data.kasDistribution && data.kasDistribution.some(d => d.count > 0) && (
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-[#001F3F] mb-4">Distribusi Kas Siswa</h3>
+          <h3 className="text-sm font-bold text-white mb-4">Distribusi Kas Siswa</h3>
           <ResponsiveContainer width="100%" height={280}>
             <PieChart>
               <Pie
@@ -108,7 +108,7 @@ export default function KasSiswaCharts({ data, activeOrg }: Props) {
       {/* Comparison by Organization */}
       {(data.kasSiswa.programming?.length || data.kasSiswa.english?.length || data.kasSiswa.osis?.length || data.kasSiswa.mpk?.length) && (
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-[#001F3F] mb-4">Rata-rata Kas per Organisasi</h3>
+          <h3 className="text-sm font-bold text-white mb-4">Rata-rata Kas per Organisasi</h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={[
               { name: 'Programming', avg: data.kasSiswa.programming?.length ? Math.round(data.kasSiswa.programming.reduce((s, d) => s + d.total_kas, 0) / data.kasSiswa.programming.length) : 0 },

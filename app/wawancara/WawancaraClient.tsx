@@ -76,10 +76,10 @@ interface Props {
 }
 
 const statusStyle: Record<SessionStatus, string> = {
-  SCHEDULED: 'bg-blue-50 text-blue-700 border-blue-200',
-  ACTIVE: 'bg-green-50 text-green-700 border-green-200',
+  SCHEDULED: 'bg-white/5 text-blue-300 border-white/10',
+  ACTIVE: 'bg-green-500/10 text-green-400 border-white/10',
   SELESAI: 'bg-white/10 text-slate-200 border-white/10',
-  DIBATALKAN: 'bg-red-50 text-red-700 border-red-200',
+  DIBATALKAN: 'bg-red-500/10 text-red-400 border-white/10',
 }
 
 const queueLabel: Record<QueueStatus, string> = {
@@ -89,8 +89,8 @@ const queueLabel: Record<QueueStatus, string> = {
 }
 
 const queueStyle: Record<QueueStatus, string> = {
-  MENUNGGU: 'bg-green-50 border-green-200 text-green-700',
-  WAWANCARA: 'bg-red-50 border-red-200 text-red-700',
+  MENUNGGU: 'bg-green-500/10 border-white/10 text-green-400',
+  WAWANCARA: 'bg-red-500/10 border-white/10 text-red-400',
   SELESAI_WAWANCARA: 'bg-white/10 border-white/10 text-slate-300',
 }
 
@@ -115,9 +115,9 @@ const validationLabel: Record<ScanValidation, string> = {
 }
 
 const validationStyle: Record<ScanValidation, string> = {
-  SAH: 'bg-green-50 text-green-700 border-green-200',
-  SAH_DICURIGAI: 'bg-amber-50 text-amber-700 border-amber-200',
-  DITOLAK_VPN: 'bg-red-50 text-red-700 border-red-200',
+  SAH: 'bg-green-500/10 text-green-400 border-white/10',
+  SAH_DICURIGAI: 'bg-amber-500/10 text-amber-400 border-white/10',
+  DITOLAK_VPN: 'bg-red-500/10 text-red-400 border-white/10',
   TIDAK_SAH: 'bg-white/10 text-slate-200 border-white/10',
 }
 
@@ -696,7 +696,7 @@ export default function WawancaraClient({ user }: Props) {
                 <div className="text-sm font-bold text-white flex items-center gap-2">
                   Antrian Kandidat
                   {selectedSession?.status === 'ACTIVE' && selectedSession.jadwal_selesai && (
-                    <span className="badge bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1 font-mono">
+                    <span className="badge bg-amber-500/10 text-amber-400 border border-white/10 flex items-center gap-1 font-mono">
                       <Clock className="w-3 h-3" />
                       Sisa: {
                         (() => {
@@ -726,7 +726,7 @@ export default function WawancaraClient({ user }: Props) {
               )}
             </div>
 
-            <div className="px-5 py-3 border-b border-white/10 bg-white/5/60 grid grid-cols-1 sm:grid-cols-4 gap-2">
+            <div className="px-5 py-3 border-b border-white/10 hover:bg-white/10 grid grid-cols-1 sm:grid-cols-4 gap-2">
               <div className="flex items-center px-3 text-xs font-bold text-slate-400 bg-deep-navy border border-white/10 rounded-xl">
                 Organisasi: OSIS & MPK
               </div>
@@ -787,9 +787,9 @@ export default function WawancaraClient({ user }: Props) {
                           </div>
                         </td>
                         <td className="td">{q.hasil_wawancara ? <span className={
-                           q.hasil_wawancara.hasil === 'LOLOS' ? 'badge bg-green-50 text-green-700 border border-green-200' : 
-                           q.hasil_wawancara.hasil === 'PENDING' ? 'badge bg-amber-50 text-amber-700 border border-amber-200' :
-                           'badge bg-red-50 text-red-700 border border-red-200'
+                           q.hasil_wawancara.hasil === 'LOLOS' ? 'badge bg-green-500/10 text-green-400 border border-white/10' : 
+                           q.hasil_wawancara.hasil === 'PENDING' ? 'badge bg-amber-500/10 text-amber-400 border border-white/10' :
+                           'badge bg-red-500/10 text-red-400 border border-white/10'
                          }>{resultLabel[q.hasil_wawancara.hasil]}</span> : <span className="text-xs text-slate-400">Belum dinilai</span>}</td>
                         <td className="td font-mono text-sm">{q.hasil_wawancara ? `${q.hasil_wawancara.persentase}%` : '-'}</td>
                         <td className="td">
@@ -814,7 +814,7 @@ export default function WawancaraClient({ user }: Props) {
                                 </div>
                               )}
                               {q.status === 'SELESAI_WAWANCARA' && ['SAH', 'SAH_DICURIGAI'].includes(q.status_validasi) && <button onClick={() => openResult(q)} className="btn-secondary btn-sm"><SquarePen className="w-3.5 h-3.5" />Lihat/Edit</button>}
-                              {admin && q.hasil_wawancara && (q.hasil_wawancara.hasil === 'TIDAK_LOLOS' || q.hasil_wawancara.hasil === 'PENDING') && <button onClick={() => openOverride(q)} className="btn-secondary btn-sm text-amber-700"><ShieldCheck className="w-3.5 h-3.5" />Override</button>}
+                              {admin && q.hasil_wawancara && (q.hasil_wawancara.hasil === 'TIDAK_LOLOS' || q.hasil_wawancara.hasil === 'PENDING') && <button onClick={() => openOverride(q)} className="btn-secondary btn-sm text-amber-400"><ShieldCheck className="w-3.5 h-3.5" />Override</button>}
                             </div>
                           ) : <span className="text-xs text-slate-400">Terkunci</span>}
                         </td>
@@ -852,7 +852,7 @@ export default function WawancaraClient({ user }: Props) {
               <div className="relative">
                 <Bell className={`w-5 h-5 ${unreadCount > 0 ? 'text-amber-500 animate-bounce' : 'text-slate-400'}`} />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm border border-white">
+                  <span className="absolute -top-1.5 -right-1.5 bg-red-500/100 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm border border-white">
                     {unreadCount}
                   </span>
                 )}
@@ -950,7 +950,7 @@ export default function WawancaraClient({ user }: Props) {
       <Modal open={overrideModal} title={overrideTarget ? `Override Hasil ${overrideTarget.nama}` : 'Override Hasil'} onClose={() => setOverrideModal(false)} size="md"
         footer={<div className="flex justify-end gap-2"><button onClick={() => setOverrideModal(false)} className="btn-secondary">Batal</button><button onClick={saveOverride} disabled={saving} className="btn-primary">{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}Override ke Lolos</button></div>}>
         <div className="space-y-4">
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          <div className="rounded-xl border border-white/10 bg-amber-500/10 p-3 text-sm text-amber-300">
             Hanya Administrator dapat mengubah kandidat Tidak Lolos menjadi Lolos karena pertimbangan pembina. Alasan akan masuk ke Log Aktivitas.
           </div>
           <div className="form-group">

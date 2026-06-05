@@ -262,7 +262,7 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
       <div className="flex flex-col gap-1.5 max-w-[170px] min-w-[140px]">
         <div className="flex justify-between items-center">
           <LevelBadge exp={s.xp || 0} size="sm" />
-          <span className="font-mono text-[10px] font-bold text-[#001F3F]">{s.xp || 0} EXP</span>
+          <span className="font-mono text-[10px] font-bold text-blue-300">{s.xp || 0} EXP</span>
         </div>
         <ExpProgressBar exp={s.xp || 0} showLabels={false} />
       </div>
@@ -273,9 +273,9 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
       render: (s: Siswa) => (
         <div className="flex items-center gap-1">
           <button onClick={() => openProfile(s)} className="btn-icon text-emerald-500 hover:bg-emerald-50" title="Profil & Pencapaian"><Award className="w-3.5 h-3.5" /></button>
-          <button onClick={() => openXpModal(s)} className="btn-icon text-amber-500 hover:bg-amber-50" title="Beri Poin XP"><Zap className="w-3.5 h-3.5" /></button>
+          <button onClick={() => openXpModal(s)} className="btn-icon text-amber-500 hover:bg-amber-500/10" title="Beri Poin XP"><Zap className="w-3.5 h-3.5" /></button>
           <button onClick={() => openEdit(s)} className="btn-icon text-persian-blue/100 hover:bg-persian-blue/10"><Pencil className="w-3.5 h-3.5" /></button>
-          <button onClick={() => setDeleteTarget(s)} className="btn-icon text-red-400 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /></button>
+          <button onClick={() => setDeleteTarget(s)} className="btn-icon text-red-400 hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" /></button>
         </div>
       )
     },
@@ -295,7 +295,7 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
         </div>
         <div className="flex gap-2">
           {selectedIds.length > 0 && (
-            <button onClick={() => setBulkDeleteConfirmOpen(true)} className="btn-secondary text-red-600 border-red-200 hover:bg-red-50">
+            <button onClick={() => setBulkDeleteConfirmOpen(true)} className="btn-secondary text-red-600 border-white/10 hover:bg-red-500/10">
               <Trash2 className="w-4 h-4" /> Hapus Terpilih ({selectedIds.length})
             </button>
           )}
@@ -478,11 +478,11 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-xl border border-white/10 bg-white/5 p-3">
               <p className="text-[10px] uppercase font-bold text-slate-400">EXP</p>
-              <p className="text-lg font-black text-[#001F3F]">{profileTarget?.xp || 0}</p>
+              <p className="text-lg font-black text-white">{profileTarget?.xp || 0}</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/5 p-3">
               <p className="text-[10px] uppercase font-bold text-slate-400">Level</p>
-              <p className="text-lg font-black text-[#001F3F]">Lv {profileTarget?.level || 1}</p>
+              <p className="text-lg font-black text-white">Lv {profileTarget?.level || 1}</p>
             </div>
           </div>
 
@@ -498,10 +498,10 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
             ) : (
               <div className="space-y-2">
                 {profileAchievements.map(item => (
-                  <div key={item.id} className="rounded-xl border border-amber-100 bg-amber-50/60 p-3">
+                  <div key={item.id} className="rounded-xl border border-amber-100 bg-amber-500/10/60 p-3">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-bold text-white">{item.pencapaian.nama}</p>
-                      <span className="text-xs font-bold text-amber-700">+{item.pencapaian.exp_reward} EXP</span>
+                      <span className="text-xs font-bold text-amber-400">+{item.pencapaian.exp_reward} EXP</span>
                     </div>
                     <p className="text-xs text-slate-400 mt-0.5">{item.pencapaian.deskripsi}</p>
                   </div>
@@ -546,10 +546,10 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
         }
       >
         <div className="space-y-4">
-          <div className="p-4 bg-white/5 border border-white/10/60 rounded-2xl space-y-3 shadow-sm">
+          <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="text-xs font-bold text-[#001F3F]">{xpModalTarget?.nama}</h4>
+                <h4 className="text-xs font-bold text-white">{xpModalTarget?.nama}</h4>
                 <p className="text-[10px] text-slate-400 font-semibold uppercase">{xpModalTarget?.kelas} • {xpModalTarget?.ekskul}</p>
               </div>
               <LevelBadge exp={xpModalTarget?.xp || 0} size="sm" />
@@ -612,7 +612,7 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
             {fXpActivity !== 'manual' ? (
               <div className="p-3 bg-[#1E90FF]/10 border border-[#1E90FF]/30 rounded-xl flex items-center justify-between">
                 <span className="text-xs text-slate-400 font-medium">Preset Poin Terpilih:</span>
-                <span className="text-base font-mono font-black text-[#001F3F]">+{fXpAmount} XP</span>
+                <span className="text-base font-mono font-black text-white">+{fXpAmount} XP</span>
               </div>
             ) : (
               <input

@@ -216,11 +216,11 @@ export default function PengeluaranClient({ user }: Props) {
                     </td>
                     <td className="font-medium text-white">{item.keterangan}</td>
                     <td className="text-slate-300 text-sm">{item.creator_nama}</td>
-                    <td className="text-right font-mono font-bold text-red-600 bg-red-50/30">
+                    <td className="text-right font-mono font-bold text-red-600 bg-red-500/10/30">
                       - {formatCurrency(item.nominal)}
                     </td>
                     <td className="text-center">
-                      <button onClick={() => handleDelete(item.id)} className="p-1.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg tooltip-trigger" title="Hapus Transaksi">
+                      <button onClick={() => handleDelete(item.id)} className="p-1.5 bg-red-500/10 text-red-500 hover:bg-red-100 rounded-lg tooltip-trigger" title="Hapus Transaksi">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </td>

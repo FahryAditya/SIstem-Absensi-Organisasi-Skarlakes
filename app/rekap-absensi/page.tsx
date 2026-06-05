@@ -22,9 +22,9 @@ interface RekapData {
 
 const STATUS_COLORS: Record<string, string> = {
   hadir: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-  tidak_hadir: 'bg-red-500/20 text-red-400 border-red-500/30',
+  tidak_hadir: 'bg-red-500/100/20 text-red-400 border-red-500/30',
   izin: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  sakit: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  sakit: 'bg-white/50/20 text-blue-400 border-blue-500/30',
   kas_saja: 'bg-white/50/20 text-slate-400 border-slate-500/30',
 }
 

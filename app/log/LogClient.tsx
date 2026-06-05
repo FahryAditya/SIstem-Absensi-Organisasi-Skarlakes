@@ -26,10 +26,10 @@ interface LogEntry {
 }
 
 const AKSI_STYLE: Record<string, string> = {
-  CREATE: 'bg-green-100 text-green-700 border-green-200',
-  UPDATE: 'bg-blue-100 text-blue-700 border-blue-200',
-  DELETE: 'bg-red-100 text-red-700 border-red-200',
-  LOGIN:  'bg-persian-blue/20 text-blue-300 border-blue-200',
+  CREATE: 'bg-green-100 text-green-400 border-white/10',
+  UPDATE: 'bg-blue-100 text-blue-300 border-white/10',
+  DELETE: 'bg-red-100 text-red-400 border-white/10',
+  LOGIN:  'bg-persian-blue/20 text-blue-300 border-white/10',
   LOGOUT: 'bg-white/10 text-slate-300 border-white/10',
 }
 
@@ -108,7 +108,7 @@ export default function LogClient() {
           <p className="page-sub mt-0.5">Rekam jejak semua perubahan data dalam sistem</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setClearConfirmOpen(true)} className="btn-secondary text-red-600 border-red-200 hover:bg-red-50 flex items-center gap-2">
+          <button onClick={() => setClearConfirmOpen(true)} className="btn-secondary text-red-600 border-white/10 hover:bg-red-500/10 flex items-center gap-2">
             <Trash2 className="w-4 h-4" />
             Bersihkan Log
           </button>
@@ -255,7 +255,7 @@ export default function LogClient() {
                   <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />
                   Data Sebelum
                 </label>
-                <pre className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 overflow-auto max-h-40 font-mono">
+                <pre className="p-3 bg-red-500/10 border border-white/10 rounded-lg text-xs text-red-400 overflow-auto max-h-40 font-mono">
                   {JSON.stringify(detailLog.data_lama, null, 2)}
                 </pre>
               </div>
@@ -267,7 +267,7 @@ export default function LogClient() {
                   <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
                   Data Sesudah
                 </label>
-                <pre className="p-3 bg-green-50 border border-green-200 rounded-lg text-xs text-green-700 overflow-auto max-h-40 font-mono">
+                <pre className="p-3 bg-green-500/10 border border-white/10 rounded-lg text-xs text-green-400 overflow-auto max-h-40 font-mono">
                   {JSON.stringify(detailLog.data_baru, null, 2)}
                 </pre>
               </div>

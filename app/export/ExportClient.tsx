@@ -193,7 +193,7 @@ export default function ExportClient({ user }: Props) {
             </div>
           </div>
 
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800 leading-relaxed">
+          <div className="rounded-lg border border-white/10 bg-white/5 p-3 text-xs text-blue-200 leading-relaxed">
             <strong>{currentOption.sheets}</strong>. Scope export: {selectedExportOrgs.map(o => ORG_LABELS[o as OrgType]).join(', ')}.
             {startDate && endDate ? <> Periode {formatDate(startDate)} sampai {formatDate(endDate)}.</> : <> Export diblokir jika tanggal kosong.</>}
           </div>
@@ -229,7 +229,7 @@ export default function ExportClient({ user }: Props) {
         </div>
 
         {isSuperAdmin && (
-          <div className="card p-5 border-red-200 bg-red-50/40">
+          <div className="card p-5 border-white/10 bg-red-500/10/40">
             <div className="flex items-center gap-2.5 mb-4">
               <ShieldAlert className="w-5 h-5 text-red-600" />
               <h3 className="text-sm font-bold text-red-800">Clear Database</h3>
@@ -256,10 +256,10 @@ export default function ExportClient({ user }: Props) {
                 <label className="label">Konfirmasi *</label>
                 <input value={clearConfirm} onChange={e => setClearConfirm(e.target.value)} className="input" placeholder={expectedConfirm} />
               </div>
-              <button onClick={handleClearDatabase} disabled={clearing || clearConfirm !== expectedConfirm} className="btn-secondary w-full justify-center text-red-700 border-red-200 hover:bg-red-50">
+              <button onClick={handleClearDatabase} disabled={clearing || clearConfirm !== expectedConfirm} className="btn-secondary w-full justify-center text-red-400 border-white/10 hover:bg-red-500/10">
                 {clearing ? <><Loader2 className="w-4 h-4 animate-spin" />Memproses...</> : <><Trash2 className="w-4 h-4" />Clear Database</>}
               </button>
-              <p className="text-xs text-red-700 leading-relaxed">
+              <p className="text-xs text-red-400 leading-relaxed">
                 Sistem membuat backup otomatis sebelum hapus. Proses selalu per ekskul, data ekskul lain tidak disentuh.
               </p>
             </div>

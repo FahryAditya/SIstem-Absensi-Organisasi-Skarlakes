@@ -248,7 +248,7 @@ export default function AdminClient({ user }: Props) {
       <div className="flex gap-1">
         <button onClick={() => openEdit(u)} className="btn-icon text-blue-400 hover:bg-persian-blue/10"><Pencil className="w-3.5 h-3.5" /></button>
         {u.id !== user.id && (
-          <button onClick={() => setDeleteTarget(u)} className="btn-icon text-red-400 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /></button>
+          <button onClick={() => setDeleteTarget(u)} className="btn-icon text-red-400 hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" /></button>
         )}
       </div>
     )},
@@ -257,7 +257,7 @@ export default function AdminClient({ user }: Props) {
   const roleGroups = [
     { role: 'administrator', label: 'Administrator', color: 'bg-persian-blue/10 border-persian-blue/20 text-persian-blue', dot: 'bg-persian-blue' },
     { role: 'admin_programming', label: 'Admin Programming', color: 'bg-unit-programming/10 border-unit-programming/20 text-unit-programming', dot: 'bg-unit-programming' },
-    { role: 'admin_english', label: 'Admin English', color: 'bg-unit-english/10 border-unit-english/20 text-unit-english', dot: 'bg-unit-english' },
+    { role: 'admin_english', label: 'Admin English', color: 'bg-unit-english/10 border-unit-english/20 text-blue-400', dot: 'bg-unit-english' },
     { role: 'admin_osis_mpk', label: 'Admin OSIS & MPK', color: 'bg-unit-osis/10 border-unit-osis/20 text-unit-osis', dot: 'bg-unit-osis' },
   ]
 
@@ -354,13 +354,13 @@ export default function AdminClient({ user }: Props) {
               options={Object.entries(ROLE_LABELS).map(([val, label]) => ({ value: val, label }))}
             />
           </div>
-          <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 flex gap-2.5 text-xs text-amber-700">
+          <div className="p-3 rounded-xl bg-amber-500/10 border border-white/10 flex gap-2.5 text-xs text-amber-400">
             <Shield className="w-4 h-4 flex-shrink-0 mt-0.5"/>
             <div><strong>Hak Akses:</strong><br/>
-              <span className="text-emerald-700">Programming</span> → hanya data Programming<br/>
-              <span className="text-blue-700">English</span> → hanya data English Club<br/>
+              <span className="text-unit-programming font-bold">Programming</span> → hanya data Programming<br/>
+              <span className="text-blue-300">English</span> → hanya data English Club<br/>
               <span className="text-blue-300">OSIS & MPK</span> → hanya data OSIS & MPK<br/>
-              <span className="text-amber-700">Administrator</span> → semua data + log aktivitas
+              <span className="text-amber-400">Administrator</span> → semua data + log aktivitas
             </div>
           </div>
         </div>
@@ -432,7 +432,7 @@ export default function AdminClient({ user }: Props) {
       >
         <div className="space-y-4">
           <div className="p-4 bg-[#1E90FF]/20 border border-[#1E90FF]/40 rounded-2xl">
-            <div className="flex items-center gap-2 text-[#001F3F] font-black mb-2.5">
+            <div className="flex items-center gap-2 text-white font-black mb-2.5">
               <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse" />
               Database Dioptimalkan Sempurna!
             </div>
@@ -456,7 +456,7 @@ export default function AdminClient({ user }: Props) {
           </div>
 
           <div>
-            <h4 className="text-xs font-bold text-[#001F3F] mb-2">Footprint Ukuran Tabel Live (PostgreSQL)</h4>
+            <h4 className="text-xs font-bold text-white mb-2">Footprint Ukuran Tabel Live (PostgreSQL)</h4>
             <div className="border border-white/10 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
@@ -469,7 +469,7 @@ export default function AdminClient({ user }: Props) {
                   {optimizeResult?.tableSizes?.map((tbl: any) => (
                     <tr key={tbl.table_name} className="hover:bg-white/5 transition-colors">
                       <td className="p-2.5 font-mono text-slate-300 font-semibold">{tbl.table_name}</td>
-                      <td className="p-2.5 text-right font-mono font-bold text-[#001F3F]">{tbl.total_size}</td>
+                      <td className="p-2.5 text-right font-mono font-bold text-slate-200">{tbl.total_size}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -497,7 +497,7 @@ export default function AdminClient({ user }: Props) {
             </div>
           ) : (
             <>
-              <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-[11px] text-blue-700 leading-relaxed">
+              <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-[11px] text-blue-300 leading-relaxed">
                 <div className="flex gap-2 font-bold mb-1"><Shield className="w-3.5 h-3.5" /> INFORMASI PENTING</div>
                 Gunakan <strong>Sandi Aplikasi (App Password)</strong> Gmail 16-karakter. Jangan gunakan sandi utama akun Google Anda. Email ini akan digunakan oleh seluruh admin untuk mengirimkan pengumuman.
               </div>

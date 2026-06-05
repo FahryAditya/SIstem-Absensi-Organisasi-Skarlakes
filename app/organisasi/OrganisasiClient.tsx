@@ -21,10 +21,10 @@ interface BulkRow { anggota_id: number; nama: string; jabatan: string | null; st
 interface PencapaianItem { id: number; tanggal: string; pencapaian: { nama: string; deskripsi: string; exp_reward: number } }
 
 const STATUS_OPTIONS = [
-  { value: 'hadir', label: 'Hadir', icon: CheckCircle2, color: 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100' },
-  { value: 'tidak_hadir', label: 'Tidak', icon: XCircle, color: 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100' },
+  { value: 'hadir', label: 'Hadir', icon: CheckCircle2, color: 'bg-green-500/10 text-green-400 border-white/20 hover:bg-green-100' },
+  { value: 'tidak_hadir', label: 'Tidak', icon: XCircle, color: 'bg-red-500/10 text-red-400 border-red-300 hover:bg-red-100' },
   { value: 'izin', label: 'Izin', icon: Clock, color: 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100' },
-  { value: 'sakit', label: 'Sakit', icon: Heart, color: 'bg-sky-50 text-sky-700 border-sky-300 hover:bg-sky-100' },
+  { value: 'sakit', label: 'Sakit', icon: Heart, color: 'bg-sky-500/10 text-sky-400 border-white/20 hover:bg-sky-100' },
 ]
 
 interface Props {
@@ -258,7 +258,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
       <div className="flex gap-1">
         <button onClick={() => openProfile(a)} className="btn-icon text-emerald-500 hover:bg-emerald-50"><Award className="w-3.5 h-3.5" /></button>
         <button onClick={() => openEdit(a)} className="btn-icon text-blue-400 hover:bg-persian-blue/10"><Pencil className="w-3.5 h-3.5" /></button>
-        <button onClick={() => setDeleteTarget(a)} className="btn-icon text-red-400 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /></button>
+        <button onClick={() => setDeleteTarget(a)} className="btn-icon text-red-400 hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" /></button>
       </div>
     )},
   ]
@@ -432,11 +432,11 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl border border-white/10 bg-white/5 p-3">
                   <p className="text-[10px] uppercase font-bold text-slate-400">EXP</p>
-                  <p className="text-lg font-black text-[#001F3F]">{profileTarget?.xp || 0}</p>
+                  <p className="text-lg font-black text-white">{profileTarget?.xp || 0}</p>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-white/5 p-3">
                   <p className="text-[10px] uppercase font-bold text-slate-400">Level</p>
-                  <p className="text-lg font-black text-[#001F3F]">Lv {profileTarget?.level || 1}</p>
+                  <p className="text-lg font-black text-white">Lv {profileTarget?.level || 1}</p>
                 </div>
               </div>
 
@@ -452,10 +452,10 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
                 ) : (
                   <div className="space-y-2">
                     {profileAchievements.map(item => (
-                      <div key={item.id} className="rounded-xl border border-amber-100 bg-amber-50/60 p-3">
+                      <div key={item.id} className="rounded-xl border border-amber-100 bg-amber-500/10/60 p-3">
                         <div className="flex items-center justify-between gap-3">
                           <p className="text-sm font-bold text-white">{item.pencapaian.nama}</p>
-                          <span className="text-xs font-bold text-amber-700">+{item.pencapaian.exp_reward} EXP</span>
+                          <span className="text-xs font-bold text-amber-400">+{item.pencapaian.exp_reward} EXP</span>
                         </div>
                         <p className="text-xs text-slate-400 mt-0.5">{item.pencapaian.deskripsi}</p>
                       </div>
@@ -484,8 +484,14 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
                 <div className="card p-16 text-center text-slate-400 text-sm">Belum ada anggota {orgLabel}</div>
               ) : (
                 <div className="card overflow-hidden">
-                  <div className={`px-5 py-3 border-b flex items-center justify-between flex-wrap gap-2 ${orgBgClass.replace('text-', 'border-')}`} style={{background: activeOrg==='osis'?'#f5f3ff':'#fff7ed', borderColor: activeOrg==='osis'?'#ede9fe':'#fed7aa'}}>
-                    <span className="text-sm font-bold">{orgLabel} — {formatDate(bulkDate)}</span>
+                  <div className={cn(
+                    "px-5 py-3 border-b flex items-center justify-between flex-wrap gap-2",
+                    activeOrg === 'osis' ? "bg-unit-osis/10 border-unit-osis/20" : "bg-unit-mpk/10 border-unit-mpk/20"
+                  )}>
+                    <span className={cn(
+                      "text-sm font-bold",
+                      activeOrg === 'osis' ? "text-unit-osis" : "text-unit-mpk"
+                    )}>{orgLabel} — {formatDate(bulkDate)}</span>
                     <div className="flex gap-1 flex-wrap">
                       <span className="text-xs text-slate-400 self-center">Tandai semua:</span>
                       {STATUS_OPTIONS.map(s => <button key={s.value} onClick={() => setAllStatus(s.value)} className={`text-xs font-semibold px-2 py-1 rounded-lg border ${s.color}`}>{s.label}</button>)}
@@ -496,7 +502,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
                       <thead><tr className="bg-white/5 border-b border-white/10"><th className="th">#</th><th className="th">Nama</th><th className="th">Jabatan</th><th className="th w-48">Status</th><th className="th w-32">Kas (Rp)</th><th className="th w-36">Keterangan</th></tr></thead>
                       <tbody className="divide-y divide-slate-100">
                         {bulkRows.map((row, i) => (
-                          <tr key={row.anggota_id} className="hover:bg-white/5/60">
+                          <tr key={row.anggota_id} className="hover:bg-white/10">
                             <td className="td text-slate-400 font-mono text-xs">{i+1}</td>
                             <td className="td font-semibold text-white text-sm">{row.nama}</td>
                             <td className="td text-xs text-slate-400">{row.jabatan || '-'}</td>

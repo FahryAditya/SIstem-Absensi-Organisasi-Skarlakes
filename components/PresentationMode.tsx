@@ -300,7 +300,7 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
               <button
                 onClick={handleClose}
                 className="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 rounded-xl bg-white/5 border border-white/10
-                  hover:bg-red-500/20 hover:border-red-500/30 text-white/60 hover:text-red-400 transition-all"
+                  hover:bg-red-500/100/20 hover:border-red-500/30 text-white/60 hover:text-red-400 transition-all"
                 title="Tutup (Esc)"
               >
                 <X className="w-3.5 h-3.5 md:w-4 md:h-4" />

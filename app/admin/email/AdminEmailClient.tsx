@@ -63,7 +63,7 @@ export default function AdminEmailClient({ user }: AdminEmailClientProps) {
 
       {/* Title */}
       <div className="flex items-center gap-3">
-        <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-400">
+        <div className="p-3 bg-white/50/10 rounded-2xl text-blue-400">
           <Mail className="w-6 h-6" />
         </div>
         <div>

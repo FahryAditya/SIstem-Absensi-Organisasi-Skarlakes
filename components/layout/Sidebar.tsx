@@ -91,7 +91,7 @@ function RoleBadge({ role }: { role: string }) {
   const colors: Record<string, string> = {
     administrator: 'bg-persian-blue border-white/20 text-white font-extrabold',
     admin_programming: 'bg-unit-programming/20 border-unit-programming/30 text-unit-programming font-extrabold',
-    admin_english: 'bg-unit-english/20 border-unit-english/30 text-unit-english font-extrabold',
+    admin_english: 'bg-unit-english/20 border-unit-english/30 text-blue-400 font-extrabold',
     admin_osis_mpk: 'bg-unit-osis/20 border-unit-osis/30 text-unit-osis font-extrabold',
   }
   return (

@@ -49,9 +49,9 @@ const ORG_THEMES: Record<string, { border: string; bg: string; text: string; rin
   english: {
     border: 'border-unit-english/30 hover:border-unit-english',
     bg: 'bg-unit-english/5',
-    text: 'text-unit-english',
+    text: 'text-blue-400',
     ring: 'focus:ring-unit-english',
-    badge: 'bg-unit-english/10 text-unit-english border-unit-english/20',
+    badge: 'bg-unit-english/10 text-blue-400 border-unit-english/20',
     iconBg: 'bg-unit-english text-white',
   },
   programming: {
@@ -301,7 +301,7 @@ export default function AmbilSiswaClient({ user }: Props) {
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all ${
             step === 1 
               ? 'bg-persian-blue/10 border-persian-blue/30 text-white' 
-              : 'bg-green-500/10 border-green-500/20 text-green-400'
+              : 'bg-green-500/100/10 border-green-500/20 text-green-400'
           }`}>
             <span className="w-4 h-4 rounded-full bg-current text-white flex items-center justify-center text-[10px]">1</span>
             Informasi
@@ -330,7 +330,7 @@ export default function AmbilSiswaClient({ user }: Props) {
 
           {/* Org Selector Grid */}
           <div className="space-y-3">
-            <label className="label text-[#001F3F] font-bold">Pilih Organisasi / Ekskul Kegiatan * <span className="text-xs font-semibold text-slate-400 font-normal">(bisa pilih 2 atau lebih sekaligus)</span></label>
+            <label className="label text-white font-bold">Pilih Organisasi / Ekskul Kegiatan * <span className="text-xs font-semibold text-slate-400 font-normal">(bisa pilih 2 atau lebih sekaligus)</span></label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               {accessibleOrgs.map((orgKey) => {
                 const theme = ORG_THEMES[orgKey]
@@ -345,7 +345,7 @@ export default function AmbilSiswaClient({ user }: Props) {
                     className={`p-4 rounded-xl border-2 text-left flex items-start gap-4 transition-all duration-200 ${
                       isSelected 
                         ? `${theme.border} ${theme.bg} ring-2 ring-offset-1 ${theme.text}` 
-                        : 'border-white/10 hover:border-white/10 bg-deep-navy hover:bg-white/5/50'
+                        : 'border-white/10 hover:border-white/10 bg-deep-navy hover:bg-white/10'
                     }`}
                   >
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 relative ${
@@ -353,7 +353,7 @@ export default function AmbilSiswaClient({ user }: Props) {
                     }`}>
                       <Icon className="w-5 h-5" />
                       {isSelected && (
-                        <div className="absolute -top-1.5 -right-1.5 bg-green-500 text-white rounded-full p-0.5 border border-white">
+                        <div className="absolute -top-1.5 -right-1.5 bg-green-500/100 text-white rounded-full p-0.5 border border-white">
                           <CheckCircle2 className="w-3 h-3" />
                         </div>
                       )}
@@ -370,7 +370,7 @@ export default function AmbilSiswaClient({ user }: Props) {
 
           {/* Custom Modern Dropdown & Custom Title Input */}
           <div className="form-group space-y-3">
-            <label className="label text-[#001F3F] font-bold">Judul / Acara Kegiatan *</label>
+            <label className="label text-white font-bold">Judul / Acara Kegiatan *</label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Custom Dropdown Container */}
               <div className="relative">
@@ -501,7 +501,7 @@ export default function AmbilSiswaClient({ user }: Props) {
         <div className="card p-6 bg-deep-navy border border-white/10 rounded-2xl shadow-sm space-y-6">
           <div className="flex items-center justify-between border-b border-white/10 pb-4 gap-4 flex-wrap">
             <div>
-              <h3 className="text-sm font-black text-[#001F3F] flex items-center gap-2">
+              <h3 className="text-sm font-black text-white flex items-center gap-2">
                 <Users className="w-4 h-4 text-persian-blue/100" /> Langkah 2: Pilih Siswa / Anggota
               </h3>
               <p className="text-xs text-slate-400 font-semibold uppercase mt-0.5">Silakan pilih/centang siswa yang hadir dalam kegiatan ini.</p>
@@ -591,7 +591,7 @@ export default function AmbilSiswaClient({ user }: Props) {
                         <tr 
                           key={key} 
                           onClick={() => handleToggleSiswa(key)}
-                          className={`hover:bg-white/5/50 cursor-pointer transition-colors ${
+                          className={`hover:bg-white/10 cursor-pointer transition-colors ${
                             isSelected ? (
                               siswa.org === 'osis' ? 'bg-[#3D3DB8]/5' :
                               siswa.org === 'mpk' ? 'bg-[#DC143C]/5' :
@@ -616,7 +616,7 @@ export default function AmbilSiswaClient({ user }: Props) {
                             <span className={`inline-block px-2.5 py-0.5 rounded-full border text-[10px] font-extrabold uppercase ${
                               siswa.org === 'osis' ? 'bg-[#3D3DB8]/10 text-[#3D3DB8] border-[#3D3DB8]/20' :
                               siswa.org === 'mpk' ? 'bg-[#DC143C]/10 text-[#DC143C] border-[#DC143C]/20' :
-                              siswa.org === 'english' ? 'bg-[#0F52BA]/10 text-[#0F52BA] border-[#0F52BA]/20' :
+                              siswa.org === 'english' ? 'bg-[#0F52BA]/10 text-blue-400 border-[#0F52BA]/20' :
                               'bg-[#FFB81C]/10 text-[#FFB81C] border-[#FFB81C]/20'
                             }`}>
                               {siswa.org?.toUpperCase()}

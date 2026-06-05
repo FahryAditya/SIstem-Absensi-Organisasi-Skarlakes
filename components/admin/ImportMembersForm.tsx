@@ -139,7 +139,7 @@ export default function ImportMembersForm({ user }: ImportMembersFormProps) {
               disabled={loading}
             />
             
-            <div className="p-4 rounded-full bg-blue-500/10 text-blue-400 group-hover:scale-110 transition duration-200 mb-3">
+            <div className="p-4 rounded-full bg-white/50/10 text-blue-400 group-hover:scale-110 transition duration-200 mb-3">
               {file ? <FileSpreadsheet className="w-8 h-8" /> : <Upload className="w-8 h-8" />}
             </div>
 
@@ -178,7 +178,7 @@ export default function ImportMembersForm({ user }: ImportMembersFormProps) {
         <div className={`p-4 rounded-xl flex items-start gap-3 border ${
           messageType === 'success'
             ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-            : 'bg-red-500/10 border-red-500/20 text-red-400'
+            : 'bg-red-500/100/10 border-red-500/20 text-red-400'
         }`}>
           {messageType === 'success' ? (
             <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
@@ -199,7 +199,7 @@ export default function ImportMembersForm({ user }: ImportMembersFormProps) {
               <p className="text-2xl font-bold text-emerald-400">{importSummary.imported}</p>
               <p className="text-xs text-slate-400 font-medium mt-1">Berhasil Ditambahkan</p>
             </div>
-            <div className="p-3 bg-red-500/5 border border-red-500/10 rounded-xl text-center">
+            <div className="p-3 bg-red-500/100/5 border border-red-500/10 rounded-xl text-center">
               <p className="text-2xl font-bold text-red-400">{importSummary.failed}</p>
               <p className="text-xs text-slate-400 font-medium mt-1">Gagal / Dilewati</p>
             </div>

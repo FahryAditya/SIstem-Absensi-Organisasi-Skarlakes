@@ -180,7 +180,7 @@ export default function QrCodeClient({ baseUrl, initialItems }: QrCodeClientProp
                   <div className="rounded-lg bg-white/5 border border-white/10 p-3"><div className="text-xs text-slate-400">Dibuat Oleh</div><div className="text-sm font-bold">{activeQr.creator.nama}</div></div>
                 </div>
                 {expiredSoon && (
-                  <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm text-amber-700 flex gap-2">
+                  <div className="rounded-xl bg-amber-500/10 border border-white/10 p-3 text-sm text-amber-400 flex gap-2">
                     <TriangleAlert className="w-4 h-4 flex-shrink-0 mt-0.5" />
                     QR akan expired kurang dari 24 jam. Buat QR baru sebelum digunakan lagi.
                   </div>
@@ -227,7 +227,7 @@ export default function QrCodeClient({ baseUrl, initialItems }: QrCodeClientProp
             {items.length === 0 ? (
               <div className="p-5 text-sm text-slate-400">Belum ada riwayat.</div>
             ) : items.map((item) => (
-              <div key={item.id} className={`p-4 ${deleteMode && selectedDeleteId === item.id ? 'bg-red-50/50' : ''}`}>
+              <div key={item.id} className={`p-4 ${deleteMode && selectedDeleteId === item.id ? 'bg-red-500/10/50' : ''}`}>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     {deleteMode && (
@@ -236,18 +236,18 @@ export default function QrCodeClient({ baseUrl, initialItems }: QrCodeClientProp
                         className={`w-7 h-7 rounded-full border flex items-center justify-center transition ${
                           selectedDeleteId === item.id
                             ? 'bg-red-600 border-red-600 text-white'
-                            : 'bg-deep-navy border-slate-300 text-transparent hover:border-red-300 hover:bg-red-50'
+                            : 'bg-deep-navy border-slate-300 text-transparent hover:border-red-300 hover:bg-red-500/10'
                         }`}
                         title="Pilih QR ini"
                       >
                         <CheckCircle2 className="w-4 h-4" />
                       </button>
                     )}
-                    <span className={item.aktif ? 'badge bg-green-50 text-green-700 border border-green-200' : 'badge bg-white/10 text-slate-400 border border-white/10'}>{item.aktif ? 'Aktif' : 'Nonaktif'}</span>
+                    <span className={item.aktif ? 'badge bg-green-500/10 text-green-400 border border-white/10' : 'badge bg-white/10 text-slate-400 border border-white/10'}>{item.aktif ? 'Aktif' : 'Nonaktif'}</span>
                     <span className="text-xs text-slate-400">#{item.id}</span>
                   </div>
                   {!deleteMode && (
-                    <button onClick={() => setDeleteId(item.id)} className="btn-icon text-red-500 hover:bg-red-50">
+                    <button onClick={() => setDeleteId(item.id)} className="btn-icon text-red-500 hover:bg-red-500/10">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   )}

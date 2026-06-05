@@ -212,7 +212,7 @@ function JadwalCard({ item, onEdit, onDelete, color }: { item: JadwalItem; onEdi
         <div className="flex items-center gap-2 flex-wrap mb-1">
           <h3 className="font-semibold text-white">{item.judul}</h3>
           {item.wajib_hadir && (
-            <span className="flex items-center gap-1 text-xs text-red-400 bg-red-500/10 border border-red-500/30 px-2 py-0.5 rounded-full">
+            <span className="flex items-center gap-1 text-xs text-red-400 bg-red-500/100/10 border border-red-500/30 px-2 py-0.5 rounded-full">
               <AlertCircle className="w-3 h-3" /> Wajib Hadir
             </span>
           )}
