@@ -134,7 +134,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
     const requestId = ++riwayatRequestId.current
     setLoadingRiwayat(true)
     try {
-      const json = await fetchJsonCachedUrl<{ data?: AbsensiOrg[] }>(`/api/organisasi/absensi?organisasi=${activeOrg}&tanggal=${filterTanggal}&limit=50`, { ttlMs: 30_000 })
+      const json = await fetchJsonCachedUrl<{ data?: AbsensiOrg[] }>(`/api/organisasi/absensi?organisasi=${activeOrg}&tanggal=${filterTanggal}&limit=100`, { ttlMs: 30_000 })
       if (requestId !== riwayatRequestId.current) return
       setRiwayat(json.data || [])
     } catch (error: any) {

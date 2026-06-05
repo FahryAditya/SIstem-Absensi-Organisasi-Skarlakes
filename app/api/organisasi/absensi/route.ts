@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   const organisasi = searchParams.get('organisasi') as 'osis' | 'mpk' | null
   const tanggal = searchParams.get('tanggal')
   const page = parseInt(searchParams.get('page') || '1')
-  const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100)
+  const limit = Math.min(parseInt(searchParams.get('limit') || '100'), 500)
 
   if (organisasi === 'osis' && !canAccessOsis(userRole))
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
