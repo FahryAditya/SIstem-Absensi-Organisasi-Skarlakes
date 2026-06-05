@@ -1,59 +1,85 @@
-# Laporan Analisis Bug & Rencana Perbaikan Sistem Absensi OSIS
+# Perbaikan Bug Absensi, Kas OSIS & Export Excel
 
-Dokumen ini berisi catatan masalah (bug) yang ditemukan pada sistem absensi berdasarkan rekaman simulasi `kesalahan.mp4` tertanggal **5 Juni 2026**, beserta analisis teknis dan panduan perbaikannya.
+## Ringkasan Masalah
 
----
+Berdasarkan analisis kode dan laporan [main-1.md](file:///c:/Users/ACER/Desktop/Sistem Ekstrakurikuler/perbaikan/main-1.md):
 
-## 📌 Ringkasan Masalah (Bug List)
-
-| No | Masalah | Lokasi | Dampak | Prioritas |
-| :--- | :--- | :--- | :--- | :--- |
-| 1 | Status selain "Hadir" tidak tersimpan | Tab Input $\rightarrow$ Database | Data tidak valid (semua dianggap Hadir) | **CRITICAL** |
-| 2 | Bug Tanggal Tidak Valid (Format "75 Juni 2026") | Fitur Ekspor Excel | Laporan rusak & tidak dapat digunakan | **HIGH** |
-| 3 | Duplikasi Data Masif (*Duplicate Rows*) | Fitur Ekspor Excel | Ukuran file membengkak & data inkonsisten | **HIGH** |
-| 4 | Urutan Nama Tidak Sinkron (*Sorting*) | Tab Riwayat & Excel | Menyulitkan verifikasi manual | **LOW** |
+1. **Data selain "Hadir" tidak muncul setelah simpan** — Saat admin input absensi dengan status Tidak Hadir/Sakit/Izin lalu menyimpan, riwayat hanya menampilkan siswa berstatus "Hadir". Nama juga tidak muncul lengkap A-Z.
+2. **Urutan nama di Excel tidak terurut A-Z** — Export Excel menampilkan nama yang tidak tersortir secara konsisten.
 
 ---
 
-## 🛠 Detail Masalah & Rencana Perbaikan (Action Plan)
+## Analisis Akar Masalah
 
-### 1. Masalah Payload / State Input Tidak Tersimpan
-* **Deskripsi:** Ketika admin mengubah status anggota menjadi **"Tidak Idn"** atau **"Sakit"** (misal: Silvi Andini, Siti Azahra), status tersebut kembali menjadi **"Hadir"** setelah halaman dimuat ulang di tab Riwayat.
-* **Penyebab:** * Frontend tidak mengirimkan *state* terbaru dari radio button/toggle saat tombol "Simpan Absensi" ditekan (mengirimkan nilai default).
-  * Atau, Backend FastAPI tidak melakukan update data secara benar pada query SQL/NoSQL untuk status non-hadir.
-* **Solusi Perbaikan:**
-  * Pastikan fungsi `onChange` pada komponen radio button mengubah *state* array data kelompok anggota.
-  * Periksa struktur JSON Payload yang dikirim ke backend. Pastikan formatnya sudah benar, contoh:
-    ```json
-    {
-      "user_id": "80",
-      "status": "Tidak Idn"
-    }
-    ```
+### Bug #1: Data Riwayat Hanya Menampilkan "Hadir"
 
-### 2. Bug Logika "Tanggal 75 Juni 2026" di Excel
-* **Deskripsi:** Pada baris 64 ke bawah di file Excel, kolom tanggal menampilkan teks tidak masuk akal seperti "75 Juni 2026", "74 Juni 2026", dst.
-* **Penyebab:** Terjadi *Logic Error* pada fungsi perulangan (*looping generator*) file Excel. Variabel `index` perulangan baris secara tidak sengaja ter-render ke dalam string format tanggal menggantikan variabel hari (`day`).
-* **Solusi Perbaikan:**
-  * Cari fungsi eksportir Excel di backend/frontend.
-  * Koreksi variabel di dalam *looping*. Pastikan variabel tanggal mengambil objek tanggal yang valid dari database, bukan dari *counter/index* perulangan.
-  * *Contoh kesalahan:* `cell.value = f"{index} Juni 2026"` 
-  * *Perbaikan:* `cell.value = data.tanggal.strftime("%d %B %Y")`
+Setelah menelusuri kode secara menyeluruh:
 
-### 3. Duplikasi Baris Data Anggota pada Excel
-* **Deskripsi:** Satu nama anggota muncul berkali-kali secara berurutan pada tanggal yang sama di hasil unduhan Excel.
-* **Penyebab:** Kesalahan pada query pengambilan data (`SELECT`) yang tidak melakukan filter secara spesifik atau adanya penumpukan fungsi `append()` di dalam nested loop saat menyusun baris Excel.
-* **Solusi Perbaikan:**
-  * Jalankan evaluasi query database. Jika menggunakan SQL, pastikan tidak terjadi *Cartesian Product* akibat `JOIN` yang salah. Gunakan query yang spesifik berdasarkan `tanggal_absensi`.
-  * Pastikan array/list menampung data yang bersih sebelum di-mapping ke baris spreadsheet.
+- **Frontend** ([AbsensiClient.tsx](file:///c:/Users/ACER/Desktop/Sistem Ekstrakurikuler/app/absensi/AbsensiClient.tsx)): State `bulkRows` dikelola dengan benar. Fungsi `updateRow()` (L100-102) dan `setAllStatus()` (L104-106) mengubah status per baris dengan benar. Payload dikirim ke API via `handleSave()` (L108-126) menggunakan `bulkRows.map(r => ({ siswa_id: r.siswa_id, status: r.status, ... }))`.
 
-### 4. Inkonsistensi Pengurutan Nama (*Sorting*)
-* **Deskripsi:** Urutan nama di tab Input (A-Z) tidak sama dengan urutan nama di tab Riwayat maupun file Excel.
-* **Penyebab:** Tidak adanya parameter `ORDER BY` atau fungsi `.sort()` yang seragam di setiap *endpoint* pencarian data.
-* **Solusi Perbaikan:**
-  * Standarisasikan pengurutan data berdasarkan nama alfabetis (`nama ASC`) di semua level: Query Database, State Frontend, dan Fungsi Ekspor Excel.
+- **Backend API** ([route.ts](file:///c:/Users/ACER/Desktop/Sistem Ekstrakurikuler/app/api/absensi/route.ts)): Validasi schema (L96-104) menerima `z.enum(['hadir', 'tidak_hadir', 'izin', 'sakit'])`. Upsert di L148-152 menyimpan status dengan benar.
+
+- **🔴 Masalah ditemukan — Riwayat GET (L81-92)**: Query mengambil data dari tabel `absensi` dengan pagination `PAGE_SIZE = 20`. **Tetapi**, `limit` di GET default ke `100` (L24). Masalah sebenarnya adalah:
+  1. **Halaman riwayat memfilter berdasarkan tanggal dan ekskul**, tapi pagination `PAGE_SIZE = 20` di frontend membatasi tampilan. Jika ada >20 siswa, siswa selebihnya tidak terlihat tanpa pindah halaman.
+  2. **Urutan data riwayat**: `orderBy: [{ tanggal: 'desc' }, { siswa: { nama: 'asc' } }]` sudah benar secara prinsip.
+  
+- **🔴 Masalah utama — Caching**: Setelah menyimpan, `clearJsonCache()` dipanggil (L122), lalu mode berubah ke `'riwayat'` (L124). Namun fungsi `loadRiwayat()` menggunakan `fetchJsonCachedUrl` yang **bisa mengembalikan data cache lama** jika cache belum benar-benar di-clear saat `loadRiwayat` dipanggil. `staleTime: 60_000` (1 menit) berarti data bisa stale. Perlu dipastikan fetch riwayat setelah save benar-benar fresh.
+
+- **🔴 Kemungkinan lain — Tanggal**: Pada API POST, `tanggalDate = new Date(tanggal)` (L113) tanpa timezone suffix. Sementara pada GET riwayat, filter menggunakan `new Date(tanggal + 'T00:00:00')` dan `new Date(tanggal + 'T23:59:59')`. Jika POST menyimpan tanggal dengan timezone berbeda, maka GET tidak akan menemukan data tersebut. Karena kolom `tanggal` bertipe `@db.Date` (date only, tanpa time), Prisma bisa menyimpan tanggal yang shifted. **Ini adalah akar masalah utama.**
+
+  Contoh: `new Date('2026-06-05')` di timezone WIB (+7) menghasilkan `2026-06-04T17:00:00Z`. Saat disimpan ke kolom `DATE`, PostgreSQL menyimpannya sebagai `2026-06-04`. Lalu saat GET memfilter `tanggal >= 2026-06-05T00:00:00 AND tanggal <= 2026-06-05T23:59:59`, record `2026-06-04` tidak cocok!
+
+  Namun ini seharusnya mempengaruhi SEMUA record (termasuk Hadir). **Kecuali** jika record yang muncul adalah dari input sebelumnya yang tersimpan pada tanggal yang benar.
+
+Setelah analisis lebih lanjut, masalah paling mungkin adalah kombinasi:
+1. **Cache stale** — setelah save, data riwayat masih dari cache lama
+2. **Semua nama tidak muncul karena PAGE_SIZE = 20** — harus menampilkan semua atau meningkatkan limit
+
+### Bug #2: Urutan Nama di Excel Tidak A-Z
+
+Di [export route.ts](file:///c:/Users/ACER/Desktop/Sistem Ekstrakurikuler/app/api/export/route.ts):
+- `buildAbsensiRows()` (L62-117): Menggunakan `orderBy: [{ tanggal: 'asc' }, { siswa: { nama: 'asc' } }]` — ini mengurutkan berdasarkan tanggal dulu, baru nama. Jika user ingin urutan A-Z (nama duluan), perlu sort ulang setelah data dikumpulkan.
+- `buildKasRows()` (L119-195): Sama, orderBy tanggal dulu.
+- `buildKehadiranRows()` (L197-258): Sudah `orderBy: { nama: 'asc' }` — ini sudah benar.
+- **Masalah**: Saat data dari multiple orgs digabung, rows di-push berurutan per org tanpa final sort. Hasil akhir hanya A-Z per org, bukan A-Z secara keseluruhan.
+
+Perlu menambahkan **final sort by Nama** pada setiap fungsi builder sebelum mengembalikan rows.
 
 ---
 
-## 📅 Target Penyelesaian
-Perbaikan ini bersifat mendesak karena merusak fungsi utama aplikasi (*core functionality*). Diharapkan *hotfix* dapat segera di-deploy setelah logika perulangan pada backend diperbaiki.
+## Proposed Changes
+
+### Komponen 1: Absensi API (Backend)
+
+#### [MODIFY] [route.ts](file:///c:/Users/ACER/Desktop/Sistem Ekstrakurikuler/app/api/absensi/route.ts)
+
+1. **Fix tanggal POST**: Pastikan tanggal yang disimpan menggunakan format konsisten dengan menambahkan suffix `T00:00:00` agar tidak terjadi timezone shift.
+2. **Increase limit pada riwayat query**: Pastikan semua data pada tanggal tertentu muncul (tidak terpotong pagination backend).
+
+---
+
+### Komponen 2: Absensi Client (Frontend) 
+
+#### [MODIFY] [AbsensiClient.tsx](file:///c:/Users/ACER/Desktop/Sistem Ekstrakurikuler/app/absensi/AbsensiClient.tsx)
+
+1. **Force fresh fetch setelah save**: Ubah `loadRiwayat` agar menggunakan `force: true` untuk bypass cache setelah save.
+2. **Naikkan PAGE_SIZE atau gunakan limit lebih besar**: Agar semua siswa muncul pada satu halaman riwayat per tanggal.
+
+---
+
+### Komponen 3: Export API
+
+#### [MODIFY] [route.ts](file:///c:/Users/ACER/Desktop/Sistem Ekstrakurikuler/app/api/export/route.ts)
+
+1. **Sort final rows by Nama A-Z** di `buildAbsensiRows()` dan `buildKasRows()` sebelum return.
+2. **Re-number "No" column** setelah sort agar urutan nomor tetap konsisten.
+
+---
+
+## Verification Plan
+
+### Manual Verification
+1. Input absensi dengan campuran status (Hadir, Tidak Hadir, Izin, Sakit) lalu simpan
+2. Periksa di tab Riwayat apakah semua nama muncul dengan status yang benar
+3. Export Excel dan periksa urutan nama A-Z
+4. Pastikan semua nama muncul lengkap di riwayat (bukan hanya 20 pertama)

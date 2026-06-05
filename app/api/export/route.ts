@@ -71,7 +71,7 @@ async function buildAbsensiRows(orgs: Org[], range: { start: Date; end: Date }, 
         orderBy: [{ tanggal: 'asc' }, { siswa: { nama: 'asc' } }],
       })
       data.forEach((a) => rows.push({
-        No: rows.length + 1,
+        No: 0,
         Tanggal: formatDate(a.tanggal),
         Ekskul: ORG_LABELS[a.siswa.ekskul as Org],
         Nama: a.siswa.nama,
@@ -100,7 +100,7 @@ async function buildAbsensiRows(orgs: Org[], range: { start: Date; end: Date }, 
         const anggota = org === 'osis' ? a.anggota_osis : a.anggota_mpk
         if (!anggota) return // Skip if no member found (data integrity check)
         rows.push({
-          No: rows.length + 1,
+          No: 0,
           Tanggal: formatDate(a.tanggal),
           Ekskul: ORG_LABELS[org],
           Nama: anggota.nama || '-',
@@ -112,6 +112,11 @@ async function buildAbsensiRows(orgs: Org[], range: { start: Date; end: Date }, 
       })
     }
   }
+
+  // Final sort by Nama A-Z across all organizations
+  rows.sort((a, b) => (a.Nama as string).localeCompare(b.Nama as string))
+  // Re-number
+  rows.forEach((r, i) => r.No = i + 1)
 
   return rows
 }
@@ -128,7 +133,7 @@ async function buildKasRows(orgs: Org[], range: { start: Date; end: Date }, kela
         orderBy: [{ tanggal: 'asc' }, { siswa: { nama: 'asc' } }],
       })
       data.forEach((a) => rows.push({
-        No: rows.length + 1,
+        No: 0,
         Tanggal: formatDate(a.tanggal),
         Ekskul: ORG_LABELS[org],
         Nama: a.siswa.nama,
@@ -159,7 +164,7 @@ async function buildKasRows(orgs: Org[], range: { start: Date; end: Date }, kela
         const anggota = org === 'osis' ? a.anggota_osis : a.anggota_mpk
         if (!anggota) return
         rows.push({
-          No: rows.length + 1,
+          No: 0,
           Tanggal: formatDate(a.tanggal),
           Ekskul: ORG_LABELS[org],
           Nama: anggota.nama || '-',
@@ -173,6 +178,15 @@ async function buildKasRows(orgs: Org[], range: { start: Date; end: Date }, kela
     }
   }
 
+  // Final sort by Nama A-Z
+  rows.sort((a, b) => {
+    const nameA = (a.Nama as string) || ''
+    const nameB = (b.Nama as string) || ''
+    if (nameA === '-' && nameB !== '-') return 1
+    if (nameA !== '-' && nameB === '-') return -1
+    return nameA.localeCompare(nameB)
+  })
+
   const pengeluaran = await prisma.pengeluaranKas.findMany({
     where: { organisasi_type: { in: uniqueOrgs }, ...dateWhere(range) },
     include: { creator: { select: { nama: true } } },
@@ -180,7 +194,7 @@ async function buildKasRows(orgs: Org[], range: { start: Date; end: Date }, kela
   })
 
   pengeluaran.forEach((p) => rows.push({
-    No: rows.length + 1,
+    No: 0,
     Tanggal: formatDate(p.tanggal),
     Ekskul: ORG_LABELS[p.organisasi_type as Org],
     Nama: '-',
@@ -190,6 +204,9 @@ async function buildKasRows(orgs: Org[], range: { start: Date; end: Date }, kela
     Keterangan: p.keterangan,
     Petugas: p.creator.nama,
   }))
+
+  // Re-number
+  rows.forEach((r, i) => r.No = i + 1)
 
   return rows
 }

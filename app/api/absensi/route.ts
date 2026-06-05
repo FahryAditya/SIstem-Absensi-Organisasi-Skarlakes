@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
 
   const { tanggal, rows } = parsed.data
-  const tanggalDate = new Date(tanggal)
+  const tanggalDate = new Date(tanggal + 'T00:00:00')
 
   // Verify access for each siswa
   const siswaIds = rows.map(r => r.siswa_id)

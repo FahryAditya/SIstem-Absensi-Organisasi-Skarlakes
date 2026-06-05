@@ -30,7 +30,7 @@ const STATUS_OPTIONS = [
   { value: 'sakit', label: 'Sakit', icon: Heart, color: 'bg-sky-500/10 text-sky-400 border-white/20 hover:bg-sky-100' },
 ]
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 100
 
 export default function AbsensiClient({ user, defaultOrg }: Props) {
   const [mounted, setMounted] = useState(false)
@@ -80,14 +80,14 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
   useEffect(() => { if (mode === 'input') loadBulkData() }, [mode, loadBulkData])
 
   // Load riwayat
-  const loadRiwayat = useCallback(async () => {
+  const loadRiwayat = useCallback(async (force = false) => {
     setLoadingRiwayat(true)
     const params = new URLSearchParams({
       page: String(page), limit: String(PAGE_SIZE),
       ...(filterTanggal && { tanggal: filterTanggal }),
       ...(filterOrg && { ekskul: filterOrg }),
     })
-    const json = await fetchJsonCachedUrl<{ data?: AbsensiRecord[]; total?: number; totalPages?: number }>(`/api/absensi?${params}`)
+    const json = await fetchJsonCachedUrl<{ data?: AbsensiRecord[]; total?: number; totalPages?: number }>(`/api/absensi?${params}`, { force })
     setRiwayat(json.data || [])
     setTotal(json.total || 0)
     setTotalPages(json.totalPages || 1)
@@ -123,6 +123,7 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
     setSaving(false)
     setMode('riwayat')
     setFilterTanggal(bulkDate)
+    loadRiwayat(true)
   }
 
   async function handleGiveAward() {
