@@ -86,6 +86,7 @@ model Siswa {
   creator    User              @relation("SiswaCreatedBy", fields: [created_by], references: [id])
   pencapaian SiswaPencapaian[]
   email_logs EmailLog[]        @relation("SiswaEmailLogs")
+  pengelompokan_kegiatan PengelompokanKegiatan[]
 
   @@index([ekskul])
   @@index([xp])
@@ -94,6 +95,44 @@ model Siswa {
   @@index([kelas])
   @@index([created_at])
   @@map("siswa")
+}
+
+model Kegiatan {
+  id             Int                    @id @default(autoincrement())
+  nama_kegiatan  String                 @db.VarChar(100)
+  tipe           TipeKegiatan
+  tanggal        DateTime?              @db.Date
+  created_at     DateTime               @default(now())
+  pengelompokan  PengelompokanKegiatan[]
+
+  @@map("kegiatan")
+}
+
+model PengelompokanKegiatan {
+  id            Int            @id @default(autoincrement())
+  kegiatan_id   Int
+  siswa_id      Int
+  organisasi    OrganisasiWawancara
+  sub_kategori  String?        @db.VarChar(50)
+  created_at    DateTime       @default(now())
+  kegiatan      Kegiatan       @relation(fields: [kegiatan_id], references: [id], onDelete: Cascade)
+  siswa         Siswa          @relation(fields: [siswa_id], references: [id], onDelete: Cascade)
+
+  @@index([kegiatan_id])
+  @@index([siswa_id])
+  @@map("pengelompokan_kegiatan")
+}
+
+enum TipeKegiatan {
+  panitia
+  piket
+  petugas
+  rapat
+}
+
+enum OrganisasiWawancara {
+  OSIS
+  MPK
 }
 
 model Absensi {

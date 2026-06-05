@@ -6,7 +6,7 @@ import { createLog, getIp } from '@/lib/log'
 import * as XLSX from 'xlsx'
 
 type Org = 'programming' | 'english' | 'osis' | 'mpk'
-type ExportType = 'admin' | 'absensi' | 'kas' | 'kehadiran' | 'absensi_kehadiran' | 'semua' | 'siswa' | 'absensi_ekskul' | 'absensi_organisasi' | 'rekap_siswa'
+type ExportType = 'admin' | 'absensi' | 'kas' | 'kehadiran' | 'absensi_kehadiran' | 'semua' | 'siswa' | 'absensi_ekskul' | 'absensi_organisasi' | 'rekap_siswa' | 'kegiatan'
 
 const EXPORT_LABELS: Record<string, string> = {
   admin: 'Data Admin',
@@ -19,6 +19,7 @@ const EXPORT_LABELS: Record<string, string> = {
   absensi_ekskul: 'Absensi',
   absensi_organisasi: 'Absensi',
   rekap_siswa: 'Kehadiran',
+  kegiatan: 'Pengelompokan Kegiatan',
 }
 
 function getCtx(req: NextRequest) {
@@ -317,7 +318,64 @@ export async function GET(req: NextRequest) {
   const nama = searchParams.get('nama') || ''
   const startDate = searchParams.get('start') || ''
   const endDate = searchParams.get('end') || ''
+  const kegiatanId = parseInt(searchParams.get('kegiatanId') || '0')
   const accessible = getAccessibleOrgs(ctx.userRole) as Org[]
+
+  if (tipe === 'kegiatan' && kegiatanId) {
+    const activity = await prisma.kegiatan.findUnique({
+      where: { id: kegiatanId },
+      include: {
+        pengelompokan: {
+          include: { siswa: true },
+          orderBy: { siswa: { nama: 'asc' } }
+        }
+      }
+    })
+
+    if (!activity) return NextResponse.json({ error: 'Kegiatan tidak ditemukan' }, { status: 404 })
+
+    const wb = XLSX.utils.book_new()
+    
+    if (activity.tipe === 'piket') {
+      const penyambutan = activity.pengelompokan.filter(p => p.sub_kategori === 'Penyambutan')
+      const kebersihan = activity.pengelompokan.filter(p => p.sub_kategori === 'Kebersihan')
+
+      const formatPiket = (data: any[]) => data.map((p, i) => ({
+        'No': i + 1,
+        'Nama': p.siswa.nama,
+        'Kelas': p.siswa.kelas,
+        'Organisasi': p.organisasi
+      }))
+
+      appendJsonSheet(wb, formatPiket(penyambutan), 'Penyambutan', [5, 30, 15, 15])
+      appendJsonSheet(wb, formatPiket(kebersihan), 'Kebersihan', [5, 30, 15, 15])
+    } else {
+      const data = activity.pengelompokan.map((p, i) => ({
+        'No': i + 1,
+        'Nama': p.siswa.nama,
+        'Kelas': p.siswa.kelas,
+        'Organisasi': p.organisasi
+      }))
+      appendJsonSheet(wb, data, 'Daftar Peserta', [5, 30, 15, 15])
+    }
+
+    const output = XLSX.write(wb, { type: 'array', bookType: 'xlsx' })
+    
+    await createLog({
+      userId: ctx.userId, userNama: ctx.userNama,
+      aksi: 'CREATE', tabel: 'export', recordId: kegiatanId.toString(),
+      deskripsi: `${ctx.userNama} export kegiatan: ${activity.nama_kegiatan}`,
+      ipAddress: getIp(req)
+    })
+
+    return new NextResponse(output, {
+      headers: {
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': `attachment; filename="Kegiatan_${activity.nama_kegiatan.replace(/\s+/g, '_')}.xlsx"`,
+        'Cache-Control': 'no-store',
+      },
+    })
+  }
 
   if (tipe === 'admin') {
     if (ctx.userRole !== 'administrator') {

@@ -9,7 +9,7 @@ import Image from 'next/image'
 import {
   LayoutDashboard, Users, ClipboardList, Building2, UserCog, Mail,
   Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode, UserX, Megaphone, BarChart3,
-  Trophy, Star, BookOpen, CalendarDays, ClipboardCheck, Zap
+  Trophy, Star, BookOpen, CalendarDays, ClipboardCheck, Zap, LayoutGrid
 } from 'lucide-react'
 import AnimatedList from '../AnimatedList'
 
@@ -63,6 +63,7 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
     items.push({ type: 'section', label: 'Organisasi' })
     items.push({ type: 'link', href: '/organisasi?org=osis', label: 'OSIS', icon: Building2 })
     items.push({ type: 'link', href: '/organisasi?org=mpk', label: 'MPK', icon: Building2 })
+    items.push({ type: 'link', href: '/organisasi/kegiatan', label: 'Pengelompokan Kegiatan', icon: LayoutGrid })
     items.push({ type: 'link', href: '/wawancara', label: 'Wawancara OSIS & MPK', icon: MessagesSquare })
   }
 

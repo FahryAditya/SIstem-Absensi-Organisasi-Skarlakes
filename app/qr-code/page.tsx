@@ -24,7 +24,10 @@ export default async function QrCodePage() {
   const h = headers()
   const host = h.get('x-forwarded-host') || h.get('host') || ''
   const protocol = h.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https')
-  const baseUrl = host ? `${protocol}://${host}` : ''
+  
+  // Prioritas: Env Var (agar tidak pakai link preview Vercel yang terkunci login)
+  const envBaseUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : '')
+  const baseUrl = envBaseUrl || (host ? `${protocol}://${host}` : '')
 
   return (
     <DashboardLayout user={user} pageTitle="QR Code Wawancara">
