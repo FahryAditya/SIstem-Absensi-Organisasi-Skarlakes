@@ -30,10 +30,10 @@ export function StatusBadge({ status }: { status: string }) {
 
 export function RoleBadge({ role }: { role: string }) {
   const map: Record<string, string> = {
-    administrator: 'bg-amber-50 text-amber-700 border border-amber-200',
-    admin_programming: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-    admin_english: 'bg-blue-50 text-blue-700 border border-blue-200',
-    admin_osis_mpk: 'bg-violet-50 text-violet-700 border border-violet-200',
+    administrator: 'bg-persian-blue/10 text-persian-blue border border-persian-blue/20',
+    admin_programming: 'bg-unit-programming/10 text-unit-programming border border-unit-programming/20',
+    admin_english: 'bg-unit-english/10 text-unit-english border border-unit-english/20',
+    admin_osis_mpk: 'bg-unit-osis/10 text-unit-osis border border-unit-osis/20',
   }
   const labels: Record<string, string> = {
     administrator: 'Administrator',

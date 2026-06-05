@@ -217,7 +217,7 @@ export default function AdminExpClient({ user }: AdminExpClientProps) {
                 {isDropdownOpen && (
                   <div className="absolute left-0 right-0 mt-2 bg-[#161922] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden backdrop-blur-xl animate-in fade-in duration-200">
                     <div className="p-2 border-b border-white/5 relative">
-                      <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
                         type="text"
                         placeholder="Cari anggota berdasarkan nama atau kelas..."
@@ -230,7 +230,7 @@ export default function AdminExpClient({ user }: AdminExpClientProps) {
                     
                     <ul className="max-h-60 overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                       {filteredMembers.length === 0 ? (
-                        <li className="px-4 py-6 text-sm text-slate-500 text-center">
+                        <li className="px-4 py-6 text-sm text-slate-400 text-center">
                           Tidak ada anggota yang ditemukan
                         </li>
                       ) : (
@@ -264,7 +264,7 @@ export default function AdminExpClient({ user }: AdminExpClientProps) {
                                     <span className="text-xs bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded font-semibold">
                                       Lv.{m.level}
                                     </span>
-                                    <span className="text-xs text-slate-500">{m.xp} EXP</span>
+                                    <span className="text-xs text-slate-400">{m.xp} EXP</span>
                                   </div>
                                   {isSelected && <Check className="w-4 h-4 text-blue-400" />}
                                 </div>
@@ -278,7 +278,7 @@ export default function AdminExpClient({ user }: AdminExpClientProps) {
                 )}
 
                 {loadingMembers && !isDropdownOpen && (
-                  <p className="text-xs text-slate-500 mt-2 animate-pulse">Memuat anggota...</p>
+                  <p className="text-xs text-slate-400 mt-2 animate-pulse">Memuat anggota...</p>
                 )}
               </div>
 
@@ -346,9 +346,9 @@ export default function AdminExpClient({ user }: AdminExpClientProps) {
             
             <div className="space-y-4">
               {loadingLogs ? (
-                <p className="text-sm text-slate-500 text-center py-10">Memuat riwayat...</p>
+                <p className="text-sm text-slate-400 text-center py-10">Memuat riwayat...</p>
               ) : logs.length === 0 ? (
-                <p className="text-sm text-slate-500 text-center py-10">Belum ada riwayat update manual.</p>
+                <p className="text-sm text-slate-400 text-center py-10">Belum ada riwayat update manual.</p>
               ) : (
                 logs.map(log => (
                   <div key={log.id} className="p-3 bg-white/5 border border-white/10 rounded-xl">
@@ -356,7 +356,7 @@ export default function AdminExpClient({ user }: AdminExpClientProps) {
                       <span className={`text-sm font-bold ${log.selisih > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                         {log.selisih > 0 ? '+' : ''}{log.selisih} EXP
                       </span>
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-slate-400">
                         {new Date(log.created_at).toLocaleDateString('id-ID', { month: 'short', day: 'numeric' })}
                       </span>
                     </div>

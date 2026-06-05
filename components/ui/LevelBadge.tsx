@@ -14,7 +14,7 @@ export function LevelBadge({ exp, size = 'md' }: LevelBadgeProps) {
   // Curated premium color schemes
   const tierStyles = {
     1: {
-      bg: 'bg-slate-50 border-slate-200 text-slate-700 shadow-slate-100/50',
+      bg: 'bg-white/5 border-white/10 text-slate-200 shadow-slate-100/50',
       icon: <Award className="w-3.5 h-3.5 text-slate-400 fill-slate-200" />,
       gradient: 'from-slate-400 to-slate-500',
     },
@@ -29,9 +29,9 @@ export function LevelBadge({ exp, size = 'md' }: LevelBadgeProps) {
       gradient: 'from-teal-400 to-teal-500',
     },
     4: {
-      bg: 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-indigo-100/50',
-      icon: <Trophy className="w-3.5 h-3.5 text-indigo-500 fill-indigo-300" />,
-      gradient: 'from-indigo-500 to-indigo-600',
+      bg: 'bg-persian-blue/10 border-persian-blue/30 text-blue-300 shadow-persian-blue/20/50',
+      icon: <Trophy className="w-3.5 h-3.5 text-persian-blue/100 fill-blue-300" />,
+      gradient: 'from-persian-blue/100 to-persian-blue',
     },
     5: {
       bg: 'bg-amber-50 border-amber-200 text-amber-700 shadow-amber-100/50 animate-pulse',
@@ -39,7 +39,7 @@ export function LevelBadge({ exp, size = 'md' }: LevelBadgeProps) {
       gradient: 'from-amber-500 to-amber-600',
     },
   }[level as 1 | 2 | 3 | 4 | 5] || {
-    bg: 'bg-slate-50 border-slate-200 text-slate-700 shadow-slate-100/50',
+    bg: 'bg-white/5 border-white/10 text-slate-200 shadow-slate-100/50',
     icon: <Award className="w-3.5 h-3.5 text-slate-400 fill-slate-200" />,
     gradient: 'from-slate-400 to-slate-500',
   }
@@ -64,7 +64,7 @@ export function LevelBadge({ exp, size = 'md' }: LevelBadgeProps) {
         </div>
         <div className="flex flex-col items-center">
           <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-none">LEVEL {level}</span>
-          <span className="text-sm font-black text-slate-800 tracking-tight mt-1">{tierName}</span>
+          <span className="text-sm font-black text-white tracking-tight mt-1">{tierName}</span>
         </div>
       </div>
     )

@@ -18,7 +18,7 @@ interface JadwalItem {
 const ORG_TABS = [
   { key: 'programming', label: 'Programming', color: 'from-blue-500 to-cyan-500', isEkskul: true },
   { key: 'english', label: 'English Club', color: 'from-emerald-500 to-teal-500', isEkskul: true },
-  { key: 'osis', label: 'OSIS', color: 'from-purple-500 to-violet-500', isEkskul: false },
+  { key: 'osis', label: 'OSIS', color: 'from-purple-500 to-persian-blue/100', isEkskul: false },
   { key: 'mpk', label: 'MPK', color: 'from-orange-500 to-amber-500', isEkskul: false },
 ]
 
@@ -122,7 +122,7 @@ export default function JadwalPage() {
         {loading ? (
           <div className="space-y-4">{[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-white/5 rounded-2xl animate-pulse" />)}</div>
         ) : data.length === 0 ? (
-          <div className="text-center py-20 text-slate-500">
+          <div className="text-center py-20 text-slate-400">
             <CalendarDays className="w-12 h-12 mx-auto mb-4 opacity-30" />
             <p>Belum ada jadwal</p>
           </div>
@@ -221,7 +221,7 @@ function JadwalCard({ item, onEdit, onDelete, color }: { item: JadwalItem; onEdi
           {item.waktu && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{item.waktu}</span>}
           {item.lokasi && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{item.lokasi}</span>}
         </div>
-        {item.keterangan && <p className="text-xs text-slate-500 mt-1.5">{item.keterangan}</p>}
+        {item.keterangan && <p className="text-xs text-slate-400 mt-1.5">{item.keterangan}</p>}
       </div>
       <div className="flex items-start gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
         <button onClick={() => onEdit(item)} className="p-1.5 text-slate-400 hover:text-blue-400 transition"><Pencil className="w-4 h-4" /></button>

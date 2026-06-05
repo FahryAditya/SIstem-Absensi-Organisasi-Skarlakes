@@ -25,7 +25,7 @@ const ORG_TABS = [
 const ORG_COLORS: Record<string, string> = {
   programming: 'from-blue-500 to-cyan-500',
   english: 'from-emerald-500 to-teal-500',
-  osis: 'from-purple-500 to-violet-500',
+  osis: 'from-purple-500 to-persian-blue/100',
   mpk: 'from-orange-500 to-amber-500',
 }
 
@@ -166,7 +166,7 @@ export default function MateriPage() {
         {loading ? (
           <div className="space-y-4">{[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-white/5 rounded-2xl animate-pulse" />)}</div>
         ) : data.length === 0 ? (
-          <div className="text-center py-20 text-slate-500">
+          <div className="text-center py-20 text-slate-400">
             <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-30" />
             <p>Belum ada {isEkskul ? 'materi' : 'notulen rapat'}</p>
           </div>
@@ -196,12 +196,12 @@ export default function MateriPage() {
                 {expandedId === item.id && (
                   <div className="border-t border-white/5 px-4 pb-4 pt-3 space-y-3">
                     <div>
-                      <p className="text-xs text-slate-500 uppercase font-medium mb-1">{isEkskul ? 'Deskripsi' : 'Agenda'}</p>
+                      <p className="text-xs text-slate-400 uppercase font-medium mb-1">{isEkskul ? 'Deskripsi' : 'Agenda'}</p>
                       <p className="text-sm text-slate-300 whitespace-pre-wrap">{item.deskripsi}</p>
                     </div>
                     {item.notulen && (
                       <div>
-                        <p className="text-xs text-slate-500 uppercase font-medium mb-1">Notulen</p>
+                        <p className="text-xs text-slate-400 uppercase font-medium mb-1">Notulen</p>
                         <p className="text-sm text-slate-300 whitespace-pre-wrap">{item.notulen}</p>
                       </div>
                     )}

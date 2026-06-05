@@ -140,7 +140,7 @@ export default function Select({
         zIndex: 99999,
       }}
       className={[
-        'bg-white rounded-xl',
+        'bg-deep-navy rounded-xl',
         'border border-[rgba(84,130,180,0.15)]',
         'shadow-[0_8px_32px_rgba(1,16,37,0.14)]',
         'overflow-hidden',
@@ -157,11 +157,11 @@ export default function Select({
             onClick={() => { onChange(''); setOpen(false) }}
             className={[
               'flex items-center gap-2.5 px-3.5 py-2 cursor-pointer transition-colors',
-              value === '' ? 'bg-[#F4F8FC] text-[#5482B4]' : 'text-[#7EA0C5] hover:bg-[#F4F8FC]',
+              value === '' ? 'bg-[#F4F8FC] text-[#1E90FF]' : 'text-[#7EA0C5] hover:bg-[#F4F8FC]',
             ].join(' ')}
           >
             <span className="flex-1 text-sm truncate">{placeholder}</span>
-            {value === '' && <Check className="w-3.5 h-3.5 text-[#5482B4] flex-shrink-0" />}
+            {value === '' && <Check className="w-3.5 h-3.5 text-[#1E90FF] flex-shrink-0" />}
           </li>
         )}
 
@@ -186,15 +186,15 @@ export default function Select({
                   ? 'opacity-40 cursor-not-allowed'
                   : 'cursor-pointer',
                 isSelected
-                  ? 'bg-[rgba(84,130,180,0.08)] text-[#052659]'
-                  : opt.disabled ? '' : 'hover:bg-[#F4F8FC] text-[#011025]',
+                  ? 'bg-[rgba(84,130,180,0.08)] text-[#001F3F]'
+                  : opt.disabled ? '' : 'hover:bg-[#F4F8FC] text-[#001F3F]',
               ].join(' ')}
             >
               <span className={`flex-1 text-sm truncate ${isSelected ? 'font-semibold' : ''}`}>
                 {opt.label}
               </span>
               {isSelected && (
-                <Check className="w-3.5 h-3.5 text-[#5482B4] flex-shrink-0" />
+                <Check className="w-3.5 h-3.5 text-[#1E90FF] flex-shrink-0" />
               )}
             </li>
           )
@@ -216,16 +216,16 @@ export default function Select({
         aria-expanded={open}
         onClick={handleOpen}
         className={[
-          'w-full flex items-center gap-2 px-3.5 rounded-lg border bg-white text-left',
+          'w-full flex items-center gap-2 px-3.5 rounded-lg border bg-deep-navy text-left',
           'transition-all duration-200',
           'disabled:opacity-50 disabled:cursor-not-allowed',
           open
-            ? 'border-[#5482B4] ring-2 ring-[#5482B4]/20 shadow-sm'
-            : 'border-[rgba(84,130,180,0.25)] hover:border-[#5482B4]/60',
+            ? 'border-[#1E90FF] ring-2 ring-[#1E90FF]/20 shadow-sm'
+            : 'border-[rgba(84,130,180,0.25)] hover:border-[#1E90FF]/60',
           py,
         ].join(' ')}
       >
-        <span className={`flex-1 truncate ${selected ? 'text-[#011025] font-medium' : 'text-[#7EA0C5]'}`}>
+        <span className={`flex-1 truncate ${selected ? 'text-[#001F3F] font-medium' : 'text-[#7EA0C5]'}`}>
           {selected ? selected.label : placeholder}
         </span>
         <ChevronDown

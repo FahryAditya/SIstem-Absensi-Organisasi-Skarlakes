@@ -19,7 +19,7 @@ export default function DocumentationGallery({ photoUrl, title }: Props) {
   return (
     <div className="space-y-4">
       {/* Main Image View */}
-      <div className="relative aspect-[16/9] sm:aspect-[21/9] rounded-[2rem] overflow-hidden border border-slate-100 bg-slate-50 shadow-inner group">
+      <div className="relative aspect-[16/9] sm:aspect-[21/9] rounded-[2rem] overflow-hidden border border-white/10 bg-white/5 shadow-inner group">
         <Image
           src={activePhoto}
           alt={`${title} - Foto ${activeIndex + 1}`}
@@ -45,8 +45,8 @@ export default function DocumentationGallery({ photoUrl, title }: Props) {
               onClick={() => setActiveIndex(idx)}
               className={`relative w-24 aspect-[4/3] rounded-2xl overflow-hidden border-2 transition-all duration-300 active:scale-95 flex-shrink-0 ${
                 activeIndex === idx
-                  ? 'border-indigo-600 shadow-md shadow-indigo-600/10 scale-105'
-                  : 'border-slate-200 hover:border-slate-300 hover:scale-102 bg-white'
+                  ? 'border-persian-blue shadow-md shadow-persian-blue/10 scale-105'
+                  : 'border-white/10 hover:border-slate-300 hover:scale-102 bg-white'
               }`}
             >
               <Image

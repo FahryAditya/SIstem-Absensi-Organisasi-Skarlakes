@@ -156,12 +156,12 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
   const riwayatCols = [
     { key: 'siswa', label: 'Nama Siswa', render: (a: AbsensiRecord) => (
       <div>
-        <div className="font-semibold text-slate-800 text-sm">{a.siswa?.nama}</div>
+        <div className="font-semibold text-white text-sm">{a.siswa?.nama}</div>
         <span className="text-xs text-slate-400">{a.siswa?.kelas || ''}</span>
       </div>
     )},
     { key: 'ekskul', label: 'Ekskul', render: (a: AbsensiRecord) => a.siswa ? <OrgBadge org={a.siswa.ekskul} /> : null },
-    { key: 'tanggal', label: 'Tanggal', render: (a: AbsensiRecord) => <span className="text-slate-500 text-xs font-mono">{formatDate(a.tanggal)}</span> },
+    { key: 'tanggal', label: 'Tanggal', render: (a: AbsensiRecord) => <span className="text-slate-400 text-xs font-mono">{formatDate(a.tanggal)}</span> },
     { key: 'status', label: 'Status', render: (a: AbsensiRecord) => <StatusBadge status={a.status} /> },
     { key: 'uang_kas', label: 'Uang Kas', render: (a: AbsensiRecord) => (
       <span className={`font-mono text-sm font-semibold ${a.uang_kas > 0 ? 'text-green-600' : 'text-slate-300'}`}>
@@ -169,7 +169,7 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
       </span>
     )},
     { key: 'keterangan', label: 'Keterangan', render: (a: AbsensiRecord) => <span className="text-slate-400 text-xs">{a.keterangan || '-'}</span> },
-    { key: 'creator', label: 'Di-input oleh', render: (a: AbsensiRecord) => <span className="text-slate-500 text-xs">{a.creator?.nama || '-'}</span> },
+    { key: 'creator', label: 'Di-input oleh', render: (a: AbsensiRecord) => <span className="text-slate-400 text-xs">{a.creator?.nama || '-'}</span> },
   ]
 
   if (!mounted) return null;
@@ -180,7 +180,7 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
       <div className="page-header">
         <div className="flex-1">
           <div className="flex items-center gap-2.5">
-            <ClipboardList className="w-5 h-5 text-indigo-500" />
+            <ClipboardList className="w-5 h-5 text-persian-blue" />
             <h2 className="page-title">Absensi & Kas</h2>
           </div>
           <p className="page-sub mt-0.5">Input dan lihat riwayat absensi siswa ekskul</p>
@@ -224,22 +224,28 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
           ) : bulkRows.length === 0 ? (
             <div className="card p-16 text-center">
               <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-500 text-sm font-medium">Belum ada siswa di ekskul ini</p>
+              <p className="text-slate-400 text-sm font-medium">Belum ada siswa di ekskul ini</p>
               <p className="text-slate-400 text-xs mt-1">Tambahkan siswa terlebih dahulu di menu Data Siswa</p>
             </div>
           ) : (
             <div className="card overflow-hidden">
               {/* Bulk header */}
-              <div className="px-5 py-3 bg-indigo-50 border-b border-indigo-100 flex items-center justify-between flex-wrap gap-3">
+              <div className={cn(
+                "px-5 py-3 border-b flex items-center justify-between flex-wrap gap-3",
+                bulkOrg === 'programming' ? "bg-unit-programming/10 border-unit-programming/20" : "bg-unit-english/10 border-unit-english/20"
+              )}>
                 <div>
-                  <span className="text-sm font-bold text-indigo-700">
+                  <span className={cn(
+                    "text-sm font-bold",
+                    bulkOrg === 'programming' ? "text-unit-programming" : "text-unit-english"
+                  )}>
                     {bulkOrg === 'programming' ? 'Programming' : 'English Club'} — {formatDate(bulkDate)}
                   </span>
-                  <span className="text-xs text-indigo-400 ml-2">{bulkRows.length} siswa</span>
+                  <span className="text-xs text-white/50 ml-2">{bulkRows.length} siswa</span>
                 </div>
                 {/* Quick actions */}
                 <div className="flex gap-1.5 flex-wrap">
-                  <span className="text-xs text-slate-500 self-center mr-1">Tandai semua:</span>
+                  <span className="text-xs text-slate-400 self-center mr-1">Tandai semua:</span>
                   {STATUS_OPTIONS.map(s => (
                     <button key={s.value} onClick={() => setAllStatus(s.value)}
                       className={`text-xs font-semibold px-2.5 py-1 rounded-lg border transition-all ${s.color}`}>
@@ -253,7 +259,7 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200">
+                    <tr className="bg-white/5 border-b border-white/10">
                       <th className="th w-8">#</th>
                       <th className="th">Nama Siswa</th>
                       <th className="th w-48">Status Kehadiran</th>
@@ -265,10 +271,10 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
                     {bulkRows.map((row, i) => {
                       const statusOpt = STATUS_OPTIONS.find(s => s.value === row.status)
                       return (
-                        <tr key={row.siswa_id} className="hover:bg-slate-50/60">
+                        <tr key={row.siswa_id} className="hover:bg-white/5/60">
                           <td className="td text-slate-400 font-mono text-xs">{i + 1}</td>
                           <td className="td">
-                            <div className="font-semibold text-slate-800 text-sm">{row.nama}</div>
+                            <div className="font-semibold text-white text-sm">{row.nama}</div>
                             {row.kelas && <div className="text-xs text-slate-400">{row.kelas}</div>}
                           </td>
                           <td className="td">
@@ -279,7 +285,7 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
                                   <button key={s.value} onClick={() => updateRow(i, 'status', s.value)}
                                     title={s.label}
                                     className={`flex items-center gap-1 px-2 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
-                                      row.status === s.value ? s.color + ' ring-1 ring-current' : 'border-slate-200 text-slate-400 hover:border-slate-300'
+                                      row.status === s.value ? s.color + ' ring-1 ring-current' : 'border-white/10 text-slate-400 hover:border-slate-300'
                                     }`}>
                                     <Icon className="w-3 h-3" />
                                     <span className="hidden sm:inline">{s.label}</span>
@@ -319,7 +325,7 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
               </div>
 
               {/* Summary footer */}
-              <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between flex-wrap gap-3">
+              <div className="px-5 py-3 bg-white/5 border-t border-white/10 flex items-center justify-between flex-wrap gap-3">
                 <div className="flex gap-4 text-xs font-semibold flex-wrap">
                   <span className="text-green-600">✓ Hadir: {hadirCount}</span>
                   <span className="text-red-500">✗ Tidak: {tidakCount}</span>
@@ -379,7 +385,7 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
           </div>
         }>
         <div className="space-y-4">
-          <p className="text-xs text-slate-500">Memberikan penghargaan kepada <b>{selectedStudent?.nama}</b></p>
+          <p className="text-xs text-slate-400">Memberikan penghargaan kepada <b>{selectedStudent?.nama}</b></p>
           <div className="form-group">
             <label className="label">Jenis Penghargaan *</label>
             <Select

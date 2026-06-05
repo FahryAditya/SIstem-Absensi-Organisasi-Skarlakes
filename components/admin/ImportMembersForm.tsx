@@ -146,12 +146,12 @@ export default function ImportMembersForm({ user }: ImportMembersFormProps) {
             {file ? (
               <div>
                 <p className="text-white font-medium text-sm max-w-xs truncate">{file.name}</p>
-                <p className="text-xs text-slate-500 mt-1">{(file.size / 1024).toFixed(1)} KB</p>
+                <p className="text-xs text-slate-400 mt-1">{(file.size / 1024).toFixed(1)} KB</p>
               </div>
             ) : (
               <div>
                 <p className="text-slate-300 text-sm font-medium">Klik atau seret file Excel ke sini</p>
-                <p className="text-xs text-slate-500 mt-1">Hanya mendukung format .xlsx</p>
+                <p className="text-xs text-slate-400 mt-1">Hanya mendukung format .xlsx</p>
               </div>
             )}
           </div>

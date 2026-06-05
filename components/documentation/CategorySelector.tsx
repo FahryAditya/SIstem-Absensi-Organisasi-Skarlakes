@@ -33,7 +33,7 @@ export default function CategorySelector({ type, value, onChange }: Props) {
       <select
         value={isCustom ? 'custom' : value}
         onChange={handleSelectChange}
-        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+        className="w-full px-3 py-2 text-sm border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-persian-blue/100/20"
       >
         <option value="" disabled>Pilih Kategori</option>
         {fixedCategories.map((cat) => (
@@ -48,7 +48,7 @@ export default function CategorySelector({ type, value, onChange }: Props) {
           placeholder="Masukkan kategori kustom..."
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 animate-in fade-in slide-in-from-top-1"
+          className="w-full px-3 py-2 text-sm border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-persian-blue/100/20 animate-in fade-in slide-in-from-top-1"
         />
       )}
     </div>

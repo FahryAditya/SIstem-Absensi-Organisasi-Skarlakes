@@ -163,7 +163,7 @@ function CoolSelect({ value, onChange, options, labelPrefix = '' }: CoolSelectPr
                 }}
                 className={`w-full text-left px-4 py-2 text-xs font-bold transition-all duration-150 flex items-center justify-between ${
                   opt.value === value
-                    ? 'bg-[#5482B4] text-white font-extrabold'
+                    ? 'bg-[#1E90FF] text-white font-extrabold'
                     : 'text-slate-300 hover:bg-white/10 hover:text-white'
                 }`}
               >
@@ -301,7 +301,7 @@ export default function ReportsClient({ user }: Props) {
       // Center Official Texts
       doc.setFont('Helvetica', 'bold')
       doc.setFontSize(13)
-      doc.setTextColor(5, 38, 89) // #052659 - Corporate Premium Blue
+      doc.setTextColor(5, 38, 89) // #001F3F - Corporate Premium Blue
       doc.text('YAYASAN AIRLANGGA BALIKPAPAN', 105, currentY + 3, { align: 'center' })
       
       doc.setFontSize(11)
@@ -593,10 +593,10 @@ export default function ReportsClient({ user }: Props) {
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <BarChart3 className="w-6 h-6 text-[#5482B4]" />
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Laporan Statistik</h1>
+            <BarChart3 className="w-6 h-6 text-[#1E90FF]" />
+            <h1 className="text-2xl font-black text-white tracking-tight">Laporan Statistik</h1>
           </div>
-          <p className="text-sm text-slate-500 mt-1">Kompilasi dan visualisasi data kehadiran, keuangan, dan kas siswa terintegrasi.</p>
+          <p className="text-sm text-slate-400 mt-1">Kompilasi dan visualisasi data kehadiran, keuangan, dan kas siswa terintegrasi.</p>
         </div>
 
         {/* Action Export & Futuristic Cool Filters Panel */}
@@ -604,8 +604,8 @@ export default function ReportsClient({ user }: Props) {
           
           {/* Custom Cool Select Dropdown period pickers (Administrator Only) */}
           {user.role === 'administrator' && data?.keuanganBulanan && data.keuanganBulanan.length > 0 && (
-            <div className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200/50 border border-slate-200/80 px-3 py-2 rounded-2xl transition-all">
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider hidden sm:inline">Periode:</span>
+            <div className="flex items-center gap-2 bg-white/10 hover:bg-slate-200/50 border border-white/10/80 px-3 py-2 rounded-2xl transition-all">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider hidden sm:inline">Periode:</span>
               
               {/* Cool Select Year */}
               <CoolSelect 
@@ -645,7 +645,7 @@ export default function ReportsClient({ user }: Props) {
               <button
                 onClick={() => setPrintMenuOpen(!printMenuOpen)}
                 disabled={loading || exportingPdf || exportingExcel}
-                className="flex items-center gap-2 px-4 py-2.5 bg-[#052659] hover:bg-[#073377] border border-[#5482B4]/30 text-white text-sm font-black rounded-xl transition-all shadow-md shadow-[#052659]/10 hover:shadow-[#052659]/20 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
+                className="flex items-center gap-2 px-4 py-2.5 bg-[#001F3F] hover:bg-[#073377] border border-[#1E90FF]/30 text-white text-sm font-black rounded-xl transition-all shadow-md shadow-[#001F3F]/10 hover:shadow-[#001F3F]/20 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
               >
                 <span className="material-symbols-outlined text-lg leading-none" style={{ fontVariationSettings: "'FILL' 0, 'wght' 700, 'GRAD' 0, 'opsz' 24" }}>print</span>
                 <span>Cetak Laporan</span>
@@ -709,7 +709,7 @@ export default function ReportsClient({ user }: Props) {
           <button
             onClick={fetchReportsData}
             disabled={loading}
-            className="flex items-center justify-center w-10 h-10 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors disabled:opacity-50"
+            className="flex items-center justify-center w-10 h-10 bg-white/10 hover:bg-slate-200 text-slate-200 rounded-xl transition-colors disabled:opacity-50"
             title="Refresh Data"
           >
             {loading ? (
@@ -728,8 +728,8 @@ export default function ReportsClient({ user }: Props) {
             onClick={() => setActiveTab('attendance')}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
               activeTab === 'attendance'
-                ? 'bg-[#5482B4] text-white font-black'
-                : 'text-slate-600 hover:bg-slate-100'
+                ? 'bg-[#1E90FF] text-white font-black'
+                : 'text-slate-300 hover:bg-white/10'
             }`}
           >
             <TrendingUp className="w-4 h-4" />
@@ -742,8 +742,8 @@ export default function ReportsClient({ user }: Props) {
             }}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
               activeTab === 'finance'
-                ? 'bg-[#5482B4] text-white font-black'
-                : 'text-slate-600 hover:bg-slate-100'
+                ? 'bg-[#1E90FF] text-white font-black'
+                : 'text-slate-300 hover:bg-white/10'
             }`}
           >
             <Wallet className="w-4 h-4" />
@@ -756,8 +756,8 @@ export default function ReportsClient({ user }: Props) {
             }}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
               activeTab === 'kas'
-                ? 'bg-[#5482B4] text-white font-black'
-                : 'text-slate-600 hover:bg-slate-100'
+                ? 'bg-[#1E90FF] text-white font-black'
+                : 'text-slate-300 hover:bg-white/10'
             }`}
           >
             <BarChart3 className="w-4 h-4" />
@@ -770,15 +770,15 @@ export default function ReportsClient({ user }: Props) {
       {loading ? (
         <div className="card p-12 flex items-center justify-center">
           <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-[#5482B4] mx-auto mb-3" />
-            <p className="text-sm text-slate-500">Memuat laporan...</p>
+            <Loader2 className="w-8 h-8 animate-spin text-[#1E90FF] mx-auto mb-3" />
+            <p className="text-sm text-slate-400">Memuat laporan...</p>
           </div>
         </div>
       ) : authError ? (
         <div className="card p-12 text-center">
           <ShieldAlert className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-          <p className="text-sm font-bold text-slate-700 mb-1">Sesi habis atau akses ditolak</p>
-          <p className="text-sm text-slate-500 mb-4">Silakan login ulang untuk melanjutkan.</p>
+          <p className="text-sm font-bold text-slate-200 mb-1">Sesi habis atau akses ditolak</p>
+          <p className="text-sm text-slate-400 mb-4">Silakan login ulang untuk melanjutkan.</p>
           <button
             onClick={() => { window.location.href = '/login' }}
             className="btn-primary inline-flex items-center gap-2"
@@ -790,8 +790,8 @@ export default function ReportsClient({ user }: Props) {
       ) : serverError ? (
         <div className="card p-12 text-center">
           <ShieldAlert className="w-12 h-12 text-rose-500 mx-auto mb-4" />
-          <p className="text-sm font-bold text-slate-700 mb-1">Gagal Memuat Data</p>
-          <p className="text-sm text-slate-500 mb-4">{serverError}</p>
+          <p className="text-sm font-bold text-slate-200 mb-1">Gagal Memuat Data</p>
+          <p className="text-sm text-slate-400 mb-4">{serverError}</p>
           <button
             onClick={fetchReportsData}
             className="btn-primary inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900"
@@ -808,7 +808,7 @@ export default function ReportsClient({ user }: Props) {
         </>
       ) : (
         <div className="card p-12 text-center">
-          <p className="text-sm text-slate-500">Tidak ada data untuk ditampilkan</p>
+          <p className="text-sm text-slate-400">Tidak ada data untuk ditampilkan</p>
         </div>
       )}
     </div>

@@ -29,8 +29,8 @@ const AKSI_STYLE: Record<string, string> = {
   CREATE: 'bg-green-100 text-green-700 border-green-200',
   UPDATE: 'bg-blue-100 text-blue-700 border-blue-200',
   DELETE: 'bg-red-100 text-red-700 border-red-200',
-  LOGIN:  'bg-violet-100 text-violet-700 border-violet-200',
-  LOGOUT: 'bg-slate-100 text-slate-600 border-slate-200',
+  LOGIN:  'bg-persian-blue/20 text-blue-300 border-blue-200',
+  LOGOUT: 'bg-white/10 text-slate-300 border-white/10',
 }
 
 const PAGE_SIZE = 25
@@ -101,9 +101,9 @@ export default function LogClient() {
       <div className="page-header">
         <div className="flex-1">
           <div className="flex items-center gap-2.5">
-            <ScrollText className="w-5 h-5 text-indigo-500" />
+            <ScrollText className="w-5 h-5 text-persian-blue/100" />
             <h2 className="page-title">Log Aktivitas</h2>
-            <span className="badge bg-slate-100 text-slate-600 border border-slate-200">{total} log</span>
+            <span className="badge bg-white/10 text-slate-300 border border-white/10">{total} log</span>
           </div>
           <p className="page-sub mt-0.5">Rekam jejak semua perubahan data dalam sistem</p>
         </div>
@@ -143,7 +143,7 @@ export default function LogClient() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
+              <tr className="bg-white/5 border-b border-white/10">
                 <th className="th">Waktu</th>
                 <th className="th">User</th>
                 <th className="th w-20">Aksi</th>
@@ -156,7 +156,7 @@ export default function LogClient() {
             <tbody>
               {loading ? (
                 Array.from({ length: 8 }).map((_, i) => (
-                  <tr key={i} className="border-b border-slate-100">
+                  <tr key={i} className="border-b border-white/10">
                     {Array.from({ length: 7 }).map((_, j) => (
                       <td key={j} className="td"><div className="h-4 bg-slate-200 rounded animate-pulse" style={{ width: `${50 + Math.random()*40}%` }} /></td>
                     ))}
@@ -171,28 +171,28 @@ export default function LogClient() {
                 logs.map(log => (
                   <tr key={log.id} className="tr">
                     <td className="td">
-                      <span className="text-xs text-slate-500 font-mono whitespace-nowrap">{formatDateTime(log.created_at)}</span>
+                      <span className="text-xs text-slate-400 font-mono whitespace-nowrap">{formatDateTime(log.created_at)}</span>
                     </td>
                     <td className="td">
-                      <div className="text-sm font-semibold text-slate-800 whitespace-nowrap">{log.user_nama}</div>
+                      <div className="text-sm font-semibold text-white whitespace-nowrap">{log.user_nama}</div>
                     </td>
                     <td className="td">
-                      <span className={`badge border text-[10px] font-black ${AKSI_STYLE[log.aksi] || 'bg-slate-100 text-slate-600'}`}>
+                      <span className={`badge border text-[10px] font-black ${AKSI_STYLE[log.aksi] || 'bg-white/10 text-slate-300'}`}>
                         {log.aksi}
                       </span>
                     </td>
                     <td className="td">
-                      <span className="font-mono text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">{log.tabel}</span>
+                      <span className="font-mono text-xs text-slate-400 bg-white/10 px-1.5 py-0.5 rounded">{log.tabel}</span>
                     </td>
                     <td className="td">
-                      <p className="text-sm text-slate-700 leading-snug max-w-xs truncate" title={log.deskripsi}>{log.deskripsi}</p>
+                      <p className="text-sm text-slate-200 leading-snug max-w-xs truncate" title={log.deskripsi}>{log.deskripsi}</p>
                     </td>
                     <td className="td">
                       <span className="text-[10px] font-mono text-slate-400">{log.ip_address || '-'}</span>
                     </td>
                     <td className="td">
                       {(log.data_lama || log.data_baru) && (
-                        <button onClick={() => setDetailLog(log)} className="btn-icon text-indigo-400 hover:bg-indigo-50">
+                        <button onClick={() => setDetailLog(log)} className="btn-icon text-blue-400 hover:bg-persian-blue/10">
                           <Eye className="w-3.5 h-3.5" />
                         </button>
                       )}
@@ -206,13 +206,13 @@ export default function LogClient() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50/50">
-            <span className="text-xs text-slate-500">{total} total log — Halaman {page} dari {totalPages}</span>
+          <div className="flex items-center justify-between px-4 py-3 border-t border-white/10 bg-white/5/50">
+            <span className="text-xs text-slate-400">{total} total log — Halaman {page} dari {totalPages}</span>
             <div className="flex items-center gap-1">
               <button onClick={() => setPage(p => Math.max(1, p-1))} disabled={page <= 1} className="btn-icon disabled:opacity-30">
                 <ChevronRight className="w-4 h-4 rotate-180" />
               </button>
-              <span className="text-xs font-medium text-slate-600 px-2">{page}</span>
+              <span className="text-xs font-medium text-slate-300 px-2">{page}</span>
               <button onClick={() => setPage(p => Math.min(totalPages, p+1))} disabled={page >= totalPages} className="btn-icon disabled:opacity-30">
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -228,11 +228,11 @@ export default function LogClient() {
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="form-group">
                 <label className="label">User</label>
-                <div className="text-slate-800 font-semibold">{detailLog.user_nama}</div>
+                <div className="text-white font-semibold">{detailLog.user_nama}</div>
               </div>
               <div className="form-group">
                 <label className="label">Waktu</label>
-                <div className="text-slate-600 font-mono text-xs">{formatDateTime(detailLog.created_at)}</div>
+                <div className="text-slate-300 font-mono text-xs">{formatDateTime(detailLog.created_at)}</div>
               </div>
               <div className="form-group">
                 <label className="label">Aksi</label>
@@ -240,13 +240,13 @@ export default function LogClient() {
               </div>
               <div className="form-group">
                 <label className="label">Tabel</label>
-                <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">{detailLog.tabel}</span>
+                <span className="font-mono text-xs bg-white/10 px-2 py-1 rounded text-slate-300">{detailLog.tabel}</span>
               </div>
             </div>
 
             <div className="form-group">
               <label className="label">Deskripsi</label>
-              <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-700 border border-slate-200">{detailLog.deskripsi}</div>
+              <div className="p-3 bg-white/5 rounded-lg text-sm text-slate-200 border border-white/10">{detailLog.deskripsi}</div>
             </div>
 
             {detailLog.data_lama && (

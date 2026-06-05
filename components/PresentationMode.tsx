@@ -181,7 +181,7 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
       value: stats.totalSiswa,
       suffix: 'siswa',
       icon: Users,
-      accent: '#5482B4',
+      accent: '#1E90FF',
       glow: 'rgba(84,130,180,0.35)',
     },
     {
@@ -219,8 +219,8 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
         id="btn-presentation-mode"
         onClick={handleOpen}
         className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl
-          bg-[#052659] text-white shadow-lg shadow-[#052659]/30
-          hover:bg-[#011025] hover:shadow-xl hover:shadow-[#052659]/40
+          bg-[#001F3F] text-white shadow-lg shadow-[#001F3F]/30
+          hover:bg-[#001F3F] hover:shadow-xl hover:shadow-[#001F3F]/40
           hover:-translate-y-0.5 active:scale-95
           transition-all duration-200 border border-white/10"
         title="Buka Mode Presentasi (cocok untuk proyektor)"
@@ -235,7 +235,7 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
         <div
           className="fixed inset-0 z-[99999] flex flex-col presentation-enter"
           style={{
-            background: 'linear-gradient(135deg, #011025 0%, #021840 40%, #031e5c 70%, #052659 100%)',
+            background: 'linear-gradient(135deg, #001F3F 0%, #021840 40%, #031e5c 70%, #001F3F 100%)',
           }}
         >
           {/* Dot grid background pattern */}
@@ -387,7 +387,7 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
                   style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(10px)' }}
                 >
                   <div className="flex items-center gap-2 mb-4 flex-shrink-0">
-                    <TrendingUp className="w-5 h-5 text-[#5482B4]" />
+                    <TrendingUp className="w-5 h-5 text-[#1E90FF]" />
                     <h3 className="text-base font-black text-white tracking-tight">Kehadiran 7 Hari Terakhir</h3>
                   </div>
                   <div className="w-full h-[220px] md:h-[260px] min-h-0 relative">
@@ -401,7 +401,7 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
                             contentStyle={{ fontSize: 13, borderRadius: 12, background: '#021840', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                             labelStyle={{ fontWeight: 700, color: 'white' }}
                           />
-                          <Bar dataKey="hadir" name="Hadir" fill="#5482B4" radius={[6, 6, 0, 0]} />
+                          <Bar dataKey="hadir" name="Hadir" fill="#1E90FF" radius={[6, 6, 0, 0]} />
                           <Bar dataKey="tidak_hadir" name="Tidak Hadir" fill="rgba(248,113,113,0.7)" radius={[6, 6, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>

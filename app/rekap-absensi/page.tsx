@@ -25,13 +25,13 @@ const STATUS_COLORS: Record<string, string> = {
   tidak_hadir: 'bg-red-500/20 text-red-400 border-red-500/30',
   izin: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
   sakit: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  kas_saja: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
+  kas_saja: 'bg-white/50/20 text-slate-400 border-slate-500/30',
 }
 
 const ORG_TABS = [
   { key: 'siswa', ekskul: 'programming', label: 'Programming', color: 'from-blue-500 to-cyan-500' },
   { key: 'siswa', ekskul: 'english', label: 'English Club', color: 'from-emerald-500 to-teal-500' },
-  { key: 'osis', ekskul: 'osis', label: 'OSIS', color: 'from-purple-500 to-violet-500' },
+  { key: 'osis', ekskul: 'osis', label: 'OSIS', color: 'from-purple-500 to-persian-blue/100' },
   { key: 'mpk', ekskul: 'mpk', label: 'MPK', color: 'from-orange-500 to-amber-500' },
 ]
 
@@ -154,7 +154,7 @@ export default function RekapAbsensiPage() {
               {loadingMembers ? (
                 <div className="space-y-2 p-3">{[...Array(6)].map((_, i) => <div key={i} className="h-10 bg-white/5 rounded-xl animate-pulse" />)}</div>
               ) : members.length === 0 ? (
-                <p className="text-center text-slate-500 text-sm py-8">Tidak ada anggota</p>
+                <p className="text-center text-slate-400 text-sm py-8">Tidak ada anggota</p>
               ) : (
                 <div className="p-2 space-y-1">
                   {members.map((m) => (
@@ -172,7 +172,7 @@ export default function RekapAbsensiPage() {
           {/* Rekap Detail */}
           <div className="md:col-span-2 space-y-4">
             {!selectedId ? (
-              <div className="h-full flex items-center justify-center text-slate-500 bg-white/5 border border-white/10 rounded-2xl py-20">
+              <div className="h-full flex items-center justify-center text-slate-400 bg-white/5 border border-white/10 rounded-2xl py-20">
                 <div className="text-center">
                   <BarChart3 className="w-10 h-10 mx-auto mb-3 opacity-30" />
                   <p className="text-sm">Pilih anggota untuk melihat rekap</p>
@@ -221,14 +221,14 @@ export default function RekapAbsensiPage() {
                   <div className="flex items-end gap-2 h-28">
                     {rekap.grafik.map((g) => (
                       <div key={g.bulan} className="flex-1 flex flex-col items-center gap-1">
-                        <span className="text-[10px] text-slate-500">{g.persen}%</span>
+                        <span className="text-[10px] text-slate-400">{g.persen}%</span>
                         <div className="w-full rounded-t-md relative bg-white/5" style={{ height: '80px' }}>
                           <div
                             className={`absolute bottom-0 w-full rounded-t-md bg-gradient-to-t ${tab.color} transition-all duration-700`}
                             style={{ height: `${Math.max(4, g.persen)}%` }}
                           />
                         </div>
-                        <span className="text-[10px] text-slate-500">{g.bulan.slice(5)}</span>
+                        <span className="text-[10px] text-slate-400">{g.bulan.slice(5)}</span>
                       </div>
                     ))}
                   </div>
@@ -244,7 +244,7 @@ export default function RekapAbsensiPage() {
                   {showRiwayat && (
                     <div className="border-t border-white/5 max-h-64 overflow-y-auto">
                       {rekap.riwayat.length === 0 ? (
-                        <p className="text-center text-slate-500 py-6 text-sm">Belum ada riwayat</p>
+                        <p className="text-center text-slate-400 py-6 text-sm">Belum ada riwayat</p>
                       ) : (
                         <div className="divide-y divide-white/5">
                           {[...rekap.riwayat].reverse().map((r, i) => (
@@ -260,7 +260,7 @@ export default function RekapAbsensiPage() {
                 </div>
               </>
             ) : (
-              <div className="text-center py-20 text-slate-500 bg-white/5 border border-white/10 rounded-2xl">
+              <div className="text-center py-20 text-slate-400 bg-white/5 border border-white/10 rounded-2xl">
                 Gagal memuat data rekap
               </div>
             )}

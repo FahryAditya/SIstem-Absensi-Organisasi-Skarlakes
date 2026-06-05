@@ -299,11 +299,11 @@ const AnimatedList = <T,>({
       {showGradients && (
         <>
           <div
-            className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-[#011025] to-transparent pointer-events-none transition-opacity duration-300 z-10"
+            className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-[#001F3F] to-transparent pointer-events-none transition-opacity duration-300 z-10"
             style={{ opacity: topGradientOpacity }}
           ></div>
           <div
-            className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-[#011025] to-transparent pointer-events-none transition-opacity duration-300 z-10"
+            className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-[#001F3F] to-transparent pointer-events-none transition-opacity duration-300 z-10"
             style={{ opacity: bottomGradientOpacity }}
           ></div>
         </>

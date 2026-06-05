@@ -144,7 +144,7 @@ export default function PencapaianPage() {
   const ORG_COLORS: Record<string, string> = {
     programming: 'from-blue-500 to-cyan-500',
     english: 'from-emerald-500 to-teal-500',
-    osis: 'from-purple-500 to-violet-500',
+    osis: 'from-purple-500 to-persian-blue/100',
     mpk: 'from-orange-500 to-amber-500',
     semua: 'from-pink-500 to-rose-500',
   }
@@ -193,7 +193,7 @@ export default function PencapaianPage() {
             {[...Array(6)].map((_, i) => <div key={i} className="h-36 bg-white/5 rounded-2xl animate-pulse" />)}
           </div>
         ) : data.length === 0 ? (
-          <div className="text-center py-20 text-slate-500">
+          <div className="text-center py-20 text-slate-400">
             <Trophy className="w-12 h-12 mx-auto mb-4 opacity-30" />
             <p>Belum ada pencapaian</p>
           </div>
@@ -318,7 +318,7 @@ export default function PencapaianPage() {
                   <Loader2 className="w-4 h-4 animate-spin" /> Memuat anggota...
                 </div>
               ) : recipients.length === 0 ? (
-                <div className="p-10 text-center text-slate-500">Belum ada anggota</div>
+                <div className="p-10 text-center text-slate-400">Belum ada anggota</div>
               ) : recipients.map((recipient) => {
                 const checked = selectedRecipients.includes(recipient.id)
                 return (
@@ -327,7 +327,7 @@ export default function PencapaianPage() {
                     onClick={() => setSelectedRecipients(prev => checked ? prev.filter(id => id !== recipient.id) : [...prev, recipient.id])}
                     className="w-full flex items-center gap-3 p-3 text-left hover:bg-white/5 transition"
                   >
-                    {checked ? <CheckSquare className="w-4 h-4 text-emerald-400" /> : <Square className="w-4 h-4 text-slate-500" />}
+                    {checked ? <CheckSquare className="w-4 h-4 text-emerald-400" /> : <Square className="w-4 h-4 text-slate-400" />}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-white truncate">{recipient.nama}</p>
                       <p className="text-xs text-slate-400">{recipient.kelas || '-'}{recipient.jabatan ? ` · ${recipient.jabatan}` : ''}</p>

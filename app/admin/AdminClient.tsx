@@ -227,18 +227,18 @@ export default function AdminClient({ user }: Props) {
   const columns = [
     { key: 'nama', label: 'Nama', render: (u: UserData) => (
       <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-black flex-shrink-0">
+        <div className="w-8 h-8 rounded-full bg-persian-blue/10 flex items-center justify-center text-persian-blue text-xs font-black flex-shrink-0">
           {u.nama.charAt(0).toUpperCase()}
         </div>
         <div>
-          <div className="font-semibold text-slate-800 text-sm">{u.nama}</div>
-          {u.id === user.id && <span className="text-[10px] text-indigo-500 font-bold">● Anda</span>}
+          <div className="font-semibold text-white text-sm">{u.nama}</div>
+          {u.id === user.id && <span className="text-[10px] text-persian-blue font-bold">● Anda</span>}
         </div>
       </div>
     )},
-    { key: 'email', label: 'Email', render: (u: UserData) => <span className="text-xs text-slate-500 font-mono">{u.email}</span> },
+    { key: 'email', label: 'Email', render: (u: UserData) => <span className="text-xs text-slate-400 font-mono">{u.email}</span> },
     { key: 'password', label: 'Password', render: (u: UserData & { password?: string }) => (
-      <span className="text-xs text-slate-500 font-mono">
+      <span className="text-xs text-slate-400 font-mono">
         {u.password?.startsWith('$2') ? '(Teracak)' : (u.password || '-')}
       </span>
     )},
@@ -246,7 +246,7 @@ export default function AdminClient({ user }: Props) {
     { key: 'created_at', label: 'Dibuat', render: (u: UserData) => <span className="text-xs text-slate-400">{formatDateTime(u.created_at)}</span> },
     { key: 'actions', label: '', render: (u: UserData) => (
       <div className="flex gap-1">
-        <button onClick={() => openEdit(u)} className="btn-icon text-indigo-400 hover:bg-indigo-50"><Pencil className="w-3.5 h-3.5" /></button>
+        <button onClick={() => openEdit(u)} className="btn-icon text-blue-400 hover:bg-persian-blue/10"><Pencil className="w-3.5 h-3.5" /></button>
         {u.id !== user.id && (
           <button onClick={() => setDeleteTarget(u)} className="btn-icon text-red-400 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /></button>
         )}
@@ -255,10 +255,10 @@ export default function AdminClient({ user }: Props) {
   ]
 
   const roleGroups = [
-    { role: 'administrator', label: 'Administrator', color: 'bg-amber-50 border-amber-200', dot: 'bg-amber-400' },
-    { role: 'admin_programming', label: 'Admin Programming', color: 'bg-emerald-50 border-emerald-200', dot: 'bg-emerald-400' },
-    { role: 'admin_english', label: 'Admin English', color: 'bg-blue-50 border-blue-200', dot: 'bg-blue-400' },
-    { role: 'admin_osis_mpk', label: 'Admin OSIS & MPK', color: 'bg-violet-50 border-violet-200', dot: 'bg-violet-400' },
+    { role: 'administrator', label: 'Administrator', color: 'bg-persian-blue/10 border-persian-blue/20 text-persian-blue', dot: 'bg-persian-blue' },
+    { role: 'admin_programming', label: 'Admin Programming', color: 'bg-unit-programming/10 border-unit-programming/20 text-unit-programming', dot: 'bg-unit-programming' },
+    { role: 'admin_english', label: 'Admin English', color: 'bg-unit-english/10 border-unit-english/20 text-unit-english', dot: 'bg-unit-english' },
+    { role: 'admin_osis_mpk', label: 'Admin OSIS & MPK', color: 'bg-unit-osis/10 border-unit-osis/20 text-unit-osis', dot: 'bg-unit-osis' },
   ]
 
   return (
@@ -266,34 +266,34 @@ export default function AdminClient({ user }: Props) {
       {/* Header */}
       <div className="page-header">
         <div className="flex-1">
-          <div className="flex items-center gap-2.5"><UserCog className="w-5 h-5 text-indigo-500" /><h2 className="page-title">Kelola User & Admin</h2></div>
+          <div className="flex items-center gap-2.5"><UserCog className="w-5 h-5 text-persian-blue" /><h2 className="page-title">Kelola User & Admin</h2></div>
           <p className="page-sub mt-0.5">Buat, edit, dan hapus akun pengguna sistem</p>
         </div>
         <div className="flex gap-2">
           {user.role === 'administrator' && (
-            <button onClick={openEmailSetting} className="btn-secondary text-indigo-600 font-semibold">
+            <button onClick={openEmailSetting} className="btn-secondary text-persian-blue font-semibold">
               <Mail className="w-4 h-4" />
               Pengirim Email
             </button>
           )}
-          {/* <button onClick={() => setAwardModalOpen(true)} className="btn-secondary text-indigo-600 font-semibold">
+          {/* <button onClick={() => setAwardModalOpen(true)} className="btn-secondary text-persian-blue font-semibold">
             <Sparkles className="w-4 h-4" />
             Beri Penghargaan
           </button> */}
-          <button onClick={handleOptimize} disabled={optimizeLoading} className="btn-secondary text-[#5482B4] border-[#5482B4]/20 hover:bg-[#5482B4]/5">
+          <button onClick={handleOptimize} disabled={optimizeLoading} className="btn-secondary text-[#1E90FF] border-[#1E90FF]/20 hover:bg-[#1E90FF]/5">
             <span className="flex items-center gap-2 font-semibold">
               {optimizeLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Cpu className="w-4 h-4 text-emerald-500" />}
               Optimalkan DB
             </span>
           </button>
           <button onClick={() => window.open('/api/admin/backup', '_blank')} className="btn-secondary">
-            <span className="flex items-center gap-2 text-indigo-600 font-semibold">
+            <span className="flex items-center gap-2 text-persian-blue font-semibold">
               <Database className="w-4 h-4" />
               Backup SQL
             </span>
           </button>
           <button onClick={() => window.open('/api/export?tipe=admin', '_blank')} className="btn-secondary">
-            <span className="flex items-center gap-2 text-indigo-600 font-semibold">
+            <span className="flex items-center gap-2 text-persian-blue font-semibold">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
               Export XLS
             </span>
@@ -306,8 +306,8 @@ export default function AdminClient({ user }: Props) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {roleGroups.map(rg => (
           <div key={rg.role} className={`card p-4 border ${rg.color}`}>
-            <div className="flex items-center gap-2 mb-1"><div className={`w-2 h-2 rounded-full ${rg.dot}`}/><span className="text-xs font-bold text-slate-600">{rg.label}</span></div>
-            <div className="text-2xl font-black text-slate-800 font-mono">{roleCount(rg.role)}</div>
+            <div className="flex items-center gap-2 mb-1"><div className={`w-2 h-2 rounded-full ${rg.dot}`}/><span className="text-xs font-bold text-slate-300">{rg.label}</span></div>
+            <div className="text-2xl font-black text-white font-mono">{roleCount(rg.role)}</div>
           </div>
         ))}
       </div>
@@ -359,7 +359,7 @@ export default function AdminClient({ user }: Props) {
             <div><strong>Hak Akses:</strong><br/>
               <span className="text-emerald-700">Programming</span> → hanya data Programming<br/>
               <span className="text-blue-700">English</span> → hanya data English Club<br/>
-              <span className="text-violet-700">OSIS & MPK</span> → hanya data OSIS & MPK<br/>
+              <span className="text-blue-300">OSIS & MPK</span> → hanya data OSIS & MPK<br/>
               <span className="text-amber-700">Administrator</span> → semua data + log aktivitas
             </div>
           </div>
@@ -431,8 +431,8 @@ export default function AdminClient({ user }: Props) {
         }
       >
         <div className="space-y-4">
-          <div className="p-4 bg-[#C2E8FF]/20 border border-[#C2E8FF]/40 rounded-2xl">
-            <div className="flex items-center gap-2 text-[#052659] font-black mb-2.5">
+          <div className="p-4 bg-[#1E90FF]/20 border border-[#1E90FF]/40 rounded-2xl">
+            <div className="flex items-center gap-2 text-[#001F3F] font-black mb-2.5">
               <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse" />
               Database Dioptimalkan Sempurna!
             </div>
@@ -440,36 +440,36 @@ export default function AdminClient({ user }: Props) {
               Query planner PostgreSQL telah disegarkan dengan menjalankan fungsi <code className="bg-white/60 px-1 rounded font-mono">ANALYZE</code>. Indeks relasi kini berjalan dengan efisiensi puncak.
             </p>
             <div className="grid grid-cols-3 gap-2 mt-4">
-              <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm text-center">
+              <div className="bg-deep-navy p-3 rounded-xl border border-white/10 shadow-sm text-center">
                 <span className="block text-[10px] text-slate-400 font-bold uppercase">Log Pruned</span>
-                <span className="text-sm font-black font-mono text-slate-700">+{optimizeResult?.summary?.prunedLogs || 0}</span>
+                <span className="text-sm font-black font-mono text-slate-200">+{optimizeResult?.summary?.prunedLogs || 0}</span>
               </div>
-              <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm text-center">
+              <div className="bg-deep-navy p-3 rounded-xl border border-white/10 shadow-sm text-center">
                 <span className="block text-[10px] text-slate-400 font-bold uppercase">QR Pruned</span>
-                <span className="text-sm font-black font-mono text-slate-700">+{optimizeResult?.summary?.prunedQrs || 0}</span>
+                <span className="text-sm font-black font-mono text-slate-200">+{optimizeResult?.summary?.prunedQrs || 0}</span>
               </div>
-              <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm text-center">
+              <div className="bg-deep-navy p-3 rounded-xl border border-white/10 shadow-sm text-center">
                 <span className="block text-[10px] text-slate-400 font-bold uppercase">Chats Pruned</span>
-                <span className="text-sm font-black font-mono text-slate-700">+{optimizeResult?.summary?.prunedChats || 0}</span>
+                <span className="text-sm font-black font-mono text-slate-200">+{optimizeResult?.summary?.prunedChats || 0}</span>
               </div>
             </div>
           </div>
 
           <div>
-            <h4 className="text-xs font-bold text-[#011025] mb-2">Footprint Ukuran Tabel Live (PostgreSQL)</h4>
-            <div className="border border-slate-100 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
+            <h4 className="text-xs font-bold text-[#001F3F] mb-2">Footprint Ukuran Tabel Live (PostgreSQL)</h4>
+            <div className="border border-white/10 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-100 text-slate-500">
+                  <tr className="bg-white/5 border-b border-white/10 text-slate-400">
                     <th className="p-2.5 font-bold">Nama Tabel</th>
                     <th className="p-2.5 font-bold text-right">Ukuran Data + Index</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {optimizeResult?.tableSizes?.map((tbl: any) => (
-                    <tr key={tbl.table_name} className="hover:bg-slate-50 transition-colors">
-                      <td className="p-2.5 font-mono text-slate-600 font-semibold">{tbl.table_name}</td>
-                      <td className="p-2.5 text-right font-mono font-bold text-[#052659]">{tbl.total_size}</td>
+                    <tr key={tbl.table_name} className="hover:bg-white/5 transition-colors">
+                      <td className="p-2.5 font-mono text-slate-300 font-semibold">{tbl.table_name}</td>
+                      <td className="p-2.5 text-right font-mono font-bold text-[#001F3F]">{tbl.total_size}</td>
                     </tr>
                   ))}
                 </tbody>

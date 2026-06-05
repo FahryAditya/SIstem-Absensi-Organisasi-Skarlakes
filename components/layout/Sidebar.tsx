@@ -89,13 +89,13 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
 
 function RoleBadge({ role }: { role: string }) {
   const colors: Record<string, string> = {
-    administrator: 'bg-indigo-600 border-indigo-500/30 text-white font-extrabold',
-    admin_programming: 'bg-indigo-900/40 border-indigo-500/25 text-white font-extrabold',
-    admin_english: 'bg-indigo-900/40 border-indigo-500/25 text-white font-extrabold',
-    admin_osis_mpk: 'bg-indigo-900/40 border-indigo-500/25 text-white font-extrabold',
+    administrator: 'bg-persian-blue border-white/20 text-white font-extrabold',
+    admin_programming: 'bg-unit-programming/20 border-unit-programming/30 text-unit-programming font-extrabold',
+    admin_english: 'bg-unit-english/20 border-unit-english/30 text-unit-english font-extrabold',
+    admin_osis_mpk: 'bg-unit-osis/20 border-unit-osis/30 text-unit-osis font-extrabold',
   }
   return (
-    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold ${colors[role] || 'bg-indigo-900/40 border-indigo-500/25 text-indigo-200'}`}>
+    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold ${colors[role] || 'bg-white/5 border-white/10 text-white'}`}>
       <div className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
       {ROLE_LABELS[role] || role}
     </div>
@@ -118,9 +118,9 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
     switch (item.type) {
       case 'logo':
         return (
-          <div className="px-1 py-4 flex items-center justify-between border-b border-slate-800 mb-2">
+          <div className="px-1 py-4 flex items-center justify-between border-b border-white/10 mb-2">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center shadow-sm shadow-indigo-600/30 flex-shrink-0">
+              <div className="w-9 h-9 bg-persian-blue rounded-xl flex items-center justify-center shadow-sm shadow-blue-600/30 flex-shrink-0">
                 <GraduationCap className="w-5 h-5 text-white" />
               </div>
               {!isCollapsed && (
@@ -168,18 +168,18 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
             className={cn(
               'group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ease-out',
               active 
-                ? 'bg-gradient-to-r from-indigo-600/20 to-transparent text-white border-l-4 border-indigo-500 font-bold shadow-[0_4px_20px_-5px_rgba(99,102,241,0.3)]' 
+                ? 'bg-gradient-to-r from-persian-blue/20 to-transparent text-white border-l-4 border-persian-blue font-bold shadow-[0_4px_20px_-5px_rgba(30,144,255,0.3)]' 
                 : 'text-slate-400 hover:text-white hover:bg-white/5 hover:translate-x-1',
               isNonaktif && 'opacity-60 cursor-not-allowed'
             )}
           >
-            <Icon className={cn("w-5 h-5 transition-transform duration-300 group-hover:scale-110", active ? "text-indigo-300" : "text-slate-500 group-hover:text-white")} />
+            <Icon className={cn("w-5 h-5 transition-transform duration-300 group-hover:scale-110", active ? "text-blue-300" : "text-slate-400 group-hover:text-white")} />
             {!isCollapsed && (
               <span className={cn("flex-1 truncate text-[13px]", active ? "font-semibold text-white" : "font-medium text-white")}>
                 {item.label}
               </span>
             )}
-            {!isCollapsed && active && <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_#6366f1]" />}
+            {!isCollapsed && active && <div className="w-1.5 h-1.5 rounded-full bg-persian-blue shadow-[0_0_8px_#1E90FF]" />}
           </Link>
         )
     }
@@ -199,10 +199,10 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
         />
       </div>
 
-       <div className="px-4 py-4 border-t border-slate-800 flex-shrink-0 bg-slate-900/80 backdrop-blur-sm">
+       <div className="px-4 py-4 border-t border-white/10 flex-shrink-0 bg-deep-navy/80 backdrop-blur-sm">
         <div className="flex items-center gap-2.5">
           {cleanRole === 'administrator' ? (
-            <div className="relative w-8 h-8 rounded-full overflow-hidden shadow-sm border border-slate-700 flex-shrink-0">
+            <div className="relative w-8 h-8 rounded-full overflow-hidden shadow-sm border border-white/10 flex-shrink-0">
               <Image 
                 src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" 
                 alt="Admin Profile" 
@@ -211,7 +211,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
               />
             </div>
           ) : (
-            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-black flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-persian-blue flex items-center justify-center text-white text-xs font-black flex-shrink-0">
               {user.nama.charAt(0).toUpperCase()}
             </div>
           )}
@@ -229,7 +229,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
   return (
     <>
       <aside className={cn(
-        "hidden lg:flex flex-col bg-slate-900 border-r border-slate-800 h-screen sticky top-0 shadow-sm transition-all duration-300 ease-in-out",
+        "hidden lg:flex flex-col bg-deep-navy border-r border-white/10 h-screen sticky top-0 shadow-sm transition-all duration-300 ease-in-out",
         isCollapsed ? "w-16" : "w-60"
       )}>
         {content}
@@ -237,7 +237,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-          <aside className="relative w-64 bg-slate-900 h-full shadow-2xl slide-up">
+          <aside className="relative w-64 bg-deep-navy h-full shadow-2xl slide-up">
             {content}
           </aside>
         </div>

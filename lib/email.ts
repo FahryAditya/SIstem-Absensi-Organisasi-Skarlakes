@@ -8,10 +8,10 @@ export async function sendLevelUpEmail(studentName: string, email: string, level
   const subject = `Selamat ${studentName}, Kamu Naik ke Level ${level}! 🎉`
   const html = `
     <div style="font-family: sans-serif; padding: 20px; color: #333; max-width: 600px; border: 1px solid #eee; border-radius: 12px;">
-      <h2 style="color: #052659;">Selamat Kamu Naik Level! 🚀</h2>
+      <h2 style="color: #001F3F;">Selamat Kamu Naik Level! 🚀</h2>
       <p>Halo <strong>${studentName}</strong>,</p>
       <p>Kerja keras dan keaktifanmu membuahkan hasil! Kamu telah berhasil naik ke:</p>
-      <div style="background: linear-gradient(135deg, #052659, #5482B4); color: white; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0;">
+      <div style="background: linear-gradient(135deg, #001F3F, #1E90FF); color: white; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0;">
         <span style="font-size: 24px; font-weight: bold; display: block;">Level ${level}</span>
         <span style="font-size: 16px; opacity: 0.9;">Tier: ${levelName}</span>
       </div>
@@ -27,12 +27,12 @@ export async function sendAchievementEmail(studentName: string, email: string, a
   const subject = `Kamu Mendapat Pencapaian Baru: [${achievementName}]! 🏆`
   const html = `
     <div style="font-family: sans-serif; padding: 20px; color: #333; max-width: 600px; border: 1px solid #eee; border-radius: 12px;">
-      <h2 style="color: #052659;">Pencapaian Baru Terbuka! 🏆</h2>
+      <h2 style="color: #001F3F;">Pencapaian Baru Terbuka! 🏆</h2>
       <p>Halo <strong>${studentName}</strong>,</p>
       <p>Selamat! Admin telah memberikan pencapaian baru untukmu atas kontribusi atau prestasimu:</p>
-      <div style="background-color: #F0F4F8; border-left: 4px solid #5482B4; padding: 15px; border-radius: 0 8px 8px 0; margin: 20px 0;">
+      <div style="background-color: #F0F4F8; border-left: 4px solid #1E90FF; padding: 15px; border-radius: 0 8px 8px 0; margin: 20px 0;">
         <span style="font-size: 30px; float: left; margin-right: 15px;">${getEmojiForIcon(icon)}</span>
-        <strong style="font-size: 18px; color: #011025; display: block;">${achievementName}</strong>
+        <strong style="font-size: 18px; color: #001F3F; display: block;">${achievementName}</strong>
         <span style="font-size: 14px; color: #555; display: block; margin-top: 5px;">${description}</span>
         <span style="font-size: 12px; font-weight: bold; color: #2e7d32; display: block; margin-top: 10px;">🎁 +${expReward} EXP Reward</span>
       </div>

@@ -27,7 +27,7 @@ interface LeaderboardEntry {
 const TABS = [
   { key: 'programming', label: 'Programming', color: 'from-blue-500 to-cyan-500', bg: 'bg-blue-500/10 border-blue-500/30' },
   { key: 'english', label: 'English Club', color: 'from-emerald-500 to-teal-500', bg: 'bg-emerald-500/10 border-emerald-500/30' },
-  { key: 'osis', label: 'OSIS', color: 'from-purple-500 to-violet-500', bg: 'bg-purple-500/10 border-purple-500/30' },
+  { key: 'osis', label: 'OSIS', color: 'from-purple-500 to-persian-blue/100', bg: 'bg-purple-500/10 border-purple-500/30' },
   { key: 'mpk', label: 'MPK', color: 'from-orange-500 to-amber-500', bg: 'bg-orange-500/10 border-orange-500/30' },
 ]
 
@@ -38,7 +38,7 @@ const RANK_STYLES = [
 ]
 
 const LEVEL_COLORS: Record<string, string> = {
-  'Beginner': 'bg-slate-500/20 text-slate-300 border-slate-500/30',
+  'Beginner': 'bg-white/50/20 text-slate-300 border-slate-500/30',
   'Intermediate': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
   'Advanced': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
   'Expert': 'bg-purple-500/20 text-purple-300 border-purple-500/30',
@@ -141,7 +141,7 @@ export default function LeaderboardPage() {
             ))}
           </div>
         ) : data.length === 0 ? (
-          <div className="text-center py-20 text-slate-500">
+          <div className="text-center py-20 text-slate-400">
             <Users className="w-12 h-12 mx-auto mb-4 opacity-30" />
             <p>Belum ada data anggota</p>
           </div>
@@ -181,7 +181,7 @@ export default function LeaderboardPage() {
                             style={{ width: `${entry.progress.persen}%` }}
                           />
                         </div>
-                        <p className="text-[10px] text-slate-500 mt-2 font-medium">{entry.progress.persen}% ke {entry.progress.nextLevelName ?? 'Max'}</p>
+                        <p className="text-[10px] text-slate-400 mt-2 font-medium">{entry.progress.persen}% ke {entry.progress.nextLevelName ?? 'Max'}</p>
                       </div>
                     </div>
                   )
@@ -216,7 +216,7 @@ export default function LeaderboardPage() {
                             style={{ width: `${entry.progress.persen}%` }}
                           />
                         </div>
-                        <span className="text-xs text-slate-500 shrink-0">{entry.progress.persen}%</span>
+                        <span className="text-xs text-slate-400 shrink-0">{entry.progress.persen}%</span>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
@@ -224,7 +224,7 @@ export default function LeaderboardPage() {
                         <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
                         <span className="font-semibold text-emerald-400">{entry.xp.toLocaleString()}</span>
                       </div>
-                      <div className="text-xs text-slate-500">EXP</div>
+                      <div className="text-xs text-slate-400">EXP</div>
                     </div>
                   </div>
                 ))}

@@ -41,7 +41,7 @@ interface Props {
   }
 }
 
-const COLORS = ['#5482B4', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6']
+const COLORS = ['#1E90FF', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6']
 
 export default function AttendanceCharts({ data }: Props) {
   return (
@@ -49,7 +49,7 @@ export default function AttendanceCharts({ data }: Props) {
       {/* Weekly Attendance Chart */}
       {data.kehadiranMingguan && data.kehadiranMingguan.some(d => d.hadir + d.tidak_hadir > 0) && (
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-[#011025] mb-4">Kehadiran 7 Hari Terakhir</h3>
+          <h3 className="text-sm font-bold text-[#001F3F] mb-4">Kehadiran 7 Hari Terakhir</h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={data.kehadiranMingguan} barSize={20} barGap={4}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -59,7 +59,7 @@ export default function AttendanceCharts({ data }: Props) {
                 contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,.08)' }}
               />
               <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="hadir" name="Hadir" fill="#5482B4" radius={[4,4,0,0]} animationDuration={1000} />
+              <Bar dataKey="hadir" name="Hadir" fill="#1E90FF" radius={[4,4,0,0]} animationDuration={1000} />
               <Bar dataKey="tidak_hadir" name="Tidak Hadir" fill="#FCA5A5" radius={[4,4,0,0]} animationDuration={1000} />
             </BarChart>
           </ResponsiveContainer>
@@ -69,7 +69,7 @@ export default function AttendanceCharts({ data }: Props) {
       {/* Monthly Attendance Trend */}
       {data.kehadiranBulanan && data.kehadiranBulanan.some(d => d.hadir + d.tidak_hadir > 0) && (
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-[#011025] mb-4">Tren Kehadiran 30 Hari</h3>
+          <h3 className="text-sm font-bold text-[#001F3F] mb-4">Tren Kehadiran 30 Hari</h3>
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={data.kehadiranBulanan}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -83,9 +83,9 @@ export default function AttendanceCharts({ data }: Props) {
                 type="monotone" 
                 dataKey="hadir" 
                 name="Hadir" 
-                stroke="#5482B4" 
+                stroke="#1E90FF" 
                 strokeWidth={2.5} 
-                dot={{ r: 3, fill: '#5482B4' }}
+                dot={{ r: 3, fill: '#1E90FF' }}
                 activeDot={{ r: 5 }}
                 animationDuration={1500}
               />
@@ -107,7 +107,7 @@ export default function AttendanceCharts({ data }: Props) {
       {/* Yearly Attendance by Month */}
       {data.kehadiranTahunan && data.kehadiranTahunan.some(d => d.hadir + d.tidak_hadir > 0) && (
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-[#011025] mb-4">Kehadiran Tahunan per Bulan</h3>
+          <h3 className="text-sm font-bold text-[#001F3F] mb-4">Kehadiran Tahunan per Bulan</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={data.kehadiranTahunan} barSize={24} barGap={6}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -131,11 +131,11 @@ export default function AttendanceCharts({ data }: Props) {
       {/* Organization Attendance */}
       {data.kehadiranOrganisasi && (data.kehadiranOrganisasi.osis || data.kehadiranOrganisasi.mpk) && (
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-[#011025] mb-4">Kehadiran Organisasi (30 Hari)</h3>
+          <h3 className="text-sm font-bold text-[#001F3F] mb-4">Kehadiran Organisasi (30 Hari)</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {data.kehadiranOrganisasi.osis && (
               <div>
-                <h4 className="text-xs font-semibold text-[#5482B4] mb-3">OSIS</h4>
+                <h4 className="text-xs font-semibold text-[#1E90FF] mb-3">OSIS</h4>
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
                     <Pie
@@ -151,20 +151,20 @@ export default function AttendanceCharts({ data }: Props) {
                       dataKey="value"
                       animationDuration={1000}
                     >
-                      <Cell fill="#5482B4" />
+                      <Cell fill="#1E90FF" />
                       <Cell fill="#FCA5A5" />
                     </Pie>
                     <Tooltip />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="text-center mt-2">
-                  <span className="text-xs text-slate-500">Total: {data.kehadiranOrganisasi.osis.total}</span>
+                  <span className="text-xs text-slate-400">Total: {data.kehadiranOrganisasi.osis.total}</span>
                 </div>
               </div>
             )}
             {data.kehadiranOrganisasi.mpk && (
               <div>
-                <h4 className="text-xs font-semibold text-[#5482B4] mb-3">MPK</h4>
+                <h4 className="text-xs font-semibold text-[#1E90FF] mb-3">MPK</h4>
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
                     <Pie
@@ -187,7 +187,7 @@ export default function AttendanceCharts({ data }: Props) {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="text-center mt-2">
-                  <span className="text-xs text-slate-500">Total: {data.kehadiranOrganisasi.mpk.total}</span>
+                  <span className="text-xs text-slate-400">Total: {data.kehadiranOrganisasi.mpk.total}</span>
                 </div>
               </div>
             )}

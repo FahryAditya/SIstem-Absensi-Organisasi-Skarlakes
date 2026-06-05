@@ -23,7 +23,7 @@ export default function DashboardLayout({ user, pageTitle, children }: Dashboard
   const themeClass = user.role === 'administrator' ? 'theme-admin' : ''
 
   return (
-    <div className={`flex h-[100dvh] overflow-hidden bg-slate-50 ${themeClass}`}>
+    <div className={`flex h-[100dvh] overflow-hidden bg-white/5 ${themeClass}`}>
       <Sidebar 
         user={user} 
         mobileOpen={mobileOpen} 

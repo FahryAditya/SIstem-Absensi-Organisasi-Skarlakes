@@ -60,14 +60,14 @@ export default function LoginPage() {
   }
 
   const orgBadges = [
-    { label: 'Programming', color: 'bg-[#C2E8FF] text-[#052659]' },
-    { label: 'English Club', color: 'bg-white/90 text-[#052659]' },
+    { label: 'Programming', color: 'bg-[#1E90FF] text-[#001F3F]' },
+    { label: 'English Club', color: 'bg-white/90 text-[#001F3F]' },
     { label: 'OSIS', color: 'bg-[rgba(126,160,197,0.25)] text-white border border-white/20' },
     { label: 'MPK', color: 'bg-[rgba(84,130,180,0.35)] text-white border border-white/20' },
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#052659] via-[#011025] to-[#5482B4] flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#001F3F] via-[#001F3F] to-[#1E90FF] flex items-center justify-center p-4 relative overflow-hidden">
       {/* Decorative background */}
       <div className="absolute inset-0 pointer-events-none">
         {/* Grid pattern */}
@@ -79,11 +79,11 @@ export default function LoginPage() {
       <div className="w-full max-w-md relative slide-up">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#052659] rounded-2xl shadow-xl shadow-[#011025]/50 mb-4 ring-4 ring-[#5482B4]/20">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#001F3F] rounded-2xl shadow-xl shadow-[#001F3F]/50 mb-4 ring-4 ring-[#1E90FF]/20">
             <GraduationCap className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Sistem Ekstrakurikuler Sekolah</h1>
-          <p className="text-[#C2E8FF] text-sm mt-1.5 font-medium">Sistem Manajemen Ekstrakurikuler</p>
+          <p className="text-[#1E90FF] text-sm mt-1.5 font-medium">Sistem Manajemen Ekstrakurikuler</p>
           <div className="flex items-center justify-center gap-2 flex-wrap mt-3">
             {orgBadges.map(b => (
               <span key={b.label} className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${b.color}`}>
@@ -97,13 +97,13 @@ export default function LoginPage() {
         <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 shadow-2xl">
           <div className="mb-6">
             <h2 className="text-xl font-bold text-white">Masuk ke Dashboard</h2>
-            <p className="text-[#C2E8FF] text-sm mt-1">Masukkan identitas lengkap Anda</p>
+            <p className="text-[#1E90FF] text-sm mt-1">Masukkan identitas lengkap Anda</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4" autoComplete="off">
             {/* Nama */}
             <div>
-              <label className="block text-xs font-bold text-[#C2E8FF] uppercase tracking-widest mb-1.5">
+              <label className="block text-xs font-bold text-[#1E90FF] uppercase tracking-widest mb-1.5">
                 Nama Lengkap
               </label>
               <div className="relative">
@@ -113,7 +113,7 @@ export default function LoginPage() {
                   value={nama}
                   onChange={e => setNama(e.target.value)}
                   placeholder="Masukkan nama lengkap"
-                  className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-[#7EA0C5]/70 focus:outline-none focus:ring-2 focus:ring-[#5482B4] focus:border-transparent transition-all text-sm"
+                  className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-[#7EA0C5]/70 focus:outline-none focus:ring-2 focus:ring-[#1E90FF] focus:border-transparent transition-all text-sm"
                   autoComplete="off"
                   spellCheck="false"
                 />
@@ -122,7 +122,7 @@ export default function LoginPage() {
 
             {/* Email */}
             <div>
-              <label className="block text-xs font-bold text-[#C2E8FF] uppercase tracking-widest mb-1.5">
+              <label className="block text-xs font-bold text-[#1E90FF] uppercase tracking-widest mb-1.5">
                 Email
               </label>
               <div className="relative">
@@ -132,7 +132,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="email@domain.com"
-                  className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-[#7EA0C5]/70 focus:outline-none focus:ring-2 focus:ring-[#5482B4] focus:border-transparent transition-all text-sm"
+                  className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-[#7EA0C5]/70 focus:outline-none focus:ring-2 focus:ring-[#1E90FF] focus:border-transparent transition-all text-sm"
                   autoComplete="off"
                   spellCheck="false"
                 />
@@ -141,7 +141,7 @@ export default function LoginPage() {
 
             {/* Password */}
             <div>
-              <label className="block text-xs font-bold text-[#C2E8FF] uppercase tracking-widest mb-1.5">
+              <label className="block text-xs font-bold text-[#1E90FF] uppercase tracking-widest mb-1.5">
                 Password
               </label>
               <div className="relative">
@@ -151,7 +151,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-11 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-[#7EA0C5]/70 focus:outline-none focus:ring-2 focus:ring-[#5482B4] focus:border-transparent transition-all text-sm"
+                  className="w-full pl-10 pr-11 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-[#7EA0C5]/70 focus:outline-none focus:ring-2 focus:ring-[#1E90FF] focus:border-transparent transition-all text-sm"
                   autoComplete="new-password"
                 />
                 <button type="button" onClick={() => setShowPass(!showPass)}
@@ -162,20 +162,20 @@ export default function LoginPage() {
             </div>
 
             <button type="submit" disabled={loading}
-              className="w-full mt-2 py-3 px-4 bg-[#052659] hover:bg-[#011025] text-white font-bold rounded-xl transition-all shadow-lg shadow-[#011025]/40 active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60">
+              className="w-full mt-2 py-3 px-4 bg-[#001F3F] hover:bg-[#001F3F] text-white font-bold rounded-xl transition-all shadow-lg shadow-[#001F3F]/40 active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60">
               {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Memproses...</> : 'Masuk'}
             </button>
           </form>
 
           <div className="mt-5 pt-5 border-t border-white/10 flex items-start gap-2">
             <Shield className="w-3.5 h-3.5 text-[#7EA0C5] flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-[#C2E8FF]/80">
+            <p className="text-xs text-[#1E90FF]/80">
               Hak akses dibatasi sesuai peran. Hubungi Administrator jika belum memiliki akun.
             </p>
           </div>
         </div>
 
-        <p className="text-center text-[#C2E8FF]/60 text-xs mt-6">
+        <p className="text-center text-[#1E90FF]/60 text-xs mt-6">
           SKARLAKES • Sistem Ekstrakurikuler Sekolah
         </p>
       </div>

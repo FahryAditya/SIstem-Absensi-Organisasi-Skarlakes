@@ -37,11 +37,11 @@ const TableRow = memo(function TableRow<T>({
   itemKey: string | number
 }) {
   return (
-    <tr className={cn('tr', isSelected && 'bg-indigo-50')}>
+    <tr className={cn('tr', isSelected && 'bg-persian-blue/10')}>
       {selectable && (
         <td className="td w-10 text-center px-4" onClick={(e) => e.stopPropagation()}>
           <input type="checkbox"
-            className="w-4 h-4 rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+            className="w-4 h-4 rounded border-blue-300 text-persian-blue focus:ring-persian-blue/100 cursor-pointer"
             checked={isSelected || false}
             onChange={(e) => onSelect?.(e.target.checked, itemKey)}
           />
@@ -72,15 +72,15 @@ export default function Table<T>({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <div className="overflow-hidden rounded-xl border border-white/10 bg-white">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200">
+            <tr className="bg-white/5 border-b border-white/10">
               {selectable && (
                 <th className="th w-10 text-center px-4">
                   <input type="checkbox" 
-                    className="w-4 h-4 rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    className="w-4 h-4 rounded border-blue-300 text-persian-blue focus:ring-persian-blue/100 cursor-pointer"
                     checked={data.length > 0 && selectedKeys?.length === data.length}
                     onChange={(e) => {
                       if (onSelectionChange) {
@@ -98,11 +98,11 @@ export default function Table<T>({
           <tbody>
             {loading ? (
               Array.from({ length: 6 }).map((_, i) => (
-                <tr key={i} className="border-b border-slate-200">
+                <tr key={i} className="border-b border-white/10">
                   {selectable && <td className="td w-10"></td>}
                   {columns.map(col => (
                     <td key={col.key} className="td">
-                      <div className="h-4 bg-slate-100 rounded animate-pulse" style={{ width: `${50 + Math.random() * 40}%` }} />
+                      <div className="h-4 bg-white/10 rounded animate-pulse" style={{ width: `${50 + Math.random() * 40}%` }} />
                     </td>
                   ))}
                 </tr>
@@ -138,8 +138,8 @@ export default function Table<T>({
 
       {/* Pagination */}
       {(totalPages > 1 || total !== undefined) && onPageChange && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50">
-          <span className="text-xs text-slate-500">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-white/10 bg-white/5">
+          <span className="text-xs text-slate-400">
             {total !== undefined ? `${total} data` : ''} — Halaman {page} dari {totalPages}
           </span>
           <div className="flex items-center gap-1">
@@ -157,7 +157,7 @@ export default function Table<T>({
                 <button key={p} onClick={() => onPageChange(p)}
                   className={cn(
                     'w-7 h-7 text-xs rounded-lg font-medium transition-colors',
-                    p === page ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-200'
+                    p === page ? 'bg-persian-blue text-white' : 'text-slate-400 hover:bg-slate-200'
                   )}>
                   {p}
                 </button>

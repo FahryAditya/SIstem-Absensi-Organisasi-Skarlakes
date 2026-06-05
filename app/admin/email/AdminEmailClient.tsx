@@ -94,7 +94,7 @@ export default function AdminEmailClient({ user }: AdminEmailClientProps) {
       {/* Send Email Form Container */}
       <div className="bg-[#0f1117] border border-white/10 rounded-2xl p-6 shadow-xl max-w-3xl">
         {loadingMembers ? (
-          <div className="py-20 text-center text-slate-500">
+          <div className="py-20 text-center text-slate-400">
             <div className="w-6 h-6 border-2 border-slate-500 border-t-white rounded-full animate-spin mx-auto mb-3" />
             Memuat data anggota...
           </div>

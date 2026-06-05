@@ -12,7 +12,7 @@ interface Props {
 
 export default function DocumentationCard({ doc, canManage, onEdit, onDelete }: Props) {
   return (
-    <div className="group bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
+    <div className="group bg-deep-navy border border-white/10 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
       <div className="relative aspect-video overflow-hidden">
         <Image 
           src={doc.photoUrl.split(',')[0]} 
@@ -22,8 +22,8 @@ export default function DocumentationCard({ doc, canManage, onEdit, onDelete }: 
           unoptimized
         />
         <div className="absolute top-3 left-3">
-          <span className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-800 shadow-sm flex items-center gap-1.5 border border-white/20">
-            <Tag className="w-3 h-3 text-indigo-500" />
+          <span className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-white shadow-sm flex items-center gap-1.5 border border-white/20">
+            <Tag className="w-3 h-3 text-persian-blue/100" />
             {doc.category}
           </span>
         </div>
@@ -32,7 +32,7 @@ export default function DocumentationCard({ doc, canManage, onEdit, onDelete }: 
           <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={() => onEdit?.(doc)}
-              className="p-2 bg-white/90 backdrop-blur-md rounded-xl text-slate-600 hover:text-indigo-600 shadow-sm border border-white/20"
+              className="p-2 bg-white/90 backdrop-blur-md rounded-xl text-slate-300 hover:text-persian-blue shadow-sm border border-white/20"
             >
               <Edit className="w-4 h-4" />
             </button>
@@ -49,11 +49,11 @@ export default function DocumentationCard({ doc, canManage, onEdit, onDelete }: 
       <div className="p-5 space-y-3">
         <div className="space-y-1">
           <Link href={`/dokumentasi/${doc.id}`}>
-            <h3 className="font-extrabold text-slate-800 line-clamp-1 group-hover:text-indigo-600 transition-colors cursor-pointer">
+            <h3 className="font-extrabold text-white line-clamp-1 group-hover:text-persian-blue transition-colors cursor-pointer">
               {doc.title}
             </h3>
           </Link>
-          <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+          <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
             {doc.description}
           </p>
         </div>

@@ -240,7 +240,7 @@ export default function SendEmailForm({ organizationType, members }: SendEmailFo
 
         {/* Search recipient */}
         <div className="relative">
-          <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Cari anggota berdasarkan nama, kelas, jabatan..."
@@ -254,7 +254,7 @@ export default function SendEmailForm({ organizationType, members }: SendEmailFo
         <div className="border border-white/10 rounded-2xl overflow-hidden bg-white/[0.01]">
           <div className="max-h-72 overflow-y-auto divide-y divide-white/5 scrollbar-thin">
             {filteredMembers.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-10">Tidak ada anggota yang cocok dengan pencarian.</p>
+              <p className="text-sm text-slate-400 text-center py-10">Tidak ada anggota yang cocok dengan pencarian.</p>
             ) : (
               filteredMembers.map((member) => {
                 const isSelected = selectedIds.includes(member.id)

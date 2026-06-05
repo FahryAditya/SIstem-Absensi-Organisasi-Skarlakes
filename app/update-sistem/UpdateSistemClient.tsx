@@ -157,7 +157,7 @@ export default function UpdateSistemClient({ user }: Props) {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="bg-gradient-to-br from-[#052659] to-[#5482B4] rounded-2xl p-6 text-white shadow-lg overflow-hidden relative">
+      <div className="bg-gradient-to-br from-[#001F3F] to-[#1E90FF] rounded-2xl p-6 text-white shadow-lg overflow-hidden relative">
         <div className="absolute top-0 right-0 w-64 h-full opacity-10 pointer-events-none"
           style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
         <div className="relative flex items-center gap-4">
@@ -176,10 +176,10 @@ export default function UpdateSistemClient({ user }: Props) {
         <div className="lg:col-span-2 space-y-5">
 
           {/* ── Tipe Notifikasi Selector ── */}
-          <div className="card p-5 shadow-sm border border-slate-100">
+          <div className="card p-5 shadow-sm border border-white/10">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-1.5 h-5 rounded-full bg-[#5482B4]" />
-              <h3 className="text-sm font-bold text-[#011025]">Tipe Notifikasi</h3>
+              <div className="w-1.5 h-5 rounded-full bg-[#1E90FF]" />
+              <h3 className="text-sm font-bold text-[#001F3F]">Tipe Notifikasi</h3>
             </div>
             <div className="grid grid-cols-3 gap-3">
               {(Object.entries(TYPE_CONFIG) as [UpdateType, typeof TYPE_CONFIG[UpdateType]][]).map(([key, cfg]) => (
@@ -191,7 +191,7 @@ export default function UpdateSistemClient({ user }: Props) {
                     relative flex flex-col items-center gap-2 p-3.5 rounded-xl border-2 transition-all duration-200 text-center
                     ${updateType === key
                       ? `${cfg.cardBorder} ${cfg.cardBg} ring-2 ${cfg.ring} ring-offset-1 shadow-sm`
-                      : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                      : 'border-white/10 bg-deep-navy hover:border-slate-300 hover:bg-white/5'
                     }
                   `}
                 >
@@ -204,7 +204,7 @@ export default function UpdateSistemClient({ user }: Props) {
                   </span>
 
                   {/* Label */}
-                  <span className={`text-xs font-bold leading-none ${updateType === key ? cfg.badgeText : 'text-slate-500'} transition-colors`}>
+                  <span className={`text-xs font-bold leading-none ${updateType === key ? cfg.badgeText : 'text-slate-400'} transition-colors`}>
                     {cfg.label}
                   </span>
 
@@ -229,7 +229,7 @@ export default function UpdateSistemClient({ user }: Props) {
           <div className={`card p-6 shadow-sm border-2 transition-colors duration-300 ${selectedCfg.cardBorder}`}>
             <div className="flex items-center gap-2 mb-6">
               <PlusCircle className={`w-5 h-5 ${selectedCfg.badgeText}`} />
-              <h3 className="text-lg font-bold text-[#011025]">Buat Update Baru</h3>
+              <h3 className="text-lg font-bold text-[#001F3F]">Buat Update Baru</h3>
               <span className={`ml-auto text-[10px] font-black px-2.5 py-0.5 rounded-full ${selectedCfg.badgeBg} ${selectedCfg.badgeText} uppercase tracking-wide`}>
                 {selectedCfg.label}
               </span>
@@ -266,7 +266,7 @@ export default function UpdateSistemClient({ user }: Props) {
               <button
                 type="submit"
                 disabled={loading}
-                className="btn-primary w-full justify-center py-3.5 text-base font-bold shadow-md shadow-[#052659]/20"
+                className="btn-primary w-full justify-center py-3.5 text-base font-bold shadow-md shadow-[#001F3F]/20"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                   <><Save className="w-5 h-5" /> Publikasikan Sekarang</>
@@ -279,25 +279,25 @@ export default function UpdateSistemClient({ user }: Props) {
         {/* ── Sidebar: History + Tips ── */}
         <div className="space-y-5">
           {/* Legenda Warna */}
-          <div className="card p-4 border border-slate-100 shadow-sm">
-            <h4 className="text-xs font-bold text-[#011025] mb-3">Legenda Tipe Notifikasi</h4>
+          <div className="card p-4 border border-white/10 shadow-sm">
+            <h4 className="text-xs font-bold text-[#001F3F] mb-3">Legenda Tipe Notifikasi</h4>
             <div className="space-y-2">
               {(Object.entries(TYPE_CONFIG) as [UpdateType, typeof TYPE_CONFIG[UpdateType]][]).map(([key, cfg]) => (
                 <div key={key} className={`flex items-center gap-2.5 px-3 py-2 rounded-lg ${cfg.cardBg} border ${cfg.cardBorder}`}>
                   <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
                   <span className={`text-xs font-bold ${cfg.badgeText}`}>{cfg.label}</span>
-                  <span className="text-[10px] text-slate-500 leading-tight">{cfg.description}</span>
+                  <span className="text-[10px] text-slate-400 leading-tight">{cfg.description}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* History */}
-          <div className="card p-5 border border-slate-100">
+          <div className="card p-5 border border-white/10">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <History className="w-4 h-4 text-[#5482B4]" />
-                <h3 className="text-sm font-bold text-[#011025]">Riwayat Terbaru</h3>
+                <History className="w-4 h-4 text-[#1E90FF]" />
+                <h3 className="text-sm font-bold text-[#001F3F]">Riwayat Terbaru</h3>
               </div>
               {history.length > 0 && user.role === 'administrator' && (
                 <button
@@ -332,10 +332,10 @@ export default function UpdateSistemClient({ user }: Props) {
                           {upd.version}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-600 line-clamp-3 mb-2 leading-relaxed">
+                      <p className="text-xs text-slate-300 line-clamp-3 mb-2 leading-relaxed">
                         {upd.content}
                       </p>
-                      <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
+                      <div className="pt-2 border-t border-white/10 flex justify-between items-center">
                         <span className="text-[10px] text-slate-400 font-medium">
                           {formatDateTime(upd.created_at)}
                         </span>
@@ -354,7 +354,7 @@ export default function UpdateSistemClient({ user }: Props) {
               </div>
             ) : (
               <div className="py-10 text-center">
-                <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3">
                   <History className="w-6 h-6 text-slate-300" />
                 </div>
                 <p className="text-xs text-slate-400">Belum ada riwayat update.</p>

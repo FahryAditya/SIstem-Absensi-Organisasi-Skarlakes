@@ -71,12 +71,12 @@ function getLucideIcon(iconName: string) {
     case 'trophy': return <Trophy className="w-5 h-5 text-amber-500 fill-amber-300/30" />
     case 'star': return <Star className="w-5 h-5 text-yellow-500 fill-yellow-300/30" />
     case 'workspace_premium': return <Award className="w-5 h-5 text-orange-500 fill-orange-300/30" />
-    case 'school': return <Crown className="w-5 h-5 text-indigo-500 fill-indigo-300/30" />
+    case 'school': return <Crown className="w-5 h-5 text-persian-blue/100 fill-blue-300/30" />
     case 'code': return <Code className="w-5 h-5 text-teal-500" />
     case 'translate': return <Globe className="w-5 h-5 text-blue-500" />
     case 'local_fire_department': return <Flame className="w-5 h-5 text-red-500 fill-red-300/30" />
-    case 'group': return <Users className="w-5 h-5 text-violet-500" />
-    default: return <Compass className="w-5 h-5 text-slate-500" />
+    case 'group': return <Users className="w-5 h-5 text-persian-blue/100" />
+    default: return <Compass className="w-5 h-5 text-slate-400" />
   }
 }
 
@@ -319,13 +319,13 @@ export default function PencapaianClient({ user }: Props) {
 
   const columns = useMemo(() => [
     { key: 'icon', label: 'Badge', render: (p: Pencapaian) => (
-      <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200/50 flex items-center justify-center shadow-inner">
+      <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10/50 flex items-center justify-center shadow-inner">
         {getLucideIcon(p.icon)}
       </div>
     )},
     { key: 'nama_pencapaian', label: 'Pencapaian / Achievement', render: (p: Pencapaian) => (
       <div className="flex flex-col gap-0.5">
-        <span className="font-extrabold text-[#011025]">{p.nama_pencapaian}</span>
+        <span className="font-extrabold text-[#001F3F]">{p.nama_pencapaian}</span>
         <span className="text-xs text-slate-400 font-semibold">{p.deskripsi}</span>
       </div>
     )},
@@ -342,14 +342,14 @@ export default function PencapaianClient({ user }: Props) {
           {canManageOrg(p.organisasi) && (
             <button
               onClick={() => handleOpenAward(p)}
-              className="btn-secondary py-1 px-3 text-xs bg-slate-50 font-bold border-slate-200 hover:bg-slate-100 flex items-center gap-1 shrink-0"
+              className="btn-secondary py-1 px-3 text-xs bg-white/5 font-bold border-white/10 hover:bg-white/10 flex items-center gap-1 shrink-0"
             >
               <Trophy className="w-3.5 h-3.5 text-yellow-500" /> Award Member
             </button>
           )}
           {canManageOrg(p.organisasi) && (
             <>
-              <button onClick={() => openEdit(p)} className="btn-icon text-indigo-500 hover:bg-indigo-50"><Pencil className="w-3.5 h-3.5" /></button>
+              <button onClick={() => openEdit(p)} className="btn-icon text-persian-blue/100 hover:bg-persian-blue/10"><Pencil className="w-3.5 h-3.5" /></button>
               <button onClick={() => setDeleteTarget(p)} className="btn-icon text-red-400 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /></button>
             </>
           )}
@@ -390,7 +390,7 @@ export default function PencapaianClient({ user }: Props) {
         </div>
         
         {/* Navigation Tabs */}
-        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 w-full sm:w-auto overflow-x-auto shrink-0">
+        <div className="flex bg-white/10 p-1 rounded-xl border border-white/10 w-full sm:w-auto overflow-x-auto shrink-0">
           {(['all', 'programming', 'english', 'osis', 'mpk'] as const).map(tab => (
             <button
               key={tab}
@@ -398,8 +398,8 @@ export default function PencapaianClient({ user }: Props) {
               onClick={() => setOrgTab(tab)}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold capitalize transition-all duration-300 shrink-0 ${
                 orgTab === tab
-                  ? 'bg-white text-[#052659] shadow-sm'
-                  : 'text-slate-500 hover:text-slate-800'
+                  ? 'bg-deep-navy text-[#001F3F] shadow-sm'
+                  : 'text-slate-400 hover:text-white'
               }`}
             >
               {tab === 'all' ? 'Semua' : tab === 'osis' || tab === 'mpk' ? tab.toUpperCase() : tab}
@@ -511,12 +511,12 @@ export default function PencapaianClient({ user }: Props) {
       >
         <div className="space-y-5">
           {/* Achievement Summary Card */}
-          <div className="p-4 bg-slate-50 border border-slate-200/60 rounded-2xl flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-white border border-slate-200/60 shadow flex items-center justify-center shrink-0">
+          <div className="p-4 bg-white/5 border border-white/10/60 rounded-2xl flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-deep-navy border border-white/10/60 shadow flex items-center justify-center shrink-0">
               {awardTarget && getLucideIcon(awardTarget.icon)}
             </div>
             <div>
-              <h4 className="font-extrabold text-[#011025]">{awardTarget?.nama_pencapaian}</h4>
+              <h4 className="font-extrabold text-[#001F3F]">{awardTarget?.nama_pencapaian}</h4>
               <p className="text-xs text-slate-400 font-semibold mt-0.5">{awardTarget?.deskripsi}</p>
               <div className="flex items-center gap-2 mt-2">
                 <OrgBadge org={awardTarget?.organisasi || 'programming'} />
@@ -531,11 +531,11 @@ export default function PencapaianClient({ user }: Props) {
           <div className="form-group">
             <label className="label">Pilih Anggota *</label>
             {loadingMembers ? (
-              <div className="p-3 border border-slate-200 rounded-xl flex items-center justify-center gap-2 text-xs text-slate-400 bg-slate-50">
+              <div className="p-3 border border-white/10 rounded-xl flex items-center justify-center gap-2 text-xs text-slate-400 bg-white/5">
                 <Loader2 className="w-4 h-4 animate-spin" /> Memuat daftar anggota...
               </div>
             ) : members.length === 0 ? (
-              <div className="p-3 border border-slate-200 rounded-xl text-center text-xs text-red-500 bg-red-50">
+              <div className="p-3 border border-white/10 rounded-xl text-center text-xs text-red-500 bg-red-50">
                 Belum ada anggota yang terdaftar di organisasi ini.
               </div>
             ) : (
@@ -553,12 +553,12 @@ export default function PencapaianClient({ user }: Props) {
 
           {/* Live Progress Preview */}
           {activeMember && awardTarget && (
-            <div className="p-4 bg-[#C2E8FF]/10 border border-[#C2E8FF]/30 rounded-2xl space-y-3">
-              <h5 className="text-[10px] font-black uppercase text-[#052659] tracking-wider leading-none">PREVIEW UPDATE EXP</h5>
+            <div className="p-4 bg-[#1E90FF]/10 border border-[#1E90FF]/30 rounded-2xl space-y-3">
+              <h5 className="text-[10px] font-black uppercase text-[#001F3F] tracking-wider leading-none">PREVIEW UPDATE EXP</h5>
               
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-xs font-bold text-[#011025]">{activeMember.nama}</h4>
+                  <h4 className="text-xs font-bold text-[#001F3F]">{activeMember.nama}</h4>
                   <p className="text-[10px] text-slate-400 font-semibold uppercase">{activeMember.kelas}</p>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -570,7 +570,7 @@ export default function PencapaianClient({ user }: Props) {
 
               {/* Progress visual */}
               <div className="space-y-1">
-                <div className="flex justify-between text-[10px] font-bold text-slate-500 font-mono">
+                <div className="flex justify-between text-[10px] font-bold text-slate-400 font-mono">
                   <span>Current: {activeMember.xp} EXP</span>
                   <span className="text-[#2e7d32] font-black">+{awardTarget.exp_reward} EXP (New: {activeMember.xp + awardTarget.exp_reward} EXP)</span>
                 </div>

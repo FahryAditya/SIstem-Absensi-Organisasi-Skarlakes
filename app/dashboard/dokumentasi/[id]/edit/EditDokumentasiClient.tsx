@@ -35,7 +35,7 @@ export default function EditDokumentasiClient({ user, id }: Props) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+        <Loader2 className="w-8 h-8 text-persian-blue animate-spin" />
       </div>
     )
   }
@@ -47,19 +47,19 @@ export default function EditDokumentasiClient({ user, id }: Props) {
       <div className="flex items-center gap-4">
         <button
           onClick={() => router.back()}
-          className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+          className="p-2 hover:bg-white/10 rounded-xl transition-colors"
         >
-          <ChevronLeft className="w-6 h-6 text-slate-600" />
+          <ChevronLeft className="w-6 h-6 text-slate-300" />
         </button>
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-indigo-50 rounded-xl border border-indigo-100 shadow-sm">
-            <Camera className="w-5 h-5 text-indigo-600" />
+          <div className="p-2 bg-persian-blue/10 rounded-xl border border-persian-blue/20 shadow-sm">
+            <Camera className="w-5 h-5 text-persian-blue" />
           </div>
-          <h1 className="text-xl font-black text-slate-800 tracking-tight">Edit Dokumentasi</h1>
+          <h1 className="text-xl font-black text-white tracking-tight">Edit Dokumentasi</h1>
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+      <div className="bg-deep-navy border border-white/10 rounded-3xl p-8 shadow-sm">
         <DocumentationForm 
           organizationId={doc.organizationId}
           type={doc.type}

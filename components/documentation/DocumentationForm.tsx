@@ -131,13 +131,13 @@ export default function DocumentationForm({ organizationId, type, initialData, o
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Judul */}
       <div className="space-y-1.5">
-        <label className="text-xs font-bold text-slate-500 uppercase">Judul Kegiatan <span className="text-red-400">*</span></label>
+        <label className="text-xs font-bold text-slate-400 uppercase">Judul Kegiatan <span className="text-red-400">*</span></label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Contoh: Jumat Seni – Menggambar Bersama"
-          className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+          className="w-full px-4 py-2.5 text-sm border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-persian-blue/100/20"
           maxLength={200}
         />
       </div>
@@ -145,7 +145,7 @@ export default function DocumentationForm({ organizationId, type, initialData, o
       {/* Foto Upload */}
       <div className="space-y-2">
         <div className="flex justify-between items-center">
-          <label className="text-xs font-bold text-slate-500 uppercase">
+          <label className="text-xs font-bold text-slate-400 uppercase">
             Foto Kegiatan <span className="text-red-400">*</span>
           </label>
           <span className={`text-xs font-bold ${
@@ -158,7 +158,7 @@ export default function DocumentationForm({ organizationId, type, initialData, o
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {photos.map((p, index) => (
-            <div key={index} className="relative aspect-square rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 group shadow-sm">
+            <div key={index} className="relative aspect-square rounded-2xl overflow-hidden border border-white/10 bg-white/5 group shadow-sm">
               <Image src={p.url} alt={`Preview ${index + 1}`} fill className="object-cover" unoptimized />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
               <button
@@ -181,12 +181,12 @@ export default function DocumentationForm({ organizationId, type, initialData, o
               onClick={() => !uploading && document.getElementById('photo-input')?.click()}
               className={`relative aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all ${
                 uploading
-                  ? 'border-slate-200 bg-slate-50 cursor-not-allowed'
-                  : 'border-slate-300 hover:border-indigo-400 bg-slate-50 hover:bg-indigo-50/20'
+                  ? 'border-white/10 bg-white/5 cursor-not-allowed'
+                  : 'border-slate-300 hover:border-blue-400 bg-white/5 hover:bg-persian-blue/10/20'
               }`}
             >
               {uploading ? (
-                <Loader2 className="w-6 h-6 text-indigo-500 animate-spin" />
+                <Loader2 className="w-6 h-6 text-persian-blue/100 animate-spin" />
               ) : (
                 <>
                   <UploadCloud className="w-6 h-6 text-slate-400" />
@@ -213,38 +213,38 @@ export default function DocumentationForm({ organizationId, type, initialData, o
       {/* Kategori + Tanggal */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <label className="text-xs font-bold text-slate-500 uppercase">Jenis Kegiatan <span className="text-red-400">*</span></label>
+          <label className="text-xs font-bold text-slate-400 uppercase">Jenis Kegiatan <span className="text-red-400">*</span></label>
           <CategorySelector type={type} value={category} onChange={setCategory} />
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs font-bold text-slate-500 uppercase">Tanggal Foto Diambil <span className="text-red-400">*</span></label>
+          <label className="text-xs font-bold text-slate-400 uppercase">Tanggal Foto Diambil <span className="text-red-400">*</span></label>
           <input
             type="date"
             value={dateTaken}
             onChange={(e) => setDateTaken(e.target.value)}
-            className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            className="w-full px-4 py-2.5 text-sm border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-persian-blue/100/20"
           />
         </div>
       </div>
 
       {/* Deskripsi */}
       <div className="space-y-1.5">
-        <label className="text-xs font-bold text-slate-500 uppercase">Deskripsi Kegiatan <span className="text-red-400">*</span></label>
+        <label className="text-xs font-bold text-slate-400 uppercase">Deskripsi Kegiatan <span className="text-red-400">*</span></label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Tuliskan detail kegiatan, peserta, atau hal-hal penting lainnya..."
           rows={4}
-          className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none"
+          className="w-full px-4 py-2.5 text-sm border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-persian-blue/100/20 resize-none"
         />
       </div>
 
       {/* Actions */}
-      <div className="flex justify-end gap-3 pt-2 border-t border-slate-100">
+      <div className="flex justify-end gap-3 pt-2 border-t border-white/10">
         <button
           type="submit"
           disabled={uploading || submitting || photos.length < 2}
-          className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-black shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all"
+          className="bg-persian-blue text-white px-6 py-2.5 rounded-xl text-sm font-black shadow-lg shadow-persian-blue/20 hover:bg-blue-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all"
         >
           {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
           {initialData ? 'Perbarui Dokumentasi' : 'Publikasikan Dokumentasi'}

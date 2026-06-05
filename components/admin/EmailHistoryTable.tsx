@@ -91,15 +91,15 @@ export default function EmailHistoryTable({ organizationType }: EmailHistoryTabl
       {/* Table content */}
       <div className="border border-white/10 rounded-2xl overflow-hidden bg-white/[0.01]">
         {loading ? (
-          <div className="py-20 text-center text-slate-500">
+          <div className="py-20 text-center text-slate-400">
             <div className="w-6 h-6 border-2 border-slate-500 border-t-white rounded-full animate-spin mx-auto mb-3" />
             Memuat riwayat email...
           </div>
         ) : logs.length === 0 ? (
-          <div className="py-16 text-center text-slate-500 space-y-2">
+          <div className="py-16 text-center text-slate-400 space-y-2">
             <Mail className="w-12 h-12 mx-auto mb-2 opacity-20" />
             <p className="text-sm font-medium">Belum ada email yang dikirim.</p>
-            <p className="text-xs text-slate-600">Histori pengiriman email manual akan tercatat di sini.</p>
+            <p className="text-xs text-slate-300">Histori pengiriman email manual akan tercatat di sini.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -127,7 +127,7 @@ export default function EmailHistoryTable({ organizationType }: EmailHistoryTabl
                     </td>
                     <td className="p-4">
                       <p className="font-semibold text-white">{log.recipientName}</p>
-                      <p className="text-xs text-slate-500">{log.recipientEmail}</p>
+                      <p className="text-xs text-slate-400">{log.recipientEmail}</p>
                     </td>
                     <td className="p-4 max-w-xs truncate font-medium text-slate-200" title={log.subject}>
                       {log.subject}
@@ -169,7 +169,7 @@ export default function EmailHistoryTable({ organizationType }: EmailHistoryTabl
       {/* Pagination */}
       {!loading && totalPages > 1 && (
         <div className="flex items-center justify-between p-2">
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-slate-400">
             Halaman {page} dari {totalPages}
           </span>
           <div className="flex items-center gap-2">

@@ -129,9 +129,9 @@ export default function PengeluaranClient({ user }: Props) {
         <div>
           <div className="flex items-center gap-2.5">
             <HandCoins className="w-6 h-6 text-red-500" />
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Pengeluaran Kas</h1>
+            <h1 className="text-2xl font-black text-white tracking-tight">Pengeluaran Kas</h1>
           </div>
-          <p className="text-sm text-slate-500 mt-1">Catat dan pantau penarikan dana kas organisasi.</p>
+          <p className="text-sm text-slate-400 mt-1">Catat dan pantau penarikan dana kas organisasi.</p>
         </div>
         <button onClick={openModal} className="btn-primary whitespace-nowrap self-start sm:self-auto shadow-sm">
           <Plus className="w-4 h-4 mr-1.5" />
@@ -157,7 +157,7 @@ export default function PengeluaranClient({ user }: Props) {
         {/* Filter Card */}
         <div className="card p-5 md:col-span-2 flex flex-col justify-center">
           <div className="flex items-center gap-2 mb-3">
-            <h3 className="text-sm font-bold text-slate-700">Filter Unit / Organisasi</h3>
+            <h3 className="text-sm font-bold text-slate-200">Filter Unit / Organisasi</h3>
           </div>
           {orgs.length > 1 && (
             <Select
@@ -173,11 +173,11 @@ export default function PengeluaranClient({ user }: Props) {
 
       <div className="card p-5">
         <div className="flex items-center gap-2 mb-4">
-          <h3 className="text-sm font-bold text-slate-700">Riwayat Pengeluaran</h3>
+          <h3 className="text-sm font-bold text-slate-200">Riwayat Pengeluaran</h3>
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto rounded-xl border border-slate-200">
+        <div className="overflow-x-auto rounded-xl border border-white/10">
           <table className="table">
             <thead>
               <tr>
@@ -206,16 +206,16 @@ export default function PengeluaranClient({ user }: Props) {
                 </tr>
               ) : (
                 data.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="font-medium text-slate-500">{idx + 1}</td>
-                    <td className="text-slate-600 text-sm">{formatDateTime(new Date(item.tanggal))}</td>
+                  <tr key={item.id} className="hover:bg-white/5 transition-colors">
+                    <td className="font-medium text-slate-400">{idx + 1}</td>
+                    <td className="text-slate-300 text-sm">{formatDateTime(new Date(item.tanggal))}</td>
                     <td>
-                      <span className="text-xs font-bold px-2 py-1 bg-slate-100 text-slate-600 rounded-md">
+                      <span className="text-xs font-bold px-2 py-1 bg-white/10 text-slate-300 rounded-md">
                         {ORG_LABELS[item.organisasi_type as OrgType] || item.organisasi_type}
                       </span>
                     </td>
-                    <td className="font-medium text-slate-800">{item.keterangan}</td>
-                    <td className="text-slate-600 text-sm">{item.creator_nama}</td>
+                    <td className="font-medium text-white">{item.keterangan}</td>
+                    <td className="text-slate-300 text-sm">{item.creator_nama}</td>
                     <td className="text-right font-mono font-bold text-red-600 bg-red-50/30">
                       - {formatCurrency(item.nominal)}
                     </td>
@@ -235,7 +235,7 @@ export default function PengeluaranClient({ user }: Props) {
       {/* Modal Transaksi */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm slide-up">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+          <div className="bg-deep-navy rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
             <div className="p-4 border-b flex items-center justify-between text-white bg-red-600">
               <h3 className="font-bold flex items-center gap-2">
                 <HandCoins className="w-5 h-5" />

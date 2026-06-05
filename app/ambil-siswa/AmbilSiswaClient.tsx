@@ -31,36 +31,36 @@ const ORG_LABELS: Record<string, string> = {
 
 const ORG_THEMES: Record<string, { border: string; bg: string; text: string; ring: string; badge: string; iconBg: string }> = {
   osis: {
-    border: 'border-[#023E8A]/30 hover:border-[#023E8A]',
-    bg: 'bg-[#023E8A]/5',
-    text: 'text-[#023E8A]',
-    ring: 'focus:ring-[#023E8A]',
-    badge: 'bg-[#023E8A]/10 text-[#023E8A] border-[#023E8A]/20',
-    iconBg: 'bg-[#023E8A] text-white',
+    border: 'border-unit-osis/30 hover:border-unit-osis',
+    bg: 'bg-unit-osis/5',
+    text: 'text-unit-osis',
+    ring: 'focus:ring-unit-osis',
+    badge: 'bg-unit-osis/10 text-unit-osis border-unit-osis/20',
+    iconBg: 'bg-unit-osis text-white',
   },
   mpk: {
-    border: 'border-[#C9184A]/30 hover:border-[#C9184A]',
-    bg: 'bg-[#C9184A]/5',
-    text: 'text-[#C9184A]',
-    ring: 'focus:ring-[#C9184A]',
-    badge: 'bg-[#C9184A]/10 text-[#C9184A] border-[#C9184A]/20',
-    iconBg: 'bg-[#C9184A] text-white',
+    border: 'border-unit-mpk/30 hover:border-unit-mpk',
+    bg: 'bg-unit-mpk/5',
+    text: 'text-unit-mpk',
+    ring: 'focus:ring-unit-mpk',
+    badge: 'bg-unit-mpk/10 text-unit-mpk border-unit-mpk/20',
+    iconBg: 'bg-unit-mpk text-white',
   },
   english: {
-    border: 'border-[#0096C7]/30 hover:border-[#0096C7]',
-    bg: 'bg-[#0096C7]/5',
-    text: 'text-[#0096C7]',
-    ring: 'focus:ring-[#0096C7]',
-    badge: 'bg-[#0096C7]/10 text-[#0096C7] border-[#0096C7]/20',
-    iconBg: 'bg-[#0096C7] text-white',
+    border: 'border-unit-english/30 hover:border-unit-english',
+    bg: 'bg-unit-english/5',
+    text: 'text-unit-english',
+    ring: 'focus:ring-unit-english',
+    badge: 'bg-unit-english/10 text-unit-english border-unit-english/20',
+    iconBg: 'bg-unit-english text-white',
   },
   programming: {
-    border: 'border-[#F4A916]/30 hover:border-[#F4A916]',
-    bg: 'bg-[#F4A916]/5',
-    text: 'text-[#F4A916]',
-    ring: 'focus:ring-[#F4A916]',
-    badge: 'bg-[#F4A916]/10 text-[#F4A916] border-[#F4A916]/20',
-    iconBg: 'bg-[#F4A916] text-white',
+    border: 'border-unit-programming/30 hover:border-unit-programming',
+    bg: 'bg-unit-programming/5',
+    text: 'text-unit-programming',
+    ring: 'focus:ring-unit-programming',
+    badge: 'bg-unit-programming/10 text-unit-programming border-unit-programming/20',
+    iconBg: 'bg-unit-programming text-white',
   },
 }
 
@@ -266,12 +266,12 @@ export default function AmbilSiswaClient({ user }: Props) {
 
   // Combined theme used when multiple organizations are chosen
   const COMBINED_THEME = {
-    border: 'border-indigo-200 hover:border-indigo-400',
-    bg: 'bg-indigo-50/40',
-    text: 'text-indigo-700',
-    ring: 'focus:ring-indigo-500',
-    badge: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-    iconBg: 'bg-indigo-600 text-white',
+    border: 'border-persian-blue/20 hover:border-persian-blue/40',
+    bg: 'bg-persian-blue/5',
+    text: 'text-persian-blue',
+    ring: 'focus:ring-persian-blue',
+    badge: 'bg-persian-blue/10 text-persian-blue border-persian-blue/20',
+    iconBg: 'bg-persian-blue text-white',
   }
 
   const activeTheme = useMemo(() => {
@@ -287,11 +287,11 @@ export default function AmbilSiswaClient({ user }: Props) {
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-10">
       {/* Dynamic Header */}
-      <div className="page-header bg-white/70 backdrop-blur-md p-5 border border-slate-100 rounded-2xl shadow-sm flex items-center justify-between gap-4 flex-wrap">
+      <div className="page-header bg-deep-navy border border-white/10 p-5 rounded-2xl shadow-sm flex items-center justify-between gap-4 flex-wrap">
         <div>
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-indigo-500 animate-pulse" />
-            <h2 className="page-title text-[#011025] font-extrabold tracking-tight">Ambil Anggota / Siswa Kegiatan</h2>
+            <Sparkles className="w-5 h-5 text-persian-blue animate-pulse" />
+            <h2 className="page-title text-white font-extrabold tracking-tight">Ambil Anggota / Siswa Kegiatan</h2>
           </div>
           <p className="page-sub text-slate-400 text-xs font-semibold mt-1">Cetak lembar daftar hadir kegiatan ekskul atau organisasi sekolah secara instan.</p>
         </div>
@@ -300,8 +300,8 @@ export default function AmbilSiswaClient({ user }: Props) {
         <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all ${
             step === 1 
-              ? 'bg-[#C2E8FF]/20 border-[#5482B4]/40 text-[#052659]' 
-              : 'bg-green-50 border-green-200 text-green-700'
+              ? 'bg-persian-blue/10 border-persian-blue/30 text-white' 
+              : 'bg-green-500/10 border-green-500/20 text-green-400'
           }`}>
             <span className="w-4 h-4 rounded-full bg-current text-white flex items-center justify-center text-[10px]">1</span>
             Informasi
@@ -309,8 +309,8 @@ export default function AmbilSiswaClient({ user }: Props) {
           <ChevronRight className="w-3.5 h-3.5 opacity-40 text-slate-400" />
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all ${
             step === 2 
-              ? 'bg-[#C2E8FF]/20 border-[#5482B4]/40 text-[#052659]' 
-              : 'bg-white border-slate-200 text-slate-400'
+              ? 'bg-persian-blue/10 border-persian-blue/30 text-white' 
+              : 'bg-white/5 border-white/10 text-slate-400'
           }`}>
             <span className="w-4 h-4 rounded-full bg-current text-white flex items-center justify-center text-[10px]">2</span>
             Pilih Siswa
@@ -320,17 +320,17 @@ export default function AmbilSiswaClient({ user }: Props) {
 
       {/* Step 1: Info Form */}
       {step === 1 && (
-        <div className="card p-6 bg-white border border-slate-100 rounded-2xl shadow-sm space-y-6">
-          <div className="border-b border-slate-100 pb-4">
-            <h3 className="text-sm font-black text-[#011025] flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-violet-500" /> Langkah 1: Keterangan & Tujuan Kegiatan
+        <div className="card p-6 bg-deep-navy border border-white/10 rounded-2xl shadow-sm space-y-6">
+          <div className="border-b border-white/10 pb-4">
+            <h3 className="text-sm font-black text-white flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-persian-blue" /> Langkah 1: Keterangan & Tujuan Kegiatan
             </h3>
             <p className="text-xs text-slate-400 font-semibold uppercase mt-0.5">Silakan isi detail dasar kegiatan Anda di bawah.</p>
           </div>
 
           {/* Org Selector Grid */}
           <div className="space-y-3">
-            <label className="label text-[#011025] font-bold">Pilih Organisasi / Ekskul Kegiatan * <span className="text-xs font-semibold text-slate-400 font-normal">(bisa pilih 2 atau lebih sekaligus)</span></label>
+            <label className="label text-[#001F3F] font-bold">Pilih Organisasi / Ekskul Kegiatan * <span className="text-xs font-semibold text-slate-400 font-normal">(bisa pilih 2 atau lebih sekaligus)</span></label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               {accessibleOrgs.map((orgKey) => {
                 const theme = ORG_THEMES[orgKey]
@@ -345,11 +345,11 @@ export default function AmbilSiswaClient({ user }: Props) {
                     className={`p-4 rounded-xl border-2 text-left flex items-start gap-4 transition-all duration-200 ${
                       isSelected 
                         ? `${theme.border} ${theme.bg} ring-2 ring-offset-1 ${theme.text}` 
-                        : 'border-slate-100 hover:border-slate-200 bg-white hover:bg-slate-50/50'
+                        : 'border-white/10 hover:border-white/10 bg-deep-navy hover:bg-white/5/50'
                     }`}
                   >
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 relative ${
-                      isSelected ? theme.iconBg : 'bg-slate-50 text-slate-400'
+                      isSelected ? theme.iconBg : 'bg-white/5 text-slate-400'
                     }`}>
                       <Icon className="w-5 h-5" />
                       {isSelected && (
@@ -359,7 +359,7 @@ export default function AmbilSiswaClient({ user }: Props) {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-extrabold truncate text-slate-800">{orgKey.toUpperCase()}</div>
+                      <div className="text-sm font-extrabold truncate text-white">{orgKey.toUpperCase()}</div>
                       <div className="text-xs font-semibold text-slate-400 mt-0.5 truncate">{ORG_LABELS[orgKey]}</div>
                     </div>
                   </button>
@@ -370,27 +370,27 @@ export default function AmbilSiswaClient({ user }: Props) {
 
           {/* Custom Modern Dropdown & Custom Title Input */}
           <div className="form-group space-y-3">
-            <label className="label text-[#011025] font-bold">Judul / Acara Kegiatan *</label>
+            <label className="label text-[#001F3F] font-bold">Judul / Acara Kegiatan *</label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Custom Dropdown Container */}
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setIsOpen(!isOpen)}
-                  className={`w-full flex items-center justify-between input pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold transition-all duration-200 text-left select-none cursor-pointer ${
+                  className={`w-full flex items-center justify-between input pl-10 pr-4 py-2.5 bg-deep-navy border border-white/10 rounded-xl text-sm font-semibold transition-all duration-200 text-left select-none cursor-pointer ${
                     isOpen 
-                      ? 'border-indigo-500 ring-2 ring-indigo-500/20' 
+                      ? 'border-persian-blue/100 ring-2 ring-persian-blue/100/20' 
                       : 'hover:border-slate-300'
                   }`}
                 >
                   <ScrollText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                  <span className={judulKegiatan ? 'text-slate-800' : 'text-slate-400'}>
+                  <span className={judulKegiatan ? 'text-white' : 'text-slate-400'}>
                     {PREDEFINED_ACTIVITIES.includes(judulKegiatan) 
                       ? judulKegiatan 
                       : (judulKegiatan ? 'Lainnya (Ketik Manual...)' : 'Pilih Judul Kegiatan...')}
                   </span>
                   <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
-                    isOpen ? 'rotate-90 text-indigo-500' : ''
+                    isOpen ? 'rotate-90 text-persian-blue/100' : ''
                   }`} />
                 </button>
 
@@ -401,7 +401,7 @@ export default function AmbilSiswaClient({ user }: Props) {
                       className="fixed inset-0 z-10" 
                       onClick={() => setIsOpen(false)} 
                     />
-                    <div className="absolute left-0 right-0 mt-2 bg-white/95 backdrop-blur-md border border-slate-100 rounded-xl shadow-xl z-20 overflow-hidden py-1.5 animate-fadeIn max-h-60 overflow-y-auto">
+                    <div className="absolute left-0 right-0 mt-2 bg-white/95 backdrop-blur-md border border-white/10 rounded-xl shadow-xl z-20 overflow-hidden py-1.5 animate-fadeIn max-h-60 overflow-y-auto">
                       <div className="px-3 py-1.5 text-[10px] font-black uppercase text-slate-400 tracking-wider">
                         Kegiatan Sekolah Default
                       </div>
@@ -417,16 +417,16 @@ export default function AmbilSiswaClient({ user }: Props) {
                             }}
                             className={`w-full text-left px-4 py-2.5 text-xs font-bold transition-all duration-150 flex items-center justify-between cursor-pointer ${
                               isChosen 
-                                ? 'bg-indigo-50 text-indigo-600' 
-                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                ? 'bg-persian-blue/10 text-persian-blue' 
+                                : 'text-slate-300 hover:bg-white/5 hover:text-white'
                             }`}
                           >
                             <span>{act}</span>
-                            {isChosen && <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" />}
+                            {isChosen && <CheckCircle2 className="w-3.5 h-3.5 text-persian-blue/100" />}
                           </button>
                         )
                       })}
-                      <div className="border-t border-slate-100 my-1" />
+                      <div className="border-t border-white/10 my-1" />
                       <button
                         type="button"
                         onClick={() => {
@@ -435,13 +435,13 @@ export default function AmbilSiswaClient({ user }: Props) {
                         }}
                         className={`w-full text-left px-4 py-2.5 text-xs font-black transition-all duration-150 flex items-center justify-between cursor-pointer ${
                           !PREDEFINED_ACTIVITIES.includes(judulKegiatan) && judulKegiatan !== ''
-                            ? 'bg-indigo-50 text-indigo-600' 
-                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                            ? 'bg-persian-blue/10 text-persian-blue' 
+                            : 'text-slate-400 hover:bg-white/5 hover:text-white'
                         }`}
                       >
                         <span>Lainnya (Ketik Manual...)</span>
                         {!PREDEFINED_ACTIVITIES.includes(judulKegiatan) && judulKegiatan !== '' && (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-persian-blue/100" />
                         )}
                       </button>
                     </div>
@@ -467,7 +467,7 @@ export default function AmbilSiswaClient({ user }: Props) {
                     placeholder="Ketik judul kegiatan kustom Anda di sini..."
                     maxLength={100}
                     className={`input focus:ring-2 focus:ring-offset-1 transition-all ${
-                      judulKegiatan.length >= 100 ? 'border-red-400 focus:ring-red-500/20' : (activeTheme ? activeTheme.ring : 'focus:ring-indigo-500')
+                      judulKegiatan.length >= 100 ? 'border-red-400 focus:ring-red-500/20' : (activeTheme ? activeTheme.ring : 'focus:ring-persian-blue/100')
                     }`}
                   />
                   {judulKegiatan.length >= 100 && (
@@ -486,7 +486,7 @@ export default function AmbilSiswaClient({ user }: Props) {
               disabled={selectedOrgs.length === 0 || !judulKegiatan.trim()}
               className={`btn-primary flex items-center gap-2 shadow-sm font-bold transition-all px-6 py-2.5 rounded-xl ${
                 (selectedOrgs.length === 0 || !judulKegiatan.trim()) 
-                  ? 'opacity-50 cursor-not-allowed bg-slate-300 border-slate-300 text-slate-500' 
+                  ? 'opacity-50 cursor-not-allowed bg-slate-300 border-slate-300 text-slate-400' 
                   : activeTheme ? `${activeTheme.iconBg} border-transparent text-white hover:opacity-90` : 'btn-primary'
               }`}
             >
@@ -498,26 +498,26 @@ export default function AmbilSiswaClient({ user }: Props) {
 
       {/* Step 2: Student List Checkbox */}
       {step === 2 && activeTheme && (
-        <div className="card p-6 bg-white border border-slate-100 rounded-2xl shadow-sm space-y-6">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4 gap-4 flex-wrap">
+        <div className="card p-6 bg-deep-navy border border-white/10 rounded-2xl shadow-sm space-y-6">
+          <div className="flex items-center justify-between border-b border-white/10 pb-4 gap-4 flex-wrap">
             <div>
-              <h3 className="text-sm font-black text-[#011025] flex items-center gap-2">
-                <Users className="w-4 h-4 text-indigo-500" /> Langkah 2: Pilih Siswa / Anggota
+              <h3 className="text-sm font-black text-[#001F3F] flex items-center gap-2">
+                <Users className="w-4 h-4 text-persian-blue/100" /> Langkah 2: Pilih Siswa / Anggota
               </h3>
               <p className="text-xs text-slate-400 font-semibold uppercase mt-0.5">Silakan pilih/centang siswa yang hadir dalam kegiatan ini.</p>
             </div>
             {/* Quick Context Card */}
             <div className={`p-2.5 rounded-xl border flex items-center gap-3 text-xs ${activeTheme.bg} ${activeTheme.border}`}>
               <div>
-                <span className="font-extrabold text-slate-800">{orgDisplayText}</span>
+                <span className="font-extrabold text-white">{orgDisplayText}</span>
                 <span className="mx-1 text-slate-300">•</span>
-                <span className="font-semibold text-slate-500 truncate max-w-[200px] inline-block align-bottom">{judulKegiatan}</span>
+                <span className="font-semibold text-slate-400 truncate max-w-[200px] inline-block align-bottom">{judulKegiatan}</span>
               </div>
             </div>
           </div>
 
           {/* Search bar + select all indicator */}
-          <div className="flex items-center justify-between gap-3 flex-wrap bg-slate-50 p-3 rounded-xl border border-slate-100">
+          <div className="flex items-center justify-between gap-3 flex-wrap bg-white/5 p-3 rounded-xl border border-white/10">
             <div className="relative flex-1 min-w-[220px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
@@ -526,7 +526,7 @@ export default function AmbilSiswaClient({ user }: Props) {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari berdasarkan nama atau kelas..."
                 maxLength={50}
-                className="input pl-9 pr-4 py-1.5 text-sm bg-white"
+                className="input pl-9 pr-4 py-1.5 text-sm bg-deep-navy"
               />
             </div>
             
@@ -537,7 +537,7 @@ export default function AmbilSiswaClient({ user }: Props) {
               </span>
               <button 
                 onClick={handleToggleSelectAll} 
-                className="text-xs font-extrabold text-indigo-600 hover:text-indigo-700 transition-colors"
+                className="text-xs font-extrabold text-persian-blue hover:text-blue-300 transition-colors"
               >
                 {isAllFilteredSelected ? 'Deselect All' : 'Select All'}
               </button>
@@ -547,32 +547,32 @@ export default function AmbilSiswaClient({ user }: Props) {
           {/* Dynamic Checklist table */}
           {loadingStudents ? (
             <div className="p-16 flex flex-col items-center justify-center gap-3 text-slate-400">
-              <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+              <Loader2 className="w-8 h-8 animate-spin text-persian-blue/100" />
               <span className="text-sm font-semibold">Menghubungkan & Memuat Anggota...</span>
             </div>
           ) : filteredStudents.length === 0 ? (
-            <div className="p-16 text-center border-2 border-dashed border-slate-100 rounded-xl space-y-2">
+            <div className="p-16 text-center border-2 border-dashed border-white/10 rounded-xl space-y-2">
               <AlertCircle className="w-8 h-8 text-slate-300 mx-auto" />
-              <p className="text-sm font-bold text-slate-500">Tidak ada anggota yang cocok dengan kata kunci pencarian.</p>
+              <p className="text-sm font-bold text-slate-400">Tidak ada anggota yang cocok dengan kata kunci pencarian.</p>
               <button 
                 onClick={() => setSearchQuery('')} 
-                className="text-xs font-extrabold text-indigo-600 hover:underline"
+                className="text-xs font-extrabold text-persian-blue hover:underline"
               >
                 Reset Pencarian
               </button>
             </div>
           ) : (
-            <div className="border border-slate-100 rounded-xl overflow-hidden shadow-sm">
+            <div className="border border-white/10 rounded-xl overflow-hidden shadow-sm">
               <div className="overflow-x-auto max-h-[400px]">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200">
+                    <tr className="bg-white/5 border-b border-white/10">
                       <th className="th py-3 px-4 w-12 text-center">
                         <input
                            type="checkbox"
                            checked={isAllFilteredSelected}
                            onChange={handleToggleSelectAll}
-                           className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                           className="rounded border-slate-300 text-persian-blue focus:ring-persian-blue/100 cursor-pointer"
                         />
                       </th>
                       <th className="th py-3 px-2 w-10 text-center text-slate-400">No</th>
@@ -591,12 +591,12 @@ export default function AmbilSiswaClient({ user }: Props) {
                         <tr 
                           key={key} 
                           onClick={() => handleToggleSiswa(key)}
-                          className={`hover:bg-slate-50/50 cursor-pointer transition-colors ${
+                          className={`hover:bg-white/5/50 cursor-pointer transition-colors ${
                             isSelected ? (
-                              siswa.org === 'osis' ? 'bg-[#023E8A]/5' :
-                              siswa.org === 'mpk' ? 'bg-[#C9184A]/5' :
-                              siswa.org === 'english' ? 'bg-[#0096C7]/5' :
-                              'bg-[#F4A916]/5'
+                              siswa.org === 'osis' ? 'bg-[#3D3DB8]/5' :
+                              siswa.org === 'mpk' ? 'bg-[#DC143C]/5' :
+                              siswa.org === 'english' ? 'bg-[#0F52BA]/5' :
+                              'bg-[#FFB81C]/5'
                             ) : ''
                           }`}
                         >
@@ -605,19 +605,19 @@ export default function AmbilSiswaClient({ user }: Props) {
                               type="checkbox"
                               checked={isSelected}
                               onChange={() => handleToggleSiswa(key)}
-                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                              className="rounded border-slate-300 text-persian-blue focus:ring-persian-blue/100 cursor-pointer"
                             />
                           </td>
                           <td className="td py-3 px-2 text-center text-slate-400 font-mono text-xs">{itemNo}</td>
-                          <td className="td py-3 px-3 font-semibold text-slate-800 text-sm">{siswa.nama}</td>
-                          <td className="td py-3 px-3 text-xs text-slate-500 font-medium">{siswa.kelas || '-'}</td>
+                          <td className="td py-3 px-3 font-semibold text-white text-sm">{siswa.nama}</td>
+                          <td className="td py-3 px-3 text-xs text-slate-400 font-medium">{siswa.kelas || '-'}</td>
                           <td className="td py-3 px-3 text-xs text-slate-400 font-mono">{siswa.nis || '-'}</td>
-                          <td className="td py-3 px-3 text-xs text-slate-600 font-medium">
+                          <td className="td py-3 px-3 text-xs text-slate-300 font-medium">
                             <span className={`inline-block px-2.5 py-0.5 rounded-full border text-[10px] font-extrabold uppercase ${
-                              siswa.org === 'osis' ? 'bg-[#023E8A]/10 text-[#023E8A] border-[#023E8A]/20' :
-                              siswa.org === 'mpk' ? 'bg-[#C9184A]/10 text-[#C9184A] border-[#C9184A]/20' :
-                              siswa.org === 'english' ? 'bg-[#0096C7]/10 text-[#0096C7] border-[#0096C7]/20' :
-                              'bg-[#F4A916]/10 text-[#F4A916] border-[#F4A916]/20'
+                              siswa.org === 'osis' ? 'bg-[#3D3DB8]/10 text-[#3D3DB8] border-[#3D3DB8]/20' :
+                              siswa.org === 'mpk' ? 'bg-[#DC143C]/10 text-[#DC143C] border-[#DC143C]/20' :
+                              siswa.org === 'english' ? 'bg-[#0F52BA]/10 text-[#0F52BA] border-[#0F52BA]/20' :
+                              'bg-[#FFB81C]/10 text-[#FFB81C] border-[#FFB81C]/20'
                             }`}>
                               {siswa.org?.toUpperCase()}
                             </span>
@@ -635,7 +635,7 @@ export default function AmbilSiswaClient({ user }: Props) {
           )}
 
           {/* Footer actions */}
-          <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-100 flex-wrap">
+          <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/10 flex-wrap">
             <button
               onClick={() => setStep(1)}
               className="btn-secondary flex items-center gap-2 font-bold px-4 py-2"
@@ -648,7 +648,7 @@ export default function AmbilSiswaClient({ user }: Props) {
               disabled={downloading || selectedSiswaKeys.length === 0}
               className={`btn-primary flex items-center gap-2 shadow-sm font-bold transition-all px-6 py-2.5 rounded-xl ${
                 downloading || selectedSiswaKeys.length === 0
-                  ? 'opacity-50 cursor-not-allowed bg-slate-300 border-slate-300 text-slate-500'
+                  ? 'opacity-50 cursor-not-allowed bg-slate-300 border-slate-300 text-slate-400'
                   : `${activeTheme.iconBg} border-transparent text-white hover:opacity-90`
               }`}
             >
