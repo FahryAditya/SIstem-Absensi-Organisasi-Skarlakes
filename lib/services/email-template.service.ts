@@ -10,13 +10,13 @@ const DEFAULT_TEMPLATES: Record<string, Record<string, { subject: string; body: 
 <head>
   <meta charset="UTF-8">
   <style>
-    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0f172a; margin: 0; padding: 20px; color: #f8fafc; }
-    .container { max-width: 600px; margin: 20px auto; background: #1e293b; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px border-slate-700; }
-    .header { background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%); color: white; padding: 35px 24px; text-align: center; }
-    .title { font-size: 26px; font-weight: 800; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f97316; margin: 0; padding: 20px; color: #fff; }
+    .container { max-width: 600px; margin: 20px auto; background: #fb923c; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+    .header { background: linear-gradient(135deg, #fb923c 0%, #f97316 100%); color: white; padding: 35px 24px; text-align: center; }
+    .title { font-size: 26px; font-weight: 800; margin: 0; }
     .content { padding: 32px 24px; line-height: 1.6; }
     .greeting { font-size: 18px; color: #ffffff; font-weight: 600; margin-bottom: 16px; }
-    .info-box { background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; padding: 18px; margin: 24px 0; border-radius: 8px; }
+    .info-box { background: rgba(251, 146, 60, 0.1); border-left: 4px solid #fb923c; padding: 18px; margin: 24px 0; border-radius: 8px; }
     .info-item { margin: 10px 0; color: #cbd5e1; font-size: 14px; }
     .info-label { font-weight: 600; color: #60a5fa; display: inline-block; width: 100px; }
     .footer { background: #111827; padding: 24px; text-align: center; color: #94a3b8; font-size: 12px; border-top: 1px solid #334155; }
@@ -116,13 +116,13 @@ const DEFAULT_TEMPLATES: Record<string, Record<string, { subject: string; body: 
 <head>
   <meta charset="UTF-8">
   <style>
-    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #450a0a; margin: 0; padding: 20px; color: #fef2f2; }
-    .container { max-width: 600px; margin: 20px auto; background: #7f1d1d; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-    .header { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: white; padding: 35px 24px; text-align: center; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #1e3a8a; margin: 0; padding: 20px; color: #e0e7ff; }
+    .container { max-width: 600px; margin: 20px auto; background: #3b82f6; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+    .header { background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); color: white; padding: 35px 24px; text-align: center; }
     .title { font-size: 26px; font-weight: 800; margin: 0; }
     .content { padding: 32px 24px; line-height: 1.6; }
     .greeting { font-size: 18px; color: #ffffff; font-weight: 600; margin-bottom: 16px; }
-    .info-box { background: rgba(239, 68, 68, 0.15); border-left: 4px solid #ef4444; padding: 18px; margin: 24px 0; border-radius: 8px; }
+    .info-box { background: rgba(59,130,246,0.1); border-left: 4px solid #3b82f6; padding: 18px; margin: 24px 0; border-radius: 8px; }
     .info-item { margin: 10px 0; color: #fee2e2; font-size: 14px; }
     .info-label { font-weight: 600; color: #fca5a5; display: inline-block; width: 100px; }
     .footer { background: #1e0505; padding: 24px; text-align: center; color: #fca5a5; font-size: 12px; border-top: 1px solid #991b1b; }
@@ -168,16 +168,16 @@ const DEFAULT_TEMPLATES: Record<string, Record<string, { subject: string; body: 
 <head>
   <meta charset="UTF-8">
   <style>
-    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #2e1065; margin: 0; padding: 20px; color: #faf5ff; }
-    .container { max-width: 600px; margin: 20px auto; background: #4c1d95; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-    .header { background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%); color: white; padding: 35px 24px; text-align: center; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #450a0a; margin: 0; padding: 20px; color: #fef2f2; }
+    .container { max-width: 600px; margin: 20px auto; background: #7f1d1d; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+    .header { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: white; padding: 35px 24px; text-align: center; }
     .title { font-size: 26px; font-weight: 800; margin: 0; }
     .content { padding: 32px 24px; line-height: 1.6; }
     .greeting { font-size: 18px; color: #ffffff; font-weight: 600; margin-bottom: 16px; }
-    .info-box { background: rgba(168, 85, 247, 0.15); border-left: 4px solid #a855f7; padding: 18px; margin: 24px 0; border-radius: 8px; }
-    .info-item { margin: 10px 0; color: #f3e8ff; font-size: 14px; }
-    .info-label { font-weight: 600; color: #d8b4fe; display: inline-block; width: 100px; }
-    .footer { background: #17072c; padding: 24px; text-align: center; color: #d8b4fe; font-size: 12px; border-top: 1px solid #6b21a8; }
+    .info-box { background: rgba(239,68,68,0.15); border-left: 4px solid #ef4444; padding: 18px; margin: 24px 0; border-radius: 8px; }
+    .info-item { margin: 10px 0; color: #fee2e2; font-size: 14px; }
+    .info-label { font-weight: 600; color: #fca5a5; display: inline-block; width: 100px; }
+    .footer { background: #1e0505; padding: 24px; text-align: center; color: #fca5a5; font-size: 12px; border-top: 1px solid #991b1b; }
   </style>
 </head>
 <body>
