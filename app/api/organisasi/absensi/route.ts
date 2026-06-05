@@ -44,7 +44,11 @@ export async function GET(req: NextRequest) {
     prisma.absensiOrganisasi.findMany({
       where,
       include: { anggota_osis: true, anggota_mpk: true },
-      orderBy: [{ tanggal: 'desc' }],
+      orderBy: [
+        { tanggal: 'desc' },
+        { anggota_osis: { nama: 'asc' } },
+        { anggota_mpk: { nama: 'asc' } }
+      ],
       skip: (page - 1) * limit,
       take: limit,
     }),

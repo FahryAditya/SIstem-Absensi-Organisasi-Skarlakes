@@ -227,6 +227,8 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
     toast.success(`Absensi ${activeOrg.toUpperCase()} tersimpan!`)
     clearJsonCachePrefix('/api/organisasi/absensi')
     setSavingAbsensi(false)
+    setAbsensiMode('riwayat')
+    setFilterTanggal(bulkDate)
   }
 
   const orgLabel = activeOrg === 'osis' ? 'OSIS' : 'MPK'

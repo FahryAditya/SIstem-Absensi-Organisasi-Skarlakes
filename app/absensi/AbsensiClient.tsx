@@ -121,6 +121,8 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
     toast.success(`✅ Absensi ${bulkRows.length} siswa tersimpan!`, { duration: 4000 })
     clearJsonCache()
     setSaving(false)
+    setMode('riwayat')
+    setFilterTanggal(bulkDate)
   }
 
   async function handleGiveAward() {
