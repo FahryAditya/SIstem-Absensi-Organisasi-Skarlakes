@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 
 import { pusherClient } from '@/lib/pusher-client'
+import Select from '@/components/ui/Select'
 
 type Org = 'osis' | 'mpk'
 type SessionStatus = 'SCHEDULED' | 'ACTIVE' | 'SELESAI' | 'DIBATALKAN'
@@ -941,8 +942,29 @@ export default function WawancaraClient({ user }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="form-group"><label className="label">Nama</label><input value={targetQueue?.nama || ''} readOnly className="input bg-white/5" /></div>
           <div className="form-group"><label className="label">Kelas</label><input value={targetQueue?.kelas || ''} readOnly className="input bg-white/5" /></div>
-          <div className="form-group"><label className="label">Keterangan *</label><select value={fKet} onChange={(e) => setFKet(e.target.value as any)} className="input"><option value="AKTIF">Aktif</option><option value="KURANG_AKTIF">Kurang Aktif</option></select></div>
-          <div className="form-group"><label className="label">Hasil *</label><select value={fHasil} onChange={(e) => setFHasil(e.target.value as any)} className="input"><option value="LOLOS">Lolos</option><option value="TIDAK_LOLOS">Tidak Lolos</option><option value="PENDING">Pending</option></select></div>
+          <div className="form-group">
+            <label className="label">Keterangan *</label>
+            <Select
+              value={fKet}
+              onChange={(val) => setFKet(val as any)}
+              options={[
+                { value: 'AKTIF', label: 'Aktif' },
+                { value: 'KURANG_AKTIF', label: 'Kurang Aktif' },
+              ]}
+            />
+          </div>
+          <div className="form-group">
+            <label className="label">Hasil *</label>
+            <Select
+              value={fHasil}
+              onChange={(val) => setFHasil(val as any)}
+              options={[
+                { value: 'LOLOS', label: 'Lolos' },
+                { value: 'TIDAK_LOLOS', label: 'Tidak Lolos' },
+                { value: 'PENDING', label: 'Pending' },
+              ]}
+            />
+          </div>
           <div className="form-group md:col-span-2"><label className="label">Persentase *</label><input type="number" min={1} max={100} value={fPersen} onChange={(e) => setFPersen(Number(e.target.value))} className="input" /></div>
           <div className="form-group md:col-span-2">
             <div className="flex justify-between items-center">
