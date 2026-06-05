@@ -13,7 +13,7 @@
   html { 
     -webkit-font-smoothing: antialiased;
     -webkit-text-size-adjust: 100%; 
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
     @apply font-sans; 
   }
   
@@ -154,6 +154,11 @@
   .page-sub { @apply text-sm text-slate-500; }
   .divider { @apply border-t border-slate-200; }
   .empty-state { @apply flex flex-col items-center gap-3 py-16 text-slate-400; }
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scroll-behavior: auto;
+  }
 
   /* Animations */
   .fade-in { animation: fadeIn 0.25s ease-out; }
@@ -194,13 +199,39 @@
 
 /* Ringankan semua animasi di mobile */
 @media (max-width: 1023px) {
+  html { scroll-behavior: auto; }
+  .mobile-scroll {
+    contain: layout paint;
+    transform: translateZ(0);
+  }
+  .backdrop-blur,
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl,
+  .backdrop-blur-3xl,
+  .backdrop-blur-xs {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
   .fade-in { animation: none; }
   .slide-up { animation: none; }
+  .animate-pulse,
+  .animate-bounce,
+  .animate-slide-change {
+    animation: none !important;
+  }
   .stat-card { transition: none !important; }
-  .card { transition: box-shadow 0.15s ease !important; }
+  .card { transition: none !important; }
   .btn, .btn-primary, .btn-secondary, .btn-danger, .btn-ghost, .btn-icon {
     transition: background-color 0.1s ease, opacity 0.1s ease !important;
     transform: none !important;
+  }
+  .shadow-2xl,
+  .shadow-xl,
+  .shadow-lg {
+    box-shadow: 0 1px 3px rgb(15 23 42 / 0.12) !important;
   }
   .nav-link { transition: background-color 0.1s ease !important; }
   .input { transition: border-color 0.1s ease, box-shadow 0.1s ease !important; }

@@ -23,7 +23,7 @@ export default function DashboardLayout({ user, pageTitle, children }: Dashboard
   const themeClass = user.role === 'administrator' ? 'theme-admin' : ''
 
   return (
-    <div className={`flex h-screen overflow-hidden bg-slate-50 ${themeClass}`}>
+    <div className={`flex h-[100dvh] overflow-hidden bg-slate-50 ${themeClass}`}>
       <Sidebar 
         user={user} 
         mobileOpen={mobileOpen} 
@@ -38,7 +38,7 @@ export default function DashboardLayout({ user, pageTitle, children }: Dashboard
           isCollapsed={isCollapsed}
           onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
         />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+        <main className="mobile-scroll flex-1 overflow-y-auto p-4 lg:p-6">
           {children}
         </main>
       </div>

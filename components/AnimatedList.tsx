@@ -38,15 +38,23 @@ export const ADMINISTRATOR_MENU_ITEMS: AdminMenuItem[] = [
   { label: 'Backup SQL',               section: 'Tools',         href: '/api/admin/backup' },
 ];
 
-// Detect if we should reduce/skip animations (only prefers-reduced-motion, NOT mobile)
+// Reduce animations on touch/mobile devices to keep scrolling smooth.
 function useReducedAnimation() {
-  const [reduced, setReduced] = useState(false); // default false agar animasi aktif semua device
+  const [reduced, setReduced] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setReduced(mq.matches);
-    const handler = () => setReduced(mq.matches);
+    const mobileMq = window.matchMedia('(max-width: 1023px)');
+    const update = () => {
+      setReduced(mq.matches || mobileMq.matches || 'ontouchstart' in window);
+    };
+    update();
+    const handler = () => update();
     mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
+    mobileMq.addEventListener('change', handler);
+    return () => {
+      mq.removeEventListener('change', handler);
+      mobileMq.removeEventListener('change', handler);
+    };
   }, []);
   return reduced;
 }
