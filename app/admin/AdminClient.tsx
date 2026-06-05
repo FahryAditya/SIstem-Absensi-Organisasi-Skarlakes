@@ -38,6 +38,12 @@ export default function AdminClient({ user }: Props) {
   const [fAppPassword, setFAppPassword] = useState('')
   const [savingEmail, setSavingEmail] = useState(false)
 
+  // Cleanup Interview state
+  const [cleanupModalOpen, setCleanupModalOpen] = useState(false)
+  const [cleanupType, setCleanupType] = useState<'sesi' | 'chat'>('chat')
+  const [cleanupConfirmText, setCleanupConfirmText] = useState('')
+  const [cleaning, setCleaning] = useState(false)
+
   const [fNama, setFNama] = useState('')
   const [fEmail, setFEmail] = useState('')
   const [fPassword, setFPassword] = useState('')
@@ -144,6 +150,29 @@ export default function AdminClient({ user }: Props) {
     toast.success('User dihapus')
     clearJsonCache()
     setDeleting(false); setDeleteTarget(null); load()
+  }
+
+  async function handleCleanup() {
+    if (cleanupConfirmText !== 'HAPUS PERMANEN') {
+      toast.error('Ketik HAPUS PERMANEN untuk konfirmasi')
+      return
+    }
+    setCleaning(true)
+    try {
+      const res = await fetch('/api/admin/clear-wawancara', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipe: cleanupType, konfirmasi: cleanupConfirmText })
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Gagal membersihkan data')
+      toast.success(`Berhasil menghapus ${cleanupType === 'sesi' ? 'Semua Sesi & Hasil' : 'Semua Live Chat'} (${json.count} data)`)
+      setCleanupModalOpen(false)
+      setCleanupConfirmText('')
+    } catch (e: any) {
+      toast.error(e.message)
+    }
+    setCleaning(false)
   }
 
   async function handleOptimize() {
@@ -292,6 +321,14 @@ export default function AdminClient({ user }: Props) {
               Backup SQL
             </span>
           </button>
+          {user.role === 'administrator' && (
+            <button onClick={() => setCleanupModalOpen(true)} className="btn-secondary text-red-600 border-red-200 hover:bg-red-50">
+              <span className="flex items-center gap-2 font-semibold">
+                <Trash2 className="w-4 h-4" />
+                Bersihkan Wawancara
+              </span>
+            </button>
+          )}
           <button onClick={() => window.open('/api/export?tipe=admin', '_blank')} className="btn-secondary">
             <span className="flex items-center gap-2 text-persian-blue font-semibold">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
@@ -514,6 +551,56 @@ export default function AdminClient({ user }: Props) {
               </div>
             </>
           )}
+        </div>
+      </Modal>
+
+      {/* Modal Bersihkan Wawancara */}
+      <Modal open={cleanupModalOpen} title="Bersihkan Data Wawancara" onClose={() => setCleanupModalOpen(false)} size="md"
+        footer={
+          <div className="flex gap-2 justify-end">
+            <button onClick={() => setCleanupModalOpen(false)} className="btn-secondary">Batal</button>
+            <button onClick={handleCleanup} disabled={cleaning} className="btn-primary bg-red-600 hover:bg-red-700">
+              {cleaning ? <Loader2 className="w-4 h-4 animate-spin"/> : <Trash2 className="w-4 h-4" />}
+              Hapus Data
+            </button>
+          </div>
+        }>
+        <div className="space-y-4">
+          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-600 font-medium">
+            <div className="flex gap-2 font-bold mb-1"><AlertTriangle className="w-4 h-4" /> PERINGATAN KERAS</div>
+            Tindakan ini bersifat permanen dan tidak dapat dibatalkan. Data yang dihapus akan hilang selamanya dari database.
+          </div>
+          
+          <div className="form-group">
+            <label className="label">Pilih Data yang Akan Dihapus</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button 
+                onClick={() => setCleanupType('sesi')}
+                className={`p-3 rounded-xl border text-left transition-all ${cleanupType === 'sesi' ? 'bg-red-50 border-red-500 ring-1 ring-red-500' : 'bg-white border-slate-200 hover:bg-slate-50'}`}
+              >
+                <div className="font-bold text-sm mb-1 text-slate-900">Hapus Sesi</div>
+                <div className="text-[10px] text-slate-500">Menghapus semua sesi, antrian, hasil, dan chat.</div>
+              </button>
+              <button 
+                onClick={() => setCleanupType('chat')}
+                className={`p-3 rounded-xl border text-left transition-all ${cleanupType === 'chat' ? 'bg-red-50 border-red-500 ring-1 ring-red-500' : 'bg-white border-slate-200 hover:bg-slate-50'}`}
+              >
+                <div className="font-bold text-sm mb-1 text-slate-900">Hapus Live Chat</div>
+                <div className="text-[10px] text-slate-500">Hanya menghapus riwayat pesan live chat internal.</div>
+              </button>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="label">Konfirmasi Penghapusan</label>
+            <p className="text-[11px] text-slate-500 mb-2">Ketik <span className="font-mono font-bold text-red-600">HAPUS PERMANEN</span> untuk melanjutkan:</p>
+            <input 
+              value={cleanupConfirmText} 
+              onChange={e => setCleanupConfirmText(e.target.value)} 
+              placeholder="HAPUS PERMANEN" 
+              className="input border-red-200 focus:ring-red-500/20" 
+            />
+          </div>
         </div>
       </Modal>
     </div>

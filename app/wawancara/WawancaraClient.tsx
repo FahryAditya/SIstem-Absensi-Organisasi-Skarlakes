@@ -571,6 +571,26 @@ export default function WawancaraClient({ user }: Props) {
     setExportModal(false)
   }
 
+  // Check if feature is "turned on" (at least one ACTIVE or SCHEDULED session exists)
+  const isFeatureEnabled = sessions.some(s => s.status === 'ACTIVE' || s.status === 'SCHEDULED')
+  
+  if (!admin && !isFeatureEnabled && !loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center space-y-4">
+        <div className="w-20 h-20 bg-red-500/10 rounded-3xl flex items-center justify-center border border-red-500/20">
+          <Lock className="w-10 h-10 text-red-500" />
+        </div>
+        <div>
+          <h2 className="text-xl font-black text-white">Fitur Wawancara Terkunci</h2>
+          <p className="text-slate-400 max-w-sm mx-auto mt-2">
+            Administrator belum menyalakan fitur wawancara OSIS & MPK. Silakan hubungi Administrator untuk membuat jadwal atau mengaktifkan sesi.
+          </p>
+        </div>
+        <button onClick={() => window.location.href = '/dashboard'} className="btn-secondary">Kembali ke Dashboard</button>
+      </div>
+    )
+  }
+
   async function sendChat() {
     if (!activeSession || !chatText.trim()) return
     const message = chatText.trim()
