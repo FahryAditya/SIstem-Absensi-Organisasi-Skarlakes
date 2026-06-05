@@ -45,7 +45,6 @@ export async function GET(req: NextRequest) {
       where,
       include: { anggota_osis: true, anggota_mpk: true },
       orderBy: [
-        { tanggal: 'desc' },
         { anggota_osis: { nama: 'asc' } },
         { anggota_mpk: { nama: 'asc' } }
       ],
