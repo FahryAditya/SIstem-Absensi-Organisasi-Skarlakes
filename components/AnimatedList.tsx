@@ -137,6 +137,7 @@ interface AnimatedListProps<T> {
   displayScrollbar?: boolean;
   initialSelectedIndex?: number;
   selectedIndex?: number;
+  resetScrollKey?: string;
 }
 
 const AnimatedList = <T,>({
@@ -151,7 +152,8 @@ const AnimatedList = <T,>({
   itemClassName = '',
   displayScrollbar = true,
   initialSelectedIndex = -1,
-  selectedIndex: controlledSelectedIndex
+  selectedIndex: controlledSelectedIndex,
+  resetScrollKey
 }: AnimatedListProps<T>) => {
   // Gunakan ADMINISTRATOR_MENU_ITEMS jika prop administratorItems=true dan items tidak disupply
   const resolvedItems: T[] = (items && items.length > 0)
@@ -173,6 +175,15 @@ const AnimatedList = <T,>({
   const [keyboardNav, setKeyboardNav] = useState<boolean>(false);
   const [topGradientOpacity, setTopGradientOpacity] = useState<number>(0);
   const [bottomGradientOpacity, setBottomGradientOpacity] = useState<number>(1);
+
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+
+    list.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    setTopGradientOpacity(0);
+    setBottomGradientOpacity(list.scrollHeight <= list.clientHeight ? 0 : 1);
+  }, [resetScrollKey]);
 
   const handleItemMouseEnter = useCallback((index: number) => {
     setSelectedIndex(index);

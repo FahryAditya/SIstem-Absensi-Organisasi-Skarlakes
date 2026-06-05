@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
 import Image from 'next/image'
@@ -104,8 +104,10 @@ function RoleBadge({ role }: { role: string }) {
 
 export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: SidebarProps) {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const cleanRole = (user.role || '').trim().toLowerCase()
   const navItems = getFlattenedNavItems(cleanRole, !!isCollapsed)
+  const routeKey = searchParams.size > 0 ? `${pathname}?${searchParams.toString()}` : pathname
 
   const isActive = (href: string) => {
     const base = href.split('?')[0]
@@ -193,6 +195,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
           listClassName="px-3"
           showGradients={true}
           enableArrowNavigation={true}
+          resetScrollKey={routeKey}
         />
       </div>
 

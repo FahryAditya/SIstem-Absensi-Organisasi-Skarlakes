@@ -38,7 +38,7 @@ export default function DashboardLayout({ user, pageTitle, children }: Dashboard
           isCollapsed={isCollapsed}
           onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
         />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 fade-in">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           {children}
         </main>
       </div>

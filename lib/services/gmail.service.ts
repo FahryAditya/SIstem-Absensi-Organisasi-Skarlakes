@@ -112,6 +112,17 @@ export async function sendEmail(options: SendEmailOptions) {
       text: textAlternative,
       html: options.html,
       bcc: options.bcc?.join(','),
+      replyTo: fromEmail,
+      headers: {
+        'X-Priority': '3 (Normal)',
+        'X-MSMail-Priority': 'Normal',
+        'X-Mailer': 'Nodemailer',
+        'X-Auto-Response-Suppress': 'OOF, AutoReply',
+        'Precedence': 'bulk',
+        'List-Unsubscribe': `<mailto:${fromEmail}?subject=unsubscribe>`,
+        'List-ID': `<${process.env.APP_NAME || 'SistemEkstrakurikuler'}>`,
+        'X-Complaints-To': fromEmail,
+      },
     }
 
     const info = await transporter.sendMail(mailOptions)
