@@ -16,7 +16,7 @@ import {
 import { format } from 'date-fns'
 
 interface Anggota { id: number; nis: string | null; nama: string; kelas: string | null; email: string | null; foto_url: string | null; jabatan: string | null; xp?: number; level?: number }
-interface AbsensiOrg { id: number; organisasi_type: string; anggota_osis?: Anggota; anggota_mpk?: Anggota; tanggal: string; status: string; uang_kas: number; keterangan: string | null }
+interface AbsensiOrg { id: number; organisasi_type: string; anggota_osis_id?: number | null; anggota_mpk_id?: number | null; anggota_osis?: Anggota; anggota_mpk?: Anggota; tanggal: string; status: string; uang_kas: number; keterangan: string | null }
 interface BulkRow { anggota_id: number; nama: string; jabatan: string | null; status: string; uang_kas: number; keterangan: string }
 interface PencapaianItem { id: number; tanggal: string; pencapaian: { nama: string; deskripsi: string; exp_reward: number } }
 
@@ -116,7 +116,9 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
 
       const rows: BulkRow[] = anggList.map(a => {
         const ex = existing.find(e =>
-          activeOrg === 'osis' ? e.anggota_osis?.id === a.id : e.anggota_mpk?.id === a.id
+          activeOrg === 'osis'
+            ? (e.anggota_osis_id === a.id || e.anggota_osis?.id === a.id)
+            : (e.anggota_mpk_id === a.id || e.anggota_mpk?.id === a.id)
         )
         return { anggota_id: a.id, nama: a.nama, jabatan: a.jabatan, status: ex?.status || 'hadir', uang_kas: ex?.uang_kas || 0, keterangan: ex?.keterangan || '' }
       })

@@ -40,14 +40,18 @@ export async function GET(req: NextRequest) {
     ...(tanggal ? { tanggal: new Date(tanggal) } : {}),
   }
 
+  const orderBy: Record<string, unknown>[] =
+    organisasi === 'osis'
+      ? [{ anggota_osis: { nama: 'asc' } }]
+      : organisasi === 'mpk'
+        ? [{ anggota_mpk: { nama: 'asc' } }]
+        : [{ anggota_osis: { nama: 'asc' } }, { anggota_mpk: { nama: 'asc' } }]
+
   const [data, total] = await Promise.all([
     prisma.absensiOrganisasi.findMany({
       where,
       include: { anggota_osis: true, anggota_mpk: true },
-      orderBy: [
-        { anggota_osis: { nama: 'asc' } },
-        { anggota_mpk: { nama: 'asc' } }
-      ],
+      orderBy,
       skip: (page - 1) * limit,
       take: limit,
     }),
