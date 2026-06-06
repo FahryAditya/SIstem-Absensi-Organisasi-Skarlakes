@@ -63,7 +63,7 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
     items.push({ type: 'section', label: 'Organisasi' })
     items.push({ type: 'link', href: '/organisasi?org=osis', label: 'OSIS', icon: Building2 })
     items.push({ type: 'link', href: '/organisasi?org=mpk', label: 'MPK', icon: Building2 })
-    items.push({ type: 'link', href: '/organisasi/kegiatan', label: 'Pengelompokan Kegiatan', icon: LayoutGrid })
+    // items.push({ type: 'link', href: '/organisasi/kegiatan', label: 'Pengelompokan Kegiatan', icon: LayoutGrid })
     items.push({ type: 'link', href: '/wawancara', label: 'Wawancara OSIS & MPK', icon: MessagesSquare })
   }
 
