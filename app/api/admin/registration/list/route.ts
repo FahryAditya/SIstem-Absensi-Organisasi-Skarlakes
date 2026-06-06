@@ -28,17 +28,8 @@ export async function GET(req: NextRequest) {
     }
 
     const accessibleOrgs = getAccessibleOrgs(ctx.userRole)
-    
-    console.log('[ADMIN REGISTRATION LIST] Request:', {
-      type,
-      status,
-      orgId: orgIdParam,
-      userRole: ctx.userRole,
-      accessibleOrgs
-    })
 
     if (!accessibleOrgs || accessibleOrgs.length === 0) {
-      console.warn('[ADMIN REGISTRATION LIST] No accessible orgs for role:', ctx.userRole)
       return NextResponse.json([])
     }
 
@@ -49,7 +40,7 @@ export async function GET(req: NextRequest) {
       console.error('[ADMIN REGISTRATION LIST] Database Connection Error:', dbError)
       return NextResponse.json({ 
         error: 'Database connection error', 
-        message: dbError.message 
+        message: 'Tidak dapat terhubung ke database' 
       }, { status: 500 })
     }
 
