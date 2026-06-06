@@ -308,7 +308,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
               className="btn-secondary border-indigo-200 bg-indigo-50/50 hover:bg-indigo-100 text-indigo-600 font-bold"
             >
               <UserCheck className="w-4 h-4" />
-              Lihat Calon
+              Lihat Calon Pendaftaran
             </button>
             <button onClick={openAdd} className="btn-primary"><Plus className="w-4 h-4" />Tambah Anggota</button>
           </div>

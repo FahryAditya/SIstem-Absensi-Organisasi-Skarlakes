@@ -9,7 +9,7 @@ import { RoleBadge } from '@/components/ui/Badges'
 import { formatDateTime } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
-import { UserCog, Plus, Pencil, Trash2, Loader2, Shield, Mail, User, Lock, Eye, EyeOff, AlertTriangle, Database, Cpu, Sparkles, Trophy, UserCheck } from 'lucide-react'
+import { UserCog, Plus, Pencil, Trash2, Loader2, Shield, Mail, User, Lock, Eye, EyeOff, AlertTriangle, Database, Cpu, Sparkles, Trophy, UserCheck, Link as LinkIcon } from 'lucide-react'
 import Select from '@/components/ui/Select'
 import { AWARDS_DATA } from '@/lib/awards'
 
@@ -325,6 +325,12 @@ export default function AdminClient({ user }: Props) {
             <span className="flex items-center gap-2 text-blue-600 font-bold">
               <UserCheck className="w-4 h-4" />
               Penerimaan
+            </span>
+          </button>
+          <button onClick={() => window.location.href = '/admin/registration/acceptance?showLinks=true'} className="btn-secondary border-amber-200 bg-amber-50/50 hover:bg-amber-100">
+            <span className="flex items-center gap-2 text-amber-600 font-bold">
+              <LinkIcon className="w-4 h-4" />
+              Link Pendaftaran
             </span>
           </button>
           {user.role === 'administrator' && (

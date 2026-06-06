@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { 
   CheckCircle2, 
   XCircle, 
@@ -19,9 +20,13 @@ import {
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
 
-export default function AdminAcceptancePage() {
-  const [type, setType] = useState<'eskul' | 'osis-mpk'>('eskul')
-  const [status, setStatus] = useState('MENUNGGU')
+function AdminAcceptanceContent() {
+  const searchParams = useSearchParams()
+  const initialType = searchParams.get('type') as 'eskul' | 'osis-mpk' || 'eskul'
+  const initialOrg = searchParams.get('org')
+
+  const [type, setType] = useState<'eskul' | 'osis-mpk'>(initialType)
+  const [status, setStatus] = useState(initialType === 'eskul' ? 'MENUNGGU' : 'CALON')
   const [data, setData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
@@ -30,7 +35,14 @@ export default function AdminAcceptancePage() {
   const [showModal, setShowModal] = useState(false)
   const [modalType, setModalType] = useState<'accept' | 'reject'>('accept')
   const [reason, setReason] = useState('')
-  const [showLinksModal, setShowLinksModal] = useState(false)
+  const [showLinksModal, setShowLinksModal] = useState(searchParams.get('showLinks') === 'true')
+
+  // Use initialOrg to filter the query if it exists
+  useEffect(() => {
+    if (initialOrg) {
+      setQuery(initialOrg)
+    }
+  }, [initialOrg])
 
   const fetchData = async () => {
     setLoading(true)
@@ -379,5 +391,13 @@ export default function AdminAcceptancePage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function AdminAcceptancePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>}>
+      <AdminAcceptanceContent />
+    </Suspense>
   )
 }

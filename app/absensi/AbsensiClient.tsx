@@ -200,7 +200,7 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
             className="btn-secondary border-blue-200 bg-blue-50/50 hover:bg-blue-100 text-blue-600 font-bold"
           >
             <UserCheck className="w-4 h-4" />
-            Lihat Calon
+            Lihat Calon Pendaftaran
           </button>
         </div>
       </div>
