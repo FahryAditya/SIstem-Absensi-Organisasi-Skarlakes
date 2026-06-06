@@ -9,7 +9,7 @@ import { RoleBadge } from '@/components/ui/Badges'
 import { formatDateTime } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
-import { UserCog, Plus, Pencil, Trash2, Loader2, Shield, Mail, User, Lock, Eye, EyeOff, AlertTriangle, Database, Cpu, Sparkles, Trophy } from 'lucide-react'
+import { UserCog, Plus, Pencil, Trash2, Loader2, Shield, Mail, User, Lock, Eye, EyeOff, AlertTriangle, Database, Cpu, Sparkles, Trophy, UserCheck } from 'lucide-react'
 import Select from '@/components/ui/Select'
 import { AWARDS_DATA } from '@/lib/awards'
 
