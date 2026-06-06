@@ -102,21 +102,36 @@ export default function AmbilSiswaClient({ user }: Props) {
 
   // Initialize groups when moving to step 2
   useEffect(() => {
-    if (step === 2 && isGrouped && groups.length === 0) {
-      if (judulKegiatan === 'Piket Kebersihan & Penyambutan') {
-        const initialGroups = [
-          { id: 'piket-1', name: 'Penyambutan', studentKeys: [] },
-          { id: 'piket-2', name: 'Kebersihan', studentKeys: [] }
-        ]
-        setGroups(initialGroups)
-        setActiveGroupId('piket-1')
-      } else if (judulKegiatan === 'Panitia Costume') {
-        const initialGroup = { id: Math.random().toString(36).substr(2, 9), name: '', studentKeys: [] }
-        setGroups([initialGroup])
-        setActiveGroupId(initialGroup.id)
+    if (step === 2 && isGrouped) {
+      // If switching between different grouped activities, reset groups
+      const isPiket = judulKegiatan === 'Piket Kebersihan & Penyambutan'
+      const hasCorrectGroups = isPiket 
+        ? groups.some(g => g.id === 'piket-1') 
+        : groups.length > 0 && groups[0].id !== 'piket-1'
+
+      if (!hasCorrectGroups || groups.length === 0) {
+        if (isPiket) {
+          const initialGroups = [
+            { id: 'piket-1', name: 'Penyambutan', studentKeys: [] },
+            { id: 'piket-2', name: 'Kebersihan', studentKeys: [] }
+          ]
+          setGroups(initialGroups)
+          setActiveGroupId('piket-1')
+        } else if (judulKegiatan === 'Panitia Costume') {
+          const initialGroup = { id: Math.random().toString(36).substr(2, 9), name: '', studentKeys: [] }
+          setGroups([initialGroup])
+          setActiveGroupId(initialGroup.id)
+        }
+      }
+    } else if (step === 1) {
+      // Optional: keep groups if user just wants to edit info, 
+      // but clear if they change away from grouped activities
+      if (!isGrouped) {
+        setGroups([])
+        setActiveGroupId(null)
       }
     }
-  }, [step, isGrouped, judulKegiatan, groups.length])
+  }, [step, isGrouped, judulKegiatan])
 
   // Get accessible organizations based on role
   const accessibleOrgs = useMemo(() => getAccessibleOrgs(user.role), [user.role])
@@ -136,23 +151,25 @@ export default function AmbilSiswaClient({ user }: Props) {
       return
     }
 
+    const controller = new AbortController()
+
     async function loadStudents() {
       setLoadingStudents(true)
       try {
         const orgsToLoad = selectedOrgs.filter((org) => accessibleOrgs.includes(org))
         const fetchPromises = orgsToLoad.map(async (org) => {
           let res
+          const signal = controller.signal
           if (org === 'osis' || org === 'mpk') {
-            res = await fetch(`/api/organisasi?tipe=${org}&limit=1000`)
+            res = await fetch(`/api/organisasi?tipe=${org}&limit=1000`, { signal })
           } else {
-            res = await fetch(`/api/siswa?ekskul=${org}&limit=1000`)
+            res = await fetch(`/api/siswa?ekskul=${org}&limit=1000`, { signal })
           }
           
           const json = await res.json()
           if (!res.ok) throw new Error(json.error || `Gagal memuat data ${org.toUpperCase()}`)
           
           const list: Member[] = json.data || []
-          // Decorate members with their source organization
           return list.map((m) => ({ ...m, org }))
         })
 
@@ -160,16 +177,16 @@ export default function AmbilSiswaClient({ user }: Props) {
         const failedOrgs: string[] = []
         const combined = settledResults.flatMap((result, idx) => {
           if (result.status === 'fulfilled') return result.value
-          failedOrgs.push(orgsToLoad[idx])
+          if (result.reason.name !== 'AbortError') {
+            failedOrgs.push(orgsToLoad[idx])
+          }
           return []
         })
         
-        // Sort combined list alphabetically by name
         combined.sort((a, b) => a.nama.localeCompare(b.nama))
         
         setStudents(combined)
         
-        // If not grouped, select all by default
         if (!isGrouped) {
           setSelectedSiswaKeys(combined.map(s => `${s.org}-${s.id}`))
         } else {
@@ -181,13 +198,19 @@ export default function AmbilSiswaClient({ user }: Props) {
           toast.error(`Sebagian data gagal dimuat: ${failedOrgs.join(', ').toUpperCase()}`)
         }
       } catch (err: any) {
-        toast.error(err.message || 'Gagal memuat data siswa')
+        if (err.name !== 'AbortError') {
+          toast.error(err.message || 'Gagal memuat data siswa')
+        }
       } finally {
         setLoadingStudents(false)
       }
     }
 
     loadStudents()
+
+    return () => {
+      controller.abort()
+    }
   }, [selectedOrgs, accessibleOrgs, isGrouped])
 
   // Get all keys used in any group

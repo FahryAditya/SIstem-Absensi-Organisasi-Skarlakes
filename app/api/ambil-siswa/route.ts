@@ -59,27 +59,41 @@ export async function POST(req: NextRequest) {
     const sheetData: any[][] = []
 
     if (isGrouped && groups) {
-      for (const group of groups) {
-        // Fetch details for each student in the group
-        const groupMembers: any[] = []
-        
-        for (const s of group.siswa) {
-          let memberData: any = null
-          if (s.org === 'osis') {
-            memberData = await prisma.anggotaOsis.findUnique({ where: { id: s.id } })
-          } else if (s.org === 'mpk') {
-            memberData = await prisma.anggotaMpk.findUnique({ where: { id: s.id } })
-          } else {
-            memberData = await prisma.siswa.findUnique({ where: { id: s.id } })
+      // Gather all student IDs by organization across all groups to fetch them in batch
+      const allSiswaIdsByOrg: Record<string, number[]> = { osis: [], mpk: [], programming: [], english: [] }
+      groups.forEach(g => {
+        g.siswa.forEach(s => {
+          if (!allSiswaIdsByOrg[s.org].includes(s.id)) {
+            allSiswaIdsByOrg[s.org].push(s.id)
           }
+        })
+      })
 
-          if (memberData) {
-            groupMembers.push({
-              nama: memberData.nama,
-              kelas: memberData.kelas || '-',
-              org: s.org.toUpperCase(),
-            })
-          }
+      // Batch fetch all required members
+      const memberMap: Record<string, any> = {}
+      
+      if (allSiswaIdsByOrg.osis.length > 0) {
+        const data = await prisma.anggotaOsis.findMany({ where: { id: { in: allSiswaIdsByOrg.osis } } })
+        data.forEach(m => { memberMap[`osis-${m.id}`] = { nama: m.nama, kelas: m.kelas || '-', org: 'OSIS' } })
+      }
+      if (allSiswaIdsByOrg.mpk.length > 0) {
+        const data = await prisma.anggotaMpk.findMany({ where: { id: { in: allSiswaIdsByOrg.mpk } } })
+        data.forEach(m => { memberMap[`mpk-${m.id}`] = { nama: m.nama, kelas: m.kelas || '-', org: 'MPK' } })
+      }
+      if (allSiswaIdsByOrg.programming.length > 0) {
+        const data = await prisma.siswa.findMany({ where: { id: { in: allSiswaIdsByOrg.programming } } })
+        data.forEach(m => { memberMap[`programming-${m.id}`] = { nama: m.nama, kelas: m.kelas || '-', org: 'PROGRAMMING' } })
+      }
+      if (allSiswaIdsByOrg.english.length > 0) {
+        const data = await prisma.siswa.findMany({ where: { id: { in: allSiswaIdsByOrg.english } } })
+        data.forEach(m => { memberMap[`english-${m.id}`] = { nama: m.nama, kelas: m.kelas || '-', org: 'ENGLISH' } })
+      }
+
+      for (const group of groups) {
+        const groupMembers: any[] = []
+        for (const s of group.siswa) {
+          const m = memberMap[`${s.org}-${s.id}`]
+          if (m) groupMembers.push(m)
         }
 
         // Sort members alphabetically
@@ -94,35 +108,38 @@ export async function POST(req: NextRequest) {
             idx + 1,
             m.nama,
             m.kelas,
-            (m.org === 'OSIS' ? '🔵 ' : m.org === 'MPK' ? '🔴 ' : '⚫ ') + m.org
+            m.org
           ])
         })
         
-        // Add spacing between groups
         sheetData.push([])
         sheetData.push([])
       }
     } else if (siswaSelections) {
-      // Original behavior for non-grouped
-      let members: any[] = []
-      
-      for (const s of siswaSelections) {
-        let memberData: any = null
-        if (s.org === 'osis') {
-          memberData = await prisma.anggotaOsis.findUnique({ where: { id: s.id } })
-        } else if (s.org === 'mpk') {
-          memberData = await prisma.anggotaMpk.findUnique({ where: { id: s.id } })
-        } else {
-          memberData = await prisma.siswa.findUnique({ where: { id: s.id } })
+      // Original behavior for non-grouped, also optimized to batch
+      const allSiswaIdsByOrg: Record<string, number[]> = { osis: [], mpk: [], programming: [], english: [] }
+      siswaSelections.forEach(s => {
+        if (!allSiswaIdsByOrg[s.org].includes(s.id)) {
+          allSiswaIdsByOrg[s.org].push(s.id)
         }
+      })
 
-        if (memberData) {
-          members.push({
-            nama: memberData.nama,
-            kelas: memberData.kelas || '-',
-            org: s.org.toUpperCase(),
-          })
-        }
+      const members: any[] = []
+      if (allSiswaIdsByOrg.osis.length > 0) {
+        const data = await prisma.anggotaOsis.findMany({ where: { id: { in: allSiswaIdsByOrg.osis } } })
+        members.push(...data.map(m => ({ nama: m.nama, kelas: m.kelas || '-', org: 'OSIS' })))
+      }
+      if (allSiswaIdsByOrg.mpk.length > 0) {
+        const data = await prisma.anggotaMpk.findMany({ where: { id: { in: allSiswaIdsByOrg.mpk } } })
+        members.push(...data.map(m => ({ nama: m.nama, kelas: m.kelas || '-', org: 'MPK' })))
+      }
+      if (allSiswaIdsByOrg.programming.length > 0) {
+        const data = await prisma.siswa.findMany({ where: { id: { in: allSiswaIdsByOrg.programming } } })
+        members.push(...data.map(m => ({ nama: m.nama, kelas: m.kelas || '-', org: 'PROGRAMMING' })))
+      }
+      if (allSiswaIdsByOrg.english.length > 0) {
+        const data = await prisma.siswa.findMany({ where: { id: { in: allSiswaIdsByOrg.english } } })
+        members.push(...data.map(m => ({ nama: m.nama, kelas: m.kelas || '-', org: 'ENGLISH' })))
       }
 
       members.sort((a, b) => a.nama.localeCompare(b.nama))
@@ -135,12 +152,19 @@ export async function POST(req: NextRequest) {
           idx + 1,
           m.nama,
           m.kelas,
-          (m.org === 'OSIS' ? '🔵 ' : m.org === 'MPK' ? '🔴 ' : '⚫ ') + m.org
+          m.org
         ])
       })
     }
 
     const ws = XLSX.utils.aoa_to_sheet(sheetData)
+
+    // Apply basic cell styling if possible with xlsx (limited in standard version)
+    // We will set background colors for the Organisasi cells based on their content
+    // Note: Standard 'xlsx' does not support cell styling (colors).
+    // To support colors, we would need 'xlsx-js-style' or 'exceljs'.
+    // However, I will implement the data changes first and use standard text.
+
     ws['!cols'] = [
       { wch: 6 },  // No
       { wch: 40 }, // Nama
