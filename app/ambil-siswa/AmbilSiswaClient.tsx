@@ -4,7 +4,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { getAccessibleOrgs } from '@/lib/auth-shared'
 import { 
   Building2, Users, ScrollText, Search, ArrowRight, ArrowLeft, 
-  Download, Loader2, CheckCircle2, ChevronRight, Sparkles, AlertCircle
+  Download, Loader2, CheckCircle2, ChevronRight, Sparkles, AlertCircle,
+  Plus, X, LayoutGrid
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -70,9 +71,15 @@ const PREDEFINED_ACTIVITIES = [
   'Jumat Religius',
   'Jumat Pramuka',
   'Petugas Upacara',
-  'Panitia (Bisa Costume)',
+  'Panitia Costume',
   'Piket Kebersihan & Penyambutan',
 ]
+
+interface Group {
+  id: string
+  name: string
+  studentKeys: string[]
+}
 
 export default function AmbilSiswaClient({ user }: Props) {
   const [step, setStep] = useState<number>(1)
@@ -86,6 +93,30 @@ export default function AmbilSiswaClient({ user }: Props) {
   const [selectedSiswaKeys, setSelectedSiswaKeys] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [downloading, setDownloading] = useState<boolean>(false)
+
+  // Grouped selection state
+  const [groups, setGroups] = useState<Group[]>([])
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null)
+
+  const isGrouped = judulKegiatan === 'Panitia Costume' || judulKegiatan === 'Piket Kebersihan & Penyambutan'
+
+  // Initialize groups when moving to step 2
+  useEffect(() => {
+    if (step === 2 && isGrouped && groups.length === 0) {
+      if (judulKegiatan === 'Piket Kebersihan & Penyambutan') {
+        const initialGroups = [
+          { id: 'piket-1', name: 'Penyambutan', studentKeys: [] },
+          { id: 'piket-2', name: 'Kebersihan', studentKeys: [] }
+        ]
+        setGroups(initialGroups)
+        setActiveGroupId('piket-1')
+      } else if (judulKegiatan === 'Panitia Costume') {
+        const initialGroup = { id: Math.random().toString(36).substr(2, 9), name: '', studentKeys: [] }
+        setGroups([initialGroup])
+        setActiveGroupId(initialGroup.id)
+      }
+    }
+  }, [step, isGrouped, judulKegiatan, groups.length])
 
   // Get accessible organizations based on role
   const accessibleOrgs = useMemo(() => getAccessibleOrgs(user.role), [user.role])
@@ -137,8 +168,14 @@ export default function AmbilSiswaClient({ user }: Props) {
         combined.sort((a, b) => a.nama.localeCompare(b.nama))
         
         setStudents(combined)
-        // Reset selected state and select all by default using the unique compound key org-id
-        setSelectedSiswaKeys(combined.map(s => `${s.org}-${s.id}`))
+        
+        // If not grouped, select all by default
+        if (!isGrouped) {
+          setSelectedSiswaKeys(combined.map(s => `${s.org}-${s.id}`))
+        } else {
+          setSelectedSiswaKeys([])
+          setGroups(prev => prev.map(g => ({ ...g, studentKeys: [] })))
+        }
 
         if (failedOrgs.length > 0) {
           toast.error(`Sebagian data gagal dimuat: ${failedOrgs.join(', ').toUpperCase()}`)
@@ -151,48 +188,100 @@ export default function AmbilSiswaClient({ user }: Props) {
     }
 
     loadStudents()
-  }, [selectedOrgs, accessibleOrgs])
+  }, [selectedOrgs, accessibleOrgs, isGrouped])
 
-  // Filter students based on search query
+  // Get all keys used in any group
+  const allUsedKeys = useMemo(() => {
+    return groups.flatMap(g => g.studentKeys)
+  }, [groups])
+
+  // Filter students based on search query AND exclusion (if grouped)
   const filteredStudents = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
-    if (!query) return students
-    return students.filter(s => 
-      s.nama.toLowerCase().includes(query) || 
-      (s.kelas && s.kelas.toLowerCase().includes(query)) ||
-      (s.nis && s.nis.includes(query))
-    )
-  }, [students, searchQuery])
+    
+    return students.filter(s => {
+      const key = `${s.org}-${s.id}`
+      // If grouped, exclude students already in OTHER groups
+      // But KEEP students in the CURRENT active group so they can be deselected
+      const activeGroup = groups.find(g => g.id === activeGroupId)
+      const isUsedByOthers = allUsedKeys.includes(key) && !(activeGroup?.studentKeys.includes(key))
+      
+      if (isGrouped && isUsedByOthers) return false
+
+      if (!query) return true
+      
+      return s.nama.toLowerCase().includes(query) || 
+             (s.kelas && s.kelas.toLowerCase().includes(query)) ||
+             (s.nis && s.nis.includes(query))
+    })
+  }, [students, searchQuery, groups, activeGroupId, allUsedKeys, isGrouped])
 
   // Toggle single checkbox selection using unique compound key
   const handleToggleSiswa = (key: string) => {
-    setSelectedSiswaKeys(prev => 
-      prev.includes(key) ? prev.filter(item => item !== key) : [...prev, key]
-    )
+    if (isGrouped && activeGroupId) {
+      setGroups(prev => prev.map(g => {
+        if (g.id === activeGroupId) {
+          const isSelected = g.studentKeys.includes(key)
+          return {
+            ...g,
+            studentKeys: isSelected 
+              ? g.studentKeys.filter(k => k !== key) 
+              : [...g.studentKeys, key]
+          }
+        }
+        return g
+      }))
+    } else {
+      setSelectedSiswaKeys(prev => 
+        prev.includes(key) ? prev.filter(item => item !== key) : [...prev, key]
+      )
+    }
   }
 
   // Toggle select all filtered students
   const handleToggleSelectAll = () => {
     const filteredKeys = filteredStudents.map(s => `${s.org}-${s.id}`)
-    const allSelected = filteredKeys.every(k => selectedSiswaKeys.includes(k))
+    
+    if (isGrouped && activeGroupId) {
+      const activeGroup = groups.find(g => g.id === activeGroupId)
+      const allSelected = filteredKeys.every(k => activeGroup?.studentKeys.includes(k))
 
-    if (allSelected) {
-      // Deselect all filtered
-      setSelectedSiswaKeys(prev => prev.filter(k => !filteredKeys.includes(k)))
+      setGroups(prev => prev.map(g => {
+        if (g.id === activeGroupId) {
+          if (allSelected) {
+            return { ...g, studentKeys: g.studentKeys.filter(k => !filteredKeys.includes(k)) }
+          } else {
+            const unique = new Set([...g.studentKeys, ...filteredKeys])
+            return { ...g, studentKeys: Array.from(unique) }
+          }
+        }
+        return g
+      }))
     } else {
-      // Select all filtered (keeping previously selected ones outside of filter)
-      setSelectedSiswaKeys(prev => {
-        const unique = new Set([...prev, ...filteredKeys])
-        return Array.from(unique)
-      })
+      const allSelected = filteredKeys.every(k => selectedSiswaKeys.includes(k))
+      if (allSelected) {
+        setSelectedSiswaKeys(prev => prev.filter(k => !filteredKeys.includes(k)))
+      } else {
+        setSelectedSiswaKeys(prev => {
+          const unique = new Set([...prev, ...filteredKeys])
+          return Array.from(unique)
+        })
+      }
     }
   }
 
   // Check if all filtered students are selected
   const isAllFilteredSelected = useMemo(() => {
     if (filteredStudents.length === 0) return false
-    return filteredStudents.map(s => `${s.org}-${s.id}`).every(k => selectedSiswaKeys.includes(k))
-  }, [filteredStudents, selectedSiswaKeys])
+    const filteredKeys = filteredStudents.map(s => `${s.org}-${s.id}`)
+    
+    if (isGrouped && activeGroupId) {
+      const activeGroup = groups.find(g => g.id === activeGroupId)
+      return filteredKeys.every(k => activeGroup?.studentKeys.includes(k))
+    }
+    
+    return filteredKeys.every(k => selectedSiswaKeys.includes(k))
+  }, [filteredStudents, selectedSiswaKeys, isGrouped, activeGroupId, groups])
 
   // Handle organization selector grid click (supports multiple selection)
   const handleToggleOrg = (orgKey: string) => {
@@ -216,29 +305,81 @@ export default function AmbilSiswaClient({ user }: Props) {
     setStep(2)
   }
 
+  const addGroup = () => {
+    if (groups.length >= 5) {
+      toast.error('Maksimal 5 kelompok panitia')
+      return
+    }
+    const newGroup = { id: Math.random().toString(36).substr(2, 9), name: '', studentKeys: [] }
+    setGroups([...groups, newGroup])
+    setActiveGroupId(newGroup.id)
+  }
+
+  const removeGroup = (id: string) => {
+    if (groups.length <= 1 && judulKegiatan === 'Panitia Costume') {
+      toast.error('Minimal harus ada 1 kelompok')
+      return
+    }
+    const filtered = groups.filter(g => g.id !== id)
+    setGroups(filtered)
+    if (activeGroupId === id) {
+      setActiveGroupId(filtered[0]?.id || null)
+    }
+  }
+
+  const updateGroupName = (id: string, name: string) => {
+    setGroups(prev => prev.map(g => g.id === id ? { ...g, name } : g))
+  }
+
   // Handle Excel download submit
   const handleCetakExcel = async () => {
-    if (selectedSiswaKeys.length === 0) {
-      toast.error('Pilih minimal satu siswa/anggota untuk dicetak')
-      return
+    let finalSiswaSelections: any[] = []
+    let finalGroups: any[] = []
+
+    if (isGrouped) {
+      // Validate groups
+      const emptyName = groups.find(g => !g.name.trim())
+      if (emptyName) {
+        toast.error('Semua nama kelompok harus diisi')
+        return
+      }
+      const noStudents = groups.find(g => g.studentKeys.length === 0)
+      if (noStudents) {
+        toast.error(`Kelompok "${noStudents.name}" belum memiliki anggota`)
+        return
+      }
+
+      finalGroups = groups.map(g => ({
+        name: g.name,
+        siswa: g.studentKeys.map(key => {
+          const [org, idStr] = key.split('-')
+          return { org, id: parseInt(idStr) }
+        })
+      }))
+    } else {
+      if (selectedSiswaKeys.length === 0) {
+        toast.error('Pilih minimal satu siswa/anggota untuk dicetak')
+        return
+      }
+      finalSiswaSelections = selectedSiswaKeys.map(key => {
+        const [org, idStr] = key.split('-')
+        return { org, id: parseInt(idStr) }
+      })
     }
 
     setDownloading(true)
     const t = toast.loading('Sedang merancang file Excel lembar kehadiran...')
 
     try {
-      const siswaSelections = selectedSiswaKeys.map(key => {
-        const [org, idStr] = key.split('-')
-        return { org, id: parseInt(idStr) }
-      })
-
       const res = await fetch('/api/ambil-siswa', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           orgs: selectedOrgs,
           judulKegiatan: judulKegiatan.trim(),
-          siswaSelections,
+          siswaSelections: finalSiswaSelections,
+          groups: finalGroups,
+          isGrouped
         }),
       })
 
@@ -286,6 +427,8 @@ export default function AmbilSiswaClient({ user }: Props) {
   const orgDisplayText = useMemo(() => {
     return selectedOrgs.map(o => o.toUpperCase()).join(' & ')
   }, [selectedOrgs])
+
+  const totalSelected = isGrouped ? allUsedKeys.length : selectedSiswaKeys.length
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-10">
@@ -519,6 +662,100 @@ export default function AmbilSiswaClient({ user }: Props) {
             </div>
           </div>
 
+          {/* Group Management UI */}
+          {isGrouped && (
+            <div className="space-y-4 bg-white/5 p-4 rounded-xl border border-white/10">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <LayoutGrid className="w-4 h-4 text-persian-blue" /> Daftar Kelompok / Bagian
+                </h4>
+                {judulKegiatan === 'Panitia Costume' && groups.length < 5 && (
+                  <button onClick={addGroup} className="btn-secondary text-[10px] py-1 px-3">
+                    <Plus className="w-3 h-3" /> Tambah Kelompok
+                  </button>
+                )}
+              </div>
+              
+              <div className="flex flex-wrap gap-2">
+                {groups.map((group) => (
+                  <div key={group.id} className="relative group">
+                    <button
+                      onClick={() => setActiveGroupId(group.id)}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2 ${
+                        activeGroupId === group.id 
+                          ? 'bg-persian-blue/10 border-persian-blue text-white ring-2 ring-persian-blue/20' 
+                          : 'bg-deep-navy border-white/10 text-slate-400 hover:border-white/20'
+                      }`}
+                    >
+                      {activeGroupId === group.id ? (
+                        <input
+                          autoFocus
+                          value={group.name}
+                          onChange={(e) => updateGroupName(group.id, e.target.value)}
+                          placeholder="Nama Kelompok..."
+                          className="bg-transparent border-none p-0 focus:ring-0 w-32 placeholder:text-slate-500"
+                          readOnly={judulKegiatan === 'Piket Kebersihan & Penyambutan'}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      ) : (
+                        <span>{group.name || '(Tanpa Nama)'}</span>
+                      )}
+                      <span className="bg-white/10 px-1.5 py-0.5 rounded text-[10px]">{group.studentKeys.length}</span>
+                    </button>
+                    {judulKegiatan === 'Panitia Costume' && groups.length > 1 && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); removeGroup(group.id); }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Group Students Preview */}
+              {activeGroupId && (
+                <div className="mt-4 border-t border-white/5 pt-4 animate-in fade-in slide-in-from-top-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <h5 className="text-[10px] font-black text-slate-400 uppercase">
+                      Anggota Terpilih di Kelompok: {groups.find(g => g.id === activeGroupId)?.name || '...'}
+                    </h5>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {groups.find(g => g.id === activeGroupId)?.studentKeys.map(key => {
+                      const s = students.find(item => `${item.org}-${item.id}` === key)
+                      if (!s) return null
+                      return (
+                        <div key={key} className="flex items-center justify-between bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 text-[10px]">
+                          <div className="truncate pr-2">
+                            <span className="font-bold text-white block truncate">{s.nama}</span>
+                            <span className="text-slate-500 block truncate">{s.kelas || '-'} • {s.org?.toUpperCase()}</span>
+                          </div>
+                          <button 
+                            onClick={() => handleToggleSiswa(key)}
+                            className="text-red-400 hover:text-red-300 p-1"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )
+                    })}
+                    {groups.find(g => g.id === activeGroupId)?.studentKeys.length === 0 && (
+                      <div className="col-span-full py-4 text-center text-slate-500 font-medium text-[10px] border border-dashed border-white/10 rounded-xl">
+                        Belum ada anggota yang dipilih untuk kelompok ini.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <p className="text-[10px] text-slate-400 font-medium italic">
+                * Pilih kelompok di atas, lalu centang siswa di tabel bawah. Siswa yang sudah dipilih di kelompok lain tidak akan muncul kembali.
+              </p>
+            </div>
+          )}
+
           {/* Search bar + select all indicator */}
           <div className="flex items-center justify-between gap-3 flex-wrap bg-white/5 p-3 rounded-xl border border-white/10">
             <div className="relative flex-1 min-w-[220px]">
@@ -536,7 +773,7 @@ export default function AmbilSiswaClient({ user }: Props) {
             {/* selection stats */}
             <div className="flex items-center gap-3">
               <span className={`badge border text-xs font-bold ${activeTheme.badge}`}>
-                Terpilih: {selectedSiswaKeys.length} / {students.length} Anggota
+                Terpilih: {totalSelected} / {students.length} Anggota
               </span>
               <button 
                 onClick={handleToggleSelectAll} 
@@ -588,7 +825,8 @@ export default function AmbilSiswaClient({ user }: Props) {
                   <tbody className="divide-y divide-slate-100">
                     {filteredStudents.map((siswa, idx) => {
                       const key = `${siswa.org}-${siswa.id}`
-                      const isSelected = selectedSiswaKeys.includes(key)
+                      const activeGroup = groups.find(g => g.id === activeGroupId)
+                      const isSelected = isGrouped ? activeGroup?.studentKeys.includes(key) : selectedSiswaKeys.includes(key)
                       const itemNo = idx + 1
                       return (
                         <tr 
@@ -648,9 +886,9 @@ export default function AmbilSiswaClient({ user }: Props) {
 
             <button
               onClick={handleCetakExcel}
-              disabled={downloading || selectedSiswaKeys.length === 0}
+              disabled={downloading || totalSelected === 0}
               className={`btn-primary flex items-center gap-2 shadow-sm font-bold transition-all px-6 py-2.5 rounded-xl ${
-                downloading || selectedSiswaKeys.length === 0
+                downloading || totalSelected === 0
                   ? 'opacity-50 cursor-not-allowed bg-slate-300 border-slate-300 text-slate-400'
                   : `${activeTheme.iconBg} border-transparent text-white hover:opacity-90`
               }`}

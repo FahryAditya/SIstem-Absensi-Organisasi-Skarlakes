@@ -21,7 +21,19 @@ const reqSchema = z.object({
       org: z.enum(['osis', 'mpk', 'programming', 'english']),
       id: z.number(),
     })
-  ).min(1, 'Pilih minimal satu siswa/anggota'),
+  ).optional(),
+  groups: z.array(
+    z.object({
+      name: z.string(),
+      siswa: z.array(
+        z.object({
+          org: z.enum(['osis', 'mpk', 'programming', 'english']),
+          id: z.number(),
+        })
+      ),
+    })
+  ).optional(),
+  isGrouped: z.boolean().optional(),
 })
 
 export async function POST(req: NextRequest) {
@@ -34,7 +46,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
     }
 
-    const { orgs, judulKegiatan, siswaSelections } = parsed.data
+    const { orgs, judulKegiatan, siswaSelections, groups, isGrouped } = parsed.data
 
     // Authorization check
     const accessible = getAccessibleOrgs(ctx.userRole)
@@ -43,161 +55,97 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Akses ditolak untuk satu atau lebih unit/organisasi terpilih' }, { status: 403 })
     }
 
-    // Fetch student data based on organization selections
-    let members: Array<{ nis: string | null; nama: string; kelas: string | null; extra: string }> = []
-
-    interface MemberWithJabatan {
-      nis: string | null
-      nama: string
-      kelas: string | null
-      jabatan: string | null
-    }
-
-    interface BasicMember {
-      nis: string | null
-      nama: string
-      kelas: string | null
-    }
-
-    const osisIds = siswaSelections.filter((s) => s.org === 'osis').map((s) => s.id)
-    const mpkIds = siswaSelections.filter((s) => s.org === 'mpk').map((s) => s.id)
-    const programmingIds = siswaSelections.filter((s) => s.org === 'programming').map((s) => s.id)
-    const englishIds = siswaSelections.filter((s) => s.org === 'english').map((s) => s.id)
-
-    if (osisIds.length > 0) {
-      const data = await prisma.anggotaOsis.findMany({
-        where: { id: { in: osisIds } },
-        orderBy: { nama: 'asc' },
-      })
-      members.push(
-        ...(data as unknown as MemberWithJabatan[]).map((m) => ({
-          nis: m.nis,
-          nama: m.nama,
-          kelas: m.kelas,
-          extra: `OSIS - ${m.jabatan || 'Anggota'}`,
-        }))
-      )
-    }
-
-    if (mpkIds.length > 0) {
-      const data = await prisma.anggotaMpk.findMany({
-        where: { id: { in: mpkIds } },
-        orderBy: { nama: 'asc' },
-      })
-      members.push(
-        ...(data as unknown as MemberWithJabatan[]).map((m) => ({
-          nis: m.nis,
-          nama: m.nama,
-          kelas: m.kelas,
-          extra: `MPK - ${m.jabatan || 'Anggota'}`,
-        }))
-      )
-    }
-
-    if (programmingIds.length > 0) {
-      const data = await prisma.siswa.findMany({
-        where: { id: { in: programmingIds }, ekskul: 'programming' },
-        orderBy: { nama: 'asc' },
-      })
-      members.push(
-        ...(data as unknown as BasicMember[]).map((m) => ({
-          nis: m.nis,
-          nama: m.nama,
-          kelas: m.kelas,
-          extra: 'Programming',
-        }))
-      )
-    }
-
-    if (englishIds.length > 0) {
-      const data = await prisma.siswa.findMany({
-        where: { id: { in: englishIds }, ekskul: 'english' },
-        orderBy: { nama: 'asc' },
-      })
-      members.push(
-        ...(data as unknown as BasicMember[]).map((m) => ({
-          nis: m.nis,
-          nama: m.nama,
-          kelas: m.kelas,
-          extra: 'English Club',
-        }))
-      )
-    }
-
-    // Sort all combined members alphabetically by name
-    members.sort((a, b) => a.nama.localeCompare(b.nama))
-
-    if (members.length === 0) {
-      return NextResponse.json({ error: 'Tidak ada data siswa terpilih yang ditemukan' }, { status: 400 })
-    }
-
-    // Build Excel using xlsx
     const wb = XLSX.utils.book_new()
-    const orgLabelText = orgs.map((o) => o.toUpperCase()).join(', ')
+    const sheetData: any[][] = []
 
-    // Create custom AOA (Array of Arrays) for premium print styling
-    const sheetData: any[][] = [
-      ['YAYASAN AIRLANGGA BALIKPAPAN'],
-      ['SMK KESEHATAN AIRLANGGA'],
-      ['DAFTAR HADIR KEGIATAN KESISWAAN / EKSTRAKURIKULER'],
-      [],
-      ['Kegiatan', `: ${judulKegiatan}`],
-      ['Unit / Organisasi', `: ${orgLabelText}`],
-      ['Tanggal Cetak', `: ${new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`],
-      [],
-      [
-        'NO',
-        'NIS',
-        'NAMA LENGKAP',
-        'KELAS',
-        'JABATAN / EKSKUL',
-        'TANDA TANGAN (GANJIL)',
-        'TANDA TANGAN (GENAP)',
-        'KETERANGAN',
-      ],
-    ]
+    if (isGrouped && groups) {
+      for (const group of groups) {
+        // Fetch details for each student in the group
+        const groupMembers: any[] = []
+        
+        for (const s of group.siswa) {
+          let memberData: any = null
+          if (s.org === 'osis') {
+            memberData = await prisma.anggotaOsis.findUnique({ where: { id: s.id } })
+          } else if (s.org === 'mpk') {
+            memberData = await prisma.anggotaMpk.findUnique({ where: { id: s.id } })
+          } else {
+            memberData = await prisma.siswa.findUnique({ where: { id: s.id } })
+          }
 
-    // Fill members with alternating signature spots
-    members.forEach((m, idx) => {
-      const no = idx + 1
-      const ttdGanjil = no % 2 !== 0 ? `${no}. ............................` : ''
-      const ttdGenap = no % 2 === 0 ? `${no}. ............................` : ''
+          if (memberData) {
+            groupMembers.push({
+              nama: memberData.nama,
+              kelas: memberData.kelas || '-',
+              org: s.org.toUpperCase(),
+            })
+          }
+        }
 
-      sheetData.push([
-        no,
-        m.nis || '-',
-        m.nama,
-        m.kelas || '-',
-        m.extra,
-        ttdGanjil,
-        ttdGenap,
-        '', // empty for remarks
-      ])
-    })
+        // Sort members alphabetically
+        groupMembers.sort((a, b) => a.nama.localeCompare(b.nama))
 
-    // Add empty space for signatures of organizers/ pembina
-    sheetData.push([])
-    sheetData.push([])
-    sheetData.push(['', '', '', '', '', '', 'Balikpapan, ' + new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })])
-    sheetData.push(['', '', '', '', '', '', 'Mengetahui,'])
-    sheetData.push(['', '', '', '', '', '', 'Pembina / Penanggung Jawab'])
-    sheetData.push([])
-    sheetData.push([])
-    sheetData.push([])
-    sheetData.push(['', '', '', '', '', '', '( ___________________________ )'])
+        // Add Boxed Header for the group
+        sheetData.push(['PANITIA: ' + group.name.toUpperCase()])
+        sheetData.push(['No', 'Nama', 'Kelas', 'Organisasi'])
+        
+        groupMembers.forEach((m, idx) => {
+          sheetData.push([
+            idx + 1,
+            m.nama,
+            m.kelas,
+            (m.org === 'OSIS' ? '🔵 ' : m.org === 'MPK' ? '🔴 ' : '⚫ ') + m.org
+          ])
+        })
+        
+        // Add spacing between groups
+        sheetData.push([])
+        sheetData.push([])
+      }
+    } else if (siswaSelections) {
+      // Original behavior for non-grouped
+      let members: any[] = []
+      
+      for (const s of siswaSelections) {
+        let memberData: any = null
+        if (s.org === 'osis') {
+          memberData = await prisma.anggotaOsis.findUnique({ where: { id: s.id } })
+        } else if (s.org === 'mpk') {
+          memberData = await prisma.anggotaMpk.findUnique({ where: { id: s.id } })
+        } else {
+          memberData = await prisma.siswa.findUnique({ where: { id: s.id } })
+        }
+
+        if (memberData) {
+          members.push({
+            nama: memberData.nama,
+            kelas: memberData.kelas || '-',
+            org: s.org.toUpperCase(),
+          })
+        }
+      }
+
+      members.sort((a, b) => a.nama.localeCompare(b.nama))
+
+      sheetData.push(['DAFTAR HADIR KEGIATAN: ' + judulKegiatan.toUpperCase()])
+      sheetData.push(['No', 'Nama', 'Kelas', 'Organisasi'])
+      
+      members.forEach((m, idx) => {
+        sheetData.push([
+          idx + 1,
+          m.nama,
+          m.kelas,
+          (m.org === 'OSIS' ? '🔵 ' : m.org === 'MPK' ? '🔴 ' : '⚫ ') + m.org
+        ])
+      })
+    }
 
     const ws = XLSX.utils.aoa_to_sheet(sheetData)
-
-    // Set custom column widths for beautiful alignment
     ws['!cols'] = [
-      { wch: 6 },  // NO
-      { wch: 15 }, // NIS
-      { wch: 30 }, // NAMA LENGKAP
-      { wch: 15 }, // KELAS
-      { wch: 22 }, // JABATAN / EKSKUL
-      { wch: 25 }, // TANDA TANGAN (GANJIL)
-      { wch: 25 }, // TANDA TANGAN (GENAP)
-      { wch: 20 }, // KETERANGAN
+      { wch: 6 },  // No
+      { wch: 40 }, // Nama
+      { wch: 15 }, // Kelas
+      { wch: 20 }, // Organisasi
     ]
 
     XLSX.utils.book_append_sheet(wb, ws, 'Daftar Hadir')
@@ -208,13 +156,13 @@ export async function POST(req: NextRequest) {
       userNama: ctx.userNama,
       aksi: 'CREATE',
       tabel: 'export',
-      deskripsi: `${ctx.userNama} mengunduh Daftar Ambil Siswa untuk kegiatan "${judulKegiatan}" (${orgLabelText}) berisi ${members.length} anggota`,
-      dataBaru: { orgs, judulKegiatan, jumlahSiswa: members.length },
+      deskripsi: `${ctx.userNama} mengunduh Daftar Ambil Siswa untuk kegiatan "${judulKegiatan}"`,
+      dataBaru: { orgs, judulKegiatan },
       ipAddress: getIp(req),
     })
 
     const output = XLSX.write(wb, { type: 'array', bookType: 'xlsx' })
-    const filename = `ambil_siswa_gabungan_${new Date().toISOString().split('T')[0]}.xlsx`
+    const filename = `ambil_siswa_${new Date().toISOString().split('T')[0]}.xlsx`
 
     return new NextResponse(output, {
       headers: {
