@@ -303,13 +303,13 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
       {subTab === 'anggota' ? (
         <div className="space-y-4">
           <div className="flex justify-end gap-2">
-            <button 
+            {/* <button 
               onClick={() => window.location.href = `/admin/registration/acceptance?type=osis-mpk&org=${activeOrg}`}
               className="btn-secondary border-indigo-200 bg-indigo-50/50 hover:bg-indigo-100 text-indigo-600 font-bold"
             >
               <UserCheck className="w-4 h-4" />
               Lihat Calon Pendaftaran
-            </button>
+            </button> */}
             <button onClick={openAdd} className="btn-primary"><Plus className="w-4 h-4" />Tambah Anggota</button>
           </div>
           <Table columns={anggotaCols} data={anggota} loading={loadingAnggota}
