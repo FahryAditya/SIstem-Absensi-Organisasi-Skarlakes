@@ -20,6 +20,11 @@ export async function GET(req: NextRequest) {
 
     const accessibleOrgs = getAccessibleOrgs(ctx.userRole)
 
+    if (!accessibleOrgs || accessibleOrgs.length === 0) {
+      console.warn('[ADMIN REGISTRATION LIST] No accessible orgs for role:', ctx.userRole)
+      return NextResponse.json([])
+    }
+
     if (type === 'eskul') {
       const data = await prisma.registrationEskul.findMany({
         where: {
@@ -51,6 +56,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Tipe tidak valid' }, { status: 400 })
   } catch (error: any) {
     console.error('[ADMIN REGISTRATION LIST ERROR]', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Internal server error', 
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    }, { status: 500 })
   }
 }

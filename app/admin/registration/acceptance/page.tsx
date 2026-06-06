@@ -49,9 +49,20 @@ function AdminAcceptanceContent() {
     try {
       const res = await fetch(`/api/admin/registration/list?type=${type}&status=${status === 'SEMUA' ? '' : status}`)
       const result = await res.json()
-      setData(result)
+      
+      if (Array.isArray(result)) {
+        setData(result)
+      } else {
+        console.error('API returned non-array result:', result)
+        setData([])
+        if (result.error) {
+          alert(`Gagal mengambil data: ${result.error}`)
+        }
+      }
     } catch (err) {
       console.error(err)
+      setData([])
+      alert('Terjadi kesalahan koneksi saat mengambil data')
     } finally {
       setLoading(false)
     }
@@ -93,11 +104,15 @@ function AdminAcceptanceContent() {
     }
   }
 
-  const filteredData = data.filter(item => 
-    item.nama_peserta.toLowerCase().includes(query.toLowerCase()) ||
-    item.email_gmail.toLowerCase().includes(query.toLowerCase()) ||
-    item.organization.nama.toLowerCase().includes(query.toLowerCase())
-  )
+  const filteredData = (Array.isArray(data) ? data : []).filter(item => {
+    if (!item) return false
+    const searchStr = query.toLowerCase()
+    return (
+      item.nama_peserta?.toLowerCase().includes(searchStr) ||
+      item.email_gmail?.toLowerCase().includes(searchStr) ||
+      item.organization?.nama?.toLowerCase().includes(searchStr)
+    )
+  })
 
   const getStatusBadge = (s: string) => {
     switch (s) {
