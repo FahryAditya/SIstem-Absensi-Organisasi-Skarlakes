@@ -321,6 +321,12 @@ export default function AdminClient({ user }: Props) {
               Backup SQL
             </span>
           </button>
+          <button onClick={() => window.location.href = '/admin/registration/acceptance'} className="btn-secondary border-blue-200 bg-blue-50/50 hover:bg-blue-100">
+            <span className="flex items-center gap-2 text-blue-600 font-bold">
+              <UserCheck className="w-4 h-4" />
+              Penerimaan
+            </span>
+          </button>
           {user.role === 'administrator' && (
             <button onClick={() => setCleanupModalOpen(true)} className="btn-secondary text-red-600 border-red-200 hover:bg-red-50">
               <span className="flex items-center gap-2 font-semibold">

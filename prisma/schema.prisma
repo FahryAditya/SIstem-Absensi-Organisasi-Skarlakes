@@ -42,8 +42,126 @@ model Organization {
   id              Int             @id @default(autoincrement())
   nama            String          @db.VarChar(100)
   tipe            OrganisasiType
+  deskripsi       String?         @db.Text
+  hari_pertemuan  String?         @db.VarChar(20)
+  waktu_mulai     String?         @db.VarChar(10)
+  waktu_selesai   String?         @db.VarChar(10)
+  lokasi          String?         @db.VarChar(100)
+  ketua_id        Int?
   documentations  Documentation[]
+  
+  registrations_eskul    RegistrationEskul[]
+  registrations_osis_mpk RegistrationOsisMpk[]
+
   @@map("organizations")
+}
+
+model MasterKelas {
+  id            Int      @id @default(autoincrement())
+  kelas_nama    String   @unique @db.VarChar(10)
+  kelas_singkat String   @db.VarChar(5)
+  tingkat       String?  @db.VarChar(20)
+  created_at    DateTime @default(now())
+
+  @@map("master_kelas")
+}
+
+model MasterKejuruan {
+  id               Int        @id @default(autoincrement())
+  kejuruan_kode    String     @unique @db.VarChar(20)
+  kejuruan_nama    String     @db.VarChar(100)
+  kejuruan_singkat String     @db.VarChar(20)
+  skill_group      SkillGroup
+  created_at       DateTime   @default(now())
+
+  @@map("master_kejuruan")
+}
+
+enum SkillGroup {
+  SKARLA
+  SKAKES
+}
+
+model RegistrationEskul {
+  id               Int                @id @default(autoincrement())
+  organization_id  Int
+  nama_peserta     String             @db.VarChar(100)
+  kelas            String             @db.VarChar(50)
+  kejuruan         String             @db.VarChar(100)
+  email_gmail      String             @db.VarChar(100)
+  nisn             String?            @db.VarChar(20)
+  status           RegistrationStatus @default(MENUNGGU)
+  qr_token         String?            @unique @db.VarChar(255)
+  qr_token_expired DateTime?
+  accept_reason    String?            @db.Text
+  reject_reason    String?            @db.Text
+  accepted_by      Int?
+  accepted_at      DateTime?
+  rejected_by      Int?
+  rejected_at      DateTime?
+  email_sent_at    DateTime?
+  created_at       DateTime           @default(now())
+  updated_at       DateTime           @updatedAt
+
+  organization     Organization       @relation(fields: [organization_id], references: [id])
+  email_logs       EmailLogRegistration[]
+
+  @@unique([email_gmail, organization_id])
+  @@index([status])
+  @@map("registration_eskul")
+}
+
+model RegistrationOsisMpk {
+  id               Int                @id @default(autoincrement())
+  organization_id  Int
+  nama_peserta     String             @db.VarChar(100)
+  kelas            String             @db.VarChar(50)
+  kejuruan         String             @db.VarChar(100)
+  email_gmail      String             @db.VarChar(100)
+  nisn             String?            @db.VarChar(20)
+  status           RegistrationStatus @default(CALON)
+  qr_token         String?            @unique @db.VarChar(255)
+  qr_token_expired DateTime?
+  accept_reason    String?            @db.Text
+  reject_reason    String?            @db.Text
+  accepted_by      Int?
+  accepted_at      DateTime?
+  rejected_by      Int?
+  rejected_at      DateTime?
+  email_sent_at    DateTime?
+  created_at       DateTime           @default(now())
+  updated_at       DateTime           @updatedAt
+
+  organization     Organization       @relation(fields: [organization_id], references: [id])
+  email_logs       EmailLogRegistration[]
+
+  @@unique([email_gmail, organization_id])
+  @@index([status])
+  @@map("registration_osis_mpk")
+}
+
+model EmailLogRegistration {
+  id                  Int               @id @default(autoincrement())
+  registration_eskul_id   Int?
+  registration_osis_mpk_id Int?
+  recipient_email     String            @db.VarChar(100)
+  email_type          String            @db.VarChar(50) // 'confirmation', 'acceptance', 'rejection'
+  subject             String            @db.VarChar(255)
+  sent_at             DateTime          @default(now())
+  status              String            @default("sent") @db.VarChar(20)
+  error_message       String?           @db.Text
+
+  registration_eskul    RegistrationEskul?   @relation(fields: [registration_eskul_id], references: [id])
+  registration_osis_mpk RegistrationOsisMpk? @relation(fields: [registration_osis_mpk_id], references: [id])
+
+  @@map("email_log_registration")
+}
+
+enum RegistrationStatus {
+  MENUNGGU
+  DITERIMA
+  DITOLAK
+  CALON
 }
 
 model Documentation {
