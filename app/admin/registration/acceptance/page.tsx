@@ -48,21 +48,20 @@ function AdminAcceptanceContent() {
     setLoading(true)
     try {
       const res = await fetch(`/api/admin/registration/list?type=${type}&status=${status === 'SEMUA' ? '' : status}`)
-      const result = await res.json()
+      const result = await res.json().catch(() => ({ error: 'Respon server tidak valid (bukan JSON)' }))
       
-      if (Array.isArray(result)) {
+      if (res.ok && Array.isArray(result)) {
         setData(result)
       } else {
-        console.error('API returned non-array result:', result)
+        console.error('API Error Response:', result)
         setData([])
-        if (result.error) {
-          alert(`Gagal mengambil data: ${result.error}`)
-        }
+        const errDetail = result.message || result.error || 'Terjadi kesalahan internal'
+        alert(`Gagal mengambil data: ${errDetail}`)
       }
-    } catch (err) {
-      console.error(err)
+    } catch (err: any) {
+      console.error('Fetch Error:', err)
       setData([])
-      alert('Terjadi kesalahan koneksi saat mengambil data')
+      alert(`Terjadi kesalahan koneksi: ${err.message || 'Gagal menghubungi server'}`)
     } finally {
       setLoading(false)
     }
