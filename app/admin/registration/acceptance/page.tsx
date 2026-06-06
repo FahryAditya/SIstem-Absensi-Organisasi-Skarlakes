@@ -13,7 +13,8 @@ import {
   UserCheck,
   UserX,
   Clock,
-  ExternalLink
+  ExternalLink,
+  Link as LinkIcon
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
@@ -29,6 +30,7 @@ export default function AdminAcceptancePage() {
   const [showModal, setShowModal] = useState(false)
   const [modalType, setModalType] = useState<'accept' | 'reject'>('accept')
   const [reason, setReason] = useState('')
+  const [showLinksModal, setShowLinksModal] = useState(false)
 
   const fetchData = async () => {
     setLoading(true)
@@ -163,6 +165,14 @@ export default function AdminAcceptancePage() {
           {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Clock className="w-5 h-5" />}
           Refresh Data
         </button>
+
+        <button 
+          onClick={() => setShowLinksModal(true)}
+          className="bg-blue-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-200"
+        >
+          <LinkIcon className="w-5 h-5" />
+          Link Pendaftaran
+        </button>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
@@ -290,6 +300,80 @@ export default function AdminAcceptancePage() {
                   {processingId ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Konfirmasi'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showLinksModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-8 border-b border-slate-100 flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-800">Link Pendaftaran</h2>
+                <p className="text-sm text-slate-500">Gunakan link ini untuk disematkan pada QR Code atau dibagikan</p>
+              </div>
+              <button onClick={() => setShowLinksModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                <XCircle className="w-6 h-6 text-slate-400" />
+              </button>
+            </div>
+            
+            <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+              <div>
+                <h3 className="text-sm font-bold text-blue-600 uppercase tracking-widest mb-4">Ekstrakurikuler</h3>
+                <div className="grid gap-4">
+                  {[
+                    { name: 'Programming', link: '/registration/eskul?program=programming' },
+                    { name: 'English Club', link: '/registration/eskul?program=english' }
+                  ].map(l => (
+                    <div key={l.link} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between group">
+                      <div>
+                        <p className="font-bold text-slate-700">{l.name}</p>
+                        <p className="text-xs text-slate-400 font-mono">{l.link}</p>
+                      </div>
+                      <button 
+                        onClick={() => { navigator.clipboard.writeText(window.location.origin + l.link); alert('Link disalin!') }}
+                        className="p-2 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-bold text-indigo-600 uppercase tracking-widest mb-4">Organisasi</h3>
+                <div className="grid gap-4">
+                  {[
+                    { name: 'OSIS', link: '/registration/osis-mpk?org=osis' },
+                    { name: 'MPK', link: '/registration/osis-mpk?org=mpk' }
+                  ].map(l => (
+                    <div key={l.link} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between group">
+                      <div>
+                        <p className="font-bold text-slate-700">{l.name}</p>
+                        <p className="text-xs text-slate-400 font-mono">{l.link}</p>
+                      </div>
+                      <button 
+                        onClick={() => { navigator.clipboard.writeText(window.location.origin + l.link); alert('Link disalin!') }}
+                        className="p-2 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl text-xs text-amber-700 leading-relaxed">
+                <strong>Tips:</strong> Untuk menggunakan pelacakan token QR, tambahkan parameter <code className="bg-amber-100 px-1 rounded">&qr_token=KODE_UNIK</code> di akhir link. Contoh: <code className="bg-amber-100 px-1 rounded">.../eskul?program=programming&qr_token=poster_kantin</code>
+              </div>
+            </div>
+
+            <div className="p-8 bg-slate-50 border-t border-slate-100">
+              <button onClick={() => setShowLinksModal(false)} className="w-full py-4 bg-white border border-slate-200 text-slate-700 font-bold rounded-2xl hover:bg-slate-100 transition-all">
+                Tutup
+              </button>
             </div>
           </div>
         </div>

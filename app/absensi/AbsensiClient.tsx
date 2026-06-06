@@ -7,7 +7,7 @@ import { StatusBadge, OrgBadge } from '@/components/ui/Badges'
 import { cn, formatDate, formatCurrency, STATUS_LABELS } from '@/lib/utils'
 import { canAccessProgramming, canAccessEnglish } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
-import { ClipboardList, Save, Calendar, Filter, Loader2, CheckCircle2, XCircle, Clock, Heart, Banknote, Users, Sparkles } from 'lucide-react'
+import { ClipboardList, Save, Calendar, Filter, Loader2, CheckCircle2, XCircle, Clock, Heart, Banknote, Users, Sparkles, UserCheck } from 'lucide-react'
 import { AWARDS_DATA } from '@/lib/awards'
 import Modal from '@/components/ui/Modal'
 import Select from '@/components/ui/Select'
@@ -194,6 +194,13 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
           </button>
           <button onClick={() => setMode('riwayat')} className={mode === 'riwayat' ? 'btn-primary' : 'btn-secondary'}>
             <ClipboardList className="w-4 h-4" /> Riwayat
+          </button>
+          <button 
+            onClick={() => window.location.href = `/admin/registration/acceptance?type=eskul&org=${bulkOrg}`}
+            className="btn-secondary border-blue-200 bg-blue-50/50 hover:bg-blue-100 text-blue-600 font-bold"
+          >
+            <UserCheck className="w-4 h-4" />
+            Lihat Calon
           </button>
         </div>
       </div>

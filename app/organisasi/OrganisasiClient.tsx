@@ -11,7 +11,7 @@ import { canAccessOsis, canAccessMpk } from '@/lib/auth-shared'
 import { clearJsonCachePrefix, fetchJsonCachedUrl, prefetchJsonCachedUrl } from '@/lib/client-cache'
 import {
   Building2, Plus, Pencil, Trash2, Loader2, Save, Calendar,
-  ClipboardList, CheckCircle2, XCircle, Clock, Heart, Banknote, Contact, Award, Mail, Image as ImageIcon
+  ClipboardList, CheckCircle2, XCircle, Clock, Heart, Banknote, Contact, Award, Mail, Image as ImageIcon, UserCheck
 } from 'lucide-react'
 import { format } from 'date-fns'
 
@@ -302,7 +302,14 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
 
       {subTab === 'anggota' ? (
         <div className="space-y-4">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <button 
+              onClick={() => window.location.href = `/admin/registration/acceptance?type=osis-mpk&org=${activeOrg}`}
+              className="btn-secondary border-indigo-200 bg-indigo-50/50 hover:bg-indigo-100 text-indigo-600 font-bold"
+            >
+              <UserCheck className="w-4 h-4" />
+              Lihat Calon
+            </button>
             <button onClick={openAdd} className="btn-primary"><Plus className="w-4 h-4" />Tambah Anggota</button>
           </div>
           <Table columns={anggotaCols} data={anggota} loading={loadingAnggota}
