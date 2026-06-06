@@ -123,7 +123,8 @@ export default function KegiatanClient({ user }: { user: any }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nama_kegiatan: fNama, tipe: fTipe, tanggal: fTanggal || null })
       })
-      if (!res.ok) throw new Error('Gagal membuat kegiatan')
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Gagal membuat kegiatan')
       toast.success('Kegiatan berhasil dibuat')
       setCreateModal(false)
       setFNama('')
@@ -144,7 +145,8 @@ export default function KegiatanClient({ user }: { user: any }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ siswa_id: fSiswaId, organisasi: fOrg, sub_kategori: fSub || null })
       })
-      if (!res.ok) throw new Error('Gagal menambahkan siswa')
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Gagal menambahkan siswa')
       toast.success('Siswa berhasil ditambahkan')
       setAddSiswaModal(false)
       setFSiswaId(null)

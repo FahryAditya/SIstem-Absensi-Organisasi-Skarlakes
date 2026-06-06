@@ -33,8 +33,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const ctx = getCtx(req)
-    if (!isAdministrator(ctx.userRole)) {
-      return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+    if (!isAdministrator(ctx.userRole) && ctx.userRole !== 'admin_osis_mpk') {
+      return NextResponse.json({ error: 'Akses ditolak: Hanya Administrator atau Admin OSIS/MPK yang dapat membuat kegiatan' }, { status: 403 })
     }
 
     const body = await req.json()
@@ -65,14 +65,15 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ data: activity })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error('[CREATE KEGIATAN ERROR]', err)
+    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 })
   }
 }
 
 export async function DELETE(req: NextRequest) {
   try {
     const ctx = getCtx(req)
-    if (!isAdministrator(ctx.userRole)) {
+    if (!isAdministrator(ctx.userRole) && ctx.userRole !== 'admin_osis_mpk') {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 

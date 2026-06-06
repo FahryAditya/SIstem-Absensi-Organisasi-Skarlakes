@@ -42,7 +42,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const ctx = getCtx(req)
-    if (!isAdministrator(ctx.userRole)) {
+    if (!isAdministrator(ctx.userRole) && ctx.userRole !== 'admin_osis_mpk') {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 
@@ -80,14 +80,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     return NextResponse.json({ data: entry })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error('[CREATE GROUPING ERROR]', err)
+    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 })
   }
 }
 
 export async function DELETE(req: NextRequest) {
   try {
     const ctx = getCtx(req)
-    if (!isAdministrator(ctx.userRole)) {
+    if (!isAdministrator(ctx.userRole) && ctx.userRole !== 'admin_osis_mpk') {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 
