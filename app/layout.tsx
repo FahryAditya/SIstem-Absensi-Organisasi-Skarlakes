@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     'Skarla',
     'SiKadik'
   ],
-  authors: [{ name: 'Yayasan Airlangga Balikpapan', url: 'https://smkairlangga.sch.id' }],
+  authors: [{ name: 'Yayasan Airlangga Balikpapan', url: 'https://smkairlanggabpn.sch.id/' }],
   creator: 'Artemis Developer Team',
   publisher: 'SKARLAKES',
   metadataBase: new URL('https://artemis.smkairlangga.sch.id'),
