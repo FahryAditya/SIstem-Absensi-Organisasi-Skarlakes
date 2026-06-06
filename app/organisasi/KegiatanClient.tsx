@@ -40,9 +40,9 @@ const PRESET_NAMES = [
   'Jumat Seni',
   'Jumat Religius',
   'Jumat Pramuka',
-  'Piket Kebersihan & Penyambutan',
   'Petugas Upacara',
-  'Panitia (Costume)'
+  'Panitia (Bisa Costume)',
+  'Piket Kebersihan & Penyambutan',
 ]
 
 export default function KegiatanClient({ user }: { user: any }) {
@@ -311,7 +311,7 @@ export default function KegiatanClient({ user }: { user: any }) {
           <div className="form-group">
             <label className="label">Jenis Kegiatan</label>
             <Select value={fTipe} onChange={val => setFTipe(val as any)} options={[
-              { value: 'panitia', label: 'Panitia' },
+              { value: 'panitia', label: 'Panitia (Bisa Costume)' },
               { value: 'piket', label: 'Piket Kebersihan & Penyambutan' },
               { value: 'petugas', label: 'Petugas Upacara' },
               { value: 'rapat', label: 'Rapat / Lainnya' }

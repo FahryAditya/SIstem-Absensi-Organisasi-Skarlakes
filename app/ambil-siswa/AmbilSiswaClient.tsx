@@ -69,6 +69,9 @@ const PREDEFINED_ACTIVITIES = [
   'Jumat Seni',
   'Jumat Religius',
   'Jumat Pramuka',
+  'Petugas Upacara',
+  'Panitia (Bisa Costume)',
+  'Piket Kebersihan & Penyambutan',
 ]
 
 export default function AmbilSiswaClient({ user }: Props) {

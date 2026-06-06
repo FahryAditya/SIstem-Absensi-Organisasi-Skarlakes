@@ -7,8 +7,8 @@ interface Props {
 }
 
 const CATEGORIES: Record<string, string[]> = {
-  osis: ['Jumat Seni', 'Jumat Olahraga', 'Jumat Religius', 'Rapat Pengurus', 'Kegiatan Sosial', 'Peringatan Hari Besar'],
-  mpk: ['Jumat Seni', 'Jumat Olahraga', 'Jumat Religius', 'Rapat Pengurus', 'Sidang MPK', 'Peringatan Hari Besar'],
+  osis: ['Jumat Seni', 'Jumat Olahraga', 'Jumat Religius', 'Rapat Pengurus', 'Kegiatan Sosial', 'Peringatan Hari Besar', 'Petugas Upacara', 'Panitia (Bisa Costume)', 'Piket Kebersihan & Penyambutan'],
+  mpk: ['Jumat Seni', 'Jumat Olahraga', 'Jumat Religius', 'Rapat Pengurus', 'Sidang MPK', 'Peringatan Hari Besar', 'Petugas Upacara', 'Panitia (Bisa Costume)', 'Piket Kebersihan & Penyambutan'],
   programming: ['Pertemuan Rutin', 'Webinar', 'Workshop', 'Kompetisi', 'Hackathon', 'Demo Project'],
   english: ['Pertemuan Rutin', 'Speaking Session', 'Debate Club', 'Listening Class', 'English Day', 'Movie Night'],
 }
