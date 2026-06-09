@@ -39,10 +39,7 @@ export async function GET(req: NextRequest) {
       }),
       prisma.absensi.findMany({
         where: {
-          tanggal: {
-            gte: new Date(tanggal + 'T00:00:00'),
-            lte: new Date(tanggal + 'T23:59:59')
-          },
+          tanggal: new Date(tanggal),
           siswa: { ekskul: ekskul as any }
         },
         select: { siswa_id: true, status: true, uang_kas: true, keterangan: true }
@@ -71,10 +68,7 @@ export async function GET(req: NextRequest) {
   const where: Record<string, unknown> = {
     siswa: { ekskul: { in: ekskulFilter } },
     ...(tanggal ? { 
-      tanggal: {
-        gte: new Date(tanggal + 'T00:00:00'),
-        lte: new Date(tanggal + 'T23:59:59')
-      } 
+      tanggal: new Date(tanggal)
     } : {}),
   }
 
@@ -110,7 +104,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
 
   const { tanggal, rows } = parsed.data
-  const tanggalDate = new Date(tanggal + 'T00:00:00')
+  const tanggalDate = new Date(tanggal)
 
   // Verify access for each siswa
   const siswaIds = rows.map(r => r.siswa_id)

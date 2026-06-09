@@ -130,8 +130,8 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
     setFilterOrg(bulkOrg)
     setMode('riwayat')
     
-    // We don't call loadRiwayat(true) here because the useEffect on mode/filter change 
-    // will trigger it. Since we cleared the cache, it will fetch fresh data.
+    // Explicitly trigger a fresh load
+    loadRiwayat(true)
   }
 
   async function handleGiveAward() {

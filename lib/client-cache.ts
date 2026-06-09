@@ -28,7 +28,10 @@ export async function fetchJsonCached<T>(key: string, url: string, options: Cach
     queryKey,
     staleTime: ttlMs,
     queryFn: async () => {
-      const res = await fetch(url, fetchOptions)
+      const res = await fetch(url, {
+        ...fetchOptions,
+        cache: force ? 'no-store' : fetchOptions.cache,
+      })
       const json = await res.json().catch(() => ({}))
       if (!res.ok) {
         throw new Error(json?.error || 'Gagal memuat data')
@@ -52,7 +55,10 @@ export async function prefetchJsonCached<T>(key: string, url: string, options: C
     queryKey,
     staleTime: ttlMs,
     queryFn: async () => {
-      const res = await fetch(url, fetchOptions)
+      const res = await fetch(url, {
+        ...fetchOptions,
+        cache: force ? 'no-store' : fetchOptions.cache,
+      })
       const json = await res.json().catch(() => ({}))
       if (!res.ok) {
         throw new Error(json?.error || 'Gagal memuat data')

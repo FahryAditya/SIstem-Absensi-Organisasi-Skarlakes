@@ -231,6 +231,9 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
     setSavingAbsensi(false)
     setAbsensiMode('riwayat')
     setFilterTanggal(bulkDate)
+    
+    // Explicitly trigger a fresh load
+    loadRiwayat(true)
   }
 
   const orgLabel = activeOrg === 'osis' ? 'OSIS' : 'MPK'

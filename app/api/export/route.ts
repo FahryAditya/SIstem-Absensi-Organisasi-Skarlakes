@@ -32,8 +32,8 @@ function getCtx(req: NextRequest) {
 
 function parseDateRange(startDate: string, endDate: string) {
   if (!startDate || !endDate) return null
-  const start = new Date(`${startDate}T00:00:00`)
-  const end = new Date(`${endDate}T23:59:59`)
+  const start = new Date(startDate)
+  const end = new Date(endDate)
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null
   if (start > end) return null
   return { start, end }
