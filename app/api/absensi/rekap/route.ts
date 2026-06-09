@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
 import { getAccessibleOrgs } from '@/lib/auth-shared'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+const prisma = new PrismaClient()
 
 function getCtx(req: NextRequest) {
   return { userRole: req.headers.get('x-user-role') || '' }
