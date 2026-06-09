@@ -130,11 +130,11 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
     }
   }, [activeOrg, bulkDate])
 
-  const loadRiwayat = useCallback(async () => {
+  const loadRiwayat = useCallback(async (force = false) => {
     const requestId = ++riwayatRequestId.current
     setLoadingRiwayat(true)
     try {
-      const json = await fetchJsonCachedUrl<{ data?: AbsensiOrg[] }>(`/api/organisasi/absensi?organisasi=${activeOrg}&tanggal=${filterTanggal}&limit=100`, { ttlMs: 30_000 })
+      const json = await fetchJsonCachedUrl<{ data?: AbsensiOrg[] }>(`/api/organisasi/absensi?organisasi=${activeOrg}&tanggal=${filterTanggal}&limit=100`, { ttlMs: 30_000, force })
       if (requestId !== riwayatRequestId.current) return
       setRiwayat(json.data || [])
     } catch (error: any) {
