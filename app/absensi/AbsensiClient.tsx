@@ -119,11 +119,19 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
     const json = await res.json()
     if (!res.ok) { toast.error(json.error || 'Gagal menyimpan'); setSaving(false); return }
     toast.success(`✅ Absensi ${bulkRows.length} siswa tersimpan!`, { duration: 4000 })
+    
+    // Clear cache to ensure next loads are fresh
     clearJsonCache()
+    
     setSaving(false)
-    setMode('riwayat')
+    
+    // Switch to riwayat and ensure the date filter matches what we just saved
     setFilterTanggal(bulkDate)
-    loadRiwayat(true)
+    setFilterOrg(bulkOrg)
+    setMode('riwayat')
+    
+    // We don't call loadRiwayat(true) here because the useEffect on mode/filter change 
+    // will trigger it. Since we cleared the cache, it will fetch fresh data.
   }
 
   async function handleGiveAward() {

@@ -150,12 +150,12 @@ export async function POST(req: NextRequest) {
 
   const activeOrScheduled = await prisma.sesiWawancara.findFirst({
     where: {
-      organisasi_type: { in: ['osis', 'mpk'] },
+      organisasi_type: parsed.data.organisasi_type || 'osis',
       status: { in: ['SCHEDULED', 'ACTIVE'] },
     },
   })
   if (activeOrScheduled) {
-    return NextResponse.json({ error: 'Masih ada sesi wawancara OSIS & MPK yang terjadwal/aktif' }, { status: 400 })
+    return NextResponse.json({ error: `Masih ada sesi wawancara ${activeOrScheduled.organisasi_type.toUpperCase()} yang terjadwal/aktif` }, { status: 400 })
   }
 
   const now = new Date()

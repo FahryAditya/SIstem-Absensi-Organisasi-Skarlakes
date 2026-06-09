@@ -152,12 +152,17 @@ export default function QrCodeClient({ baseUrl, initialItems }: QrCodeClientProp
         </div>
 
         {isVercelPreview && (
-          <div className="rounded-2xl bg-red-500/10 border border-red-500/20 p-4 flex gap-3 text-sm text-red-400">
-            <TriangleAlert className="w-5 h-5 flex-shrink-0" />
+          <div className="rounded-2xl bg-red-500/10 border border-red-500/50 p-5 flex gap-4 text-sm text-red-400 shadow-lg animate-pulse">
+            <TriangleAlert className="w-8 h-8 flex-shrink-0" />
             <div>
-              <div className="font-bold mb-1">Peringatan: Anda menggunakan Link Preview Vercel!</div>
-              Siswa yang melakukan scan mungkin akan diminta untuk <strong>"Login Vercel"</strong> karena link ini diproteksi. 
-              Gunakan domain utama (Production) atau tambahkan env var <code>NEXT_PUBLIC_SITE_URL</code> di dashboard Vercel untuk memperbaikinya.
+              <div className="font-black text-base mb-1 uppercase tracking-tight">⚠️ Bahaya: Menggunakan Link Preview Vercel!</div>
+              <p className="leading-relaxed">
+                Anda sedang membuat QR Code menggunakan URL <strong>Preview/Development</strong>. 
+                QR Code ini akan <strong>MATI (404 Not Found)</strong> setelah beberapa hari jika deployment ini dihapus oleh Vercel.
+              </p>
+              <p className="mt-2 font-bold text-white">
+                Solusi: Buka dashboard admin menggunakan domain utama (Production) sebelum membuat QR untuk acara resmi.
+              </p>
             </div>
           </div>
         )}

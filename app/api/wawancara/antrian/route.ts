@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
   const sesi = await prisma.sesiWawancara.findFirst({
     where: { 
       status: 'ACTIVE',
-      organisasi_type: parsed.data.organisasi
+      organisasi_type: { in: ['osis', 'mpk'] }
     },
     orderBy: { created_at: 'desc' }
   })
@@ -126,6 +126,11 @@ export async function POST(req: NextRequest) {
   if (!sesi) {
     return NextResponse.json({ error: `Sesi wawancara ${parsed.data.organisasi.toUpperCase()} tidak aktif` }, { status: 400 })
   }
+
+  // If the session found is not the same as the target org, we can still allow it
+  // But we might want to store the student's intention in the record if possible.
+  // For now, we'll just let them join the session.
+
 
   const nama = parsed.data.nama.trim()
   const kelas = parsed.data.kelas.trim()

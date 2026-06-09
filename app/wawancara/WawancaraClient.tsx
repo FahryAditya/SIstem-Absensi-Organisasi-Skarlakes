@@ -931,7 +931,18 @@ export default function WawancaraClient({ user }: Props) {
         <div className="space-y-4">
           <div className="form-group">
             <label className="label">Ekskul / Organisasi</label>
-            <div className="input bg-white/5 font-bold text-persian-blue">OSIS & MPK (Unified Session)</div>
+            {editingSessionId ? (
+              <div className="input bg-white/5 font-bold text-persian-blue uppercase">{fOrg}</div>
+            ) : (
+              <Select
+                value={fOrg}
+                onChange={(val) => setFOrg(val as Org)}
+                options={[
+                  { value: 'osis', label: 'OSIS' },
+                  { value: 'mpk', label: 'MPK' },
+                ]}
+              />
+            )}
           </div>
           <div className="form-group"><label className="label">Jam Mulai</label><input type="datetime-local" value={fMulai} onChange={(e) => setFMulai(e.target.value)} className="input" /></div>
           <div className="form-group"><label className="label">Jam Selesai</label><input type="datetime-local" value={fSelesai} onChange={(e) => setFSelesai(e.target.value)} className="input" /></div>
