@@ -98,11 +98,7 @@ export async function POST(req: NextRequest) {
       })
       insertedCount = result.count
     } else if (org === 'osis') {
-      const filteredRows = rows.filter((item: any) => {
-        const k = item.kelas ? String(item.kelas).trim().toUpperCase() : ''
-        return !k.startsWith('[MPK]')
-      })
-      const createData = filteredRows.map((item: any) => {
+      const createData = rows.map((item: any) => {
         const rawKelas = item.kelas ? String(item.kelas).trim() : ''
         const cleanKelas = rawKelas.replace(/^\[(OSIS|MPK)\]\s*/i, '')
         return {
@@ -115,11 +111,7 @@ export async function POST(req: NextRequest) {
       const result = await prisma.anggotaOsis.createMany({ data: createData, skipDuplicates: true })
       insertedCount = result.count
     } else if (org === 'mpk') {
-      const filteredRows = rows.filter((item: any) => {
-        const k = item.kelas ? String(item.kelas).trim().toUpperCase() : ''
-        return !k.startsWith('[OSIS]')
-      })
-      const createData = filteredRows.map((item: any) => {
+      const createData = rows.map((item: any) => {
         const rawKelas = item.kelas ? String(item.kelas).trim() : ''
         const cleanKelas = rawKelas.replace(/^\[(OSIS|MPK)\]\s*/i, '')
         return {
