@@ -370,11 +370,13 @@ export default function PencapaianClient({ user }: Props) {
           </div>
           <p className="page-sub mt-0.5">Kelola template pencapaian dan berikan penghargaan EXP kepada anggota organisasi</p>
         </div>
+        <div className="flex flex-wrap gap-2 items-center">
         {canCreate && (
           <button onClick={openAdd} className="btn-primary">
             <Plus className="w-4 h-4" /> Tambah Pencapaian
           </button>
         )}
+      </div>
       </div>
 
       {/* Tabs and Search Filters */}

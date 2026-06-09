@@ -293,7 +293,7 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
           </div>
           <p className="page-sub mt-0.5">Kelola daftar siswa ekstrakurikuler</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
           {selectedIds.length > 0 && (
             <button onClick={() => setBulkDeleteConfirmOpen(true)} className="btn-secondary text-red-600 border-white/10 hover:bg-red-500/10">
               <Trash2 className="w-4 h-4" /> Hapus Terpilih ({selectedIds.length})

@@ -196,7 +196,7 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
           </div>
           <p className="page-sub mt-0.5">Input dan lihat riwayat absensi siswa ekskul</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
           <button onClick={() => setMode('input')} className={mode === 'input' ? 'btn-primary' : 'btn-secondary'}>
             <Save className="w-4 h-4" /> Input
           </button>
