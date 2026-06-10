@@ -153,6 +153,10 @@ function AdminAcceptanceContent() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-white/10">
         <div className="space-y-2">
+          <button onClick={() => router.push('/admin')} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm font-medium group mb-2">
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            Kembali ke Kelola User
+          </button>
           <div className="flex items-center gap-3 text-blue-400 mb-2">
             <UserCheck className="w-6 h-6" />
             <span className="text-[10px] font-black uppercase tracking-[0.3em]">Management Portal</span>
@@ -354,32 +358,33 @@ function AdminAcceptanceContent() {
       {/* Confirmation Modal - REDESIGNED per UIUX.md */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#000B18]/80 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="bg-[#051526] w-full max-w-lg rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.8)] overflow-hidden border border-white/10 animate-in zoom-in-95 duration-300 relative">
+          <div className="bg-[#051526] w-full max-w-lg max-h-[90vh] rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.8)] overflow-hidden border border-white/10 animate-in zoom-in-95 duration-300 flex flex-col relative">
             
             {/* Modal Header */}
-            <div className={`p-8 text-center relative overflow-hidden ${modalType === 'accept' ? 'bg-green-600/10' : 'bg-red-600/10'}`}>
+            <div className={`p-6 text-center relative overflow-hidden flex-shrink-0 ${modalType === 'accept' ? 'bg-green-600/10' : 'bg-red-600/10'}`}>
                <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-48 h-24 blur-3xl opacity-20 rounded-full ${modalType === 'accept' ? 'bg-green-500' : 'bg-red-500'}`} />
-               <div className={`w-20 h-20 rounded-3xl mx-auto mb-6 flex items-center justify-center ${modalType === 'accept' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'} shadow-2xl relative z-10`}>
-                  {modalType === 'accept' ? <UserCheck className="w-10 h-10" /> : <UserX className="w-10 h-10" />}
+               <div className={`w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center ${modalType === 'accept' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'} shadow-2xl relative z-10`}>
+                  {modalType === 'accept' ? <UserCheck className="w-8 h-8" /> : <UserX className="w-8 h-8" />}
                </div>
-               <h2 className="text-3xl font-black tracking-tight text-white relative z-10">
+               <h2 className="text-2xl font-black tracking-tight text-white relative z-10">
                  {modalType === 'accept' ? 'Terima Peserta' : 'Tolak Peserta'}
                </h2>
-               <p className="text-slate-400 font-medium text-sm mt-2 relative z-10 uppercase tracking-widest">Konfirmasi Keputusan</p>
+               <p className="text-slate-400 font-medium text-xs mt-1 relative z-10 uppercase tracking-widest">Konfirmasi Keputusan</p>
             </div>
             
-            <div className="p-8 space-y-8">
+            {/* Modal Body - Scrollable */}
+            <div className="p-6 md:p-8 space-y-6 overflow-y-auto flex-1 mobile-scroll">
               {/* Peserta Card - Step 2 Improvement */}
-              <div className="bg-white/[0.03] p-6 rounded-[2rem] border border-white/10 shadow-inner relative group overflow-hidden">
+              <div className="bg-white/[0.03] p-5 rounded-[2rem] border border-white/10 shadow-inner relative group overflow-hidden">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-2xl rounded-full" />
                 <div className="flex items-center gap-4 relative z-10">
-                   <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-                      <User className="w-6 h-6" />
+                   <div className="w-10 h-10 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                      <User className="w-5 h-5" />
                    </div>
                    <div>
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] block mb-1">PESERTA</span>
-                      <p className="font-black text-white text-xl tracking-tight leading-tight">{selectedReg?.nama_peserta}</p>
-                      <div className="flex items-center gap-2 mt-2">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] block mb-0.5">PESERTA</span>
+                      <p className="font-black text-white text-lg tracking-tight leading-tight">{selectedReg?.nama_peserta}</p>
+                      <div className="flex items-center gap-2 mt-1.5">
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wider">
                           {selectedReg?.organization?.nama}
                         </span>
@@ -400,7 +405,7 @@ function AdminAcceptanceContent() {
                   <textarea
                     maxLength={200}
                     aria-label="Catatan konfirmasi penerimaan peserta"
-                    className="w-full px-6 py-5 rounded-[1.5rem] bg-white/[0.03] border border-white/10 text-white placeholder:text-slate-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all h-32 text-sm font-medium resize-none shadow-inner"
+                    className="w-full px-5 py-4 rounded-[1.5rem] bg-white/[0.03] border border-white/10 text-white placeholder:text-slate-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all h-28 text-sm font-medium resize-none shadow-inner"
                     placeholder="Tambahkan pesan khusus untuk peserta..."
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
@@ -411,31 +416,32 @@ function AdminAcceptanceContent() {
                 </div>
                 <p className="text-[10px] text-slate-500 font-medium italic ml-1">*Pesan ini akan dikirimkan ke email peserta.</p>
               </div>
-
-              {/* Buttons - Step 3 Improvement */}
-              <div className="flex gap-4">
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 py-4 px-6 border-2 border-white/10 bg-transparent text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl hover:bg-white/5 hover:border-white/20 transition-all active:scale-95"
-                >
-                  Batal
-                </button>
-                <button
-                  disabled={!!processingId}
-                  onClick={handleAction}
-                  className={`flex-1 py-4 px-6 text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-3 ${
-                    modalType === 'accept' ? 'bg-green-600 shadow-green-900/40 hover:bg-green-500' : 'bg-red-600 shadow-red-900/40 hover:bg-red-500'
-                  }`}
-                >
-                  {processingId ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      Konfirmasi
-                    </>
-                  )}
-                </button>
-              </div>
             </div>
+
+            {/* Modal Footer - Fixed */}
+            <div className="p-6 bg-white/[0.01] border-t border-white/5 flex gap-4 flex-shrink-0">
+              <button
+                onClick={() => setShowModal(false)}
+                className="flex-1 py-3 px-6 border-2 border-white/10 bg-transparent text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl hover:bg-white/5 hover:border-white/20 transition-all active:scale-95"
+              >
+                Batal
+              </button>
+              <button
+                disabled={!!processingId}
+                onClick={handleAction}
+                className={`flex-1 py-3 px-6 text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-3 ${
+                  modalType === 'accept' ? 'bg-green-600 shadow-green-900/40 hover:bg-green-500' : 'bg-red-600 shadow-red-900/40 hover:bg-red-500'
+                }`}
+              >
+                {processingId ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    Konfirmasi
+                  </>
+                )}
+              </button>
+            </div>
+
           </div>
         </div>
       )}
@@ -443,75 +449,75 @@ function AdminAcceptanceContent() {
       {/* Links Modal - Premium Redesign */}
       {showLinksModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#000B18]/80 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="bg-[#051526] w-full max-w-2xl rounded-[3rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.8)] overflow-hidden border border-white/10 animate-in zoom-in-95 duration-300">
-            <div className="p-10 border-b border-white/5 flex justify-between items-start bg-gradient-to-br from-blue-600/10 to-transparent">
+          <div className="bg-[#051526] w-full max-w-2xl max-h-[90vh] rounded-[3rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.8)] overflow-hidden border border-white/10 animate-in zoom-in-95 duration-300 flex flex-col">
+            <div className="p-6 md:p-8 border-b border-white/5 flex justify-between items-start flex-shrink-0 bg-gradient-to-br from-blue-600/10 to-transparent">
               <div className="space-y-1">
-                <div className="flex items-center gap-2 text-blue-400 mb-2">
-                   <LinkIcon className="w-5 h-5" />
+                <div className="flex items-center gap-2 text-blue-400 mb-1.5">
+                   <LinkIcon className="w-4 h-4" />
                    <span className="text-[10px] font-black uppercase tracking-[0.25em]">Portal Access</span>
                 </div>
-                <h2 className="text-3xl font-black tracking-tight">Link Pendaftaran</h2>
-                <p className="text-slate-400 text-sm font-medium">Salin link resmi untuk distribusi publik.</p>
+                <h2 className="text-2xl font-black tracking-tight">Link Pendaftaran</h2>
+                <p className="text-slate-400 text-xs font-medium">Salin link resmi untuk distribusi publik.</p>
               </div>
               <button 
                 onClick={() => setShowLinksModal(false)} 
-                className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-red-500/20 hover:text-red-400 rounded-full transition-all border border-white/10 group"
+                className="w-8 h-8 flex items-center justify-center bg-white/5 hover:bg-red-500/20 hover:text-red-400 rounded-full transition-all border border-white/10 group"
               >
-                <X className="w-5 h-5 group-hover:rotate-90 transition-transform" />
+                <X className="w-4 h-4 group-hover:rotate-90 transition-transform" />
               </button>
             </div>
             
-            <div className="p-10 space-y-8 max-h-[60vh] overflow-y-auto mobile-scroll">
-              <div className="space-y-4">
+            <div className="p-6 md:p-8 space-y-6 overflow-y-auto flex-1 mobile-scroll">
+              <div className="space-y-3">
                 <h3 className="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em] px-1">Ekstrakurikuler</h3>
-                <div className="grid gap-4">
+                <div className="grid gap-3">
                   {[
                     { name: 'Programming', link: '/registration/eskul?program=programming', color: 'from-blue-600/20' },
                     { name: 'English Club', link: '/registration/eskul?program=english', color: 'from-cyan-600/20' }
                   ].map(l => (
-                    <div key={l.link} className={`p-5 bg-white/[0.02] rounded-[1.5rem] border border-white/5 flex items-center justify-between group hover:bg-white/[0.05] transition-all`}>
+                    <div key={l.link} className={`p-4 bg-white/[0.02] rounded-[1.5rem] border border-white/5 flex items-center justify-between group hover:bg-white/[0.05] transition-all`}>
                       <div className="space-y-1">
-                        <p className="font-black text-white text-lg tracking-tight group-hover:text-blue-400 transition-colors">{l.name}</p>
+                        <p className="font-black text-white text-base tracking-tight group-hover:text-blue-400 transition-colors">{l.name}</p>
                         <p className="text-[11px] text-slate-500 font-mono tracking-tight">{l.link}</p>
                       </div>
                       <button 
                         onClick={() => { navigator.clipboard.writeText(window.location.origin + l.link); toast.success('Link disalin!') }}
-                        className="w-12 h-12 flex items-center justify-center bg-white/5 border border-white/10 rounded-2xl text-slate-400 hover:text-white hover:bg-blue-600 hover:border-blue-500 transition-all shadow-lg active:scale-90"
+                        className="w-10 h-10 flex items-center justify-center bg-white/5 border border-white/10 rounded-2xl text-slate-400 hover:text-white hover:bg-blue-600 hover:border-blue-500 transition-all shadow-lg active:scale-90"
                       >
-                        <ExternalLink className="w-5 h-5" />
+                        <ExternalLink className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
                 </div>
               </div>
-
-              <div className="space-y-4 pt-4 border-t border-white/5">
+ 
+              <div className="space-y-3 pt-3 border-t border-white/5">
                 <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] px-1">Organisasi Utama</h3>
-                <div className="grid gap-4">
+                <div className="grid gap-3">
                   {[
                     { name: 'OSIS', link: '/registration/osis-mpk?org=osis' },
                     { name: 'MPK', link: '/registration/osis-mpk?org=mpk' }
                   ].map(l => (
-                    <div key={l.link} className="p-5 bg-white/[0.02] rounded-[1.5rem] border border-white/5 flex items-center justify-between group hover:bg-white/[0.05] transition-all">
+                    <div key={l.link} className="p-4 bg-white/[0.02] rounded-[1.5rem] border border-white/5 flex items-center justify-between group hover:bg-white/[0.05] transition-all">
                       <div className="space-y-1">
-                        <p className="font-black text-white text-lg tracking-tight group-hover:text-indigo-400 transition-colors">{l.name}</p>
+                        <p className="font-black text-white text-base tracking-tight group-hover:text-indigo-400 transition-colors">{l.name}</p>
                         <p className="text-[11px] text-slate-500 font-mono tracking-tight">{l.link}</p>
                       </div>
                       <button 
                         onClick={() => { navigator.clipboard.writeText(window.location.origin + l.link); toast.success('Link disalin!') }}
-                        className="w-12 h-12 flex items-center justify-center bg-white/5 border border-white/10 rounded-2xl text-slate-400 hover:text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all shadow-lg active:scale-90"
+                        className="w-10 h-10 flex items-center justify-center bg-white/5 border border-white/10 rounded-2xl text-slate-400 hover:text-white hover:bg-indigo-600 hover:border-indigo-500 transition-all shadow-lg active:scale-90"
                       >
-                        <ExternalLink className="w-5 h-5" />
+                        <ExternalLink className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
                 </div>
               </div>
-
-              <div className="p-6 bg-blue-500/10 border border-blue-500/20 rounded-[2rem] text-xs text-blue-200/60 leading-relaxed relative overflow-hidden group">
+ 
+              <div className="p-5 bg-blue-500/10 border border-blue-500/20 rounded-[2rem] text-xs text-blue-200/60 leading-relaxed relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 blur-2xl rounded-full" />
                 <div className="relative z-10 flex gap-4">
-                  <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                  <div className="w-7 h-7 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
                     <span className="font-black text-blue-400">?</span>
                   </div>
                   <p className="font-medium">
@@ -521,8 +527,8 @@ function AdminAcceptanceContent() {
                 </div>
               </div>
             </div>
-
-            <div className="p-6 bg-white/[0.01] border-t border-white/5 flex justify-end">
+ 
+            <div className="p-5 bg-white/[0.01] border-t border-white/5 flex justify-end flex-shrink-0">
               <button 
                 onClick={() => setShowLinksModal(false)} 
                 className="px-6 py-2.5 bg-white/5 border border-white/10 text-white font-bold text-xs rounded-xl hover:bg-white/10 transition-all"

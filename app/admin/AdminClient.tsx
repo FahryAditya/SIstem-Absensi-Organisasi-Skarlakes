@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import Table from '@/components/ui/Table'
 import Modal from '@/components/ui/Modal'
@@ -9,7 +10,7 @@ import { RoleBadge } from '@/components/ui/Badges'
 import { formatDateTime } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
-import { UserCog, Plus, Pencil, Trash2, Loader2, Shield, Mail, User, Lock, Eye, EyeOff, AlertTriangle, Database, Cpu, Sparkles, Trophy, UserCheck, Link as LinkIcon } from 'lucide-react'
+import { UserCog, Plus, Pencil, Trash2, Loader2, Shield, Mail, User, Lock, Eye, EyeOff, AlertTriangle, Database, Cpu, Sparkles, Trophy, UserCheck, Link as LinkIcon, ArrowLeft } from 'lucide-react'
 import Select from '@/components/ui/Select'
 import { AWARDS_DATA } from '@/lib/awards'
 import AdminDropdownMenu from '@/components/admin/AdminDropdownMenu'
@@ -18,6 +19,7 @@ interface UserData { id: number; nama: string; email: string; role: string; crea
 interface Props { user: { id: number; nama: string; email: string; role: string } }
 
 export default function AdminClient({ user }: Props) {
+  const router = useRouter()
   const [users, setUsers] = useState<UserData[]>([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
@@ -295,8 +297,14 @@ export default function AdminClient({ user }: Props) {
     <div className="space-y-5">
       {/* Header */}
       <div className="page-header">
-        <div className="flex-1">
-          <div className="flex items-center gap-2.5"><UserCog className="w-5 h-5 text-persian-blue" /><h2 className="page-title">Kelola User & Admin</h2></div>
+          <div className="flex items-center gap-2.5">
+            <button onClick={() => router.push('/admin')} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm font-medium group mb-2">
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              Kembali ke Dashboard
+            </button>
+            <UserCog className="w-5 h-5 text-persian-blue" />
+            <h2 className="page-title">Kelola User & Admin</h2>
+          </div>
           <p className="page-sub mt-0.5">Buat, edit, dan hapus akun pengguna sistem</p>
         </div>
         <div className="flex flex-wrap gap-2 items-center">
@@ -321,9 +329,8 @@ export default function AdminClient({ user }: Props) {
           </button>
           <button onClick={openAdd} className="btn-primary"><Plus className="w-4 h-4" />Tambah User</button>
         </div>
-      </div>
 
-      {/* Role summary cards */}
+      {/* Role cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {roleGroups.map(rg => (
           <div key={rg.role} className={`card p-4 border ${rg.color}`}>
@@ -337,7 +344,7 @@ export default function AdminClient({ user }: Props) {
       <Table columns={columns} data={users} loading={loading} emptyMessage="Belum ada user" rowKey={(u: UserData) => u.id} />
 
       {/* Modal */}
-      <Modal open={modalOpen} title={editTarget ? 'Edit User' : 'Tambah User Baru'} onClose={() => setModalOpen(false)} size="md"
+      <Modal open={modalOpen} title={editTarget ? 'Edit User' : 'Tambah User Baru'} onClose={() => setModalOpen(false)} size="sm"
         footer={
           <div className="flex gap-2 justify-end">
             <button onClick={() => setModalOpen(false)} className="btn-secondary">Batal</button>
