@@ -37,11 +37,12 @@ function RegistrationOsisMpkContent() {
       try {
         const [masterRes, orgsRes] = await Promise.all([
           fetch('/api/registration/master'),
-          fetch('/api/organisasi')
+          fetch('/api/organizations')
         ])
 
         const masterData = await masterRes.json()
-        const orgsData = await orgsRes.json()
+        const orgsResponse = await orgsRes.json()
+        const orgsData = orgsResponse.data || []
 
         setMaster(masterData)
         

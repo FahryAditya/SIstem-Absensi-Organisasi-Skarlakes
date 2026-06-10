@@ -167,6 +167,18 @@ export default function LoginPage() {
             </button>
           </form>
 
+          <div className="mt-6 text-center">
+            <p className="text-sm text-[#7EA0C5]">
+              Belum bergabung?{' '}
+              <button 
+                onClick={() => router.push('/registration')}
+                className="text-[#1E90FF] font-bold hover:underline"
+              >
+                Daftar Sekarang
+              </button>
+            </p>
+          </div>
+
           <div className="mt-5 pt-5 border-t border-white/10 flex items-start gap-2">
             <Shield className="w-3.5 h-3.5 text-[#7EA0C5] flex-shrink-0 mt-0.5" />
             <p className="text-xs text-[#1E90FF]/80">

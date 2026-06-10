@@ -21,8 +21,10 @@ model User {
   absensi_dibuat      Absensi[]             @relation("AbsensiCreatedBy")
   absensi_diubah      Absensi[]             @relation("AbsensiUpdatedBy")
   chat_wawancara      ChatWawancara[]
-  dokumentasi_foto    DokumentasiFoto[]     @relation("FotoCreatedBy")
   documentations      Documentation[]       @relation("DocCreatedBy")
+  dokumentasi_foto    DokumentasiFoto[]     @relation("FotoCreatedBy")
+  email_import_logs   EmailImportLog[]      @relation("AdminImportLogs")
+  email_logs          EmailLog[]            @relation("AdminEmailLogs")
   penilaian_wawancara HasilWawancaraTable[] @relation("WawancaraAssessedBy")
   override_wawancara  HasilWawancaraTable[] @relation("WawancaraOverriddenBy")
   log_aktivitas       LogAktivitas[]
@@ -31,25 +33,22 @@ model User {
   sesi_wawancara      SesiWawancara[]
   siswa_dibuat        Siswa[]               @relation("SiswaCreatedBy")
   updates_created     SystemUpdate[]        @relation("UpdateCreatedBy")
-  email_logs          EmailLog[]            @relation("AdminEmailLogs")
-  email_import_logs   EmailImportLog[]      @relation("AdminImportLogs")
 
   @@index([created_at])
   @@map("users")
 }
 
 model Organization {
-  id              Int             @id @default(autoincrement())
-  nama            String          @db.VarChar(100)
-  tipe            OrganisasiType
-  deskripsi       String?         @db.Text
-  hari_pertemuan  String?         @db.VarChar(20)
-  waktu_mulai     String?         @db.VarChar(10)
-  waktu_selesai   String?         @db.VarChar(10)
-  lokasi          String?         @db.VarChar(100)
-  ketua_id        Int?
-  documentations  Documentation[]
-  
+  id                     Int                   @id @default(autoincrement())
+  nama                   String                @db.VarChar(100)
+  tipe                   OrganisasiType
+  deskripsi              String?
+  hari_pertemuan         String?               @db.VarChar(20)
+  ketua_id               Int?
+  lokasi                 String?               @db.VarChar(100)
+  waktu_mulai            String?               @db.VarChar(10)
+  waktu_selesai          String?               @db.VarChar(10)
+  documentations         Documentation[]
   registrations_eskul    RegistrationEskul[]
   registrations_osis_mpk RegistrationOsisMpk[]
 
@@ -77,34 +76,28 @@ model MasterKejuruan {
   @@map("master_kejuruan")
 }
 
-enum SkillGroup {
-  SKARLA
-  SKAKES
-}
-
 model RegistrationEskul {
-  id               Int                @id @default(autoincrement())
+  id               Int                    @id @default(autoincrement())
   organization_id  Int
-  nama_peserta     String             @db.VarChar(100)
-  kelas            String             @db.VarChar(50)
-  kejuruan         String             @db.VarChar(100)
-  email_gmail      String             @db.VarChar(100)
-  nisn             String?            @db.VarChar(20)
-  status           RegistrationStatus @default(MENUNGGU)
-  qr_token         String?            @unique @db.VarChar(255)
+  nama_peserta     String                 @db.VarChar(100)
+  kelas            String                 @db.VarChar(50)
+  kejuruan         String                 @db.VarChar(100)
+  email_gmail      String                 @db.VarChar(100)
+  nisn             String?                @db.VarChar(20)
+  status           RegistrationStatus     @default(MENUNGGU)
+  qr_token         String?                @unique @db.VarChar(255)
   qr_token_expired DateTime?
-  accept_reason    String?            @db.Text
-  reject_reason    String?            @db.Text
+  accept_reason    String?
+  reject_reason    String?
   accepted_by      Int?
   accepted_at      DateTime?
   rejected_by      Int?
   rejected_at      DateTime?
   email_sent_at    DateTime?
-  created_at       DateTime           @default(now())
-  updated_at       DateTime           @updatedAt
-
-  organization     Organization       @relation(fields: [organization_id], references: [id])
+  created_at       DateTime               @default(now())
+  updated_at       DateTime               @updatedAt
   email_logs       EmailLogRegistration[]
+  organization     Organization           @relation(fields: [organization_id], references: [id])
 
   @@unique([email_gmail, organization_id])
   @@index([status])
@@ -112,28 +105,27 @@ model RegistrationEskul {
 }
 
 model RegistrationOsisMpk {
-  id               Int                @id @default(autoincrement())
+  id               Int                    @id @default(autoincrement())
   organization_id  Int
-  nama_peserta     String             @db.VarChar(100)
-  kelas            String             @db.VarChar(50)
-  kejuruan         String             @db.VarChar(100)
-  email_gmail      String             @db.VarChar(100)
-  nisn             String?            @db.VarChar(20)
-  status           RegistrationStatus @default(CALON)
-  qr_token         String?            @unique @db.VarChar(255)
+  nama_peserta     String                 @db.VarChar(100)
+  kelas            String                 @db.VarChar(50)
+  kejuruan         String                 @db.VarChar(100)
+  email_gmail      String                 @db.VarChar(100)
+  nisn             String?                @db.VarChar(20)
+  status           RegistrationStatus     @default(CALON)
+  qr_token         String?                @unique @db.VarChar(255)
   qr_token_expired DateTime?
-  accept_reason    String?            @db.Text
-  reject_reason    String?            @db.Text
+  accept_reason    String?
+  reject_reason    String?
   accepted_by      Int?
   accepted_at      DateTime?
   rejected_by      Int?
   rejected_at      DateTime?
   email_sent_at    DateTime?
-  created_at       DateTime           @default(now())
-  updated_at       DateTime           @updatedAt
-
-  organization     Organization       @relation(fields: [organization_id], references: [id])
+  created_at       DateTime               @default(now())
+  updated_at       DateTime               @updatedAt
   email_logs       EmailLogRegistration[]
+  organization     Organization           @relation(fields: [organization_id], references: [id])
 
   @@unique([email_gmail, organization_id])
   @@index([status])
@@ -141,44 +133,36 @@ model RegistrationOsisMpk {
 }
 
 model EmailLogRegistration {
-  id                  Int               @id @default(autoincrement())
-  registration_eskul_id   Int?
+  id                       Int                  @id @default(autoincrement())
+  registration_eskul_id    Int?
   registration_osis_mpk_id Int?
-  recipient_email     String            @db.VarChar(100)
-  email_type          String            @db.VarChar(50) // 'confirmation', 'acceptance', 'rejection'
-  subject             String            @db.VarChar(255)
-  sent_at             DateTime          @default(now())
-  status              String            @default("sent") @db.VarChar(20)
-  error_message       String?           @db.Text
-
-  registration_eskul    RegistrationEskul?   @relation(fields: [registration_eskul_id], references: [id])
-  registration_osis_mpk RegistrationOsisMpk? @relation(fields: [registration_osis_mpk_id], references: [id])
+  recipient_email          String               @db.VarChar(100)
+  email_type               String               @db.VarChar(50)
+  subject                  String               @db.VarChar(255)
+  sent_at                  DateTime             @default(now())
+  status                   String               @default("sent") @db.VarChar(20)
+  error_message            String?
+  registration_eskul       RegistrationEskul?   @relation(fields: [registration_eskul_id], references: [id])
+  registration_osis_mpk    RegistrationOsisMpk? @relation(fields: [registration_osis_mpk_id], references: [id])
 
   @@map("email_log_registration")
 }
 
-enum RegistrationStatus {
-  MENUNGGU
-  DITERIMA
-  DITOLAK
-  CALON
-}
-
 model Documentation {
-  id              Int            @id @default(autoincrement())
-  title           String         @db.VarChar(200)
-  description     String?        @db.Text
-  photos          Json           // Store array of {url, publicId}
-  category        String         @db.VarChar(100)
-  type            OrganisasiType
-  organizationId  Int
-  organization    Organization   @relation(fields: [organizationId], references: [id])
-  createdBy       Int
-  creator         User           @relation("DocCreatedBy", fields: [createdBy], references: [id])
-  dateTaken       DateTime       @default(now())
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  deletedAt       DateTime?
+  id             Int            @id @default(autoincrement())
+  title          String         @db.VarChar(200)
+  description    String?
+  category       String         @db.VarChar(100)
+  type           OrganisasiType
+  organizationId Int
+  createdBy      Int
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deletedAt      DateTime?
+  dateTaken      DateTime       @default(now())
+  photos         Json
+  creator        User           @relation("DocCreatedBy", fields: [createdBy], references: [id])
+  organization   Organization   @relation(fields: [organizationId], references: [id])
 
   @@index([organizationId])
   @@index([type])
@@ -187,24 +171,24 @@ model Documentation {
 }
 
 model Siswa {
-  id         Int               @id @default(autoincrement())
-  nis        String?           @db.VarChar(20)
-  nama       String            @db.VarChar(100)
-  kelas      String?           @db.VarChar(20)
-  email      String?           @db.VarChar(150)
-  foto_url   String?           @db.VarChar(255)
-  ekskul     OrganisasiType
-  jabatan    String?           @db.VarChar(100)
-  xp         Int               @default(0)
-  level      Int               @default(1)
-  created_at DateTime          @default(now())
-  updated_at DateTime          @updatedAt
-  created_by Int
-  absensi    Absensi[]
-  creator    User              @relation("SiswaCreatedBy", fields: [created_by], references: [id])
-  pencapaian SiswaPencapaian[]
-  email_logs EmailLog[]        @relation("SiswaEmailLogs")
+  id                     Int                     @id @default(autoincrement())
+  nis                    String?                 @db.VarChar(20)
+  nama                   String                  @db.VarChar(100)
+  kelas                  String?                 @db.VarChar(20)
+  email                  String?                 @db.VarChar(150)
+  foto_url               String?                 @db.VarChar(255)
+  ekskul                 OrganisasiType
+  jabatan                String?                 @db.VarChar(100)
+  xp                     Int                     @default(0)
+  level                  Int                     @default(1)
+  created_at             DateTime                @default(now())
+  updated_at             DateTime                @updatedAt
+  created_by             Int
+  absensi                Absensi[]
+  email_logs             EmailLog[]              @relation("SiswaEmailLogs")
   pengelompokan_kegiatan PengelompokanKegiatan[]
+  creator                User                    @relation("SiswaCreatedBy", fields: [created_by], references: [id])
+  pencapaian             SiswaPencapaian[]
 
   @@index([ekskul])
   @@index([xp])
@@ -216,41 +200,29 @@ model Siswa {
 }
 
 model Kegiatan {
-  id             Int                    @id @default(autoincrement())
-  nama_kegiatan  String                 @db.VarChar(100)
-  tipe           TipeKegiatan
-  tanggal        DateTime?              @db.Date
-  created_at     DateTime               @default(now())
-  pengelompokan  PengelompokanKegiatan[]
+  id            Int                     @id @default(autoincrement())
+  nama_kegiatan String                  @db.VarChar(100)
+  tipe          TipeKegiatan
+  tanggal       DateTime?               @db.Date
+  created_at    DateTime                @default(now())
+  pengelompokan PengelompokanKegiatan[]
 
   @@map("kegiatan")
 }
 
 model PengelompokanKegiatan {
-  id            Int            @id @default(autoincrement())
-  kegiatan_id   Int
-  siswa_id      Int
-  organisasi    OrganisasiWawancara
-  sub_kategori  String?        @db.VarChar(50)
-  created_at    DateTime       @default(now())
-  kegiatan      Kegiatan       @relation(fields: [kegiatan_id], references: [id], onDelete: Cascade)
-  siswa         Siswa          @relation(fields: [siswa_id], references: [id], onDelete: Cascade)
+  id           Int                 @id @default(autoincrement())
+  kegiatan_id  Int
+  siswa_id     Int
+  organisasi   OrganisasiWawancara
+  sub_kategori String?             @db.VarChar(50)
+  created_at   DateTime            @default(now())
+  kegiatan     Kegiatan            @relation(fields: [kegiatan_id], references: [id], onDelete: Cascade)
+  siswa        Siswa               @relation(fields: [siswa_id], references: [id], onDelete: Cascade)
 
   @@index([kegiatan_id])
   @@index([siswa_id])
   @@map("pengelompokan_kegiatan")
-}
-
-enum TipeKegiatan {
-  panitia
-  piket
-  petugas
-  rapat
-}
-
-enum OrganisasiWawancara {
-  OSIS
-  MPK
 }
 
 model Absensi {
@@ -287,8 +259,8 @@ model AnggotaOsis {
   created_at DateTime            @default(now())
   updated_at DateTime            @updatedAt
   absensi    AbsensiOrganisasi[]
-  pencapaian SiswaPencapaian[]
   email_logs EmailLog[]          @relation("OsisEmailLogs")
+  pencapaian SiswaPencapaian[]
 
   @@index([nama])
   @@index([kelas])
@@ -310,8 +282,8 @@ model AnggotaMpk {
   created_at DateTime            @default(now())
   updated_at DateTime            @updatedAt
   absensi    AbsensiOrganisasi[]
-  pencapaian SiswaPencapaian[]
   email_logs EmailLog[]          @relation("MpkEmailLogs")
+  pencapaian SiswaPencapaian[]
 
   @@index([nama])
   @@index([kelas])
@@ -617,6 +589,107 @@ model ExpLog {
   @@map("exp_log")
 }
 
+model EmailLog {
+  id               Int            @id @default(autoincrement())
+  subject          String         @db.VarChar(255)
+  recipientEmail   String         @db.VarChar(150)
+  recipientName    String         @db.VarChar(100)
+  emailType        String         @db.VarChar(50)
+  organizationType OrganisasiType
+  content          String
+  tipe_anggota     TipeAnggota
+  siswa_id         Int?
+  anggota_osis_id  Int?
+  anggota_mpk_id   Int?
+  admin_id         Int
+  status           String         @default("sent") @db.VarChar(20)
+  error_message    String?
+  sent_at          DateTime?
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @updatedAt
+  admin            User           @relation("AdminEmailLogs", fields: [admin_id], references: [id], onDelete: Cascade)
+  anggota_mpk      AnggotaMpk?    @relation("MpkEmailLogs", fields: [anggota_mpk_id], references: [id], onDelete: Cascade)
+  anggota_osis     AnggotaOsis?   @relation("OsisEmailLogs", fields: [anggota_osis_id], references: [id], onDelete: Cascade)
+  siswa            Siswa?         @relation("SiswaEmailLogs", fields: [siswa_id], references: [id], onDelete: Cascade)
+
+  @@index([siswa_id])
+  @@index([anggota_osis_id])
+  @@index([anggota_mpk_id])
+  @@index([admin_id])
+  @@index([status])
+  @@index([created_at])
+  @@map("email_logs")
+}
+
+model EmailTemplate {
+  id               Int            @id @default(autoincrement())
+  organizationType OrganisasiType
+  emailType        String         @db.VarChar(50)
+  subject          String
+  bodyTemplate     String
+  description      String?
+  isActive         Boolean        @default(true)
+  created_by       Int
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @updatedAt
+
+  @@unique([organizationType, emailType])
+  @@index([isActive])
+  @@map("email_templates")
+}
+
+model EmailImportLog {
+  id               Int            @id @default(autoincrement())
+  filename         String         @db.VarChar(255)
+  totalRows        Int
+  successRows      Int
+  failureRows      Int
+  organizationType OrganisasiType
+  admin_id         Int
+  errors           String
+  status           String         @default("completed") @db.VarChar(20)
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @updatedAt
+  admin            User           @relation("AdminImportLogs", fields: [admin_id], references: [id], onDelete: Cascade)
+
+  @@index([admin_id])
+  @@index([status])
+  @@map("email_import_logs")
+}
+
+model EmailSetting {
+  id          Int      @id @default(autoincrement())
+  email       String   @db.VarChar(150)
+  appPassword String   @db.VarChar(255)
+  updated_at  DateTime @updatedAt
+
+  @@map("email_settings")
+}
+
+enum SkillGroup {
+  SKARLA
+  SKAKES
+}
+
+enum RegistrationStatus {
+  MENUNGGU
+  DITERIMA
+  DITOLAK
+  CALON
+}
+
+enum TipeKegiatan {
+  panitia
+  piket
+  petugas
+  rapat
+}
+
+enum OrganisasiWawancara {
+  OSIS
+  MPK
+}
+
 enum Role {
   administrator
   admin_programming
@@ -698,86 +771,4 @@ enum TipeAnggota {
   siswa
   anggota_osis
   anggota_mpk
-}
-
-model EmailLog {
-  id               Int            @id @default(autoincrement())
-  subject          String         @db.VarChar(255)
-  recipientEmail   String         @db.VarChar(150)
-  recipientName    String         @db.VarChar(100)
-  emailType        String         @db.VarChar(50)  // "pertemuan", "rapat", "masalah", "pembahasan"
-  organizationType OrganisasiType
-  content          String         @db.Text
-  
-  tipe_anggota     TipeAnggota
-  siswa_id         Int?
-  anggota_osis_id  Int?
-  anggota_mpk_id   Int?
-
-  siswa            Siswa?         @relation("SiswaEmailLogs", fields: [siswa_id], references: [id], onDelete: Cascade)
-  anggota_osis     AnggotaOsis?   @relation("OsisEmailLogs", fields: [anggota_osis_id], references: [id], onDelete: Cascade)
-  anggota_mpk      AnggotaMpk?    @relation("MpkEmailLogs", fields: [anggota_mpk_id], references: [id], onDelete: Cascade)
-  
-  admin_id         Int
-  admin            User           @relation("AdminEmailLogs", fields: [admin_id], references: [id], onDelete: Cascade)
-  
-  status           String         @default("sent") @db.VarChar(20) // "sent", "failed"
-  error_message    String?        @db.Text
-  
-  sent_at          DateTime?
-  created_at       DateTime       @default(now())
-  updated_at       DateTime       @updatedAt
-
-  @@index([siswa_id])
-  @@index([anggota_osis_id])
-  @@index([anggota_mpk_id])
-  @@index([admin_id])
-  @@index([status])
-  @@index([created_at])
-  @@map("email_logs")
-}
-
-model EmailTemplate {
-  id               Int            @id @default(autoincrement())
-  organizationType OrganisasiType
-  emailType        String         @db.VarChar(50)
-  subject          String         @db.Text
-  bodyTemplate     String         @db.Text // HTML dengan {{placeholder}}
-  description      String?        @db.Text
-  isActive         Boolean        @default(true)
-  created_by       Int
-  created_at       DateTime       @default(now())
-  updated_at       DateTime       @updatedAt
-  
-  @@unique([organizationType, emailType])
-  @@index([isActive])
-  @@map("email_templates")
-}
-
-model EmailImportLog {
-  id               Int            @id @default(autoincrement())
-  filename         String         @db.VarChar(255)
-  totalRows        Int
-  successRows      Int
-  failureRows      Int
-  organizationType OrganisasiType
-  admin_id         Int
-  admin            User           @relation("AdminImportLogs", fields: [admin_id], references: [id], onDelete: Cascade)
-  errors           String         @db.Text // JSON array
-  status           String         @default("completed") @db.VarChar(20)
-  created_at       DateTime       @default(now())
-  updated_at       DateTime       @updatedAt
-  
-  @@index([admin_id])
-  @@index([status])
-  @@map("email_import_logs")
-}
-
-model EmailSetting {
-  id          Int      @id @default(autoincrement())
-  email       String   @db.VarChar(150)
-  appPassword String   @db.VarChar(255)
-  updated_at  DateTime @updatedAt
-
-  @@map("email_settings")
 }
