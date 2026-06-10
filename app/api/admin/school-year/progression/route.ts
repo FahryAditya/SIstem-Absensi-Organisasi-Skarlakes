@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { getServerUser } from '@/lib/server-utils'
 import { randomUUID } from 'crypto'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: Request) {
   try {
     const user = await getServerUser('administrator')

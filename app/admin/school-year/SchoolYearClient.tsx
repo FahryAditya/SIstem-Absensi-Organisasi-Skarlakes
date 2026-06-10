@@ -218,7 +218,7 @@ export default function SchoolYearClient({ user }: { user: any }) {
       </div>
 
       {/* Confirmation Modal */}
-      <Modal isOpen={showConfirm} onClose={() => !processing && setShowConfirm(false)} title="Konfirmasi Naik Kelas">
+      <Modal open={showConfirm} onClose={() => { if (!processing) setShowConfirm(false) }} title="Konfirmasi Naik Kelas">
         <div className="p-6">
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 flex gap-3">
             <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0" />
@@ -272,7 +272,7 @@ export default function SchoolYearClient({ user }: { user: any }) {
       </Modal>
 
       {/* History Modal */}
-      <Modal isOpen={historyOpen} onClose={() => setHistoryOpen(false)} title="Riwayat Naik Kelas">
+      <Modal open={historyOpen} onClose={() => setHistoryOpen(false)} title="Riwayat Naik Kelas">
         <div className="p-6">
           {historyLoading ? (
             <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>
