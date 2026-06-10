@@ -191,39 +191,45 @@ function RegistrationOsisMpkContent() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-bold text-indigo-200/70 ml-1">Kelas</label>
-                <select
-                  required
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all appearance-none"
-                  value={formData.kelas}
-                  onChange={(e) => setFormData({ ...formData, kelas: e.target.value })}
-                >
-                  <option value="" className="bg-[#001F3F]">Pilih Kelas</option>
-                  {master?.kelas.map((k) => (
-                    <option key={k.id} value={k.kelas_nama} className="bg-[#001F3F]">{k.kelas_nama}</option>
-                  ))}
-                </select>
+                <div className="relative group">
+                  <select
+                    required
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all appearance-none cursor-pointer group-hover:bg-white/10"
+                    value={formData.kelas}
+                    onChange={(e) => setFormData({ ...formData, kelas: e.target.value })}
+                  >
+                    <option value="" className="bg-[#001F3F]">Pilih Kelas</option>
+                    {master?.kelas.map((k) => (
+                      <option key={k.id} value={k.kelas_nama} className="bg-[#001F3F]">{k.kelas_nama}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-400 pointer-events-none group-hover:text-white transition-colors" />
+                </div>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-bold text-indigo-200/70 ml-1">Kejuruan</label>
-                <select
-                  required
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all appearance-none"
-                  value={formData.kejuruan}
-                  onChange={(e) => setFormData({ ...formData, kejuruan: e.target.value })}
-                >
-                  <option value="" className="bg-[#001F3F]">Pilih Kejuruan</option>
-                  <optgroup label="SKARLA" className="bg-[#001F3F]">
-                    {master?.kejuruan.filter(k => k.skill_group === 'SKARLA').map((k) => (
-                      <option key={k.id} value={k.kejuruan_kode} className="bg-[#001F3F]">{k.kejuruan_kode}</option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="SKAKES" className="bg-[#001F3F]">
-                    {master?.kejuruan.filter(k => k.skill_group === 'SKAKES').map((k) => (
-                      <option key={k.id} value={k.kejuruan_kode} className="bg-[#001F3F]">{k.kejuruan_kode}</option>
-                    ))}
-                  </optgroup>
-                </select>
+                <div className="relative group">
+                  <select
+                    required
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all appearance-none cursor-pointer group-hover:bg-white/10"
+                    value={formData.kejuruan}
+                    onChange={(e) => setFormData({ ...formData, kejuruan: e.target.value })}
+                  >
+                    <option value="" className="bg-[#001F3F]">Pilih Kejuruan</option>
+                    <optgroup label="SKARLA" className="bg-[#001F3F] font-bold text-indigo-400">
+                      {master?.kejuruan.filter(k => k.skill_group === 'SKARLA').map((k) => (
+                        <option key={k.id} value={k.kejuruan_kode} className="bg-[#001F3F] text-white">{k.kejuruan_kode}</option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="SKAKES" className="bg-[#001F3F] font-bold text-indigo-400">
+                      {master?.kejuruan.filter(k => k.skill_group === 'SKAKES').map((k) => (
+                        <option key={k.id} value={k.kejuruan_kode} className="bg-[#001F3F] text-white">{k.kejuruan_kode}</option>
+                      ))}
+                    </optgroup>
+                  </select>
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-400 pointer-events-none group-hover:text-white transition-colors" />
+                </div>
               </div>
             </div>
 
@@ -277,32 +283,6 @@ function RegistrationOsisMpkContent() {
               ) : (
                 'Daftar Sebagai Calon'
               )}
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <style jsx global>{`
-        @keyframes slide-up {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .slide-up {
-          animation: slide-up 0.6s ease-out forwards;
-        }
-      `}</style>
-    </div>
-  )
-}
-
-export default function RegistrationOsisMpkPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#001F3F]"><Loader2 className="w-8 h-8 animate-spin text-indigo-400" /></div>}>
-      <RegistrationOsisMpkContent />
-    </Suspense>
-  )
-}
-   )}
             </button>
           </form>
         </div>
