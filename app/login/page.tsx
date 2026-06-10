@@ -59,107 +59,88 @@ export default function LoginPage() {
     }
   }
 
-  const orgBadges = [
-    { label: 'Programming', color: 'bg-[#1E90FF] text-[#001F3F]' },
-    { label: 'English Club', color: 'bg-white/90 text-[#001F3F]' },
-    { label: 'OSIS', color: 'bg-[rgba(126,160,197,0.25)] text-white border border-white/20' },
-    { label: 'MPK', color: 'bg-[rgba(84,130,180,0.35)] text-white border border-white/20' },
-  ]
-
   return (
-    <div className="min-h-screen bg-[#000B18] relative overflow-hidden flex flex-col items-center justify-center p-6 font-sans">
-      {/* Immersive Background */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/10 rounded-full blur-[120px] animate-pulse delay-700" />
-      </div>
-
-      <div className="w-full max-w-lg relative z-10 slide-up">
-        {/* Logo & Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/[0.03] backdrop-blur-xl rounded-[2rem] shadow-2xl border border-white/10 mb-6 ring-1 ring-white/10 group hover:scale-110 transition-transform duration-500">
-            <GraduationCap className="w-10 h-10 text-blue-500" />
+    <div className="min-h-screen bg-[#000B18] flex items-center justify-center p-6 font-sans">
+      <div className="w-full max-w-md slide-up">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600/10 rounded-2xl mb-4 border border-blue-500/20">
+            <GraduationCap className="w-8 h-8 text-blue-500" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">Artemis Series</h1>
-          <p className="text-slate-500 text-sm font-bold uppercase tracking-[0.3em]">Sistem Manajemen Kesiswaan</p>
-          
-          <div className="flex items-center justify-center gap-2 flex-wrap mt-6">
-            {orgBadges.map(b => (
-              <span key={b.label} className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border border-white/5 bg-white/5 text-slate-400`}>
-                {b.label}
-              </span>
-            ))}
-          </div>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Sistem Ekstrakurikuler</h1>
+          <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Admin & Administrator Gateway</p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[3rem] p-10 md:p-12 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)]">
-          <div className="mb-10 text-center md:text-left">
-            <h2 className="text-3xl font-bold text-white mb-2">Selamat Datang</h2>
-            <p className="text-slate-400 font-medium">Silakan masuk untuk melanjutkan ke dashboard.</p>
+        <div className="card p-8 sm:p-10 border border-white/10 shadow-2xl">
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-white mb-1">Selamat Datang</h2>
+            <p className="text-slate-400 text-sm">Masuk untuk mengelola data organisasi.</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6" autoComplete="off">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Identitas Pengguna</label>
-              <div className="space-y-4">
-                <div className="relative group">
-                  <User className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-blue-500 transition-colors" />
+          <form onSubmit={handleLogin} className="space-y-5" autoComplete="off">
+            <div className="space-y-4">
+              <div className="form-group">
+                <label className="label">Nama Lengkap</label>
+                <div className="relative">
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
                     type="text"
                     value={nama}
                     onChange={e => setNama(e.target.value)}
-                    placeholder="Nama Lengkap"
-                    className="w-full pl-12 pr-5 py-4 bg-white/[0.03] border border-white/10 rounded-2xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                    placeholder="Nama lengkap"
+                    className="input pl-10"
                     autoComplete="off"
                   />
                 </div>
-                
-                <div className="relative group">
-                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-blue-500 transition-colors" />
+              </div>
+              
+              <div className="form-group">
+                <label className="label">Alamat Email</label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
                     type="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    placeholder="Alamat Email"
-                    className="w-full pl-12 pr-5 py-4 bg-white/[0.03] border border-white/10 rounded-2xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                    placeholder="email@sekolah.sch.id"
+                    className="input pl-10"
                     autoComplete="off"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Kata Sandi</label>
-              <div className="relative group">
-                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-blue-500 transition-colors" />
+            <div className="form-group">
+              <label className="label">Kata Sandi</label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type={showPass ? 'text' : 'password'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-12 pr-14 py-4 bg-white/[0.03] border border-white/10 rounded-2xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+                  className="input pl-10 pr-12"
                   autoComplete="new-password"
                 />
                 <button type="button" onClick={() => setShowPass(!showPass)}
-                  className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition-colors">
-                  {showPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
-            <button type="submit" disabled={loading}
-              className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-blue-900/40 active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-3">
+            <button type="submit" disabled={loading} className="btn-primary w-full py-3 mt-2 justify-center text-xs uppercase tracking-widest font-bold">
               {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Memproses...</> : 'Masuk Sekarang'}
             </button>
           </form>
 
-          <div className="mt-10 text-center">
-            <p className="text-slate-500 text-sm font-medium">
+          <div className="mt-8 pt-6 border-t border-white/5 text-center">
+            <p className="text-slate-500 text-sm">
               Belum terdaftar?{' '}
               <button 
                 onClick={() => router.push('/registration')}
-                className="text-white font-bold hover:underline decoration-blue-500 decoration-2 underline-offset-4"
+                className="text-blue-400 font-bold hover:text-blue-300 transition-colors"
               >
                 Mulai Pendaftaran
               </button>
@@ -167,24 +148,15 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-center gap-4 text-slate-600">
-          <div className="flex items-center gap-3">
-            <Shield className="w-4 h-4" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Secure Artemis Gateway</span>
+        <div className="mt-8 flex flex-col items-center gap-2 text-slate-600">
+          <div className="flex items-center gap-2">
+            <Shield className="w-3 h-3" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Artemis Secured</span>
           </div>
-          <p className="text-[10px] font-medium opacity-50">© 2026 SMK AIRLANGGA • ALL RIGHTS RESERVED</p>
+          <p className="text-[10px] font-medium opacity-50">© 2026 SMK AIRLANGGA BALIKPAPAN</p>
         </div>
       </div>
-
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        @keyframes slide-up {
-          from { opacity: 0; transform: translateY(40px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .slide-up { animation: slide-up 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-      `}</style>
     </div>
   )
 }
+

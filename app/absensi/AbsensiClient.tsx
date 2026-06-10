@@ -26,7 +26,7 @@ interface Props {
 const STATUS_OPTIONS = [
   { value: 'hadir', label: 'Hadir', icon: CheckCircle2, color: 'bg-green-500/10 text-green-400 border-white/20 hover:bg-green-100' },
   { value: 'tidak_hadir', label: 'Tidak', icon: XCircle, color: 'bg-red-500/10 text-red-400 border-red-300 hover:bg-red-100' },
-  { value: 'izin', label: 'Izin', icon: Clock, color: 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100' },
+  { value: 'izin', label: 'Izin', icon: Clock, color: 'bg-yellow-500/10 text-yellow-400 border-white/20 hover:bg-yellow-100' },
   { value: 'sakit', label: 'Sakit', icon: Heart, color: 'bg-sky-500/10 text-sky-400 border-white/20 hover:bg-sky-100' },
 ]
 
@@ -63,12 +63,32 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
   const canProg = canAccessProgramming(user.role)
   const canEng = canAccessEnglish(user.role)
 
+  // Load riwayat
+  const loadRiwayat = useCallback(async (force = false, customParams?: any) => {
+    setLoadingRiwayat(true)
+    const activePage = customParams?.page || page
+    const activeTanggal = customParams?.tanggal !== undefined ? customParams.tanggal : filterTanggal
+    const activeOrg = customParams?.ekskul !== undefined ? customParams.ekskul : filterOrg
+
+    const params = new URLSearchParams({
+      page: String(activePage), limit: String(PAGE_SIZE),
+      ...(activeTanggal && { tanggal: activeTanggal }),
+      ...(activeOrg && { ekskul: activeOrg }),
+    })
+    const json = await fetchJsonCachedUrl<{ data?: AbsensiRecord[]; total?: number; totalPages?: number }>(`/api/absensi?${params}`, { force })
+    setRiwayat(json.data || [])
+    setTotal(json.total || 0)
+    setTotalPages(json.totalPages || 1)
+    setLoadingRiwayat(false)
+  }, [page, filterTanggal, filterOrg])
+
   // Load siswa & absensi for bulk input (Optimized combined call)
   const loadBulkData = useCallback(async () => {
     setLoadingBulk(true)
     try {
       const json = await fetchJsonCachedUrl<{ data?: AbsensiRow[] }>(
-        `/api/absensi?mode=input&tanggal=${bulkDate}&ekskul=${bulkOrg}`
+        `/api/absensi?mode=input&tanggal=${bulkDate}&ekskul=${bulkOrg}`,
+        { force: true } // Always force fresh data for input mode
       )
       setBulkRows(json.data || [])
     } catch (e) {
@@ -78,21 +98,6 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
   }, [bulkOrg, bulkDate])
 
   useEffect(() => { if (mode === 'input') loadBulkData() }, [mode, loadBulkData])
-
-  // Load riwayat
-  const loadRiwayat = useCallback(async (force = false) => {
-    setLoadingRiwayat(true)
-    const params = new URLSearchParams({
-      page: String(page), limit: String(PAGE_SIZE),
-      ...(filterTanggal && { tanggal: filterTanggal }),
-      ...(filterOrg && { ekskul: filterOrg }),
-    })
-    const json = await fetchJsonCachedUrl<{ data?: AbsensiRecord[]; total?: number; totalPages?: number }>(`/api/absensi?${params}`, { force })
-    setRiwayat(json.data || [])
-    setTotal(json.total || 0)
-    setTotalPages(json.totalPages || 1)
-    setLoadingRiwayat(false)
-  }, [page, filterTanggal, filterOrg])
 
   useEffect(() => { if (mode === 'riwayat') loadRiwayat() }, [mode, loadRiwayat])
   useEffect(() => { setPage(1) }, [filterTanggal, filterOrg])
@@ -108,30 +113,36 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
   async function handleSave() {
     if (!bulkRows.length) { toast.error('Tidak ada siswa'); return }
     setSaving(true)
-    const res = await fetch('/api/absensi', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        tanggal: bulkDate,
-        rows: bulkRows.map(r => ({ siswa_id: r.siswa_id, status: r.status, uang_kas: r.uang_kas, keterangan: r.keterangan || undefined }))
+    try {
+      const res = await fetch('/api/absensi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tanggal: bulkDate,
+          rows: bulkRows.map(r => ({ siswa_id: r.siswa_id, status: r.status, uang_kas: r.uang_kas, keterangan: r.keterangan || undefined }))
+        })
       })
-    })
-    const json = await res.json()
-    if (!res.ok) { toast.error(json.error || 'Gagal menyimpan'); setSaving(false); return }
-    toast.success(`✅ Absensi ${bulkRows.length} siswa tersimpan!`, { duration: 4000 })
-    
-    // Clear cache to ensure next loads are fresh
-    clearJsonCache()
-    
-    setSaving(false)
-    
-    // Switch to riwayat and ensure the date filter matches what we just saved
-    setFilterTanggal(bulkDate)
-    setFilterOrg(bulkOrg)
-    setMode('riwayat')
-    
-    // Explicitly trigger a fresh load
-    loadRiwayat(true)
+      const json = await res.json()
+      if (!res.ok) { toast.error(json.error || 'Gagal menyimpan'); setSaving(false); return }
+      toast.success(`✅ Absensi ${bulkRows.length} siswa tersimpan!`, { duration: 4000 })
+      
+      // Clear cache to ensure next loads are fresh
+      clearJsonCache()
+      
+      setSaving(false)
+      
+      // Update filters FIRST so the useEffect will see new values if it triggers
+      setFilterTanggal(bulkDate)
+      setFilterOrg(bulkOrg)
+      setPage(1)
+      setMode('riwayat')
+      
+      // Explicitly trigger a fresh load with the KNOWN new values to avoid closure/state issues
+      loadRiwayat(true, { page: 1, tanggal: bulkDate, ekskul: bulkOrg })
+    } catch (e) {
+      toast.error('Terjadi kesalahan saat menyimpan')
+      setSaving(false)
+    }
   }
 
   async function handleGiveAward() {
