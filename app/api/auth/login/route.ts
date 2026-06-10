@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { signToken, setSessionCookie } from '@/lib/auth'
 import { createLog, getIp } from '@/lib/log'
+import { rateLimit } from '@/lib/rate-limit'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 
@@ -13,6 +14,22 @@ const schema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = getIp(req)
+    const rl = rateLimit(`login:${ip}`, 5, 15 * 60 * 1000) // 5 attempts per 15 mins
+    
+    if (!rl.success) {
+      return NextResponse.json({ 
+        error: 'Terlalu banyak percobaan login. Silakan coba lagi dalam 15 menit.' 
+      }, { 
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': '5',
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': rl.reset.toString()
+        }
+      })
+    }
+
     const body = await req.json()
     const parsed = schema.safeParse(body)
     if (!parsed.success) {
@@ -32,13 +49,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Nama tidak sesuai dengan akun ini' }, { status: 401 })
     }
 
-    // Verifikasi password (mendukung hash bcrypt lama dan plain text baru)
-    let passwordMatch = false
-    if (user.password.startsWith('$2a$') || user.password.startsWith('$2b$')) {
-      passwordMatch = await bcrypt.compare(password, user.password)
-    } else {
-      passwordMatch = password === user.password
-    }
+    // Verifikasi password (wajib bcrypt)
+    const passwordMatch = await bcrypt.compare(password, user.password)
 
     if (!passwordMatch) {
       return NextResponse.json({ error: 'Password salah' }, { status: 401 })

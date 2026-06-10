@@ -13,11 +13,22 @@ const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
  * statement_timeout=8000 → query > 8 detik otomatis di-cancel di PostgreSQL
  */
 function makePrismaClient() {
+  const url = new URL(process.env.DATABASE_URL || '')
+  
+  // Jika belum ada connection_limit di URL, tambahkan secara programmatik (default 3 untuk low-memory)
+  if (!url.searchParams.has('connection_limit')) {
+    url.searchParams.set('connection_limit', '3')
+  }
+  // Tambahkan pgbouncer=true jika terdeteksi menggunakan port pooler Neon/Supabase (6543/5432)
+  if (!url.searchParams.has('pgbouncer') && (url.port === '6543' || url.href.includes('pooler'))) {
+    url.searchParams.set('pgbouncer', 'true')
+  }
+
   return new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
     datasources: {
       db: {
-        url: process.env.DATABASE_URL,
+        url: url.toString(),
       },
     },
   })

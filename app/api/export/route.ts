@@ -387,8 +387,7 @@ export async function GET(req: NextRequest) {
       Nama: u.nama,
       Email: u.email,
       Role: ROLE_LABELS[u.role] || u.role,
-      Password: u.password,
-    })), 'Daftar Admin', [30, 30, 25, 45])
+    })), 'Daftar Admin', [30, 30, 25])
     const output = XLSX.write(wb, { type: 'array', bookType: 'xlsx' })
     return new NextResponse(output, {
       headers: {
