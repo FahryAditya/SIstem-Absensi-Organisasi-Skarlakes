@@ -298,10 +298,6 @@ export default function AdminClient({ user }: Props) {
       {/* Header */}
       <div className="page-header">
           <div className="flex items-center gap-2.5">
-            <button onClick={() => router.push('/admin')} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm font-medium group mb-2">
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-              Kembali ke Dashboard
-            </button>
             <UserCog className="w-5 h-5 text-persian-blue" />
             <h2 className="page-title">Kelola User & Admin</h2>
           </div>
