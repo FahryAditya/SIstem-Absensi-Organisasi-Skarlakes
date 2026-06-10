@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerUser } from '@/lib/server-utils'
-import { v4 as uuidv4 } from 'uuid'
+import { randomUUID } from 'crypto'
 
 export async function POST(req: Request) {
   try {
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Sudah ada proses naik kelas yang sedang berjalan' }, { status: 400 })
     }
 
-    const batchId = uuidv4()
+    const batchId = randomUUID()
 
     // Start Transaction
     const result = await prisma.$transaction(async (tx) => {
