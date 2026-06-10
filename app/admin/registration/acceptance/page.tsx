@@ -522,12 +522,12 @@ function AdminAcceptanceContent() {
               </div>
             </div>
 
-            <div className="p-10 bg-white/[0.01] border-t border-white/5">
+            <div className="p-6 bg-white/[0.01] border-t border-white/5 flex justify-end">
               <button 
                 onClick={() => setShowLinksModal(false)} 
-                className="w-full py-5 bg-white/5 border border-white/10 text-white font-black uppercase tracking-[0.3em] text-[10px] rounded-2xl hover:bg-white/10 transition-all"
+                className="px-6 py-2.5 bg-white/5 border border-white/10 text-white font-bold text-xs rounded-xl hover:bg-white/10 transition-all"
               >
-                Kembali ke Dashboard
+                Tutup
               </button>
             </div>
           </div>
