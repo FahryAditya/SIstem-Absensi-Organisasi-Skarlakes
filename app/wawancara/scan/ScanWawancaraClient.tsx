@@ -177,7 +177,10 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
                   <span className="text-2xl animate-pulse">📣</span>
                 </div>
                 <div className="text-base font-extrabold text-red-600 tracking-wider">NAMA ANDA SEDANG DIPANGGIL!</div>
-                <div className="text-6xl font-black font-mono text-white">{session?.organisasi_type === 'osis' ? 'OS' : 'MP'}{queueNumber}</div>
+                <div className="text-6xl font-black font-mono text-white">
+                  {myQueue?.kelas?.includes('[MPK]') ? 'MP' : myQueue?.kelas?.includes('[OSIS]') ? 'OS' : (session?.organisasi_type === 'osis' ? 'OS' : 'MP')}
+                  {queueNumber}
+                </div>
                 <p className="text-sm text-slate-200 font-semibold mt-4 bg-red-500/10 border border-red-100 p-3 rounded-2xl">
                   Silakan segera menuju ke meja/ruang wawancara sekarang.
                 </p>
@@ -188,7 +191,10 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
                   <span className="text-2xl">🏆</span>
                 </div>
                 <div className="text-base font-extrabold text-green-600 tracking-wider">WAWANCARA SELESAI!</div>
-                <div className="text-6xl font-black font-mono text-slate-950">#{queueNumber}</div>
+                <div className="text-6xl font-black font-mono text-slate-950">
+                  {myQueue?.kelas?.includes('[MPK]') ? 'MP' : myQueue?.kelas?.includes('[OSIS]') ? 'OS' : (session?.organisasi_type === 'osis' ? 'OS' : 'MP')}
+                  {queueNumber}
+                </div>
                 <p className="text-sm text-slate-400 mt-4 bg-green-500/10 border border-green-100 p-3 rounded-2xl">
                   Terima kasih telah mengikuti sesi wawancara OSIS & MPK. Anda boleh meninggalkan ruangan.
                 </p>
@@ -197,7 +203,10 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
               <div className="space-y-4">
                 <UserRoundCheck className="w-14 h-14 text-persian-blue mx-auto mb-4 animate-pulse" />
                 <div className="text-sm font-bold text-slate-400">Nomor Antrian Anda</div>
-                <div className="text-6xl font-black font-mono text-white mt-1">#{queueNumber}</div>
+                <div className="text-6xl font-black font-mono text-white mt-1">
+                  {myQueue?.kelas?.includes('[MPK]') ? 'MP' : myQueue?.kelas?.includes('[OSIS]') ? 'OS' : (session?.organisasi_type === 'osis' ? 'OS' : 'MP')}
+                  {queueNumber}
+                </div>
                 <p className="text-sm text-slate-400 mt-4 bg-white/5 p-3 rounded-2xl border border-white/10">
                   Tunggu sampai nama Anda dipanggil oleh admin OSIS & MPK. Layar ini akan terupdate otomatis secara real-time!
                 </p>
