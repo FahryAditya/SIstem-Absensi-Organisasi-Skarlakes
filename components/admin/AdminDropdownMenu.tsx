@@ -177,16 +177,27 @@ const AdminDropdownMenu: React.FC<AdminDropdownMenuProps> = ({
       >
         <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-3">
           
-          {/* Kelompok 1: Pesan & Daftar */}
+          {/* Kelompok 1: Pesan & Registrasi */}
           <div
             ref={setCardRef(0)}
             className="flex flex-col rounded-xl border border-white/5 bg-white/[0.02] p-4 hover:bg-white/[0.04] transition-all duration-300"
           >
             <div className="text-sm font-black text-white/90 border-b border-white/10 pb-2 mb-3 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              Pesan & Daftar
+              Pesan & Registrasi
             </div>
             <div className="flex flex-col gap-2 mt-auto">
+              <button
+                onClick={() => handleActionClick(onOpenEmailSetting)}
+                className="flex items-center justify-between w-full px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white rounded-lg bg-white/5 hover:bg-white/10 transition-all text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <Mail className="w-3.5 h-3.5 text-emerald-400" />
+                  Pengaturan Email
+                </span>
+                <ArrowUpRight className="w-3 h-3 opacity-50" />
+              </button>
+
               <button
                 onClick={(e) => handleLinkClick(e, '/admin/email')}
                 className="flex items-center justify-between w-full px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white rounded-lg bg-white/5 hover:bg-white/10 transition-all text-left"
@@ -194,17 +205,6 @@ const AdminDropdownMenu: React.FC<AdminDropdownMenuProps> = ({
                 <span className="flex items-center gap-2">
                   <Mail className="w-3.5 h-3.5 text-emerald-400" />
                   Mengirim Email
-                </span>
-                <ArrowUpRight className="w-3 h-3 opacity-50" />
-              </button>
-
-              <button
-                onClick={() => handleActionClick(onOpenAddUser)}
-                className="flex items-center justify-between w-full px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white rounded-lg bg-white/5 hover:bg-white/10 transition-all text-left"
-              >
-                <span className="flex items-center gap-2">
-                  <Plus className="w-3.5 h-3.5 text-emerald-400" />
-                  Tambah User
                 </span>
                 <ArrowUpRight className="w-3 h-3 opacity-50" />
               </button>
@@ -280,22 +280,50 @@ const AdminDropdownMenu: React.FC<AdminDropdownMenuProps> = ({
             </div>
           </div>
 
-          {/* Kelompok 3: Pengelola Tambahan */}
+          {/* Kelompok 3: Pemantauan & Monitoring */}
           <div
             ref={setCardRef(2)}
             className="flex flex-col rounded-xl border border-white/5 bg-white/[0.02] p-4 hover:bg-white/[0.04] transition-all duration-300"
           >
-            <div className="text-sm font-black text-white/40 border-b border-white/5 pb-2 mb-3 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
-              Pengelola Tambahan
+            <div className="text-sm font-black text-white/90 border-b border-white/10 pb-2 mb-3 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              Pemantauan & Monitoring
             </div>
-            <div className="flex-1 flex items-center justify-center p-4 border border-dashed border-white/5 rounded-lg">
-              <span className="text-[10px] text-slate-500 font-bold text-center uppercase tracking-wider">
-                Masih Kosong
-              </span>
+            <div className="flex flex-col gap-2 mt-auto">
+              <button
+                onClick={() => handleActionClick(onOpenAddUser)}
+                className="flex items-center justify-between w-full px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white rounded-lg bg-white/5 hover:bg-white/10 transition-all text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <Plus className="w-3.5 h-3.5 text-amber-400" />
+                  Tambah User
+                </span>
+                <ArrowUpRight className="w-3 h-3 opacity-50" />
+              </button>
+
+              <button
+                onClick={(e) => handleLinkClick(e, '/log')}
+                className="flex items-center justify-between w-full px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white rounded-lg bg-white/5 hover:bg-white/10 transition-all text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <Database className="w-3.5 h-3.5 text-amber-400" />
+                  Riwayat Aktivitas
+                </span>
+                <ArrowUpRight className="w-3 h-3 opacity-50" />
+              </button>
+
+              <button
+                onClick={(e) => handleLinkClick(e, '/laporan')}
+                className="flex items-center justify-between w-full px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white rounded-lg bg-white/5 hover:bg-white/10 transition-all text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <Cpu className="w-3.5 h-3.5 text-amber-400" />
+                  Statistik Sistem
+                </span>
+                <ArrowUpRight className="w-3 h-3 opacity-50" />
+              </button>
             </div>
           </div>
-
         </div>
       </div>
     </div>

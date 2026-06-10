@@ -304,13 +304,6 @@ export default function AdminClient({ user }: Props) {
           <p className="page-sub mt-0.5">Buat, edit, dan hapus akun pengguna sistem</p>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          {user.role === 'administrator' && (
-            <button onClick={openEmailSetting} className="btn-secondary text-persian-blue font-semibold">
-              <Mail className="w-4 h-4" />
-              Pengirim Email
-            </button>
-          )}
-
           <div className="flex flex-wrap items-center gap-2 ml-auto">
             <AdminDropdownMenu
               onOpenEmailSetting={openEmailSetting}
