@@ -12,6 +12,7 @@ import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import { UserCog, Plus, Pencil, Trash2, Loader2, Shield, Mail, User, Lock, Eye, EyeOff, AlertTriangle, Database, Cpu, Sparkles, Trophy, UserCheck, Link as LinkIcon } from 'lucide-react'
 import Select from '@/components/ui/Select'
 import { AWARDS_DATA } from '@/lib/awards'
+import AdminDropdownMenu from '@/components/admin/AdminDropdownMenu'
 
 interface UserData { id: number; nama: string; email: string; role: string; created_at: string }
 interface Props { user: { id: number; nama: string; email: string; role: string } }
@@ -305,42 +306,13 @@ export default function AdminClient({ user }: Props) {
               Pengirim Email
             </button>
           )}
-          {/* <button onClick={() => setAwardModalOpen(true)} className="btn-secondary text-persian-blue font-semibold">
-            <Sparkles className="w-4 h-4" />
-            Beri Penghargaan
-          </button> */}
-          <button onClick={handleOptimize} disabled={optimizeLoading} className="btn-secondary text-[#1E90FF] border-[#1E90FF]/20 hover:bg-[#1E90FF]/5">
-            <span className="flex items-center gap-2 font-semibold">
-              {optimizeLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Cpu className="w-4 h-4 text-emerald-500" />}
-              Optimalkan DB
-            </span>
-          </button>
-          <button onClick={() => window.open('/api/admin/backup', '_blank')} className="btn-secondary">
-            <span className="flex items-center gap-2 text-persian-blue font-semibold">
-              <Database className="w-4 h-4" />
-              Backup SQL
-            </span>
-          </button>
-          <button onClick={() => window.location.href = '/admin/registration/acceptance'} className="btn-secondary border-blue-200 bg-blue-50/50 hover:bg-blue-100">
-            <span className="flex items-center gap-2 text-blue-600 font-bold">
-              <UserCheck className="w-4 h-4" />
-              Penerimaan
-            </span>
-          </button>
-          <button onClick={() => window.location.href = '/admin/registration/acceptance?showLinks=true'} className="btn-secondary border-amber-200 bg-amber-50/50 hover:bg-amber-100">
-            <span className="flex items-center gap-2 text-amber-600 font-bold">
-              <LinkIcon className="w-4 h-4" />
-              Link Pendaftaran
-            </span>
-          </button>
-          {user.role === 'administrator' && (
-            <button onClick={() => setCleanupModalOpen(true)} className="btn-secondary text-red-600 border-red-200 hover:bg-red-50">
-              <span className="flex items-center gap-2 font-semibold">
-                <Trash2 className="w-4 h-4" />
-                Bersihkan Wawancara
-              </span>
-            </button>
-          )}
+          <AdminDropdownMenu
+            onOpenEmailSetting={openEmailSetting}
+            onOpenAddUser={openAdd}
+            onOptimizeDb={handleOptimize}
+            onOpenCleanupWawancara={() => setCleanupModalOpen(true)}
+            userRole={user.role}
+          />
           <button onClick={() => window.open('/api/export?tipe=admin', '_blank')} className="btn-secondary">
             <span className="flex items-center gap-2 text-persian-blue font-semibold">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>

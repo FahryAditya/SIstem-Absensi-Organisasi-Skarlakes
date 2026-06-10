@@ -98,9 +98,9 @@ const AnimatedItem: React.FC<AnimatedItemProps> = ({
         {
           // Gunakan scroll container sidebar sebagai root, bukan viewport
           root: scrollRoot ?? null,
-          threshold: 0.05,
-          // Sedikit margin bawah agar item mulai animate sebelum benar-benar terlihat
-          rootMargin: '0px 0px -10px 0px',
+          threshold: 0.01,
+          // Root margin diperbesar agar item load lebih awal sebelum muncul di layar (menghilangkan 'delay' saat scroll)
+          rootMargin: '200px 0px 200px 0px',
         }
       );
       observer.observe(el);
@@ -278,7 +278,9 @@ const AnimatedList = <T,>({
         {resolvedItems.map((item, index) => (
           <AnimatedItem
             key={index}
-            delay={reduced ? 0 : index * 0.04}
+            // Delay hanya diberikan pada 10 item pertama agar stagger awal tetap cantik, 
+            // sisanya load instan (tanpa kelai) saat di-scroll masuk ke viewport.
+            delay={reduced ? 0 : index < 10 ? index * 0.02 : 0}
             index={index}
             onMouseEnter={() => handleItemMouseEnter(index)}
             onClick={() => handleItemClick(item, index)}
