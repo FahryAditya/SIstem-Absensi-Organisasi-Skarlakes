@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, Variants } from 'framer-motion'
 import { Trophy, Star, CheckCircle2, X, GraduationCap } from 'lucide-react'
 
 interface CeremonyProps {
@@ -37,18 +37,18 @@ export default function CeremonyAnimation({ onClose, graduates, yearFrom, yearTo
     return () => clearInterval(timer)
   }, [])
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { duration: 1 } },
     exit: { opacity: 0, transition: { duration: 0.5 } }
   }
 
-  const textVariants = {
+  const textVariants: Variants = {
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1, transition: { duration: 0.8, ease: "easeOut" } }
   }
 
-  const listVariants = {
+  const listVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -58,7 +58,7 @@ export default function CeremonyAnimation({ onClose, graduates, yearFrom, yearTo
     }
   }
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { x: -20, opacity: 0 },
     visible: { x: 0, opacity: 1 }
   }
