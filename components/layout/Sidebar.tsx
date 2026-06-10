@@ -72,6 +72,7 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
   items.push({ type: 'link', href: '/admin/exp', label: 'Kelola EXP', icon: Zap })
   if (role === 'administrator') {
     items.push({ type: 'link', href: '/admin', label: 'Kelola User', icon: UserCog })
+    items.push({ type: 'link', href: '/admin/school-year', label: 'Tahun Ajaran Baru', icon: GraduationCap })
   }
   items.push({ type: 'link', href: '/import', label: 'Import Excel', icon: Download })
   items.push({ type: 'link', href: '/export', label: 'Export Data', icon: Download })

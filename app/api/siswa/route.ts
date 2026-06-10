@@ -44,6 +44,7 @@ export async function GET(req: NextRequest) {
 
     const ekskul = searchParams.get('ekskul') as 'programming' | 'english' | null
     const search = searchParams.get('search') || ''
+    const includeAlumni = searchParams.get('includeAlumni') === 'true'
     
     let page = parseInt(searchParams.get('page') || '1')
     let limit = parseInt(searchParams.get('limit') || '10')
@@ -61,6 +62,7 @@ export async function GET(req: NextRequest) {
 
     const where = {
       ekskul: { in: ekskulFilter },
+      status: includeAlumni && canManageSiswaData(userRole) ? undefined : 'ACTIVE',
       ...(search ? { nama: { contains: search, mode: 'insensitive' as any } } : {}),
     }
 

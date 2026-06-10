@@ -32,7 +32,9 @@ model User {
   qr_wawancara        QrWawancara[]
   sesi_wawancara      SesiWawancara[]
   siswa_dibuat        Siswa[]               @relation("SiswaCreatedBy")
-  updates_created     SystemUpdate[]        @relation("UpdateCreatedBy")
+  updates_created      SystemUpdate[]          @relation("UpdateCreatedBy")
+  progression_executed SchoolYearProgression[] @relation("ProgressionExecutedBy")
+  progression_reverted SchoolYearProgression[] @relation("ProgressionRevertedBy")
 
   @@index([created_at])
   @@map("users")
@@ -181,6 +183,8 @@ model Siswa {
   jabatan                String?                 @db.VarChar(100)
   xp                     Int                     @default(0)
   level                  Int                     @default(1)
+  status                 String?                 @default("ACTIVE") @db.VarChar(20)
+  graduation_date        DateTime?
   created_at             DateTime                @default(now())
   updated_at             DateTime                @updatedAt
   created_by             Int
@@ -195,6 +199,7 @@ model Siswa {
   @@index([level])
   @@index([nama])
   @@index([kelas])
+  @@index([status])
   @@index([created_at])
   @@map("siswa")
 }
@@ -255,19 +260,22 @@ model AnggotaOsis {
   foto_url   String?             @db.VarChar(255)
   jabatan    String?             @db.VarChar(100)
   xp         Int                 @default(0)
-  level      Int                 @default(1)
-  created_at DateTime            @default(now())
-  updated_at DateTime            @updatedAt
-  absensi    AbsensiOrganisasi[]
-  email_logs EmailLog[]          @relation("OsisEmailLogs")
-  pencapaian SiswaPencapaian[]
+  level           Int                 @default(1)
+  status          String?             @default("ACTIVE") @db.VarChar(20)
+  graduation_date DateTime?
+  created_at      DateTime            @default(now())
+  updated_at      DateTime            @updatedAt
+  absensi         AbsensiOrganisasi[]
+  email_logs      EmailLog[]          @relation("OsisEmailLogs")
+  pencapaian      SiswaPencapaian[]
 
   @@index([nama])
   @@index([kelas])
+  @@index([status])
   @@index([xp])
   @@index([created_at])
   @@map("anggota_osis")
-}
+  }
 
 model AnggotaMpk {
   id         Int                 @id @default(autoincrement())
@@ -278,19 +286,22 @@ model AnggotaMpk {
   foto_url   String?             @db.VarChar(255)
   jabatan    String?             @db.VarChar(100)
   xp         Int                 @default(0)
-  level      Int                 @default(1)
-  created_at DateTime            @default(now())
-  updated_at DateTime            @updatedAt
-  absensi    AbsensiOrganisasi[]
-  email_logs EmailLog[]          @relation("MpkEmailLogs")
-  pencapaian SiswaPencapaian[]
+  level           Int                 @default(1)
+  status          String?             @default("ACTIVE") @db.VarChar(20)
+  graduation_date DateTime?
+  created_at      DateTime            @default(now())
+  updated_at      DateTime            @updatedAt
+  absensi         AbsensiOrganisasi[]
+  email_logs      EmailLog[]          @relation("MpkEmailLogs")
+  pencapaian      SiswaPencapaian[]
 
   @@index([nama])
   @@index([kelas])
+  @@index([status])
   @@index([xp])
   @@index([created_at])
   @@map("anggota_mpk")
-}
+  }
 
 model AbsensiOrganisasi {
   id              Int            @id @default(autoincrement())
@@ -474,6 +485,41 @@ model SystemUpdate {
   @@index([created_at])
   @@index([update_type])
   @@map("system_updates")
+}
+
+model SchoolYearProgression {
+  id               Int                   @id @default(autoincrement())
+  batch_id         String                @unique @default(uuid())
+  school_year_from String                @db.VarChar(20)
+  school_year_to   String                @db.VarChar(20)
+  status           String                @db.VarChar(20)
+  total_promoted   Int                   @default(0)
+  total_graduated  Int                   @default(0)
+  executed_by      Int
+  executed_at      DateTime              @default(now())
+  reverted_at      DateTime?
+  reverted_by      Int?
+  notes            String?               @db.Text
+  logs             ClassProgressionLog[]
+  admin            User                  @relation("ProgressionExecutedBy", fields: [executed_by], references: [id])
+  reverter         User?                 @relation("ProgressionRevertedBy", fields: [reverted_by], references: [id])
+
+  @@index([executed_at])
+  @@map("school_year_progression")
+}
+
+model ClassProgressionLog {
+  id             Int                   @id @default(autoincrement())
+  progression_id Int
+  student_id     Int
+  student_type   String                @db.VarChar(20)
+  old_class      String                @db.VarChar(20)
+  new_class      String                @db.VarChar(20)
+  action         String                @db.VarChar(20)
+  progression    SchoolYearProgression @relation(fields: [progression_id], references: [id], onDelete: Cascade)
+
+  @@index([progression_id])
+  @@map("class_progression_log")
 }
 
 model DokumentasiFoto {
