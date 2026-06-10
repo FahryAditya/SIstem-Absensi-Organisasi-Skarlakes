@@ -303,27 +303,30 @@ export default function AdminClient({ user }: Props) {
           </div>
           <p className="page-sub mt-0.5">Buat, edit, dan hapus akun pengguna sistem</p>
         </div>
-        <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           {user.role === 'administrator' && (
             <button onClick={openEmailSetting} className="btn-secondary text-persian-blue font-semibold">
               <Mail className="w-4 h-4" />
               Pengirim Email
             </button>
           )}
-          <AdminDropdownMenu
-            onOpenEmailSetting={openEmailSetting}
-            onOpenAddUser={openAdd}
-            onOptimizeDb={handleOptimize}
-            onOpenCleanupWawancara={() => setCleanupModalOpen(true)}
-            userRole={user.role}
-          />
-          <button onClick={() => window.open('/api/export?tipe=admin', '_blank')} className="btn-secondary">
-            <span className="flex items-center gap-2 text-persian-blue font-semibold">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-              Export XLS
-            </span>
-          </button>
-          <button onClick={openAdd} className="btn-primary"><Plus className="w-4 h-4" />Tambah User</button>
+
+          <div className="flex flex-wrap items-center gap-2 ml-auto">
+            <AdminDropdownMenu
+              onOpenEmailSetting={openEmailSetting}
+              onOpenAddUser={openAdd}
+              onOptimizeDb={handleOptimize}
+              onOpenCleanupWawancara={() => setCleanupModalOpen(true)}
+              userRole={user.role}
+            />
+            <button onClick={() => window.open('/api/export?tipe=admin', '_blank')} className="btn-secondary">
+              <span className="flex items-center gap-2 text-persian-blue font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                Export XLS
+              </span>
+            </button>
+            <button onClick={openAdd} className="btn-primary"><Plus className="w-4 h-4" />Tambah User</button>
+          </div>
         </div>
 
       {/* Role cards */}
