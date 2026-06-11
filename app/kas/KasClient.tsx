@@ -165,8 +165,8 @@ export default function KasClient({ user }: Props) {
   // Avatar color based on first char
   function avatarColor(nama: string) {
     const colors = [
-      'bg-blue-500','bg-emerald-500','bg-violet-500','bg-amber-500',
-      'bg-rose-500','bg-cyan-500','bg-orange-500','bg-indigo-500',
+      'bg-white/50','bg-emerald-500','bg-persian-blue/100','bg-amber-500/100',
+      'bg-rose-500','bg-cyan-500','bg-orange-500','bg-persian-blue/100',
     ]
     return colors[(nama.charCodeAt(0) || 0) % colors.length]
   }
@@ -198,16 +198,28 @@ export default function KasClient({ user }: Props) {
     {
       key: 'nama',
       label: 'Nama Anggota',
+      className: 'min-w-[150px]',
       render: (item: KasData) => (
         <div className="py-1">
-          <div className="font-bold text-slate-800 text-sm leading-tight">{item.nama}</div>
+          <div className="font-bold text-white text-sm leading-tight">{item.nama}</div>
           <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider mt-0.5">{item.kelas}</div>
         </div>
       )
     },
     {
+      key: 'organisasi',
+      label: 'Organisasi',
+      className: 'hidden sm:table-cell',
+      render: (item: KasData & { organisasi?: string }) => (
+        <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-white/10 text-slate-300 uppercase tracking-tight">
+          {item.organisasi || activeOrg}
+        </span>
+      )
+    },
+    {
       key: 'total_kas',
       label: 'Total Kas',
+      className: 'min-w-[100px]',
       render: (item: KasData) => (
         <div className="font-mono font-bold text-emerald-600 text-sm">
           {formatCurrency(item.total_kas)}
@@ -217,8 +229,9 @@ export default function KasClient({ user }: Props) {
     {
       key: 'terakhir_bayar',
       label: 'Terakhir Bayar',
+      className: 'hidden md:table-cell min-w-[140px]',
       render: (item: KasData) => (
-        <div className="flex items-center gap-1.5 text-slate-500 text-xs">
+        <div className="flex items-center gap-1.5 text-slate-400 text-xs">
           <History className="w-3 h-3 text-slate-400" />
           {formatTerakhirBayar(item.terakhir_bayar)}
         </div>
@@ -231,7 +244,7 @@ export default function KasClient({ user }: Props) {
         <div className="flex items-center gap-2">
           <button 
             onClick={() => openModal(item.id)}
-            className="p-2 bg-green-50 text-green-600 hover:bg-green-600 hover:text-white rounded-lg transition-all duration-200"
+            className="p-2 bg-green-500/10 text-green-600 hover:bg-green-600 hover:text-white rounded-lg transition-all duration-200"
             title="Setor Kas"
           >
             <Plus className="w-4 h-4" />
@@ -247,16 +260,16 @@ export default function KasClient({ user }: Props) {
         <div>
           <div className="flex items-center gap-2.5">
             <Wallet className="w-6 h-6 text-amber-500" />
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Buku Kas</h1>
+            <h1 className="text-2xl font-black text-white tracking-tight">Buku Kas</h1>
           </div>
-          <p className="text-sm text-slate-500 mt-1">Laporan rekapitulasi pembayaran uang kas anggota secara keseluruhan.</p>
+          <p className="text-sm text-slate-400 mt-1">Laporan rekapitulasi pembayaran uang kas anggota secara keseluruhan.</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => openModal()} className="btn-primary whitespace-nowrap shadow-sm">
             <Plus className="w-4 h-4 mr-1.5" />
             Setor Kas
           </button>
-          <a href="/pengeluaran" className="btn bg-red-50 text-red-600 hover:bg-red-600 hover:text-white border-red-200 whitespace-nowrap shadow-sm">
+          <a href="/pengeluaran" className="btn bg-red-500/10 text-red-600 hover:bg-red-600 hover:text-white border-white/10 whitespace-nowrap shadow-sm">
             <Minus className="w-4 h-4 mr-1.5" />
             Tarik Kas
           </a>
@@ -310,12 +323,12 @@ export default function KasClient({ user }: Props) {
       <div className="card p-5">
         <div className="flex items-center gap-2 mb-4">
           <Wallet className="w-5 h-5 text-amber-500" />
-          <h3 className="text-sm font-bold text-[#011025]">Transaksi Manual Cepat</h3>
+          <h3 className="text-sm font-bold text-white">Transaksi Manual Cepat</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-green-50 rounded-lg border border-green-100">
-            <div className="text-xs font-semibold text-green-700 mb-1">Setor Kas</div>
-            <p className="text-xs text-slate-600 mb-3">Tambahkan kas untuk anggota secara manual</p>
+          <div className="p-4 bg-green-500/10 rounded-lg border border-green-100">
+            <div className="text-xs font-semibold text-green-400 mb-1">Setor Kas</div>
+            <p className="text-xs text-slate-300 mb-3">Tambahkan kas untuk anggota secara manual</p>
             <button 
               onClick={() => {
                 if (data.length > 0) openModal(data[0].id)
@@ -326,9 +339,9 @@ export default function KasClient({ user }: Props) {
               Setor Kas
             </button>
           </div>
-          <div className="p-4 bg-red-50 rounded-lg border border-red-100">
-            <div className="text-xs font-semibold text-red-700 mb-1">Tarik Kas</div>
-            <p className="text-xs text-slate-600 mb-3">Kurangi kas untuk pengeluaran</p>
+          <div className="p-4 bg-red-500/10 rounded-lg border border-red-100">
+            <div className="text-xs font-semibold text-red-400 mb-1">Tarik Kas</div>
+            <p className="text-xs text-slate-300 mb-3">Kurangi kas untuk pengeluaran</p>
             <a 
               href="/pengeluaran"
               className="w-full py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition-colors flex items-center justify-center"
@@ -342,7 +355,7 @@ export default function KasClient({ user }: Props) {
       {/* Tabel Utama Anggota */}
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+          <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
             <Search className="w-4 h-4 text-slate-400" />
             Daftar Pembayaran Anggota
           </h3>
@@ -369,7 +382,7 @@ export default function KasClient({ user }: Props) {
           onClick={(e) => { if (e.target === e.currentTarget) setModalOpen(false) }}
         >
           <div
-            className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+            className="bg-deep-navy rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
             style={{ animation: 'slideUp 0.15s ease' }}
           >
             <div className="p-4 border-b flex items-center justify-between text-white bg-green-600">
@@ -387,7 +400,7 @@ export default function KasClient({ user }: Props) {
                 <label className="label">Pilih Anggota</label>
 
                 {memberLoading ? (
-                  <div className="flex items-center gap-2 text-sm text-slate-500 p-3 bg-slate-50 rounded-xl border border-dashed">
+                  <div className="flex items-center gap-2 text-sm text-slate-400 p-3 bg-white/5 rounded-xl border border-dashed">
                     <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
                     Memuat daftar anggota...
                   </div>
@@ -397,10 +410,10 @@ export default function KasClient({ user }: Props) {
                     <button
                       type="button"
                       onClick={() => setDropdownOpen(o => !o)}
-                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl border-2 bg-white text-left transition-all duration-200 ${
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl border-2 bg-deep-navy text-left transition-all duration-200 ${
                         dropdownOpen
                           ? 'border-emerald-400 ring-2 ring-emerald-100 shadow-sm'
-                          : 'border-slate-200 hover:border-emerald-300'
+                          : 'border-white/10 hover:border-emerald-300'
                       }`}
                     >
                       {selectedMember ? (
@@ -409,13 +422,13 @@ export default function KasClient({ user }: Props) {
                             {selectedMember.nama.charAt(0).toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-bold text-slate-800 truncate">{selectedMember.nama}</div>
+                            <div className="text-sm font-bold text-white truncate">{selectedMember.nama}</div>
                             <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{selectedMember.kelas}</div>
                           </div>
                         </>
                       ) : (
                         <>
-                          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
                             <UserCircle2 className="w-5 h-5 text-slate-400" />
                           </div>
                           <span className="text-slate-400 text-sm flex-1">-- Pilih Anggota --</span>
@@ -427,11 +440,11 @@ export default function KasClient({ user }: Props) {
                     {/* Dropdown panel */}
                     {dropdownOpen && (
                       <div
-                        className="absolute z-50 w-full mt-2 bg-white rounded-2xl border border-slate-100 shadow-2xl shadow-slate-200/80 overflow-hidden"
+                        className="absolute z-50 w-full mt-2 bg-deep-navy rounded-2xl border border-white/10 shadow-2xl shadow-slate-200/80 overflow-hidden"
                         style={{ animation: 'slideUp 0.15s ease' }}
                       >
                         {/* Search bar */}
-                        <div className="p-3 border-b border-slate-100">
+                        <div className="p-3 border-b border-white/10">
                           <div className="relative">
                             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                             <input
@@ -440,7 +453,7 @@ export default function KasClient({ user }: Props) {
                               placeholder="Cari nama atau kelas..."
                               value={memberSearch}
                               onChange={e => setMemberSearch(e.target.value)}
-                              className="w-full pl-9 pr-3 py-2 text-sm rounded-lg bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400"
+                              className="w-full pl-9 pr-3 py-2 text-sm rounded-lg bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400"
                             />
                           </div>
                         </div>
@@ -464,7 +477,7 @@ export default function KasClient({ user }: Props) {
                                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-left transition-colors ${
                                     isSelected
                                       ? 'bg-emerald-50'
-                                      : 'hover:bg-slate-50'
+                                      : 'hover:bg-white/5'
                                   }`}
                                 >
                                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-black flex-shrink-0 shadow-sm ${
@@ -474,7 +487,7 @@ export default function KasClient({ user }: Props) {
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <div className={`text-sm font-semibold truncate ${
-                                      isSelected ? 'text-emerald-700' : 'text-slate-700'
+                                      isSelected ? 'text-emerald-700' : 'text-slate-200'
                                     }`}>{m.nama}</div>
                                     <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{m.kelas}</div>
                                   </div>
@@ -488,7 +501,7 @@ export default function KasClient({ user }: Props) {
                         </div>
 
                         {/* Footer count */}
-                        <div className="px-4 py-2 border-t border-slate-100 bg-slate-50">
+                        <div className="px-4 py-2 border-t border-white/10 bg-white/5">
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                             {filteredMembers.length} dari {members.length} anggota
                           </span>

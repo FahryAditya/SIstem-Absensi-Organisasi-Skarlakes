@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { CalendarDays, Plus, Pencil, Trash2, Clock, MapPin, AlertCircle } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { CalendarDays, Plus, Pencil, Trash2, Clock, MapPin, AlertCircle, ArrowLeft } from 'lucide-react'
 
 interface JadwalItem {
   id: number
@@ -15,10 +16,10 @@ interface JadwalItem {
 }
 
 const ORG_TABS = [
-  { key: 'programming', label: 'Programming', color: 'from-blue-500 to-cyan-500' },
-  { key: 'english', label: 'English Club', color: 'from-emerald-500 to-teal-500' },
-  { key: 'osis', label: 'OSIS', color: 'from-purple-500 to-violet-500' },
-  { key: 'mpk', label: 'MPK', color: 'from-orange-500 to-amber-500' },
+  { key: 'programming', label: 'Programming', color: 'from-blue-500 to-cyan-500', isEkskul: true },
+  { key: 'english', label: 'English Club', color: 'from-emerald-500 to-teal-500', isEkskul: true },
+  { key: 'osis', label: 'OSIS', color: 'from-purple-500 to-persian-blue/100', isEkskul: false },
+  { key: 'mpk', label: 'MPK', color: 'from-orange-500 to-amber-500', isEkskul: false },
 ]
 
 const emptyForm = { judul: '', tanggal: '', waktu: '', lokasi: '', keterangan: '', organisasi: 'programming', wajib_hadir: false }
@@ -28,6 +29,7 @@ function isUpcoming(tgl: string) {
 }
 
 export default function JadwalPage() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState('programming')
   const [data, setData] = useState<JadwalItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -88,13 +90,18 @@ export default function JadwalPage() {
   return (
     <div className="min-h-screen bg-[#0f1117] text-white p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
+        <div className="mb-4">
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Kembali
+          </button>
+        </div>
         <div className="flex items-center justify-between mb-8">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <CalendarDays className="w-5 h-5 text-blue-400" />
-              <h1 className="text-2xl font-bold">Jadwal Kegiatan</h1>
+              <h1 className="text-2xl font-bold">{tabInfo.isEkskul ? 'Jadwal Pengajar' : 'Pembawa Materi'}</h1>
             </div>
-            <p className="text-slate-400 text-sm">Jadwal pengajar ekskul & rapat organisasi</p>
+            <p className="text-slate-400 text-sm">{tabInfo.isEkskul ? 'Jadwal pengajar ekstrakurikuler' : 'Jadwal pembawa materi rapat organisasi'}</p>
           </div>
           <button onClick={openCreate}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r ${tabInfo.color} text-white font-medium text-sm hover:opacity-90 transition`}>
@@ -115,7 +122,7 @@ export default function JadwalPage() {
         {loading ? (
           <div className="space-y-4">{[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-white/5 rounded-2xl animate-pulse" />)}</div>
         ) : data.length === 0 ? (
-          <div className="text-center py-20 text-slate-500">
+          <div className="text-center py-20 text-slate-400">
             <CalendarDays className="w-12 h-12 mx-auto mb-4 opacity-30" />
             <p>Belum ada jadwal</p>
           </div>
@@ -205,7 +212,7 @@ function JadwalCard({ item, onEdit, onDelete, color }: { item: JadwalItem; onEdi
         <div className="flex items-center gap-2 flex-wrap mb-1">
           <h3 className="font-semibold text-white">{item.judul}</h3>
           {item.wajib_hadir && (
-            <span className="flex items-center gap-1 text-xs text-red-400 bg-red-500/10 border border-red-500/30 px-2 py-0.5 rounded-full">
+            <span className="flex items-center gap-1 text-xs text-red-400 bg-red-500/100/10 border border-red-500/30 px-2 py-0.5 rounded-full">
               <AlertCircle className="w-3 h-3" /> Wajib Hadir
             </span>
           )}
@@ -214,7 +221,7 @@ function JadwalCard({ item, onEdit, onDelete, color }: { item: JadwalItem; onEdi
           {item.waktu && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{item.waktu}</span>}
           {item.lokasi && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{item.lokasi}</span>}
         </div>
-        {item.keterangan && <p className="text-xs text-slate-500 mt-1.5">{item.keterangan}</p>}
+        {item.keterangan && <p className="text-xs text-slate-400 mt-1.5">{item.keterangan}</p>}
       </div>
       <div className="flex items-start gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
         <button onClick={() => onEdit(item)} className="p-1.5 text-slate-400 hover:text-blue-400 transition"><Pencil className="w-4 h-4" /></button>

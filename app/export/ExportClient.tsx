@@ -126,7 +126,7 @@ export default function ExportClient({ user }: Props) {
       <div className="xl:col-span-2 space-y-6">
         <div>
           <div className="flex items-center gap-2.5">
-            <FileSpreadsheet className="w-5 h-5 text-indigo-500" />
+            <FileSpreadsheet className="w-5 h-5 text-persian-blue/100" />
             <h2 className="page-title">Export Data ke Excel</h2>
           </div>
           <p className="page-sub mt-0.5">Download laporan sesuai hak akses role pengguna.</p>
@@ -134,8 +134,8 @@ export default function ExportClient({ user }: Props) {
 
         <div className="card p-5 space-y-3">
           <div className="flex items-center gap-2 mb-1">
-            <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-black flex items-center justify-center">1</span>
-            <h3 className="text-sm font-bold text-slate-700">Pilih Data Export</h3>
+            <span className="w-6 h-6 rounded-full bg-persian-blue text-white text-xs font-black flex items-center justify-center">1</span>
+            <h3 className="text-sm font-bold text-slate-200">Pilih Data Export</h3>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {exportOptions.map(opt => {
@@ -144,11 +144,11 @@ export default function ExportClient({ user }: Props) {
                 <button
                   key={opt.value}
                   onClick={() => setExportType(opt.value)}
-                  className={`p-4 rounded-lg border text-left transition-all ${exportType === opt.value ? 'border-indigo-400 bg-indigo-50 ring-2 ring-indigo-100' : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'}`}
+                  className={`p-4 rounded-lg border text-left transition-all ${exportType === opt.value ? 'border-blue-400 bg-persian-blue/10 ring-2 ring-persian-blue/20' : 'border-white/10 hover:border-slate-300 bg-deep-navy hover:bg-white/5'}`}
                 >
-                  <Icon className={exportType === opt.value ? 'w-5 h-5 text-indigo-600 mb-2' : 'w-5 h-5 text-slate-500 mb-2'} />
-                  <div className="text-sm font-bold text-slate-800">{opt.label}</div>
-                  <div className="text-xs text-slate-500 mt-0.5 leading-relaxed">{opt.desc}</div>
+                  <Icon className={exportType === opt.value ? 'w-5 h-5 text-persian-blue mb-2' : 'w-5 h-5 text-slate-400 mb-2'} />
+                  <div className="text-sm font-bold text-white">{opt.label}</div>
+                  <div className="text-xs text-slate-400 mt-0.5 leading-relaxed">{opt.desc}</div>
                 </button>
               )
             })}
@@ -157,8 +157,8 @@ export default function ExportClient({ user }: Props) {
 
         <div className="card p-5 space-y-4">
           <div className="flex items-center gap-2 mb-1">
-            <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-black flex items-center justify-center">2</span>
-            <h3 className="text-sm font-bold text-slate-700">Atur Filter</h3>
+            <span className="w-6 h-6 rounded-full bg-persian-blue text-white text-xs font-black flex items-center justify-center">2</span>
+            <h3 className="text-sm font-bold text-slate-200">Atur Filter</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -193,7 +193,7 @@ export default function ExportClient({ user }: Props) {
             </div>
           </div>
 
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800 leading-relaxed">
+          <div className="rounded-lg border border-white/10 bg-white/5 p-3 text-xs text-blue-200 leading-relaxed">
             <strong>{currentOption.sheets}</strong>. Scope export: {selectedExportOrgs.map(o => ORG_LABELS[o as OrgType]).join(', ')}.
             {startDate && endDate ? <> Periode {formatDate(startDate)} sampai {formatDate(endDate)}.</> : <> Export diblokir jika tanggal kosong.</>}
           </div>
@@ -201,13 +201,13 @@ export default function ExportClient({ user }: Props) {
 
         <div className="card p-5">
           <div className="flex items-center gap-2 mb-4">
-            <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-black flex items-center justify-center">3</span>
-            <h3 className="text-sm font-bold text-slate-700">Download File</h3>
+            <span className="w-6 h-6 rounded-full bg-persian-blue text-white text-xs font-black flex items-center justify-center">3</span>
+            <h3 className="text-sm font-bold text-slate-200">Download File</h3>
           </div>
           <button onClick={handleExport} disabled={loading || !startDate || !endDate} className="btn-primary w-full justify-center py-3 text-base">
             {loading ? <><Loader2 className="w-5 h-5 animate-spin" />Menyiapkan file Excel...</> : <><Download className="w-5 h-5" />Download Excel (.xlsx)</>}
           </button>
-          <div className="mt-4 space-y-1.5 text-xs text-slate-500">
+          <div className="mt-4 space-y-1.5 text-xs text-slate-400">
             <div>Format Microsoft Excel (.xlsx)</div>
             <div>Semua aksi export tercatat di Log Aktivitas</div>
             <div>File dibuat langsung sebagai respons unduhan dan tidak disimpan permanen di server</div>
@@ -218,10 +218,10 @@ export default function ExportClient({ user }: Props) {
       <div className="space-y-6 pt-6">
         <div className="card p-5">
           <div className="flex items-center gap-2.5 mb-3">
-            <FileSpreadsheet className="w-5 h-5 text-indigo-500" />
-            <h3 className="text-sm font-bold text-slate-800">Kontrol Akses</h3>
+            <FileSpreadsheet className="w-5 h-5 text-persian-blue/100" />
+            <h3 className="text-sm font-bold text-white">Kontrol Akses</h3>
           </div>
-          <div className="space-y-3 text-sm text-slate-600">
+          <div className="space-y-3 text-sm text-slate-300">
             <div><strong>Super Admin:</strong> dapat export semua ekskul atau memilih ekskul tertentu.</div>
             <div><strong>Admin Ekskul:</strong> export dibatasi sesuai role pengguna.</div>
             <div><strong>Tanggal:</strong> wajib diisi untuk semua export.</div>
@@ -229,7 +229,7 @@ export default function ExportClient({ user }: Props) {
         </div>
 
         {isSuperAdmin && (
-          <div className="card p-5 border-red-200 bg-red-50/40">
+          <div className="card p-5 border-white/10 bg-red-500/10/40">
             <div className="flex items-center gap-2.5 mb-4">
               <ShieldAlert className="w-5 h-5 text-red-600" />
               <h3 className="text-sm font-bold text-red-800">Clear Database</h3>
@@ -250,16 +250,16 @@ export default function ExportClient({ user }: Props) {
                   onChange={v => setClearType(v as ClearType)}
                   options={clearOptions.map(o => ({ value: o.value, label: o.label }))}
                 />
-                <p className="text-xs text-slate-500 mt-1">{clearOptions.find(o => o.value === clearType)?.desc}</p>
+                <p className="text-xs text-slate-400 mt-1">{clearOptions.find(o => o.value === clearType)?.desc}</p>
               </div>
               <div className="form-group">
                 <label className="label">Konfirmasi *</label>
                 <input value={clearConfirm} onChange={e => setClearConfirm(e.target.value)} className="input" placeholder={expectedConfirm} />
               </div>
-              <button onClick={handleClearDatabase} disabled={clearing || clearConfirm !== expectedConfirm} className="btn-secondary w-full justify-center text-red-700 border-red-200 hover:bg-red-50">
+              <button onClick={handleClearDatabase} disabled={clearing || clearConfirm !== expectedConfirm} className="btn-secondary w-full justify-center text-red-400 border-white/10 hover:bg-red-500/10">
                 {clearing ? <><Loader2 className="w-4 h-4 animate-spin" />Memproses...</> : <><Trash2 className="w-4 h-4" />Clear Database</>}
               </button>
-              <p className="text-xs text-red-700 leading-relaxed">
+              <p className="text-xs text-red-400 leading-relaxed">
                 Sistem membuat backup otomatis sebelum hapus. Proses selalu per ekskul, data ekskul lain tidak disentuh.
               </p>
             </div>

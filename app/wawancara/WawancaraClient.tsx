@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import Modal from '@/components/ui/Modal'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { formatDateTime } from '@/lib/utils'
-import { isAdministrator } from '@/lib/auth-shared'
+import { isAdministrator, canAccessOsis } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import {
   CalendarClock, CheckCircle2, Clock, Download, Loader2, Lock, MessageSquareText,
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 
 import { pusherClient } from '@/lib/pusher-client'
+import Select from '@/components/ui/Select'
 
 type Org = 'osis' | 'mpk'
 type SessionStatus = 'SCHEDULED' | 'ACTIVE' | 'SELESAI' | 'DIBATALKAN'
@@ -76,10 +77,10 @@ interface Props {
 }
 
 const statusStyle: Record<SessionStatus, string> = {
-  SCHEDULED: 'bg-blue-50 text-blue-700 border-blue-200',
-  ACTIVE: 'bg-green-50 text-green-700 border-green-200',
-  SELESAI: 'bg-slate-100 text-slate-700 border-slate-200',
-  DIBATALKAN: 'bg-red-50 text-red-700 border-red-200',
+  SCHEDULED: 'bg-white/5 text-blue-300 border-white/10',
+  ACTIVE: 'bg-green-500/10 text-green-400 border-white/10',
+  SELESAI: 'bg-white/10 text-slate-200 border-white/10',
+  DIBATALKAN: 'bg-red-500/10 text-red-400 border-white/10',
 }
 
 const queueLabel: Record<QueueStatus, string> = {
@@ -89,9 +90,9 @@ const queueLabel: Record<QueueStatus, string> = {
 }
 
 const queueStyle: Record<QueueStatus, string> = {
-  MENUNGGU: 'bg-green-50 border-green-200 text-green-700',
-  WAWANCARA: 'bg-red-50 border-red-200 text-red-700',
-  SELESAI_WAWANCARA: 'bg-slate-100 border-slate-200 text-slate-600',
+  MENUNGGU: 'bg-green-500/10 border-white/10 text-green-400',
+  WAWANCARA: 'bg-red-500/10 border-white/10 text-red-400',
+  SELESAI_WAWANCARA: 'bg-white/10 border-white/10 text-slate-300',
 }
 
 const resultLabel = {
@@ -115,10 +116,10 @@ const validationLabel: Record<ScanValidation, string> = {
 }
 
 const validationStyle: Record<ScanValidation, string> = {
-  SAH: 'bg-green-50 text-green-700 border-green-200',
-  SAH_DICURIGAI: 'bg-amber-50 text-amber-700 border-amber-200',
-  DITOLAK_VPN: 'bg-red-50 text-red-700 border-red-200',
-  TIDAK_SAH: 'bg-slate-100 text-slate-700 border-slate-200',
+  SAH: 'bg-green-500/10 text-green-400 border-white/10',
+  SAH_DICURIGAI: 'bg-amber-500/10 text-amber-400 border-white/10',
+  DITOLAK_VPN: 'bg-red-500/10 text-red-400 border-white/10',
+  TIDAK_SAH: 'bg-white/10 text-slate-200 border-white/10',
 }
 
 const SESSION_POLL_MS = 15_000
@@ -571,6 +572,26 @@ export default function WawancaraClient({ user }: Props) {
     setExportModal(false)
   }
 
+  // Check if feature is "turned on" (at least one ACTIVE or SCHEDULED session exists)
+  const isFeatureEnabled = sessions.some(s => s.status === 'ACTIVE' || s.status === 'SCHEDULED')
+  
+  if (!admin && !isFeatureEnabled && !loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center space-y-4">
+        <div className="w-20 h-20 bg-red-500/10 rounded-3xl flex items-center justify-center border border-red-500/20">
+          <Lock className="w-10 h-10 text-red-500" />
+        </div>
+        <div>
+          <h2 className="text-xl font-black text-white">Fitur Wawancara Terkunci</h2>
+          <p className="text-slate-400 max-w-sm mx-auto mt-2">
+            Administrator belum menyalakan fitur wawancara OSIS & MPK. Silakan hubungi Administrator untuk membuat jadwal atau mengaktifkan sesi.
+          </p>
+        </div>
+        <button onClick={() => window.location.href = '/dashboard'} className="btn-secondary">Kembali ke Dashboard</button>
+      </div>
+    )
+  }
+
   async function sendChat() {
     if (!activeSession || !chatText.trim()) return
     const message = chatText.trim()
@@ -664,18 +685,18 @@ export default function WawancaraClient({ user }: Props) {
       <div className="page-header">
         <div className="flex-1">
           <div className="flex items-center gap-2.5">
-            <MessageSquareText className="w-5 h-5 text-indigo-500" />
+            <MessageSquareText className="w-5 h-5 text-persian-blue/100" />
             <h2 className="page-title">Wawancara OSIS & MPK</h2>
-            <span className="badge border border-slate-200 bg-white text-slate-600">{orgLabel}</span>
+            <span className="badge border border-white/10 bg-deep-navy text-slate-300">{orgLabel}</span>
           </div>
           <p className="page-sub mt-0.5">Kontrol sesi, antrian digital, dan penilaian kandidat.</p>
         </div>
         <div className="flex gap-3 flex-wrap items-center">
-          <div className="font-mono text-xl font-black text-indigo-600 bg-indigo-50 border border-indigo-200 px-4 py-1.5 rounded-xl shadow-sm tracking-widest flex items-center gap-2" suppressHydrationWarning>
-            <Clock className="w-4 h-4 text-indigo-400" />
+          <div className="font-mono text-xl font-black text-persian-blue bg-persian-blue/10 border border-persian-blue/30 px-4 py-1.5 rounded-xl shadow-sm tracking-widest flex items-center gap-2" suppressHydrationWarning>
+            <Clock className="w-4 h-4 text-blue-400" />
             {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
           </div>
-          {admin && <button onClick={autoSchedule} disabled={saving} className="btn-secondary text-indigo-600 border-indigo-200 hover:bg-indigo-50"><CalendarClock className="w-4 h-4" />Jadwalkan</button>}
+          {admin && <button onClick={autoSchedule} disabled={saving} className="btn-secondary text-persian-blue border-persian-blue/30 hover:bg-persian-blue/10"><CalendarClock className="w-4 h-4" />Jadwalkan</button>}
           <button onClick={openAddPeserta} className="btn-secondary"><UserPlus className="w-4 h-4" />Tambah Peserta</button>
           {admin && <button onClick={openCreate} className="btn-primary"><Plus className="w-4 h-4" />Buat/Aktifkan</button>}
         </div>
@@ -684,19 +705,19 @@ export default function WawancaraClient({ user }: Props) {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
         <div className="xl:col-span-2 space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="card p-4"><div className="text-xs font-bold text-slate-500">Status</div><div className="mt-2"><span className={`badge border ${selectedSession ? statusStyle[selectedSession.status] : 'bg-slate-50 border-slate-200 text-slate-500'}`}>{selectedSession?.status || 'NONAKTIF'}</span></div></div>
-            <div className="card p-4"><div className="text-xs font-bold text-slate-500">Antrian</div><div className="text-2xl font-black font-mono text-slate-800">{queue.length}</div></div>
-            <div className="card p-4"><div className="text-xs font-bold text-slate-500">Sudah Dinilai</div><div className="text-2xl font-black font-mono text-green-600">{done}</div></div>
-            <div className="card p-4"><div className="text-xs font-bold text-slate-500">Belum Dinilai</div><div className="text-2xl font-black font-mono text-amber-600">{Math.max(queue.length - done, 0)}</div></div>
+            <div className="card p-4"><div className="text-xs font-bold text-slate-400">Status</div><div className="mt-2"><span className={`badge border ${selectedSession ? statusStyle[selectedSession.status] : 'bg-white/5 border-white/10 text-slate-400'}`}>{selectedSession?.status || 'NONAKTIF'}</span></div></div>
+            <div className="card p-4"><div className="text-xs font-bold text-slate-400">Antrian</div><div className="text-2xl font-black font-mono text-white">{queue.length}</div></div>
+            <div className="card p-4"><div className="text-xs font-bold text-slate-400">Sudah Dinilai</div><div className="text-2xl font-black font-mono text-green-600">{done}</div></div>
+            <div className="card p-4"><div className="text-xs font-bold text-slate-400">Belum Dinilai</div><div className="text-2xl font-black font-mono text-amber-600">{Math.max(queue.length - done, 0)}</div></div>
           </div>
 
           <div className="card overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
+            <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between gap-3 flex-wrap">
               <div>
-                <div className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <div className="text-sm font-bold text-white flex items-center gap-2">
                   Antrian Kandidat
                   {selectedSession?.status === 'ACTIVE' && selectedSession.jadwal_selesai && (
-                    <span className="badge bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1 font-mono">
+                    <span className="badge bg-amber-500/10 text-amber-400 border border-white/10 flex items-center gap-1 font-mono">
                       <Clock className="w-3 h-3" />
                       Sisa: {
                         (() => {
@@ -710,14 +731,14 @@ export default function WawancaraClient({ user }: Props) {
                     </span>
                   )}
                 </div>
-                <div className="text-xs text-slate-500 mt-1">
+                <div className="text-xs text-slate-400 mt-1">
                   {selectedSession ? `${formatDateTime(selectedSession.jadwal_mulai)} - ${selectedSession.jadwal_selesai ? formatDateTime(selectedSession.jadwal_selesai) : 'selesai manual'}` : 'Belum ada sesi aktif atau terjadwal'}
                 </div>
               </div>
               {selectedSession && (
                 <div className="flex flex-wrap gap-2">
                   {admin && selectedSession.status === 'SCHEDULED' && <button onClick={() => updateSession(selectedSession.id, 'activate')} className="btn-secondary btn-sm"><Play className="w-3.5 h-3.5" />Aktifkan</button>}
-                  {admin && ['SCHEDULED', 'ACTIVE'].includes(selectedSession.status) && <button onClick={() => openEdit(selectedSession)} className="btn-secondary btn-sm text-indigo-600"><SquarePen className="w-3.5 h-3.5" />Edit Jadwal</button>}
+                  {admin && ['SCHEDULED', 'ACTIVE'].includes(selectedSession.status) && <button onClick={() => openEdit(selectedSession)} className="btn-secondary btn-sm text-persian-blue"><SquarePen className="w-3.5 h-3.5" />Edit Jadwal</button>}
                   {admin && <button onClick={() => window.location.href = '/hapus-peserta'} className="btn-secondary btn-sm text-red-600"><UserX className="w-3.5 h-3.5" />Hapus Peserta</button>}
                   {admin && selectedSession.status === 'ACTIVE' && <button onClick={() => setConfirmAction({ id: selectedSession.id, action: 'finish', title: 'Finalisasi hasil?', message: 'Setelah finalisasi, semua data wawancara akan terkunci permanen.' })} className="btn-primary btn-sm bg-gradient-to-r from-slate-900 to-slate-800 shadow-md hover:shadow-lg"><CheckCircle2 className="w-3.5 h-3.5" />Finalisasi</button>}
                   {admin && ['SCHEDULED', 'ACTIVE'].includes(selectedSession.status) && <button onClick={() => setConfirmAction({ id: selectedSession.id, action: 'cancel', title: 'Batalkan sesi?', message: 'Sesi dibatalkan dan tidak bisa diedit lagi. Buat jadwal baru jika diperlukan.' })} className="btn-secondary btn-sm text-red-600"><XCircle className="w-3.5 h-3.5" />Batal</button>}
@@ -726,23 +747,21 @@ export default function WawancaraClient({ user }: Props) {
               )}
             </div>
 
-            <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/60 grid grid-cols-1 sm:grid-cols-4 gap-2">
-              <div className="flex items-center px-3 text-xs font-bold text-slate-500 bg-white border border-slate-200 rounded-xl">
+            <div className="px-5 py-3 border-b border-white/10 hover:bg-white/10 grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="flex items-center px-3 text-xs font-bold text-slate-400 bg-deep-navy border border-white/10 rounded-xl h-[42px]">
                 Organisasi: OSIS & MPK
               </div>
-              <select value={hasilFilter} onChange={(e) => setHasilFilter(e.target.value)} className="input py-2">
-                <option value="">Semua Hasil</option>
-                <option value="LOLOS">Lolos</option>
-                <option value="TIDAK_LOLOS">Tidak Lolos</option>
-              </select>
-              <select value={validasiFilter} onChange={(e) => setValidasiFilter(e.target.value)} className="input py-2">
-                <option value="">Semua Validasi</option>
-                <option value="SAH">Sah</option>
-                <option value="SAH_DICURIGAI">Sah + Flag</option>
-                <option value="DITOLAK_VPN">Ditolak VPN</option>
-                <option value="TIDAK_SAH">Tidak Sah</option>
-              </select>
-              <input value={kelasDraft} onChange={(e) => setKelasDraft(e.target.value)} className="input py-2" placeholder="Filter kelas, contoh X MPLB 1" maxLength={30} />
+              <Select
+                value={hasilFilter}
+                onChange={(val) => setHasilFilter(val)}
+                options={[
+                  { value: '', label: 'Semua Hasil' },
+                  { value: 'LOLOS', label: 'Lolos' },
+                  { value: 'TIDAK_LOLOS', label: 'Tidak Lolos' },
+                  { value: 'PENDING', label: 'Pending' },
+                ]}
+              />
+              <input value={kelasDraft} onChange={(e) => setKelasDraft(e.target.value)} className="input py-2 h-[42px]" placeholder="Filter kelas, contoh X MPLB 1" maxLength={30} />
             </div>
 
             {loading ? (
@@ -754,21 +773,24 @@ export default function WawancaraClient({ user }: Props) {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead><tr className="bg-slate-50 border-b border-slate-200"><th className="th">No</th><th className="th">Kandidat</th><th className="th">Ekskul</th><th className="th">Status</th><th className="th">Validasi</th><th className="th">Hasil</th><th className="th">Persentase</th><th className="th">Catatan</th><th className="th"></th></tr></thead>
+                  <thead><tr className="bg-white/5 border-b border-white/10"><th className="th">No</th><th className="th">Kandidat</th><th className="th">Ekskul</th><th className="th">Status</th><th className="th">Validasi</th><th className="th">Hasil</th><th className="th">Persentase</th><th className="th">Catatan</th><th className="th"></th></tr></thead>
                   <tbody className="divide-y divide-slate-100">
                     {queue.map((q, index) => {
                       const notes = noteFor(q)
                       return (
                       <tr
                         key={q.id}
-                        className="hover:bg-slate-50/80 transition-colors group fade-in"
+                        className="hover:bg-white/5/80 transition-colors group fade-in"
                       >
-                        <td className="td font-mono text-slate-400">#{q.nomor_antrian}</td>
+                        <td className="td font-mono text-slate-400">
+                          {q.kelas.includes('[MPK]') ? 'MP' : q.kelas.includes('[OSIS]') ? 'OS' : ((q as any).sesiOrg === 'osis' ? 'OS' : 'MP')}
+                          {q.nomor_antrian}
+                        </td>
                         <td className="td">
                           <div className="flex items-start justify-between gap-3 min-w-72">
                             <div>
-                              <div className="font-bold text-slate-800">{q.nama}</div>
-                              <div className="text-xs text-slate-500">{q.kelas}</div>
+                              <div className="font-bold text-white">{q.nama}</div>
+                              <div className="text-xs text-slate-400">{q.kelas}</div>
                             </div>
                             {(q as any).sesiStatus === 'ACTIVE' && ['SAH', 'SAH_DICURIGAI'].includes(q.status_validasi) && q.status === 'MENUNGGU' && (
                               <button onClick={() => setInterviewConfirm(q)} className="btn-primary btn-sm whitespace-nowrap">
@@ -778,7 +800,7 @@ export default function WawancaraClient({ user }: Props) {
                             )}
                           </div>
                         </td>
-                        <td className="td"><span className="badge bg-white border border-slate-200 text-slate-600">{orgLabelMap[(q as any).sesiOrg as Org] || 'OSIS & MPK'}</span></td>
+                        <td className="td"><span className="badge bg-deep-navy border border-white/10 text-slate-300">{orgLabelMap[(q as any).sesiOrg as Org] || 'OSIS & MPK'}</span></td>
                         <td className="td"><span className={`badge border ${queueStyle[q.status]}`}>{queueLabel[q.status]}</span></td>
                         <td className="td">
                           <div className="space-y-1">
@@ -787,14 +809,14 @@ export default function WawancaraClient({ user }: Props) {
                           </div>
                         </td>
                         <td className="td">{q.hasil_wawancara ? <span className={
-                           q.hasil_wawancara.hasil === 'LOLOS' ? 'badge bg-green-50 text-green-700 border border-green-200' : 
-                           q.hasil_wawancara.hasil === 'PENDING' ? 'badge bg-amber-50 text-amber-700 border border-amber-200' :
-                           'badge bg-red-50 text-red-700 border border-red-200'
+                           q.hasil_wawancara.hasil === 'LOLOS' ? 'badge bg-green-500/10 text-green-400 border border-white/10' : 
+                           q.hasil_wawancara.hasil === 'PENDING' ? 'badge bg-amber-500/10 text-amber-400 border border-white/10' :
+                           'badge bg-red-500/10 text-red-400 border border-white/10'
                          }>{resultLabel[q.hasil_wawancara.hasil]}</span> : <span className="text-xs text-slate-400">Belum dinilai</span>}</td>
                         <td className="td font-mono text-sm">{q.hasil_wawancara ? `${q.hasil_wawancara.persentase}%` : '-'}</td>
                         <td className="td">
                           {notes.length ? (
-                            <div className="max-w-xs space-y-1 text-xs text-slate-600">
+                            <div className="max-w-xs space-y-1 text-xs text-slate-300">
                               {notes.map((note) => <div key={note}>{note}</div>)}
                             </div>
                           ) : <span className="text-xs text-slate-400">-</span>}
@@ -805,16 +827,19 @@ export default function WawancaraClient({ user }: Props) {
                               {q.status === 'WAWANCARA' && (
                                 <div className="flex gap-1 items-center">
                                   <span className="text-xs font-semibold text-red-600 px-2 py-1 flex items-center gap-1"><Lock className="w-3 h-3" /> Dikunci</span>
-                                  {admin && (
+                                  {(admin || user.role === 'admin_osis_mpk') && (
                                     <>
-                                      <button onClick={() => setQueueStatus(q.id, 'MENUNGGU')} className="btn-secondary btn-sm px-2" title="Kembalikan ke antrian"><RefreshCcw className="w-3.5 h-3.5" /></button>
+                                      <button onClick={() => setQueueStatus(q.id, 'MENUNGGU')} className="btn-secondary btn-sm px-2 text-red-600 border-red-200 hover:bg-red-50" title="Kembalikan ke antrian">
+                                        <RefreshCcw className="w-3.5 h-3.5" />
+                                        Reset
+                                      </button>
                                       <button onClick={() => openResult(q)} className="btn-primary btn-sm"><SquarePen className="w-3.5 h-3.5" />Lanjutkan</button>
                                     </>
                                   )}
                                 </div>
                               )}
                               {q.status === 'SELESAI_WAWANCARA' && ['SAH', 'SAH_DICURIGAI'].includes(q.status_validasi) && <button onClick={() => openResult(q)} className="btn-secondary btn-sm"><SquarePen className="w-3.5 h-3.5" />Lihat/Edit</button>}
-                              {admin && q.hasil_wawancara && (q.hasil_wawancara.hasil === 'TIDAK_LOLOS' || q.hasil_wawancara.hasil === 'PENDING') && <button onClick={() => openOverride(q)} className="btn-secondary btn-sm text-amber-700"><ShieldCheck className="w-3.5 h-3.5" />Override</button>}
+                              {admin && q.hasil_wawancara && (q.hasil_wawancara.hasil === 'TIDAK_LOLOS' || q.hasil_wawancara.hasil === 'PENDING') && <button onClick={() => openOverride(q)} className="btn-secondary btn-sm text-amber-400"><ShieldCheck className="w-3.5 h-3.5" />Override</button>}
                             </div>
                           ) : <span className="text-xs text-slate-400">Terkunci</span>}
                         </td>
@@ -830,29 +855,29 @@ export default function WawancaraClient({ user }: Props) {
         <div className="space-y-4">
           <div className="card p-5">
             <div className="flex items-center gap-2 mb-3">
-              <QrCode className="w-5 h-5 text-indigo-500" />
-              <h3 className="text-sm font-bold text-slate-800">QR Antrian</h3>
+              <QrCode className="w-5 h-5 text-persian-blue/100" />
+              <h3 className="text-sm font-bold text-white">QR Antrian</h3>
             </div>
             {activeSession ? (
               <div className="space-y-3">
-                <p className="text-sm text-slate-600 leading-relaxed">QR absensi dibuat dari menu Tools agar token unik, masa berlaku, GPS, dan IP tercatat otomatis.</p>
+                <p className="text-sm text-slate-300 leading-relaxed">QR absensi dibuat dari menu Tools agar token unik, masa berlaku, GPS, dan IP tercatat otomatis.</p>
                 {admin && <button onClick={() => window.open('/qr-code', '_blank')} className="btn-secondary"><QrCode className="w-4 h-4" />Buka Tools QR Code</button>}
               </div>
             ) : (
-              <div className="text-sm text-slate-500 leading-relaxed">QR muncul saat sesi {orgLabel} berstatus ACTIVE.</div>
+              <div className="text-sm text-slate-400 leading-relaxed">QR muncul saat sesi {orgLabel} berstatus ACTIVE.</div>
             )}
           </div>
 
           <div className="card p-5" onClick={() => setUnreadCount(0)}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <MessageSquareText className="w-5 h-5 text-indigo-500" />
-                <h3 className="text-sm font-bold text-slate-800">Live Chat Internal</h3>
+                <MessageSquareText className="w-5 h-5 text-persian-blue/100" />
+                <h3 className="text-sm font-bold text-white">Live Chat Internal</h3>
               </div>
               <div className="relative">
                 <Bell className={`w-5 h-5 ${unreadCount > 0 ? 'text-amber-500 animate-bounce' : 'text-slate-400'}`} />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm border border-white">
+                  <span className="absolute -top-1.5 -right-1.5 bg-red-500/100 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm border border-white">
                     {unreadCount}
                   </span>
                 )}
@@ -860,12 +885,12 @@ export default function WawancaraClient({ user }: Props) {
             </div>
             {activeSession ? (
               <div className="space-y-3">
-                <div className="h-72 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
+                <div className="h-72 overflow-y-auto rounded-lg border border-white/10 bg-white/5 p-3 space-y-2">
                   {chats.length === 0 ? <div className="text-xs text-slate-400 text-center py-10">Belum ada pesan.</div> : chats.map((c) => (
-                    <div key={c.id} className={`rounded-lg p-2 text-xs ${c.sender.id === user.id ? 'bg-indigo-600 text-white ml-8' : 'bg-white border border-slate-200 text-slate-700 mr-8'}`}>
+                    <div key={c.id} className={`rounded-lg p-2 text-xs ${c.sender.id === user.id ? 'bg-persian-blue text-white ml-8' : 'bg-deep-navy border border-white/10 text-slate-200 mr-8'}`}>
                       <div className="font-bold mb-1">{c.sender.nama}</div>
                       <div className="leading-relaxed whitespace-pre-wrap">{c.pesan}</div>
-                      <div className={c.sender.id === user.id ? 'text-indigo-100 mt-1' : 'text-slate-400 mt-1'}>{formatDateTime(c.created_at, 'HH:mm')}</div>
+                      <div className={c.sender.id === user.id ? 'text-persian-blue/20 mt-1' : 'text-slate-400 mt-1'}>{formatDateTime(c.created_at, 'HH:mm')}</div>
                     </div>
                   ))}
                 </div>
@@ -889,13 +914,13 @@ export default function WawancaraClient({ user }: Props) {
                 </div>
               </div>
             ) : (
-              <div className="text-sm text-slate-500 leading-relaxed">Chat hanya aktif selama ada sesi wawancara ACTIVE.</div>
+              <div className="text-sm text-slate-400 leading-relaxed">Chat hanya aktif selama ada sesi wawancara ACTIVE.</div>
             )}
           </div>
 
           <div className="card p-5">
-            <div className="text-sm font-bold text-slate-800 mb-3">Aturan Edit</div>
-            <div className="space-y-2 text-xs text-slate-600">
+            <div className="text-sm font-bold text-white mb-3">Aturan Edit</div>
+            <div className="space-y-2 text-xs text-slate-300">
               <div><strong>SCHEDULED:</strong> semua field masih dapat diubah.</div>
               <div><strong>ACTIVE:</strong> admin menjalankan antrian dan input hasil.</div>
               <div><strong>SELESAI/DIBATALKAN:</strong> data terkunci permanen.</div>
@@ -909,7 +934,18 @@ export default function WawancaraClient({ user }: Props) {
         <div className="space-y-4">
           <div className="form-group">
             <label className="label">Ekskul / Organisasi</label>
-            <div className="input bg-slate-50 font-bold text-indigo-600">OSIS & MPK (Unified Session)</div>
+            {editingSessionId ? (
+              <div className="input bg-white/5 font-bold text-persian-blue uppercase">{fOrg}</div>
+            ) : (
+              <Select
+                value={fOrg}
+                onChange={(val) => setFOrg(val as Org)}
+                options={[
+                  { value: 'osis', label: 'OSIS' },
+                  { value: 'mpk', label: 'MPK' },
+                ]}
+              />
+            )}
           </div>
           <div className="form-group"><label className="label">Jam Mulai</label><input type="datetime-local" value={fMulai} onChange={(e) => setFMulai(e.target.value)} className="input" /></div>
           <div className="form-group"><label className="label">Jam Selesai</label><input type="datetime-local" value={fSelesai} onChange={(e) => setFSelesai(e.target.value)} className="input" /></div>
@@ -919,10 +955,31 @@ export default function WawancaraClient({ user }: Props) {
       <Modal open={resultModal} title={targetQueue ? `Penilaian ${targetQueue.nama}` : 'Penilaian'} onClose={cancelInterview} size="lg"
         footer={<div className="flex justify-end gap-2"><button onClick={cancelInterview} className="btn-secondary">Batal</button><button onClick={saveResult} disabled={saving} className="btn-primary">{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}Simpan Hasil</button></div>}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="form-group"><label className="label">Nama</label><input value={targetQueue?.nama || ''} readOnly className="input bg-slate-50" /></div>
-          <div className="form-group"><label className="label">Kelas</label><input value={targetQueue?.kelas || ''} readOnly className="input bg-slate-50" /></div>
-          <div className="form-group"><label className="label">Keterangan *</label><select value={fKet} onChange={(e) => setFKet(e.target.value as any)} className="input"><option value="AKTIF">Aktif</option><option value="KURANG_AKTIF">Kurang Aktif</option></select></div>
-          <div className="form-group"><label className="label">Hasil *</label><select value={fHasil} onChange={(e) => setFHasil(e.target.value as any)} className="input"><option value="LOLOS">Lolos</option><option value="TIDAK_LOLOS">Tidak Lolos</option><option value="PENDING">Pending</option></select></div>
+          <div className="form-group"><label className="label">Nama</label><input value={targetQueue?.nama || ''} readOnly className="input bg-white/5" /></div>
+          <div className="form-group"><label className="label">Kelas</label><input value={targetQueue?.kelas || ''} readOnly className="input bg-white/5" /></div>
+          <div className="form-group">
+            <label className="label">Keterangan *</label>
+            <Select
+              value={fKet}
+              onChange={(val) => setFKet(val as any)}
+              options={[
+                { value: 'AKTIF', label: 'Aktif' },
+                { value: 'KURANG_AKTIF', label: 'Kurang Aktif' },
+              ]}
+            />
+          </div>
+          <div className="form-group">
+            <label className="label">Hasil *</label>
+            <Select
+              value={fHasil}
+              onChange={(val) => setFHasil(val as any)}
+              options={[
+                { value: 'LOLOS', label: 'Lolos' },
+                { value: 'TIDAK_LOLOS', label: 'Tidak Lolos' },
+                { value: 'PENDING', label: 'Pending' },
+              ]}
+            />
+          </div>
           <div className="form-group md:col-span-2"><label className="label">Persentase *</label><input type="number" min={1} max={100} value={fPersen} onChange={(e) => setFPersen(Number(e.target.value))} className="input" /></div>
           <div className="form-group md:col-span-2">
             <div className="flex justify-between items-center">
@@ -950,7 +1007,7 @@ export default function WawancaraClient({ user }: Props) {
       <Modal open={overrideModal} title={overrideTarget ? `Override Hasil ${overrideTarget.nama}` : 'Override Hasil'} onClose={() => setOverrideModal(false)} size="md"
         footer={<div className="flex justify-end gap-2"><button onClick={() => setOverrideModal(false)} className="btn-secondary">Batal</button><button onClick={saveOverride} disabled={saving} className="btn-primary">{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}Override ke Lolos</button></div>}>
         <div className="space-y-4">
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          <div className="rounded-xl border border-white/10 bg-amber-500/10 p-3 text-sm text-amber-300">
             Hanya Administrator dapat mengubah kandidat Tidak Lolos menjadi Lolos karena pertimbangan pembina. Alasan akan masuk ke Log Aktivitas.
           </div>
           <div className="form-group">
@@ -979,7 +1036,7 @@ export default function WawancaraClient({ user }: Props) {
       <Modal open={addPesertaModal} title="Tambah Peserta Manual" onClose={() => setAddPesertaModal(false)} size="md"
         footer={<div className="flex justify-end gap-2"><button onClick={() => setAddPesertaModal(false)} className="btn-secondary">Batal</button><button onClick={saveManualPeserta} disabled={saving} className="btn-primary">{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}Simpan Peserta</button></div>}>
         <div className="space-y-4">
-          <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-sm text-indigo-800">
+          <div className="rounded-xl border border-persian-blue/30 bg-persian-blue/10 p-3 text-sm text-blue-200">
             Gunakan fitur ini hanya jika peserta mengalami kendala teknis pada HP (tidak bisa scan QR / GPS bermasalah).
           </div>
           <div className="form-group">
@@ -1037,8 +1094,8 @@ export default function WawancaraClient({ user }: Props) {
           <div className="form-group">
             <label className="label">Pilih Organisasi *</label>
             <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => setFAddOrg('osis')} className={`py-2 px-4 rounded-xl border font-bold transition-all text-center ${fAddOrg === 'osis' ? 'bg-indigo-600 text-white border-transparent shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>OSIS</button>
-              <button onClick={() => setFAddOrg('mpk')} className={`py-2 px-4 rounded-xl border font-bold transition-all text-center ${fAddOrg === 'mpk' ? 'bg-indigo-600 text-white border-transparent shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>MPK</button>
+              <button onClick={() => setFAddOrg('osis')} className={`py-2 px-4 rounded-xl border font-bold transition-all text-center ${fAddOrg === 'osis' ? 'bg-persian-blue text-white border-transparent shadow-sm' : 'bg-deep-navy text-slate-400 border-white/10 hover:bg-white/5'}`}>OSIS</button>
+              <button onClick={() => setFAddOrg('mpk')} className={`py-2 px-4 rounded-xl border font-bold transition-all text-center ${fAddOrg === 'mpk' ? 'bg-persian-blue text-white border-transparent shadow-sm' : 'bg-deep-navy text-slate-400 border-white/10 hover:bg-white/5'}`}>MPK</button>
             </div>
           </div>
         </div>
@@ -1046,24 +1103,24 @@ export default function WawancaraClient({ user }: Props) {
 
       <Modal open={exportModal} title="Ekspor Hasil Wawancara" onClose={() => setExportModal(false)} size="sm">
         <div className="space-y-3 py-2">
-          <p className="text-sm text-slate-600 mb-4">Pilih data yang ingin Anda ekspor ke format Excel:</p>
-          <button onClick={() => downloadExport(undefined, 'osis')} className="w-full btn-secondary justify-start px-4 py-3 border-slate-200 hover:bg-indigo-50 hover:border-indigo-200 group">
+          <p className="text-sm text-slate-300 mb-4">Pilih data yang ingin Anda ekspor ke format Excel:</p>
+          <button onClick={() => downloadExport(undefined, 'osis')} className="w-full btn-secondary justify-start px-4 py-3 border-white/10 hover:bg-persian-blue/10 hover:border-persian-blue/30 group">
             <div className="flex flex-col items-start text-left">
-              <span className="font-bold text-slate-800 group-hover:text-indigo-700">Semua Hasil OSIS</span>
-              <span className="text-[11px] text-slate-500">Rekapitulasi seluruh sesi OSIS</span>
+              <span className="font-bold text-white group-hover:text-blue-300">Semua Hasil OSIS</span>
+              <span className="text-[11px] text-slate-400">Rekapitulasi seluruh sesi OSIS</span>
             </div>
           </button>
-          <button onClick={() => downloadExport(undefined, 'mpk')} className="w-full btn-secondary justify-start px-4 py-3 border-slate-200 hover:bg-indigo-50 hover:border-indigo-200 group">
+          <button onClick={() => downloadExport(undefined, 'mpk')} className="w-full btn-secondary justify-start px-4 py-3 border-white/10 hover:bg-persian-blue/10 hover:border-persian-blue/30 group">
             <div className="flex flex-col items-start text-left">
-              <span className="font-bold text-slate-800 group-hover:text-indigo-700">Semua Hasil MPK</span>
-              <span className="text-[11px] text-slate-500">Rekapitulasi seluruh sesi MPK</span>
+              <span className="font-bold text-white group-hover:text-blue-300">Semua Hasil MPK</span>
+              <span className="text-[11px] text-slate-400">Rekapitulasi seluruh sesi MPK</span>
             </div>
           </button>
           {selectedSession && (
             <button onClick={() => downloadExport(selectedSession.id)} className="w-full btn-primary justify-start px-4 py-3 group">
               <div className="flex flex-col items-start text-left">
                 <span className="font-bold">Sesi Saat Ini Saja</span>
-                <span className="text-[11px] text-indigo-100">Hanya data dari sesi ID #{selectedSession.id}</span>
+                <span className="text-[11px] text-persian-blue/20">Hanya data dari sesi ID #{selectedSession.id}</span>
               </div>
             </button>
           )}

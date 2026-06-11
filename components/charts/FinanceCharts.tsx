@@ -44,7 +44,7 @@ interface Props {
   }
 }
 
-const COLORS = ['#10B981', '#EF4444', '#5482B4']
+const COLORS = ['#10B981', '#EF4444', '#1E90FF']
 
 export default function FinanceCharts({ data }: Props) {
   return (
@@ -52,7 +52,7 @@ export default function FinanceCharts({ data }: Props) {
       {/* Monthly Finance Chart */}
       {data.keuanganBulanan && data.keuanganBulanan.some(d => d.pemasukan + d.pengeluaran > 0) && (
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-[#011025] mb-4">Keuangan 6 Bulan Terakhir</h3>
+          <h3 className="text-sm font-bold text-white mb-4">Keuangan 6 Bulan Terakhir</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={data.keuanganBulanan} barSize={28} barGap={6}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -75,13 +75,13 @@ export default function FinanceCharts({ data }: Props) {
       {/* Monthly Balance Trend */}
       {data.keuanganBulanan && data.keuanganBulanan.some(d => d.saldo !== 0) && (
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-[#011025] mb-4">Tren Saldo Kas 6 Bulan</h3>
+          <h3 className="text-sm font-bold text-white mb-4">Tren Saldo Kas 6 Bulan</h3>
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={data.keuanganBulanan}>
               <defs>
                 <linearGradient id="saldoGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#5482B4" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#5482B4" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#1E90FF" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#1E90FF" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -96,10 +96,10 @@ export default function FinanceCharts({ data }: Props) {
               <Area 
                 type="monotone" 
                 dataKey="saldo" 
-                stroke="#5482B4" 
+                stroke="#1E90FF" 
                 strokeWidth={2.5}
                 fill="url(#saldoGrad)" 
-                dot={{ r: 4, fill: '#5482B4', strokeWidth: 0 }}
+                dot={{ r: 4, fill: '#1E90FF', strokeWidth: 0 }}
                 activeDot={{ r: 6 }}
                 animationDuration={1500}
               />
@@ -111,7 +111,7 @@ export default function FinanceCharts({ data }: Props) {
       {/* Yearly Finance Chart */}
       {data.keuanganTahunan && data.keuanganTahunan.some(d => d.pemasukan + d.pengeluaran > 0) && (
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-[#011025] mb-4">Keuangan Tahunan</h3>
+          <h3 className="text-sm font-bold text-white mb-4">Keuangan Tahunan</h3>
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={data.keuanganTahunan}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -148,9 +148,9 @@ export default function FinanceCharts({ data }: Props) {
                 type="monotone" 
                 dataKey="saldo" 
                 name="Saldo" 
-                stroke="#5482B4" 
+                stroke="#1E90FF" 
                 strokeWidth={2.5} 
-                dot={{ r: 3, fill: '#5482B4' }}
+                dot={{ r: 3, fill: '#1E90FF' }}
                 activeDot={{ r: 5 }}
                 animationDuration={1500}
               />
@@ -162,11 +162,11 @@ export default function FinanceCharts({ data }: Props) {
       {/* Organization Finance */}
       {data.keuanganOrganisasi && (data.keuanganOrganisasi.osis || data.keuanganOrganisasi.mpk) && (
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-[#011025] mb-4">Keuangan Organisasi</h3>
+          <h3 className="text-sm font-bold text-white mb-4">Keuangan Organisasi</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {data.keuanganOrganisasi.osis && (
               <div>
-                <h4 className="text-xs font-semibold text-[#5482B4] mb-3">OSIS</h4>
+                <h4 className="text-xs font-semibold text-[#1E90FF] mb-3">OSIS</h4>
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
                     <Pie
@@ -182,21 +182,21 @@ export default function FinanceCharts({ data }: Props) {
                       dataKey="value"
                       animationDuration={1000}
                     >
-                      <Cell fill="#5482B4" />
+                      <Cell fill="#1E90FF" />
                       <Cell fill="#EF4444" />
                     </Pie>
                     <Tooltip formatter={(value: number) => formatCurrency(value)} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="text-center mt-2 space-y-1">
-                  <div className="text-xs text-slate-500">Pemasukan: {formatCurrency(data.keuanganOrganisasi.osis.pemasukan)}</div>
-                  <div className="text-xs text-slate-500">Saldo: {formatCurrency(data.keuanganOrganisasi.osis.saldo)}</div>
+                  <div className="text-xs text-slate-400">Pemasukan: {formatCurrency(data.keuanganOrganisasi.osis.pemasukan)}</div>
+                  <div className="text-xs text-slate-400">Saldo: {formatCurrency(data.keuanganOrganisasi.osis.saldo)}</div>
                 </div>
               </div>
             )}
             {data.keuanganOrganisasi.mpk && (
               <div>
-                <h4 className="text-xs font-semibold text-[#5482B4] mb-3">MPK</h4>
+                <h4 className="text-xs font-semibold text-[#1E90FF] mb-3">MPK</h4>
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
                     <Pie
@@ -219,8 +219,8 @@ export default function FinanceCharts({ data }: Props) {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="text-center mt-2 space-y-1">
-                  <div className="text-xs text-slate-500">Pemasukan: {formatCurrency(data.keuanganOrganisasi.mpk.pemasukan)}</div>
-                  <div className="text-xs text-slate-500">Saldo: {formatCurrency(data.keuanganOrganisasi.mpk.saldo)}</div>
+                  <div className="text-xs text-slate-400">Pemasukan: {formatCurrency(data.keuanganOrganisasi.mpk.pemasukan)}</div>
+                  <div className="text-xs text-slate-400">Saldo: {formatCurrency(data.keuanganOrganisasi.mpk.saldo)}</div>
                 </div>
               </div>
             )}

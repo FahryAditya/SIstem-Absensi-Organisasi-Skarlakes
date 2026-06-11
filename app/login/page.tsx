@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
-import { GraduationCap, User, Mail, Lock, Loader2, Eye, EyeOff, Shield } from 'lucide-react'
+import { GraduationCap, User, Mail, Lock, Loader2, Eye, EyeOff, Shield, ArrowRight } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -59,126 +60,170 @@ export default function LoginPage() {
     }
   }
 
-  const orgBadges = [
-    { label: 'Programming', color: 'bg-[#C2E8FF] text-[#052659]' },
-    { label: 'English Club', color: 'bg-white/90 text-[#052659]' },
-    { label: 'OSIS', color: 'bg-[rgba(126,160,197,0.25)] text-white border border-white/20' },
-    { label: 'MPK', color: 'bg-[rgba(84,130,180,0.35)] text-white border border-white/20' },
-  ]
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#052659] via-[#011025] to-[#5482B4] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Decorative background */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Grid pattern */}
-        <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)', backgroundSize: '40px 40px' }}
-        />
+    <div className="relative min-h-screen bg-[#000B18] flex items-center justify-center p-6 font-sans overflow-hidden">
+      {/* Decorative Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px]" />
+        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-900/20 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]" />
       </div>
 
-      <div className="w-full max-w-md relative slide-up">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#052659] rounded-2xl shadow-xl shadow-[#011025]/50 mb-4 ring-4 ring-[#5482B4]/20">
-            <GraduationCap className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Sistem Ekstrakurikuler Sekolah</h1>
-          <p className="text-[#C2E8FF] text-sm mt-1.5 font-medium">Sistem Manajemen Ekstrakurikuler</p>
-          <div className="flex items-center justify-center gap-2 flex-wrap mt-3">
-            {orgBadges.map(b => (
-              <span key={b.label} className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${b.color}`}>
-                {b.label}
-              </span>
-            ))}
-          </div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md relative z-10"
+      >
+        {/* Header */}
+        <div className="text-center mb-10">
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+            className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500/20 to-blue-600/5 rounded-3xl mb-6 border border-blue-500/30 shadow-2xl shadow-blue-500/10"
+          >
+            <GraduationCap className="w-10 h-10 text-blue-400" />
+          </motion.div>
+          <motion.h1 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-3xl font-bold text-white tracking-tight mb-2"
+          >
+            Sistem Ekstrakurikuler
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-blue-400/80 text-[10px] font-black uppercase tracking-[0.3em]"
+          >
+            Admin & Administrator Gateway
+          </motion.p>
         </div>
 
-        {/* Card */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 shadow-2xl">
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-white">Masuk ke Dashboard</h2>
-            <p className="text-[#C2E8FF] text-sm mt-1">Masukkan identitas lengkap Anda</p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-4" autoComplete="off">
-            {/* Nama */}
-            <div>
-              <label className="block text-xs font-bold text-[#C2E8FF] uppercase tracking-widest mb-1.5">
-                Nama Lengkap
-              </label>
-              <div className="relative">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7EA0C5]" />
-                <input
-                  type="text"
-                  value={nama}
-                  onChange={e => setNama(e.target.value)}
-                  placeholder="Masukkan nama lengkap"
-                  className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-[#7EA0C5]/70 focus:outline-none focus:ring-2 focus:ring-[#5482B4] focus:border-transparent transition-all text-sm"
-                  autoComplete="off"
-                  spellCheck="false"
-                />
-              </div>
+        {/* Login Card */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1, duration: 0.4 }}
+          className="relative group"
+        >
+          {/* Card Border Glow Effect */}
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/30 to-purple-500/30 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
+          
+          <div className="relative bg-[#000B18]/60 backdrop-blur-2xl p-8 sm:p-10 rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+            {/* Subtle Inner Glow */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
+            
+            <div className="mb-10 relative">
+              <h2 className="text-2xl font-bold text-white mb-2">Selamat Datang</h2>
+              <p className="text-slate-400 text-sm">Masuk untuk mengelola data organisasi.</p>
             </div>
 
-            {/* Email */}
-            <div>
-              <label className="block text-xs font-bold text-[#C2E8FF] uppercase tracking-widest mb-1.5">
-                Email
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7EA0C5]" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="email@domain.com"
-                  className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-[#7EA0C5]/70 focus:outline-none focus:ring-2 focus:ring-[#5482B4] focus:border-transparent transition-all text-sm"
-                  autoComplete="off"
-                  spellCheck="false"
-                />
+            <form onSubmit={handleLogin} className="space-y-6" autoComplete="off">
+              <div className="space-y-4">
+                <div className="form-group">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Nama Lengkap</label>
+                  <div className="relative group/input">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-blue-400 transition-colors" />
+                    <input
+                      type="text"
+                      value={nama}
+                      onChange={e => setNama(e.target.value)}
+                      placeholder="Nama lengkap"
+                      className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/50 focus:bg-white/[0.08] transition-all duration-300"
+                      autoComplete="off"
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-group">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Alamat Email</label>
+                  <div className="relative group/input">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-blue-400 transition-colors" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="email@sekolah.sch.id"
+                      className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/50 focus:bg-white/[0.08] transition-all duration-300"
+                      autoComplete="off"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
 
-            {/* Password */}
-            <div>
-              <label className="block text-xs font-bold text-[#C2E8FF] uppercase tracking-widest mb-1.5">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7EA0C5]" />
-                <input
-                  type={showPass ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-10 pr-11 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-[#7EA0C5]/70 focus:outline-none focus:ring-2 focus:ring-[#5482B4] focus:border-transparent transition-all text-sm"
-                  autoComplete="new-password"
-                />
-                <button type="button" onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7EA0C5] hover:text-white transition-colors">
-                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              <div className="form-group">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Kata Sandi</label>
+                <div className="relative group/input">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-blue-400 transition-colors" />
+                  <input
+                    type={showPass ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-12 pr-12 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/50 focus:bg-white/[0.08] transition-all duration-300"
+                    autoComplete="new-password"
+                  />
+                  <button type="button" onClick={() => setShowPass(!showPass)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+                    {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <motion.button 
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit" 
+                disabled={loading} 
+                className="relative w-full group/btn overflow-hidden rounded-xl"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500 transition-all duration-300 group-hover:scale-105" />
+                <div className="relative flex items-center justify-center gap-2 py-4 text-[11px] uppercase tracking-[0.2em] font-black text-white">
+                  {loading ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Memproses...</>
+                  ) : (
+                    <>
+                      Masuk Sekarang
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </div>
+              </motion.button>
+            </form>
+
+            <div className="mt-10 pt-8 border-t border-white/5 text-center">
+              <p className="text-slate-500 text-sm">
+                Belum terdaftar?{' '}
+                <button 
+                  onClick={() => router.push('/registration')}
+                  className="text-blue-400 font-bold hover:text-blue-300 transition-colors relative group/reg"
+                >
+                  Mulai Pendaftaran
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full" />
                 </button>
-              </div>
+              </p>
             </div>
-
-            <button type="submit" disabled={loading}
-              className="w-full mt-2 py-3 px-4 bg-[#052659] hover:bg-[#011025] text-white font-bold rounded-xl transition-all shadow-lg shadow-[#011025]/40 active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60">
-              {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Memproses...</> : 'Masuk'}
-            </button>
-          </form>
-
-          <div className="mt-5 pt-5 border-t border-white/10 flex items-start gap-2">
-            <Shield className="w-3.5 h-3.5 text-[#7EA0C5] flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-[#C2E8FF]/80">
-              Hak akses dibatasi sesuai peran. Hubungi Administrator jika belum memiliki akun.
-            </p>
           </div>
-        </div>
+        </motion.div>
 
-        <p className="text-center text-[#C2E8FF]/60 text-xs mt-6">
-          SKARLAKES • Sistem Ekstrakurikuler Sekolah
-        </p>
-      </div>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="mt-10 flex flex-col items-center gap-3"
+        >
+          <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/5">
+            <Shield className="w-3 h-3 text-blue-500" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Artemis Secured Gateway</span>
+          </div>
+          <p className="text-[9px] font-bold text-slate-600 tracking-wider">© 2026 SMK AIRLANGGA BALIKPAPAN</p>
+        </motion.div>
+      </motion.div>
     </div>
   )
 }
+

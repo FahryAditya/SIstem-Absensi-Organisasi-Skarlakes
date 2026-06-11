@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Trophy, Medal, Star, TrendingUp, Users, Crown } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Trophy, Medal, Star, TrendingUp, Users, Crown, ArrowLeft } from 'lucide-react'
 import { pusherClient } from '@/lib/pusher-client'
 
 interface LeaderboardEntry {
@@ -26,7 +27,7 @@ interface LeaderboardEntry {
 const TABS = [
   { key: 'programming', label: 'Programming', color: 'from-blue-500 to-cyan-500', bg: 'bg-blue-500/10 border-blue-500/30' },
   { key: 'english', label: 'English Club', color: 'from-emerald-500 to-teal-500', bg: 'bg-emerald-500/10 border-emerald-500/30' },
-  { key: 'osis', label: 'OSIS', color: 'from-purple-500 to-violet-500', bg: 'bg-purple-500/10 border-purple-500/30' },
+  { key: 'osis', label: 'OSIS', color: 'from-purple-500 to-persian-blue/100', bg: 'bg-purple-500/10 border-purple-500/30' },
   { key: 'mpk', label: 'MPK', color: 'from-orange-500 to-amber-500', bg: 'bg-orange-500/10 border-orange-500/30' },
 ]
 
@@ -37,14 +38,15 @@ const RANK_STYLES = [
 ]
 
 const LEVEL_COLORS: Record<string, string> = {
-  'Beginner': 'bg-slate-500/20 text-slate-300 border-slate-500/30',
-  'Intermediate': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-  'Advanced': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-  'Expert': 'bg-purple-500/20 text-purple-300 border-purple-500/30',
-  'Master': 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+  'Beginner': 'bg-white/10 text-slate-200 border-slate-500/30',
+  'Intermediate': 'bg-blue-500/20 text-blue-200 border-blue-500/30',
+  'Advanced': 'bg-emerald-500/20 text-emerald-200 border-emerald-500/30',
+  'Expert': 'bg-purple-500/20 text-purple-200 border-purple-500/30',
+  'Master': 'bg-yellow-500/20 text-yellow-200 border-yellow-500/30',
 }
 
 export default function LeaderboardPage() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState('programming')
   const [data, setData] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -89,7 +91,7 @@ export default function LeaderboardPage() {
       // eslint-disable-next-line @next/next/no-img-element
       <img src={entry.foto_url} alt={entry.nama} className={`${sizeClass} rounded-full object-cover border border-white/20 mx-auto`} />
     ) : (
-      <div className={`${sizeClass} rounded-full flex items-center justify-center font-bold bg-gradient-to-br ${activeTabInfo.color} ${textClass}`}>
+      <div className={`${sizeClass} rounded-full flex items-center justify-center font-bold bg-gradient-to-br ${activeTabInfo.color} text-white shadow-inner ${textClass}`}>
         {entry.nama.charAt(0).toUpperCase()}
       </div>
     )
@@ -99,6 +101,11 @@ export default function LeaderboardPage() {
     <div className="min-h-screen bg-[#0f1117] text-white">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
+        <div className="mb-4">
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Kembali
+          </button>
+        </div>
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/30 rounded-full px-4 py-1.5 mb-4">
             <Trophy className="w-4 h-4 text-yellow-400" />
@@ -134,7 +141,7 @@ export default function LeaderboardPage() {
             ))}
           </div>
         ) : data.length === 0 ? (
-          <div className="text-center py-20 text-slate-500">
+          <div className="text-center py-20 text-slate-400">
             <Users className="w-12 h-12 mx-auto mb-4 opacity-30" />
             <p>Belum ada data anggota</p>
           </div>
@@ -142,33 +149,39 @@ export default function LeaderboardPage() {
           <>
             {/* TOP 3 Champions */}
             {top3.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                {[top3[1], top3[0], top3[2]].filter(Boolean).map((entry, displayIdx) => {
-                  const realRank = entry.rank - 1 // 0-indexed
+              <div className="flex flex-col md:grid md:grid-cols-3 gap-6 md:gap-4 mb-10">
+                {top3.map((entry) => {
+                  const realRank = entry.rank - 1 // 0-indexed (0, 1, 2)
                   const style = RANK_STYLES[realRank]
                   const isFirst = realRank === 0
+                  
+                  // Order for podium: Rank 2 (order-1), Rank 1 (order-2), Rank 3 (order-3)
+                  // On mobile, they should follow natural rank order: 1, 2, 3
+                  const orderClass = realRank === 0 ? 'order-1 md:order-2' : 
+                                    realRank === 1 ? 'order-2 md:order-1' : 'order-3'
+
                   return (
                     <div
                       key={entry.id}
-                      className={`relative rounded-2xl border p-5 text-center transition-all duration-300 hover:-translate-y-1 ${style.border} ${style.bg} ${isFirst ? 'md:-mt-4 shadow-2xl' : ''}`}
+                      className={`relative rounded-2xl border p-6 text-center transition-all duration-300 hover:-translate-y-1 ${style.border} ${style.bg} ${isFirst ? 'md:-mt-4 shadow-2xl scale-105 md:scale-110 z-10' : ''} ${orderClass}`}
                     >
-                      <div className="text-3xl mb-2">{style.medal}</div>
-                      <div className="mb-3">{renderAvatar(entry, 'w-16 h-16', 'text-2xl')}</div>
-                      <div className="font-semibold text-white truncate">{entry.nama}</div>
-                      <div className="text-xs text-slate-400 mb-2">{entry.kelas} {entry.jabatan ? `• ${entry.jabatan}` : ''}</div>
-                      <span className={`inline-block text-xs px-2 py-0.5 rounded-full border mb-2 ${LEVEL_COLORS[entry.levelName] ?? LEVEL_COLORS['Beginner']}`}>
+                      <div className="text-3xl mb-3">{style.medal}</div>
+                      <div className="mb-4">{renderAvatar(entry, 'w-16 h-16', 'text-2xl')}</div>
+                      <div className="font-bold text-white truncate text-base mb-1">{entry.nama}</div>
+                      <div className="text-xs text-slate-400 mb-3">{entry.kelas} {entry.jabatan ? `• ${entry.jabatan}` : ''}</div>
+                      <span className={`inline-block text-[10px] px-2 py-0.5 rounded-full border mb-4 ${LEVEL_COLORS[entry.levelName] ?? LEVEL_COLORS['Beginner']}`}>
                         Lv{entry.level} {entry.levelName}
                       </span>
-                      <div className={`text-xl font-bold ${style.text}`}>{entry.xp.toLocaleString()} EXP</div>
+                      <div className={`text-2xl font-black ${style.text} mb-1`}>{entry.xp.toLocaleString()} <span className="text-xs font-medium opacity-70">EXP</span></div>
                       {/* Progress bar */}
-                      <div className="mt-3">
+                      <div className="mt-4">
                         <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
                           <div
                             className={`h-full bg-gradient-to-r ${activeTabInfo.color} rounded-full transition-all duration-700`}
                             style={{ width: `${entry.progress.persen}%` }}
                           />
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">{entry.progress.persen}% menuju {entry.progress.nextLevelName ?? 'Max'}</p>
+                        <p className="text-[10px] text-slate-400 mt-2 font-medium">{entry.progress.persen}% ke {entry.progress.nextLevelName ?? 'Max'}</p>
                       </div>
                     </div>
                   )
@@ -203,7 +216,7 @@ export default function LeaderboardPage() {
                             style={{ width: `${entry.progress.persen}%` }}
                           />
                         </div>
-                        <span className="text-xs text-slate-500 shrink-0">{entry.progress.persen}%</span>
+                        <span className="text-xs text-slate-400 shrink-0">{entry.progress.persen}%</span>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
@@ -211,7 +224,7 @@ export default function LeaderboardPage() {
                         <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
                         <span className="font-semibold text-emerald-400">{entry.xp.toLocaleString()}</span>
                       </div>
-                      <div className="text-xs text-slate-500">EXP</div>
+                      <div className="text-xs text-slate-400">EXP</div>
                     </div>
                   </div>
                 ))}

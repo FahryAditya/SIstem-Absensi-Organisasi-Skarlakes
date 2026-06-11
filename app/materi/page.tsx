@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { BookOpen, FileText, Plus, Pencil, Trash2, Calendar, MapPin, ChevronDown } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { BookOpen, FileText, Plus, Pencil, Trash2, Calendar, MapPin, ChevronDown, ArrowLeft, Loader2 } from 'lucide-react'
+import { getAccessibleOrgs } from '@/lib/auth-shared'
 
 interface MateriItem {
   id: number
@@ -23,25 +25,52 @@ const ORG_TABS = [
 const ORG_COLORS: Record<string, string> = {
   programming: 'from-blue-500 to-cyan-500',
   english: 'from-emerald-500 to-teal-500',
-  osis: 'from-purple-500 to-violet-500',
+  osis: 'from-purple-500 to-persian-blue/100',
   mpk: 'from-orange-500 to-amber-500',
 }
 
 const emptyForm = { judul: '', deskripsi: '', tanggal: '', organisasi: 'programming', notulen: '', lokasi: '' }
 
 export default function MateriPage() {
-  const [activeTab, setActiveTab] = useState('programming')
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
+  const [accessibleOrgs, setAccessibleOrgs] = useState<string[]>([])
+  const [activeTab, setActiveTab] = useState('')
   const [data, setData] = useState<MateriItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [authLoading, setAuthLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editItem, setEditItem] = useState<MateriItem | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [expandedId, setExpandedId] = useState<number | null>(null)
 
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await fetch('/api/auth/me')
+        const json = await res.json()
+        if (json.user) {
+          setUser(json.user)
+          const orgs = getAccessibleOrgs(json.user.role)
+          setAccessibleOrgs(orgs)
+          if (orgs.length > 0) setActiveTab(orgs[0])
+        } else {
+          router.push('/login')
+        }
+      } catch {
+        router.push('/login')
+      } finally {
+        setAuthLoading(false)
+      }
+    }
+    fetchUser()
+  }, [router])
+
   const isEkskul = ORG_TABS.find(t => t.key === activeTab)?.isEkskul ?? true
 
   const fetch_ = useCallback(async (org: string) => {
+    if (!org) return
     setLoading(true)
     try {
       const res = await fetch(`/api/materi?organisasi=${org}`)
@@ -50,7 +79,17 @@ export default function MateriPage() {
     } catch { setData([]) } finally { setLoading(false) }
   }, [])
 
-  useEffect(() => { fetch_(activeTab) }, [activeTab, fetch_])
+  useEffect(() => { 
+    if (activeTab) fetch_(activeTab) 
+  }, [activeTab, fetch_])
+
+  const filteredTabs = ORG_TABS.filter(t => accessibleOrgs.includes(t.key))
+
+  if (authLoading) return (
+    <div className="min-h-screen bg-[#0f1117] flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+    </div>
+  )
 
   function openCreate() {
     setForm({ ...emptyForm, organisasi: activeTab })
@@ -92,11 +131,16 @@ export default function MateriPage() {
     <div className="min-h-screen bg-[#0f1117] text-white p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
+        <div className="mb-4">
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Kembali
+          </button>
+        </div>
         <div className="flex items-center justify-between mb-8">
           <div>
             <div className="flex items-center gap-2 mb-1">
               {isEkskul ? <BookOpen className="w-5 h-5 text-blue-400" /> : <FileText className="w-5 h-5 text-purple-400" />}
-              <h1 className="text-2xl font-bold">{isEkskul ? 'Materi Hari Ini' : 'Pembahasan Rapat'}</h1>
+              <h1 className="text-2xl font-bold">{isEkskul ? 'Materi Hari Ini' : 'Jadwal Rapat'}</h1>
             </div>
             <p className="text-slate-400 text-sm">{isEkskul ? 'Dokumentasi materi pertemuan ekskul' : 'Notulen dan agenda rapat organisasi'}</p>
           </div>
@@ -110,7 +154,7 @@ export default function MateriPage() {
 
         {/* Tabs */}
         <div className="flex gap-2 flex-wrap mb-6">
-          {ORG_TABS.map(tab => (
+          {filteredTabs.map(tab => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
               className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${activeTab === tab.key ? `bg-gradient-to-r ${ORG_COLORS[tab.key]} text-white border-transparent` : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}>
               {tab.label}
@@ -122,7 +166,7 @@ export default function MateriPage() {
         {loading ? (
           <div className="space-y-4">{[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-white/5 rounded-2xl animate-pulse" />)}</div>
         ) : data.length === 0 ? (
-          <div className="text-center py-20 text-slate-500">
+          <div className="text-center py-20 text-slate-400">
             <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-30" />
             <p>Belum ada {isEkskul ? 'materi' : 'notulen rapat'}</p>
           </div>
@@ -152,12 +196,12 @@ export default function MateriPage() {
                 {expandedId === item.id && (
                   <div className="border-t border-white/5 px-4 pb-4 pt-3 space-y-3">
                     <div>
-                      <p className="text-xs text-slate-500 uppercase font-medium mb-1">{isEkskul ? 'Deskripsi' : 'Agenda'}</p>
+                      <p className="text-xs text-slate-400 uppercase font-medium mb-1">{isEkskul ? 'Deskripsi' : 'Agenda'}</p>
                       <p className="text-sm text-slate-300 whitespace-pre-wrap">{item.deskripsi}</p>
                     </div>
                     {item.notulen && (
                       <div>
-                        <p className="text-xs text-slate-500 uppercase font-medium mb-1">Notulen</p>
+                        <p className="text-xs text-slate-400 uppercase font-medium mb-1">Notulen</p>
                         <p className="text-sm text-slate-300 whitespace-pre-wrap">{item.notulen}</p>
                       </div>
                     )}
@@ -172,7 +216,7 @@ export default function MateriPage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[#1a1d27] border border-white/10 rounded-2xl w-full max-w-lg p-6">
+          <div className="bg-[#1a1d27] border border-white/10 rounded-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto flex flex-col">
             <h2 className="text-lg font-bold mb-5">{editItem ? 'Edit' : 'Tambah'} {isEkskul ? 'Materi' : 'Notulen Rapat'}</h2>
             <div className="space-y-4">
               <div>

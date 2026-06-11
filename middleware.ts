@@ -1,7 +1,16 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { getSessionFromRequest } from '@/lib/auth'
 
-const PUBLIC_PATHS = ['/login', '/api/auth/login', '/wawancara/scan', '/api/wawancara/antrian', '/api/wawancara/public']
+const PUBLIC_PATHS = [
+  '/login', 
+  '/api/auth/login', 
+  '/wawancara/scan', 
+  '/api/wawancara/antrian', 
+  '/api/wawancara/public',
+  '/registration',
+  '/api/registration',
+  '/api/organizations'
+]
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -40,7 +49,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Protect admin management - administrator only
-  if (pathname.startsWith('/admin') && session.role.trim() !== 'administrator') {
+  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/email') && !pathname.startsWith('/admin/exp') && session.role.trim() !== 'administrator') {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 

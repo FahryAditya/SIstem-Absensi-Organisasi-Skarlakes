@@ -50,27 +50,12 @@ const enqueueSchema = z.object({
   nama: z.string().min(1, 'Nama wajib diisi'),
   kelas: z.string().min(1, 'Kelas wajib diisi'),
   organisasi: z.enum(['osis', 'mpk'], { required_error: 'Pilih organisasi tujuan' }),
-  latitude: z.number().optional(),
-  longitude: z.number().optional(),
   manual: z.boolean().optional(),
 })
-
-const SCHOOL_LAT = parseFloat(process.env.SCHOOL_LAT || process.env.NEXT_PUBLIC_SCHOOL_LAT || '-1.251278')
-const SCHOOL_LNG = parseFloat(process.env.SCHOOL_LNG || process.env.NEXT_PUBLIC_SCHOOL_LNG || '116.838333')
-const SCHOOL_RADIUS_M = parseFloat(process.env.SCHOOL_RADIUS_M || process.env.NEXT_PUBLIC_SCHOOL_RADIUS_M || '50')
 
 function getIp(req: NextRequest) {
   const forwarded = req.headers.get('x-forwarded-for')
   return (forwarded ? forwarded.split(',')[0].trim() : req.headers.get('x-real-ip')) || '127.0.0.1'
-}
-
-function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number) {
-  const toRad = (v: number) => (v * Math.PI) / 180
-  const r = 6371000
-  const dLat = toRad(lat2 - lat1)
-  const dLng = toRad(lng2 - lng1)
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
-  return 2 * r * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
 function validateNama(nama: string): string | null {
@@ -112,15 +97,12 @@ export async function POST(req: NextRequest) {
   }
 
   let qrId: number | null = null
-  let statusValidasi: 'SAH' | 'SAH_DICURIGAI' | 'DITOLAK_VPN' | 'TIDAK_SAH' = 'SAH'
+  let statusValidasi: 'SAH' | 'SAH_DICURIGAI' | 'DITOLAK_VPN' = 'SAH'
   let alasan = 'Valid'
   let jarak: number | null = null
 
   if (!isManual) {
     if (!parsed.data.token) return NextResponse.json({ error: 'Token QR wajib diisi' }, { status: 400 })
-    if (parsed.data.latitude === undefined || parsed.data.longitude === undefined) {
-      return NextResponse.json({ error: 'Lokasi GPS wajib diisi' }, { status: 400 })
-    }
 
     const qr = await prisma.qrWawancara.findUnique({ where: { token: parsed.data.token } })
     const now = new Date()
@@ -128,11 +110,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'QR tidak aktif atau sudah expired' }, { status: 400 })
     }
     qrId = qr.id
-
-    jarak = haversineMeters(parsed.data.latitude, parsed.data.longitude, SCHOOL_LAT, SCHOOL_LNG)
-    const outsideRadius = jarak > SCHOOL_RADIUS_M
-    statusValidasi = outsideRadius ? 'TIDAK_SAH' : 'SAH'
-    alasan = outsideRadius ? `Jarak ${Math.round(jarak)}m dari sekolah` : 'Valid'
   } else {
     alasan = 'Ditambahkan Manual oleh Admin'
     statusValidasi = 'SAH'
@@ -140,14 +117,20 @@ export async function POST(req: NextRequest) {
 
   const sesi = await prisma.sesiWawancara.findFirst({
     where: { 
-      status: 'ACTIVE'
+      status: 'ACTIVE',
+      organisasi_type: { in: ['osis', 'mpk'] }
     },
     orderBy: { created_at: 'desc' }
   })
   
   if (!sesi) {
-    return NextResponse.json({ error: `Sesi wawancara tidak aktif` }, { status: 400 })
+    return NextResponse.json({ error: `Sesi wawancara ${parsed.data.organisasi.toUpperCase()} tidak aktif` }, { status: 400 })
   }
+
+  // If the session found is not the same as the target org, we can still allow it
+  // But we might want to store the student's intention in the record if possible.
+  // For now, we'll just let them join the session.
+
 
   const nama = parsed.data.nama.trim()
   const kelas = parsed.data.kelas.trim()
@@ -165,37 +148,7 @@ export async function POST(req: NextRequest) {
 
   const ip = getIp(req)
 
-  if (statusValidasi === 'TIDAK_SAH') {
-    const rejectedCount = await prisma.antrianWawancara.count({
-      where: { sesi_id: sesi.id, status_validasi: { in: ['DITOLAK_VPN', 'TIDAK_SAH'] } },
-    })
-    const ipSt = (() => {
-      if (ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.'))
-        return { st: 'NORMAL' as const, country: 'Indonesia' as string | null, isp: 'Local Network' as string | null }
-      return { st: 'TIDAK_DIKETAHUI' as const, country: null as string | null, isp: null as string | null }
-    })()
-    const rejected = await prisma.antrianWawancara.create({
-      data: {
-        sesi_id: sesi.id,
-        qr_id: qrId,
-        nama,
-        kelas,
-        nomor_antrian: -(rejectedCount + 1),
-        scan_token: parsed.data.token || null,
-        ip_address: ip,
-        ip_country: ipSt.country,
-        ip_isp: ipSt.isp,
-        ip_status: ipSt.st,
-        gps_lat: parsed.data.latitude || null,
-        gps_lng: parsed.data.longitude || null,
-        jarak_meter: jarak,
-        status_validasi: statusValidasi,
-        alasan_validasi: alasan,
-        user_agent: req.headers.get('user-agent')?.slice(0, 255),
-      },
-    })
-    return NextResponse.json({ error: alasan, data: rejected }, { status: 400 })
-  }
+
 
   const alloc = async (): Promise<AntrianWawancara> => {
     const maxQueue = await prisma.antrianWawancara.aggregate({
@@ -213,9 +166,9 @@ export async function POST(req: NextRequest) {
         scan_token: parsed.data.token || null,
         ip_address: ip,
         ip_status: 'TIDAK_DIKETAHUI',
-        gps_lat: parsed.data.latitude || null,
-        gps_lng: parsed.data.longitude || null,
-        jarak_meter: jarak,
+        gps_lat: null,
+        gps_lng: null,
+        jarak_meter: null,
         status_validasi: statusValidasi,
         alasan_validasi: alasan,
         user_agent: req.headers.get('user-agent')?.slice(0, 255),

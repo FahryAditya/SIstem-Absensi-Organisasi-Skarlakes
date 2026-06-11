@@ -8,6 +8,7 @@ export interface SessionUser {
 // Role labels
 export const ROLE_LABELS: Record<string, string> = {
   administrator: 'Administrator',
+  organization_admin: 'Organization Admin',
   admin_programming: 'Admin Programming',
   admin_english: 'Admin English Club',
   admin_osis_mpk: 'Admin OSIS & MPK',

@@ -2,13 +2,14 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
 import Image from 'next/image'
 import {
-  LayoutDashboard, Users, ClipboardList, Building2, UserCog,
-  Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode, UserX, Megaphone, BarChart3, Camera
+  LayoutDashboard, Users, ClipboardList, Building2, UserCog, Mail,
+  Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode, UserX, Megaphone, BarChart3,
+  Trophy, Star, BookOpen, CalendarDays, ClipboardCheck, Zap, LayoutGrid
 } from 'lucide-react'
 import AnimatedList from '../AnimatedList'
 
@@ -28,18 +29,23 @@ type SidebarItem =
 function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[] {
   const items: SidebarItem[] = []
   
-  items.push({ type: 'logo', label: 'Sistem Ekstrakurikuler', version: 'V 18.0.1 Artemis Series ' })
+  items.push({ type: 'logo', label: 'Sistem Ekstrakurikuler', version: 'V 18.5.10 Artemis Series ( Stable ) ' })
   
   if (!isCollapsed) {
     items.push({ type: 'badge', role })
   }
 
-  items.push({ type: 'section', label: 'Utama' })
-  items.push({ type: 'link', href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard })
+  items.push({ type: 'section', label: 'Dashboard' })
+  items.push({ type: 'link', href: '/dashboard', label: 'Ringkasan Utama', icon: LayoutDashboard })
+  items.push({ type: 'link', href: '/leaderboard', label: 'Leaderboard', icon: Trophy })
+
+  items.push({ type: 'section', label: 'Kegiatan' })
+  items.push({ type: 'link', href: '/materi', label: role === 'admin_osis_mpk' ? 'Jadwal Rapat' : 'Materi Hari Ini', icon: BookOpen })
+  items.push({ type: 'link', href: '/jadwal', label: role === 'admin_osis_mpk' ? 'Pembawa Materi' : 'Jadwal Pengajar', icon: CalendarDays })
   items.push({ type: 'link', href: '/laporan', label: 'Laporan Statistik', icon: BarChart3 })
+  items.push({ type: 'link', href: '/rekap-absensi', label: 'Rekap Absensi', icon: ClipboardCheck })
   items.push({ type: 'link', href: '/kas', label: 'Buku Kas', icon: Wallet })
   items.push({ type: 'link', href: '/pengeluaran', label: 'Pengeluaran Kas', icon: HandCoins })
-  items.push({ type: 'link', href: '/dokumentasi', label: 'Dokumentasi', icon: Camera })
 
   if (role === 'administrator' || role === 'admin_programming' || role === 'admin_english') {
     items.push({ type: 'section', label: 'Ekstrakurikuler' })
@@ -57,10 +63,13 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
     items.push({ type: 'section', label: 'Organisasi' })
     items.push({ type: 'link', href: '/organisasi?org=osis', label: 'OSIS', icon: Building2 })
     items.push({ type: 'link', href: '/organisasi?org=mpk', label: 'MPK', icon: Building2 })
+    // items.push({ type: 'link', href: '/organisasi/kegiatan', label: 'Pengelompokan Kegiatan', icon: LayoutGrid })
     items.push({ type: 'link', href: '/wawancara', label: 'Wawancara OSIS & MPK', icon: MessagesSquare })
   }
 
   items.push({ type: 'section', label: 'Tools' })
+  items.push({ type: 'link', href: '/admin/email', label: 'Pengumuman', icon: Mail })
+  items.push({ type: 'link', href: '/admin/exp', label: 'Kelola EXP', icon: Zap })
   if (role === 'administrator') {
     items.push({ type: 'link', href: '/admin', label: 'Kelola User', icon: UserCog })
   }
@@ -81,13 +90,13 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
 
 function RoleBadge({ role }: { role: string }) {
   const colors: Record<string, string> = {
-    administrator: 'bg-[#052659] border-[#5482B4]/30 text-white font-extrabold',
-    admin_programming: 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-white font-extrabold',
-    admin_english: 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-white font-extrabold',
-    admin_osis_mpk: 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-white font-extrabold',
+    administrator: 'bg-persian-blue border-white/20 text-white font-extrabold',
+    admin_programming: 'bg-unit-programming/20 border-unit-programming/30 text-unit-programming font-extrabold',
+    admin_english: 'bg-unit-english/20 border-unit-english/30 text-blue-400 font-extrabold',
+    admin_osis_mpk: 'bg-unit-osis/20 border-unit-osis/30 text-unit-osis font-extrabold',
   }
   return (
-    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold ${colors[role] || 'bg-[rgba(84,130,180,0.12)] border-[#5482B4]/25 text-[#C2E8FF]'}`}>
+    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold ${colors[role] || 'bg-white/5 border-white/10 text-white'}`}>
       <div className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
       {ROLE_LABELS[role] || role}
     </div>
@@ -96,8 +105,10 @@ function RoleBadge({ role }: { role: string }) {
 
 export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: SidebarProps) {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const cleanRole = (user.role || '').trim().toLowerCase()
   const navItems = getFlattenedNavItems(cleanRole, !!isCollapsed)
+  const routeKey = searchParams.size > 0 ? `${pathname}?${searchParams.toString()}` : pathname
 
   const isActive = (href: string) => {
     const base = href.split('?')[0]
@@ -108,9 +119,9 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
     switch (item.type) {
       case 'logo':
         return (
-          <div className="px-1 py-4 flex items-center justify-between border-b border-[#5482B4]/15 mb-2">
+          <div className="px-1 py-4 flex items-center justify-between border-b border-white/10 mb-2">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-[#052659] rounded-xl flex items-center justify-center shadow-sm shadow-[#052659]/30 flex-shrink-0">
+              <div className="w-9 h-9 bg-persian-blue rounded-xl flex items-center justify-center shadow-sm shadow-blue-600/30 flex-shrink-0">
                 <GraduationCap className="w-5 h-5 text-white" />
               </div>
               {!isCollapsed && (
@@ -156,18 +167,20 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
             }}
             target={item.target}
             className={cn(
-              'nav-link flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200',
-              active ? 'bg-[#5482B4]/20 text-white border border-[#5482B4]/30 font-extrabold' : 'text-white hover:bg-white/5 hover:text-white',
+              'group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ease-out',
+              active 
+                ? 'bg-gradient-to-r from-persian-blue/20 to-transparent text-white border-l-4 border-persian-blue font-bold shadow-[0_4px_20px_-5px_rgba(30,144,255,0.3)]' 
+                : 'text-slate-400 hover:text-white hover:bg-white/5 hover:translate-x-1',
               isNonaktif && 'opacity-60 cursor-not-allowed'
             )}
           >
-            <Icon className={cn("w-4 h-4 flex-shrink-0", active ? "text-[#C2E8FF]" : "text-inherit")} />
+            <Icon className={cn("w-5 h-5 transition-transform duration-300 group-hover:scale-110", active ? "text-blue-300" : "text-slate-400 group-hover:text-white")} />
             {!isCollapsed && (
-              <span className={cn("flex-1 truncate text-[13px]", active && "font-semibold")}>
+              <span className={cn("flex-1 truncate text-[13px]", active ? "font-semibold text-white" : "font-medium text-white")}>
                 {item.label}
               </span>
             )}
-            {!isCollapsed && active && <ChevronRight className="w-3 h-3 opacity-40" />}
+            {!isCollapsed && active && <div className="w-1.5 h-1.5 rounded-full bg-persian-blue shadow-[0_0_8px_#1E90FF]" />}
           </Link>
         )
     }
@@ -183,13 +196,14 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
           listClassName="px-3"
           showGradients={true}
           enableArrowNavigation={true}
+          resetScrollKey={routeKey}
         />
       </div>
 
-       <div className="px-4 py-4 border-t border-[#5482B4]/15 flex-shrink-0 bg-[#011025]/80 backdrop-blur-sm">
+       <div className="px-4 py-4 border-t border-white/10 flex-shrink-0 bg-deep-navy/80 backdrop-blur-sm">
         <div className="flex items-center gap-2.5">
           {cleanRole === 'administrator' ? (
-            <div className="relative w-8 h-8 rounded-full overflow-hidden shadow-sm border border-[#5482B4]/30 flex-shrink-0">
+            <div className="relative w-8 h-8 rounded-full overflow-hidden shadow-sm border border-white/10 flex-shrink-0">
               <Image 
                 src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" 
                 alt="Admin Profile" 
@@ -198,7 +212,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
               />
             </div>
           ) : (
-            <div className="w-8 h-8 rounded-full bg-[#052659] flex items-center justify-center text-white text-xs font-black flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-persian-blue flex items-center justify-center text-white text-xs font-black flex-shrink-0">
               {user.nama.charAt(0).toUpperCase()}
             </div>
           )}
@@ -216,7 +230,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
   return (
     <>
       <aside className={cn(
-        "hidden lg:flex flex-col bg-[#011025] border-r border-[#5482B4]/15 h-screen sticky top-0 shadow-sm transition-all duration-300 ease-in-out",
+        "hidden lg:flex flex-col bg-deep-navy border-r border-white/10 h-screen sticky top-0 shadow-sm transition-all duration-300 ease-in-out",
         isCollapsed ? "w-16" : "w-60"
       )}>
         {content}
@@ -224,7 +238,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-          <aside className="relative w-64 bg-[#011025] h-full shadow-2xl slide-up">
+          <aside className="relative w-64 bg-deep-navy h-full shadow-2xl slide-up">
             {content}
           </aside>
         </div>

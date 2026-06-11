@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Trophy, Plus, Pencil, Trash2, Gift, Sparkles, Loader2, CheckSquare, Square } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Trophy, Plus, Pencil, Trash2, Gift, Sparkles, Loader2, CheckSquare, Square, ArrowLeft } from 'lucide-react'
 
 interface Pencapaian {
   id: number
@@ -25,8 +26,10 @@ const ORG_OPTIONS = ['programming', 'english', 'osis', 'mpk', 'semua']
 const emptyForm = { icon: 'star', nama: '', deskripsi: '', exp_reward: 10, organisasi: 'programming' }
 
 export default function PencapaianPage() {
+  const router = useRouter()
   const [data, setData] = useState<Pencapaian[]>([])
   const [loading, setLoading] = useState(true)
+  const [userRole, setUserRole] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editItem, setEditItem] = useState<Pencapaian | null>(null)
   const [form, setForm] = useState(emptyForm)
@@ -50,6 +53,15 @@ export default function PencapaianPage() {
   }, [])
 
   useEffect(() => { fetch_(filterOrg || undefined) }, [filterOrg, fetch_])
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(d => setUserRole(d.user?.role || ''))
+      .catch(() => {})
+  }, [])
+
+  const isAdministrator = userRole === 'administrator'
 
   function openCreate() { setForm({ ...emptyForm }); setEditItem(null); setShowModal(true) }
   function openEdit(item: Pencapaian) {
@@ -132,7 +144,7 @@ export default function PencapaianPage() {
   const ORG_COLORS: Record<string, string> = {
     programming: 'from-blue-500 to-cyan-500',
     english: 'from-emerald-500 to-teal-500',
-    osis: 'from-purple-500 to-violet-500',
+    osis: 'from-purple-500 to-persian-blue/100',
     mpk: 'from-orange-500 to-amber-500',
     semua: 'from-pink-500 to-rose-500',
   }
@@ -141,6 +153,11 @@ export default function PencapaianPage() {
     <div className="min-h-screen bg-[#0f1117] text-white p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
+        <div className="mb-4">
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Kembali
+          </button>
+        </div>
         <div className="flex items-center justify-between mb-8">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -149,10 +166,12 @@ export default function PencapaianPage() {
             </div>
             <p className="text-slate-400 text-sm">Buat, edit, dan berikan pencapaian ke anggota</p>
           </div>
-          <button onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-medium text-sm hover:opacity-90 transition">
-            <Plus className="w-4 h-4" /> Buat Pencapaian
-          </button>
+          {isAdministrator && (
+            <button onClick={openCreate}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-medium text-sm hover:opacity-90 transition">
+              <Plus className="w-4 h-4" /> Buat Pencapaian
+            </button>
+          )}
         </div>
 
         {/* Filter */}
@@ -174,7 +193,7 @@ export default function PencapaianPage() {
             {[...Array(6)].map((_, i) => <div key={i} className="h-36 bg-white/5 rounded-2xl animate-pulse" />)}
           </div>
         ) : data.length === 0 ? (
-          <div className="text-center py-20 text-slate-500">
+          <div className="text-center py-20 text-slate-400">
             <Trophy className="w-12 h-12 mx-auto mb-4 opacity-30" />
             <p>Belum ada pencapaian</p>
           </div>
@@ -189,8 +208,12 @@ export default function PencapaianPage() {
                       <Sparkles className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => openEdit(item)} className="p-1.5 text-slate-400 hover:text-blue-400 transition"><Pencil className="w-3.5 h-3.5" /></button>
-                      <button onClick={() => handleDelete(item.id)} className="p-1.5 text-slate-400 hover:text-red-400 transition"><Trash2 className="w-3.5 h-3.5" /></button>
+                      {isAdministrator && (
+                        <>
+                          <button onClick={() => openEdit(item)} className="p-1.5 text-slate-400 hover:text-blue-400 transition"><Pencil className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => handleDelete(item.id)} className="p-1.5 text-slate-400 hover:text-red-400 transition"><Trash2 className="w-3.5 h-3.5" /></button>
+                        </>
+                      )}
                     </div>
                   </div>
                   <h3 className="font-semibold text-white mb-1">{item.nama}</h3>
@@ -295,7 +318,7 @@ export default function PencapaianPage() {
                   <Loader2 className="w-4 h-4 animate-spin" /> Memuat anggota...
                 </div>
               ) : recipients.length === 0 ? (
-                <div className="p-10 text-center text-slate-500">Belum ada anggota</div>
+                <div className="p-10 text-center text-slate-400">Belum ada anggota</div>
               ) : recipients.map((recipient) => {
                 const checked = selectedRecipients.includes(recipient.id)
                 return (
@@ -304,7 +327,7 @@ export default function PencapaianPage() {
                     onClick={() => setSelectedRecipients(prev => checked ? prev.filter(id => id !== recipient.id) : [...prev, recipient.id])}
                     className="w-full flex items-center gap-3 p-3 text-left hover:bg-white/5 transition"
                   >
-                    {checked ? <CheckSquare className="w-4 h-4 text-emerald-400" /> : <Square className="w-4 h-4 text-slate-500" />}
+                    {checked ? <CheckSquare className="w-4 h-4 text-emerald-400" /> : <Square className="w-4 h-4 text-slate-400" />}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-white truncate">{recipient.nama}</p>
                       <p className="text-xs text-slate-400">{recipient.kelas || '-'}{recipient.jabatan ? ` · ${recipient.jabatan}` : ''}</p>

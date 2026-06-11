@@ -61,7 +61,8 @@ export default function ImportClient({ user }: Props) {
 
   const parseExcel = async (f: File) => {
     try {
-      const XLSX = (await import('xlsx')).default
+      const XLSX_MODULE = await import('xlsx')
+      const XLSX = XLSX_MODULE.default || XLSX_MODULE
       const arrayBuffer = await f.arrayBuffer()
       const workbook = XLSX.read(arrayBuffer, { type: 'array' })
       const firstSheet = workbook.SheetNames[0]
@@ -180,12 +181,12 @@ export default function ImportClient({ user }: Props) {
       </div>
 
       {/* Instruksi */}
-      <div className="card p-4 bg-blue-50/40 border-blue-200">
-        <h3 className="text-sm font-bold text-blue-800 mb-2 flex items-center gap-2">
+      <div className="card p-4 bg-white/5/40 border-white/10">
+        <h3 className="text-sm font-bold text-blue-200 mb-2 flex items-center gap-2">
           <AlertCircle className="w-4 h-4" />
           Panduan Format Excel
         </h3>
-        <ul className="text-xs text-blue-700 space-y-1 ml-1">
+        <ul className="text-xs text-blue-300 space-y-1 ml-1">
           <li>• Kolom <strong>Nama</strong> wajib diisi (deteksi otomatis: "nama", "Nama Siswa", dll)</li>
           <li>• Kolom <strong>Kelas</strong> (opsional): contoh "X DKV", "XI RPL"</li>
           <li>• Kolom <strong>NIS</strong> (opsional): angka NIS/NISN</li>
@@ -211,8 +212,8 @@ export default function ImportClient({ user }: Props) {
               className={cn(
                 'py-3 px-4 rounded-lg border text-center text-sm font-semibold transition-all',
                 selectedOrg === org
-                  ? 'border-indigo-500 bg-indigo-50 text-indigo-700 ring-2 ring-indigo-100'
-                  : 'border-slate-200 bg-white text-slate-600 hover:border-indigo-300 hover:bg-slate-50'
+                  ? 'border-persian-blue/100 bg-persian-blue/10 text-blue-300 ring-2 ring-persian-blue/20'
+                  : 'border-white/10 bg-deep-navy text-slate-300 hover:border-white/20 hover:bg-white/5'
               )}
             >
               {ORG_LABELS[org]}
@@ -228,8 +229,8 @@ export default function ImportClient({ user }: Props) {
           className={cn(
             'border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer',
             file
-              ? 'border-green-300 bg-green-50'
-              : 'border-slate-300 hover:border-indigo-400 hover:bg-slate-50'
+              ? 'border-white/20 bg-green-500/10'
+              : 'border-slate-300 hover:border-blue-400 hover:bg-white/5'
           )}
           onClick={() => document.getElementById('excel-file-input')?.click()}
         >
@@ -243,13 +244,13 @@ export default function ImportClient({ user }: Props) {
           {file ? (
             <div className="space-y-2">
               <CheckCircle className="w-10 h-10 text-green-500 mx-auto" />
-              <p className="text-green-700 font-medium">{fileName}</p>
-              <p className="text-xs text-slate-500">Klik untuk ganti file</p>
+              <p className="text-green-400 font-medium">{fileName}</p>
+              <p className="text-xs text-slate-400">Klik untuk ganti file</p>
             </div>
           ) : (
             <div className="space-y-2">
               <Upload className="w-10 h-10 text-slate-400 mx-auto" />
-              <p className="text-slate-600">Klik untuk pilih file</p>
+              <p className="text-slate-300">Klik untuk pilih file</p>
               <p className="text-xs text-slate-400 mt-1">Format: .xlsx, .xls, .csv (maks 5MB)</p>
             </div>
           )}
@@ -260,36 +261,36 @@ export default function ImportClient({ user }: Props) {
       {preview.length > 0 && (
         <div className="card p-5">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-slate-700">
+            <h3 className="text-sm font-bold text-slate-200">
               <TableIcon className="w-4 h-4 inline mr-1" />
               Preview Data ({preview.length} baris)
             </h3>
             <button
               onClick={handleReset}
-              className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"
+              className="text-xs text-red-500 hover:text-red-400 flex items-center gap-1"
             >
               <X className="w-3 h-3" /> Reset
             </button>
           </div>
           <div className="overflow-x-auto max-h-72 rounded-lg border">
             <table className="w-full text-xs">
-              <thead className="bg-slate-100 sticky top-0 z-10">
+              <thead className="bg-white/10 sticky top-0 z-10">
                 <tr>
-                  <th className="px-3 py-2 text-left font-bold text-slate-600 border-b">#</th>
-                  <th className="px-3 py-2 text-left font-bold text-slate-600 border-b">Nama</th>
-                  <th className="px-3 py-2 text-left font-bold text-slate-600 border-b">Kelas</th>
-                  <th className="px-3 py-2 text-left font-bold text-slate-600 border-b">NIS</th>
-                  <th className="px-3 py-2 text-left font-bold text-slate-600 border-b">Jabatan</th>
+                  <th className="px-3 py-2 text-left font-bold text-slate-300 border-b">#</th>
+                  <th className="px-3 py-2 text-left font-bold text-slate-300 border-b">Nama</th>
+                  <th className="px-3 py-2 text-left font-bold text-slate-300 border-b">Kelas</th>
+                  <th className="px-3 py-2 text-left font-bold text-slate-300 border-b">NIS</th>
+                  <th className="px-3 py-2 text-left font-bold text-slate-300 border-b">Jabatan</th>
                 </tr>
               </thead>
               <tbody>
                 {preview.slice(0, 50).map((row, i) => (
-                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                    <td className="px-3 py-1.5 text-slate-500 border-b">{i + 1}</td>
+                  <tr key={i} className={i % 2 === 0 ? 'bg-white/5' : 'bg-transparent'}>
+                    <td className="px-3 py-1.5 text-slate-400 border-b">{i + 1}</td>
                     <td className="px-3 py-1.5 font-medium border-b">{row.nama}</td>
-                    <td className="px-3 py-1.5 text-slate-500 border-b">{row.kelas || '-'}</td>
-                    <td className="px-3 py-1.5 text-slate-500 border-b">{row.nis || '-'}</td>
-                    <td className="px-3 py-1.5 text-slate-500 border-b">{row.jabatan || '-'}</td>
+                    <td className="px-3 py-1.5 text-slate-400 border-b">{row.kelas || '-'}</td>
+                    <td className="px-3 py-1.5 text-slate-400 border-b">{row.nis || '-'}</td>
+                    <td className="px-3 py-1.5 text-slate-400 border-b">{row.jabatan || '-'}</td>
                   </tr>
                 ))}
                 {preview.length > 50 && (
@@ -302,7 +303,7 @@ export default function ImportClient({ user }: Props) {
               </tbody>
             </table>
           </div>
-          <p className="text-xs text-slate-500 mt-2">
+          <p className="text-xs text-slate-400 mt-2">
             Menampilkan maks 50 baris pertama dari {preview.length} data
           </p>
         </div>
@@ -341,8 +342,8 @@ export default function ImportClient({ user }: Props) {
           className={cn(
             'p-4 rounded-lg border text-sm',
             result.success
-              ? 'bg-green-50 border-green-200 text-green-700'
-              : 'bg-red-50 border-red-200 text-red-700'
+              ? 'bg-green-500/10 border-white/10 text-green-400'
+              : 'bg-red-500/10 border-white/10 text-red-400'
           )}
         >
           <div className="flex items-center gap-2 font-bold mb-1">

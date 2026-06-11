@@ -7,7 +7,7 @@ import Topbar from '@/components/layout/Topbar'
 const Sidebar = dynamic(() => import('@/components/layout/Sidebar'), {
   ssr: false,
   loading: () => (
-    <aside className="hidden lg:flex flex-col bg-[#011025] border-r border-[#5482B4]/15 h-screen sticky top-0 shadow-sm w-60" />
+    <aside className="hidden lg:flex flex-col bg-slate-900 border-r border-slate-800 h-screen sticky top-0 shadow-sm w-60" />
   )
 })
 
@@ -23,7 +23,7 @@ export default function DashboardLayout({ user, pageTitle, children }: Dashboard
   const themeClass = user.role === 'administrator' ? 'theme-admin' : ''
 
   return (
-    <div className={`flex h-screen overflow-hidden bg-[#F4F8FC] ${themeClass}`}>
+    <div className={`flex h-[100dvh] overflow-hidden bg-white/5 ${themeClass}`}>
       <Sidebar 
         user={user} 
         mobileOpen={mobileOpen} 
@@ -38,7 +38,7 @@ export default function DashboardLayout({ user, pageTitle, children }: Dashboard
           isCollapsed={isCollapsed}
           onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
         />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 fade-in">
+        <main className="mobile-scroll flex-1 overflow-y-auto p-4 lg:p-6">
           {children}
         </main>
       </div>

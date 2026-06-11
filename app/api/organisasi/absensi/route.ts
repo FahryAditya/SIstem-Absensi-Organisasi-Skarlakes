@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   const organisasi = searchParams.get('organisasi') as 'osis' | 'mpk' | null
   const tanggal = searchParams.get('tanggal')
   const page = parseInt(searchParams.get('page') || '1')
-  const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100)
+  const limit = Math.min(parseInt(searchParams.get('limit') || '100'), 500)
 
   if (organisasi === 'osis' && !canAccessOsis(userRole))
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
@@ -40,11 +40,18 @@ export async function GET(req: NextRequest) {
     ...(tanggal ? { tanggal: new Date(tanggal) } : {}),
   }
 
+  const orderBy: Record<string, unknown>[] =
+    organisasi === 'osis'
+      ? [{ anggota_osis: { nama: 'asc' } }]
+      : organisasi === 'mpk'
+        ? [{ anggota_mpk: { nama: 'asc' } }]
+        : [{ anggota_osis: { nama: 'asc' } }, { anggota_mpk: { nama: 'asc' } }]
+
   const [data, total] = await Promise.all([
     prisma.absensiOrganisasi.findMany({
       where,
       include: { anggota_osis: true, anggota_mpk: true },
-      orderBy: [{ tanggal: 'desc' }],
+      orderBy,
       skip: (page - 1) * limit,
       take: limit,
     }),

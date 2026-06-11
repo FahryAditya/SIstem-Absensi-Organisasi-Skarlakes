@@ -45,8 +45,9 @@ export async function POST(req: NextRequest) {
   const existing = await prisma.user.findUnique({ where: { email: parsed.data.email } })
   if (existing) return NextResponse.json({ error: 'Email sudah digunakan' }, { status: 400 })
 
+  const hashedPassword = bcrypt.hashSync(parsed.data.password, 10)
   const user = await prisma.user.create({
-    data: { ...parsed.data, password: parsed.data.password },
+    data: { ...parsed.data, password: hashedPassword },
     select: { id: true, nama: true, email: true, role: true }
   })
 
@@ -82,7 +83,9 @@ export async function PUT(req: NextRequest) {
   if (!existing) return NextResponse.json({ error: 'User tidak ditemukan' }, { status: 404 })
 
   const updateData: Record<string, unknown> = { ...rest }
-  if (password) updateData.password = password
+  if (password) {
+    updateData.password = bcrypt.hashSync(password, 10)
+  }
 
   const updated = await prisma.user.update({
     where: { id },

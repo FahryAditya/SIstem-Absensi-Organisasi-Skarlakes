@@ -32,17 +32,21 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const tipe = searchParams.get('tipe') as 'osis' | 'mpk' | null
     const search = searchParams.get('search') || ''
+    const includeAlumni = searchParams.get('includeAlumni') === 'true'
     const page = parseInt(searchParams.get('page') || '1')
     const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 100)
 
-    console.log('GET /api/organisasi params:', { tipe, search, page, limit })
+    console.log('GET /api/organisasi params:', { tipe, search, page, limit, includeAlumni })
 
     if (tipe === 'osis' && !canAccessOsis(userRole))
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     if (tipe === 'mpk' && !canAccessMpk(userRole))
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
 
-    const whereSearch = search ? { nama: { contains: search } } : {}
+    const whereSearch = {
+      ...(search ? { nama: { contains: search } } : {}),
+      status: includeAlumni && (userRole === 'administrator') ? undefined : 'ACTIVE'
+    }
 
     if (tipe === 'osis') {
       const [data, total] = await Promise.all([

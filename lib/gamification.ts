@@ -20,12 +20,12 @@ export function getLevelName(level: number): string {
 
 export function getLevelColor(level: number): string {
   switch (level) {
-    case 1: return 'from-slate-400 to-slate-500 text-slate-800 bg-slate-50'
-    case 2: return 'from-blue-400 to-blue-500 text-blue-800 bg-blue-50'
+    case 1: return 'from-slate-400 to-slate-500 text-white bg-white/5'
+    case 2: return 'from-blue-400 to-blue-500 text-blue-200 bg-white/5'
     case 3: return 'from-teal-400 to-teal-500 text-teal-800 bg-teal-50'
-    case 4: return 'from-indigo-500 to-indigo-600 text-indigo-800 bg-indigo-50'
-    case 5: return 'from-amber-500 to-amber-600 text-amber-800 bg-amber-50'
-    default: return 'from-slate-400 to-slate-500 text-slate-800 bg-slate-50'
+    case 4: return 'from-persian-blue/100 to-persian-blue text-blue-200 bg-persian-blue/10'
+    case 5: return 'from-amber-500 to-amber-600 text-amber-300 bg-amber-500/10'
+    default: return 'from-slate-400 to-slate-500 text-white bg-white/5'
   }
 }
 

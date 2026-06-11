@@ -38,15 +38,23 @@ export const ADMINISTRATOR_MENU_ITEMS: AdminMenuItem[] = [
   { label: 'Backup SQL',               section: 'Tools',         href: '/api/admin/backup' },
 ];
 
-// Detect if we should reduce/skip animations (only prefers-reduced-motion, NOT mobile)
+// Reduce animations on touch/mobile devices to keep scrolling smooth.
 function useReducedAnimation() {
-  const [reduced, setReduced] = useState(false); // default false agar animasi aktif semua device
+  const [reduced, setReduced] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setReduced(mq.matches);
-    const handler = () => setReduced(mq.matches);
+    const mobileMq = window.matchMedia('(max-width: 1023px)');
+    const update = () => {
+      setReduced(mq.matches || mobileMq.matches || 'ontouchstart' in window);
+    };
+    update();
+    const handler = () => update();
     mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
+    mobileMq.addEventListener('change', handler);
+    return () => {
+      mq.removeEventListener('change', handler);
+      mobileMq.removeEventListener('change', handler);
+    };
   }, []);
   return reduced;
 }
@@ -90,9 +98,9 @@ const AnimatedItem: React.FC<AnimatedItemProps> = ({
         {
           // Gunakan scroll container sidebar sebagai root, bukan viewport
           root: scrollRoot ?? null,
-          threshold: 0.05,
-          // Sedikit margin bawah agar item mulai animate sebelum benar-benar terlihat
-          rootMargin: '0px 0px -10px 0px',
+          threshold: 0.01,
+          // Root margin diperbesar agar item load lebih awal sebelum muncul di layar (menghilangkan 'delay' saat scroll)
+          rootMargin: '200px 0px 200px 0px',
         }
       );
       observer.observe(el);
@@ -137,6 +145,7 @@ interface AnimatedListProps<T> {
   displayScrollbar?: boolean;
   initialSelectedIndex?: number;
   selectedIndex?: number;
+  resetScrollKey?: string;
 }
 
 const AnimatedList = <T,>({
@@ -151,7 +160,8 @@ const AnimatedList = <T,>({
   itemClassName = '',
   displayScrollbar = true,
   initialSelectedIndex = -1,
-  selectedIndex: controlledSelectedIndex
+  selectedIndex: controlledSelectedIndex,
+  resetScrollKey
 }: AnimatedListProps<T>) => {
   // Gunakan ADMINISTRATOR_MENU_ITEMS jika prop administratorItems=true dan items tidak disupply
   const resolvedItems: T[] = (items && items.length > 0)
@@ -173,6 +183,15 @@ const AnimatedList = <T,>({
   const [keyboardNav, setKeyboardNav] = useState<boolean>(false);
   const [topGradientOpacity, setTopGradientOpacity] = useState<number>(0);
   const [bottomGradientOpacity, setBottomGradientOpacity] = useState<number>(1);
+
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+
+    list.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    setTopGradientOpacity(0);
+    setBottomGradientOpacity(list.scrollHeight <= list.clientHeight ? 0 : 1);
+  }, [resetScrollKey]);
 
   const handleItemMouseEnter = useCallback((index: number) => {
     setSelectedIndex(index);
@@ -259,7 +278,9 @@ const AnimatedList = <T,>({
         {resolvedItems.map((item, index) => (
           <AnimatedItem
             key={index}
-            delay={reduced ? 0 : index * 0.04}
+            // Delay hanya diberikan pada 10 item pertama agar stagger awal tetap cantik, 
+            // sisanya load instan (tanpa kelai) saat di-scroll masuk ke viewport.
+            delay={reduced ? 0 : index < 10 ? index * 0.02 : 0}
             index={index}
             onMouseEnter={() => handleItemMouseEnter(index)}
             onClick={() => handleItemClick(item, index)}
@@ -280,11 +301,11 @@ const AnimatedList = <T,>({
       {showGradients && (
         <>
           <div
-            className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-[#011025] to-transparent pointer-events-none transition-opacity duration-300 z-10"
+            className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-[#001F3F] to-transparent pointer-events-none transition-opacity duration-300 z-10"
             style={{ opacity: topGradientOpacity }}
           ></div>
           <div
-            className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-[#011025] to-transparent pointer-events-none transition-opacity duration-300 z-10"
+            className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-[#001F3F] to-transparent pointer-events-none transition-opacity duration-300 z-10"
             style={{ opacity: bottomGradientOpacity }}
           ></div>
         </>

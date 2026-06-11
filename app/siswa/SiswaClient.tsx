@@ -239,30 +239,30 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
       const idx = data.indexOf(s)
       return <span className="text-slate-400 font-mono text-xs">{(page - 1) * PAGE_SIZE + idx + 1}</span>
     }},
-    { key: 'nis', label: 'NIS', render: (s: Siswa) => <span className="font-mono text-xs text-slate-500">{s.nis || '-'}</span> },
+    { key: 'nis', label: 'NIS', render: (s: Siswa) => <span className="font-mono text-xs text-slate-400">{s.nis || '-'}</span> },
     { key: 'nama', label: 'Nama Siswa', render: (s: Siswa) => (
       <button onClick={() => openProfile(s)} className="flex items-center gap-2 text-left">
         {s.foto_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={s.foto_url} alt={s.nama} className="w-8 h-8 rounded-full object-cover border border-slate-200" />
+          <img src={s.foto_url} alt={s.nama} className="w-8 h-8 rounded-full object-cover border border-white/10" />
         ) : (
-          <span className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center justify-center text-xs font-bold">
+          <span className="w-8 h-8 rounded-full bg-persian-blue/10 text-blue-300 border border-persian-blue/20 flex items-center justify-center text-xs font-bold">
             {s.nama.charAt(0).toUpperCase()}
           </span>
         )}
         <span>
-          <span className="block font-semibold text-slate-800">{s.nama}</span>
+          <span className="block font-semibold text-white">{s.nama}</span>
           {s.email && <span className="block text-[10px] text-slate-400">{s.email}</span>}
         </span>
       </button>
     ) },
-    { key: 'kelas', label: 'Kelas', render: (s: Siswa) => <span className="text-slate-500 text-xs">{s.kelas || '-'}</span> },
+    { key: 'kelas', label: 'Kelas', render: (s: Siswa) => <span className="text-slate-400 text-xs">{s.kelas || '-'}</span> },
     { key: 'ekskul', label: 'Ekskul', render: (s: Siswa) => <OrgBadge org={s.ekskul} /> },
     { key: 'xp', label: 'Level & Progress', render: (s: Siswa) => (
       <div className="flex flex-col gap-1.5 max-w-[170px] min-w-[140px]">
         <div className="flex justify-between items-center">
           <LevelBadge exp={s.xp || 0} size="sm" />
-          <span className="font-mono text-[10px] font-bold text-[#052659]">{s.xp || 0} EXP</span>
+          <span className="font-mono text-[10px] font-bold text-blue-300">{s.xp || 0} EXP</span>
         </div>
         <ExpProgressBar exp={s.xp || 0} showLabels={false} />
       </div>
@@ -272,10 +272,10 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
       key: 'actions', label: '',
       render: (s: Siswa) => (
         <div className="flex items-center gap-1">
-          <button onClick={() => openProfile(s)} className="btn-icon text-emerald-500 hover:bg-emerald-50" title="Profil & Pencapaian"><Award className="w-3.5 h-3.5" /></button>
-          <button onClick={() => openXpModal(s)} className="btn-icon text-amber-500 hover:bg-amber-50" title="Beri Poin XP"><Zap className="w-3.5 h-3.5" /></button>
-          <button onClick={() => openEdit(s)} className="btn-icon text-indigo-500 hover:bg-indigo-50"><Pencil className="w-3.5 h-3.5" /></button>
-          <button onClick={() => setDeleteTarget(s)} className="btn-icon text-red-400 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /></button>
+          <button onClick={() => openProfile(s)} className="btn-icon text-emerald-500 hover:bg-emerald-500/10" title="Profil & Pencapaian"><Award className="w-3.5 h-3.5" /></button>
+          <button onClick={() => openXpModal(s)} className="btn-icon text-amber-500 hover:bg-amber-500/10" title="Beri Poin XP"><Zap className="w-3.5 h-3.5" /></button>
+          <button onClick={() => openEdit(s)} className="btn-icon text-persian-blue/100 hover:bg-persian-blue/10"><Pencil className="w-3.5 h-3.5" /></button>
+          <button onClick={() => setDeleteTarget(s)} className="btn-icon text-red-400 hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" /></button>
         </div>
       )
     },
@@ -287,15 +287,15 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
       <div className="page-header">
         <div className="flex-1">
           <div className="flex items-center gap-2.5">
-            <Users className="w-5 h-5 text-indigo-500" />
+            <Users className="w-5 h-5 text-persian-blue/100" />
             <h2 className="page-title">Data Siswa</h2>
-            <span className="badge bg-indigo-50 text-indigo-700 border border-indigo-100">{total} siswa</span>
+            <span className="badge bg-persian-blue/10 text-blue-300 border border-persian-blue/20">{total} siswa</span>
           </div>
           <p className="page-sub mt-0.5">Kelola daftar siswa ekstrakurikuler</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
           {selectedIds.length > 0 && (
-            <button onClick={() => setBulkDeleteConfirmOpen(true)} className="btn-secondary text-red-600 border-red-200 hover:bg-red-50">
+            <button onClick={() => setBulkDeleteConfirmOpen(true)} className="btn-secondary text-red-600 border-white/10 hover:bg-red-500/10">
               <Trash2 className="w-4 h-4" /> Hapus Terpilih ({selectedIds.length})
             </button>
           )}
@@ -462,34 +462,34 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
           <div className="flex items-center gap-4">
             {profileTarget?.foto_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={profileTarget.foto_url} alt={profileTarget.nama} className="w-16 h-16 rounded-2xl object-cover border border-slate-200" />
+              <img src={profileTarget.foto_url} alt={profileTarget.nama} className="w-16 h-16 rounded-2xl object-cover border border-white/10" />
             ) : (
-              <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center justify-center text-2xl font-black">
+              <div className="w-16 h-16 rounded-2xl bg-persian-blue/10 text-blue-300 border border-persian-blue/20 flex items-center justify-center text-2xl font-black">
                 {profileTarget?.nama.charAt(0).toUpperCase()}
               </div>
             )}
             <div>
-              <h3 className="text-base font-bold text-slate-900">{profileTarget?.nama}</h3>
-              <p className="text-xs text-slate-500">{profileTarget?.kelas || '-'} · {profileTarget?.ekskul}</p>
-              <p className="text-xs text-slate-500">{profileTarget?.email || 'Email belum diisi'}</p>
+              <h3 className="text-base font-bold text-white">{profileTarget?.nama}</h3>
+              <p className="text-xs text-slate-400">{profileTarget?.kelas || '-'} · {profileTarget?.ekskul}</p>
+              <p className="text-xs text-slate-400">{profileTarget?.email || 'Email belum diisi'}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3">
               <p className="text-[10px] uppercase font-bold text-slate-400">EXP</p>
-              <p className="text-lg font-black text-[#052659]">{profileTarget?.xp || 0}</p>
+              <p className="text-lg font-black text-white">{profileTarget?.xp || 0}</p>
             </div>
-            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3">
               <p className="text-[10px] uppercase font-bold text-slate-400">Level</p>
-              <p className="text-lg font-black text-[#052659]">Lv {profileTarget?.level || 1}</p>
+              <p className="text-lg font-black text-white">Lv {profileTarget?.level || 1}</p>
             </div>
           </div>
 
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Award className="w-4 h-4 text-amber-500" />
-              <h4 className="text-sm font-bold text-slate-900">Pencapaian</h4>
+              <h4 className="text-sm font-bold text-white">Pencapaian</h4>
             </div>
             {profileLoading ? (
               <div className="text-sm text-slate-400 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" />Memuat...</div>
@@ -498,12 +498,12 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
             ) : (
               <div className="space-y-2">
                 {profileAchievements.map(item => (
-                  <div key={item.id} className="rounded-xl border border-amber-100 bg-amber-50/60 p-3">
+                  <div key={item.id} className="rounded-xl border border-amber-100 bg-amber-500/10/60 p-3">
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-bold text-slate-900">{item.pencapaian.nama}</p>
-                      <span className="text-xs font-bold text-amber-700">+{item.pencapaian.exp_reward} EXP</span>
+                      <p className="text-sm font-bold text-white">{item.pencapaian.nama}</p>
+                      <span className="text-xs font-bold text-amber-400">+{item.pencapaian.exp_reward} EXP</span>
                     </div>
-                    <p className="text-xs text-slate-500 mt-0.5">{item.pencapaian.deskripsi}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">{item.pencapaian.deskripsi}</p>
                   </div>
                 ))}
               </div>
@@ -546,10 +546,10 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
         }
       >
         <div className="space-y-4">
-          <div className="p-4 bg-slate-50 border border-slate-200/60 rounded-2xl space-y-3 shadow-sm">
+          <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="text-xs font-bold text-[#011025]">{xpModalTarget?.nama}</h4>
+                <h4 className="text-xs font-bold text-white">{xpModalTarget?.nama}</h4>
                 <p className="text-[10px] text-slate-400 font-semibold uppercase">{xpModalTarget?.kelas} • {xpModalTarget?.ekskul}</p>
               </div>
               <LevelBadge exp={xpModalTarget?.xp || 0} size="sm" />
@@ -568,8 +568,8 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
                 }}
                 className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all ${
                   fXpActivity === 'tugas'
-                    ? 'border-[#5482B4] bg-[#C2E8FF]/20 text-[#052659]'
-                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
+                    ? 'border-[#1E90FF] bg-[#1E90FF]/20 text-[#001F3F]'
+                    : 'border-white/10 bg-deep-navy text-slate-400 hover:bg-white/5'
                 }`}
               >
                 <span>📝</span>
@@ -583,8 +583,8 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
                 }}
                 className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all ${
                   fXpActivity === 'proyek'
-                    ? 'border-[#5482B4] bg-[#C2E8FF]/20 text-[#052659]'
-                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
+                    ? 'border-[#1E90FF] bg-[#1E90FF]/20 text-[#001F3F]'
+                    : 'border-white/10 bg-deep-navy text-slate-400 hover:bg-white/5'
                 }`}
               >
                 <span>💻</span>
@@ -597,8 +597,8 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
                 }}
                 className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all ${
                   fXpActivity === 'manual'
-                    ? 'border-[#5482B4] bg-[#C2E8FF]/20 text-[#052659]'
-                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
+                    ? 'border-[#1E90FF] bg-[#1E90FF]/20 text-[#001F3F]'
+                    : 'border-white/10 bg-deep-navy text-slate-400 hover:bg-white/5'
                 }`}
               >
                 <span>⚡</span>
@@ -610,9 +610,9 @@ export default function SiswaClient({ user, defaultOrg }: Props) {
           <div className="form-group">
             <label className="label">Jumlah Poin XP</label>
             {fXpActivity !== 'manual' ? (
-              <div className="p-3 bg-[#C2E8FF]/10 border border-[#C2E8FF]/30 rounded-xl flex items-center justify-between">
-                <span className="text-xs text-slate-500 font-medium">Preset Poin Terpilih:</span>
-                <span className="text-base font-mono font-black text-[#052659]">+{fXpAmount} XP</span>
+              <div className="p-3 bg-[#1E90FF]/10 border border-[#1E90FF]/30 rounded-xl flex items-center justify-between">
+                <span className="text-xs text-slate-400 font-medium">Preset Poin Terpilih:</span>
+                <span className="text-base font-mono font-black text-white">+{fXpAmount} XP</span>
               </div>
             ) : (
               <input

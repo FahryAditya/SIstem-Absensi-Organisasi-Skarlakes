@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-const privateCacheHeader = 'private, max-age=20, stale-while-revalidate=40'
+const privateCacheHeader = 'no-store, max-age=0'
 
 export function jsonWithPrivateCache<T>(payload: T) {
   return NextResponse.json(payload, {

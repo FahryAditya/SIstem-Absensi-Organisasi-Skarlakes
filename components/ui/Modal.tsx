@@ -43,16 +43,16 @@ export default function Modal({ open, title, onClose, children, size = 'md', foo
       />
       
       <div className={cn(
-        'relative bg-white rounded-[24px] shadow-2xl w-full flex flex-col max-h-[90vh] sm:max-h-[85vh] slide-up border border-slate-100',
+        'relative bg-deep-navy rounded-[24px] shadow-2xl w-full flex flex-col max-h-[90vh] sm:max-h-[85vh] slide-up border border-white/10',
         sizes[size]
       )}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-50 flex-shrink-0">
-          <h2 className="text-base font-bold text-slate-800 tracking-tight">{title}</h2>
+          <h2 className="text-base font-bold text-white tracking-tight">{title}</h2>
           <button 
             type="button"
             onClick={onClose} 
-            className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all active:scale-90"
+            className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-300 hover:bg-white/10 transition-all active:scale-90"
           >
             <X className="w-4 h-4" />
           </button>
@@ -65,7 +65,7 @@ export default function Modal({ open, title, onClose, children, size = 'md', foo
 
         {/* Footer */}
         {footer && (
-          <div className="flex-shrink-0 px-6 py-5 border-t border-slate-50 bg-slate-50/50 rounded-b-[24px]">
+          <div className="flex-shrink-0 px-6 py-5 border-t border-slate-50 bg-white/5/50 rounded-b-[24px]">
             {footer}
           </div>
         )}

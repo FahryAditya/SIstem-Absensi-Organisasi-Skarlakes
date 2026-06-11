@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Inbox, Loader2 } from 'lucide-react'
 export interface Column<T> {
   key: string
   label: string
-  render?: (item: T) => React.ReactNode
+  render?: (item: T, index: number) => React.ReactNode
   className?: string
   headerClass?: string
 }
@@ -27,9 +27,10 @@ interface TableProps<T> {
 }
 
 const TableRow = memo(function TableRow<T>({ 
-  item, columns, selectable, isSelected, onSelect, itemKey 
+  item, index, columns, selectable, isSelected, onSelect, itemKey 
 }: { 
   item: T, 
+  index: number,
   columns: Column<any>[], 
   selectable?: boolean, 
   isSelected?: boolean, 
@@ -37,11 +38,11 @@ const TableRow = memo(function TableRow<T>({
   itemKey: string | number
 }) {
   return (
-    <tr className={cn('tr', isSelected && 'bg-[rgba(84,130,180,0.12)]')}>
+    <tr className={cn('tr', isSelected && 'bg-persian-blue/10')}>
       {selectable && (
         <td className="td w-10 text-center px-4" onClick={(e) => e.stopPropagation()}>
           <input type="checkbox"
-            className="w-4 h-4 rounded border-[#5482B4]/30 text-[#052659] focus:ring-[#5482B4] cursor-pointer"
+            className="w-4 h-4 rounded border-white/20 text-persian-blue focus:ring-persian-blue/100 cursor-pointer"
             checked={isSelected || false}
             onChange={(e) => onSelect?.(e.target.checked, itemKey)}
           />
@@ -49,7 +50,7 @@ const TableRow = memo(function TableRow<T>({
       )}
       {columns.map(col => (
         <td key={col.key} className={cn('td', col.className)}>
-          {col.render ? col.render(item) : String((item as Record<string, unknown>)[col.key] ?? '')}
+          {col.render ? col.render(item, index) : String((item as Record<string, unknown>)[col.key] ?? '')}
         </td>
       ))}
     </tr>
@@ -72,15 +73,15 @@ export default function Table<T>({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-[rgba(84,130,180,0.15)] bg-white">
+    <div className="overflow-hidden rounded-xl border border-white/10 bg-deep-navy/40 backdrop-blur-xl">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="bg-[#F4F8FC] border-b border-[rgba(84,130,180,0.15)]">
+            <tr className="bg-white/5 border-b border-white/10">
               {selectable && (
                 <th className="th w-10 text-center px-4">
                   <input type="checkbox" 
-                    className="w-4 h-4 rounded border-[#5482B4]/30 text-[#052659] focus:ring-[#5482B4] cursor-pointer"
+                    className="w-4 h-4 rounded border-white/20 text-persian-blue focus:ring-persian-blue/100 cursor-pointer"
                     checked={data.length > 0 && selectedKeys?.length === data.length}
                     onChange={(e) => {
                       if (onSelectionChange) {
@@ -98,11 +99,11 @@ export default function Table<T>({
           <tbody>
             {loading ? (
               Array.from({ length: 6 }).map((_, i) => (
-                <tr key={i} className="border-b border-[rgba(84,130,180,0.15)]">
+                <tr key={i} className="border-b border-white/10">
                   {selectable && <td className="td w-10"></td>}
                   {columns.map(col => (
                     <td key={col.key} className="td">
-                      <div className="h-4 bg-[rgba(84,130,180,0.12)] rounded animate-pulse" style={{ width: `${50 + Math.random() * 40}%` }} />
+                      <div className="h-4 bg-white/10 rounded animate-pulse" style={{ width: `${50 + Math.random() * 40}%` }} />
                     </td>
                   ))}
                 </tr>
@@ -123,6 +124,7 @@ export default function Table<T>({
                   <TableRow 
                     key={key}
                     item={item}
+                    index={i}
                     itemKey={key}
                     columns={columns}
                     selectable={selectable}
@@ -138,8 +140,8 @@ export default function Table<T>({
 
       {/* Pagination */}
       {(totalPages > 1 || total !== undefined) && onPageChange && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-[rgba(84,130,180,0.15)] bg-[#F4F8FC]">
-          <span className="text-xs text-[#7EA0C5]">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-white/10 bg-white/5">
+          <span className="text-xs text-slate-400">
             {total !== undefined ? `${total} data` : ''} — Halaman {page} dari {totalPages}
           </span>
           <div className="flex items-center gap-1">
@@ -157,7 +159,7 @@ export default function Table<T>({
                 <button key={p} onClick={() => onPageChange(p)}
                   className={cn(
                     'w-7 h-7 text-xs rounded-lg font-medium transition-colors',
-                    p === page ? 'bg-[#052659] text-white' : 'text-[#7EA0C5] hover:bg-[rgba(126,160,197,0.15)]'
+                    p === page ? 'bg-persian-blue text-white' : 'text-slate-400 hover:bg-white/10 hover:text-white'
                   )}>
                   {p}
                 </button>

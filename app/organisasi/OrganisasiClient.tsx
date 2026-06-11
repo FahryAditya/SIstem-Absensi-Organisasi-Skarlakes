@@ -6,25 +6,25 @@ import Table from '@/components/ui/Table'
 import Modal from '@/components/ui/Modal'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { StatusBadge } from '@/components/ui/Badges'
-import { formatDate, formatCurrency, STATUS_LABELS } from '@/lib/utils'
+import { cn, formatDate, formatCurrency, STATUS_LABELS } from '@/lib/utils'
 import { canAccessOsis, canAccessMpk } from '@/lib/auth-shared'
 import { clearJsonCachePrefix, fetchJsonCachedUrl, prefetchJsonCachedUrl } from '@/lib/client-cache'
 import {
   Building2, Plus, Pencil, Trash2, Loader2, Save, Calendar,
-  ClipboardList, CheckCircle2, XCircle, Clock, Heart, Banknote, Contact, Award, Mail, Image as ImageIcon
+  ClipboardList, CheckCircle2, XCircle, Clock, Heart, Banknote, Contact, Award, Mail, Image as ImageIcon, UserCheck
 } from 'lucide-react'
 import { format } from 'date-fns'
 
 interface Anggota { id: number; nis: string | null; nama: string; kelas: string | null; email: string | null; foto_url: string | null; jabatan: string | null; xp?: number; level?: number }
-interface AbsensiOrg { id: number; organisasi_type: string; anggota_osis?: Anggota; anggota_mpk?: Anggota; tanggal: string; status: string; uang_kas: number; keterangan: string | null }
+interface AbsensiOrg { id: number; organisasi_type: string; anggota_osis_id?: number | null; anggota_mpk_id?: number | null; anggota_osis?: Anggota; anggota_mpk?: Anggota; tanggal: string; status: string; uang_kas: number; keterangan: string | null }
 interface BulkRow { anggota_id: number; nama: string; jabatan: string | null; status: string; uang_kas: number; keterangan: string }
 interface PencapaianItem { id: number; tanggal: string; pencapaian: { nama: string; deskripsi: string; exp_reward: number } }
 
 const STATUS_OPTIONS = [
-  { value: 'hadir', label: 'Hadir', icon: CheckCircle2, color: 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100' },
-  { value: 'tidak_hadir', label: 'Tidak', icon: XCircle, color: 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100' },
+  { value: 'hadir', label: 'Hadir', icon: CheckCircle2, color: 'bg-green-500/10 text-green-400 border-white/20 hover:bg-green-100' },
+  { value: 'tidak_hadir', label: 'Tidak', icon: XCircle, color: 'bg-red-500/10 text-red-400 border-red-300 hover:bg-red-100' },
   { value: 'izin', label: 'Izin', icon: Clock, color: 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100' },
-  { value: 'sakit', label: 'Sakit', icon: Heart, color: 'bg-sky-50 text-sky-700 border-sky-300 hover:bg-sky-100' },
+  { value: 'sakit', label: 'Sakit', icon: Heart, color: 'bg-sky-500/10 text-sky-400 border-white/20 hover:bg-sky-100' },
 ]
 
 interface Props {
@@ -37,6 +37,9 @@ const PAGE_SIZE = 15
 export default function OrganisasiClient({ user, defaultOrg }: Props) {
   const [activeOrg, setActiveOrg] = useState<'osis' | 'mpk'>(defaultOrg || (canAccessOsis(user.role) ? 'osis' : 'mpk'))
   const [subTab, setSubTab] = useState<'anggota' | 'absensi'>('anggota')
+
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   // Anggota state
   const [anggota, setAnggota] = useState<Anggota[]>([])
@@ -113,7 +116,9 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
 
       const rows: BulkRow[] = anggList.map(a => {
         const ex = existing.find(e =>
-          activeOrg === 'osis' ? e.anggota_osis?.id === a.id : e.anggota_mpk?.id === a.id
+          activeOrg === 'osis'
+            ? (e.anggota_osis_id === a.id || e.anggota_osis?.id === a.id)
+            : (e.anggota_mpk_id === a.id || e.anggota_mpk?.id === a.id)
         )
         return { anggota_id: a.id, nama: a.nama, jabatan: a.jabatan, status: ex?.status || 'hadir', uang_kas: ex?.uang_kas || 0, keterangan: ex?.keterangan || '' }
       })
@@ -125,11 +130,11 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
     }
   }, [activeOrg, bulkDate])
 
-  const loadRiwayat = useCallback(async () => {
+  const loadRiwayat = useCallback(async (force = false) => {
     const requestId = ++riwayatRequestId.current
     setLoadingRiwayat(true)
     try {
-      const json = await fetchJsonCachedUrl<{ data?: AbsensiOrg[] }>(`/api/organisasi/absensi?organisasi=${activeOrg}&tanggal=${filterTanggal}&limit=50`, { ttlMs: 30_000 })
+      const json = await fetchJsonCachedUrl<{ data?: AbsensiOrg[] }>(`/api/organisasi/absensi?organisasi=${activeOrg}&tanggal=${filterTanggal}&limit=100`, { ttlMs: 30_000, force })
       if (requestId !== riwayatRequestId.current) return
       setRiwayat(json.data || [])
     } catch (error: any) {
@@ -224,10 +229,15 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
     toast.success(`Absensi ${activeOrg.toUpperCase()} tersimpan!`)
     clearJsonCachePrefix('/api/organisasi/absensi')
     setSavingAbsensi(false)
+    setAbsensiMode('riwayat')
+    setFilterTanggal(bulkDate)
+    
+    // Explicitly trigger a fresh load
+    loadRiwayat(true)
   }
 
   const orgLabel = activeOrg === 'osis' ? 'OSIS' : 'MPK'
-  const orgBgClass = activeOrg === 'osis' ? 'bg-violet-50 border-violet-100 text-violet-700' : 'bg-orange-50 border-orange-100 text-orange-700'
+  const orgBgClass = activeOrg === 'osis' ? 'bg-unit-osis/10 border-unit-osis/20 text-blue-300' : 'bg-unit-mpk/10 border-unit-mpk/20 text-red-400'
   const hadirCount = bulkRows.filter(r => r.status === 'hadir').length
   const totalKasBulk = bulkRows.reduce((s, r) => s + r.uang_kas, 0)
 
@@ -238,26 +248,29 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
       <button onClick={() => openProfile(a)} className="flex items-center gap-2 text-left">
         {a.foto_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={a.foto_url} alt={a.nama} className="w-8 h-8 rounded-full object-cover border border-slate-200" />
+          <img src={a.foto_url} alt={a.nama} className="w-8 h-8 rounded-full object-cover border border-white/10" />
         ) : (
-          <span className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center justify-center text-xs font-bold">{a.nama.charAt(0).toUpperCase()}</span>
+          <span className="w-8 h-8 rounded-full bg-persian-blue/10 text-blue-300 border border-persian-blue/20 flex items-center justify-center text-xs font-bold">{a.nama.charAt(0).toUpperCase()}</span>
         )}
         <span>
-          <span className="block font-semibold text-slate-800">{a.nama}</span>
+          <span className="block font-semibold text-white">{a.nama}</span>
           {a.email && <span className="block text-[10px] text-slate-400">{a.email}</span>}
         </span>
       </button>
     ) },
-    { key: 'kelas', label: 'Kelas', render: (a: Anggota) => <span className="text-xs text-slate-500">{a.kelas || '-'}</span> },
-    { key: 'jabatan', label: 'Jabatan', render: (a: Anggota) => <span className="text-xs font-medium text-slate-600">{a.jabatan || '-'}</span> },
+    { key: 'organisasi', label: 'Organisasi', render: () => <span className="badge border bg-white/5 text-slate-400 uppercase text-[10px] font-bold">{activeOrg}</span> },
+    { key: 'kelas', label: 'Kelas', render: (a: Anggota) => <span className="text-xs text-slate-400">{a.kelas || '-'}</span> },
+    { key: 'jabatan', label: 'Jabatan', render: (a: Anggota) => <span className="text-xs font-medium text-slate-300">{a.jabatan || '-'}</span> },
     { key: 'actions', label: '', render: (a: Anggota) => (
       <div className="flex gap-1">
-        <button onClick={() => openProfile(a)} className="btn-icon text-emerald-500 hover:bg-emerald-50"><Award className="w-3.5 h-3.5" /></button>
-        <button onClick={() => openEdit(a)} className="btn-icon text-indigo-400 hover:bg-indigo-50"><Pencil className="w-3.5 h-3.5" /></button>
-        <button onClick={() => setDeleteTarget(a)} className="btn-icon text-red-400 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /></button>
+        <button onClick={() => openProfile(a)} className="btn-icon text-emerald-500 hover:bg-emerald-500/10"><Award className="w-3.5 h-3.5" /></button>
+        <button onClick={() => openEdit(a)} className="btn-icon text-blue-400 hover:bg-persian-blue/10"><Pencil className="w-3.5 h-3.5" /></button>
+        <button onClick={() => setDeleteTarget(a)} className="btn-icon text-red-400 hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" /></button>
       </div>
     )},
   ]
+
+  if (!mounted) return null;
 
   return (
     <div className="space-y-5">
@@ -265,7 +278,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
       <div className="page-header">
         <div className="flex-1">
           <div className="flex items-center gap-2.5">
-            <Building2 className="w-5 h-5 text-indigo-500" />
+            <Building2 className="w-5 h-5 text-persian-blue/100" />
             <h2 className="page-title">{orgLabel}</h2>
             <span className={`badge border ${orgBgClass}`}>{orgLabel}</span>
           </div>
@@ -279,11 +292,11 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
       </div>
 
       {/* Sub tabs */}
-      <div className="flex gap-1 border-b border-slate-200">
+      <div className="flex gap-1 border-b border-white/10">
         {[{ key: 'anggota', label: 'Anggota', icon: Building2 }, { key: 'absensi', label: 'Absensi & Kas', icon: ClipboardList }].map(t => (
           <button key={t.key} onClick={() => setSubTab(t.key as 'anggota' | 'absensi')}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors -mb-px ${
-              subTab === t.key ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'
+              subTab === t.key ? 'border-persian-blue text-persian-blue' : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}>
             <t.icon className="w-4 h-4" />{t.label}
           </button>
@@ -292,7 +305,14 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
 
       {subTab === 'anggota' ? (
         <div className="space-y-4">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            {/* <button 
+              onClick={() => window.location.href = `/admin/registration/acceptance?type=osis-mpk&org=${activeOrg}`}
+              className="btn-secondary border-indigo-200 bg-indigo-50/50 hover:bg-indigo-100 text-indigo-600 font-bold"
+            >
+              <UserCheck className="w-4 h-4" />
+              Lihat Calon Pendaftaran
+            </button> */}
             <button onClick={openAdd} className="btn-primary"><Plus className="w-4 h-4" />Tambah Anggota</button>
           </div>
           <Table columns={anggotaCols} data={anggota} loading={loadingAnggota}
@@ -360,13 +380,13 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
               <div className="form-group">
                 <label className="label">Tingkat & Kejuruan</label>
                 <div className="flex gap-3">
-                  <select value={fTingkat} onChange={e => setFTingkat(e.target.value)} className="input sm:w-32 w-28 cursor-pointer font-medium text-slate-700">
+                  <select value={fTingkat} onChange={e => setFTingkat(e.target.value)} className="input sm:w-32 w-28 cursor-pointer font-medium text-slate-200">
                     <option value="" disabled>Tingkat</option>
                     <option value="X">Kelas X</option>
                     <option value="XI">Kelas XI</option>
                     <option value="XII">Kelas XII</option>
                   </select>
-                  <select value={fJurusan} onChange={e => setFJurusan(e.target.value)} className="input flex-1 cursor-pointer font-medium text-slate-700">
+                  <select value={fJurusan} onChange={e => setFJurusan(e.target.value)} className="input flex-1 cursor-pointer font-medium text-slate-200">
                     <option value="" disabled>Pilih Kejuruan...</option>
                     <option value="AKL">AKL</option>
                     <option value="PPLG">PPLG</option>
@@ -388,7 +408,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
               </div>
               <div className="form-group">
                 <label className="label">Jabatan</label>
-                <select value={fJabatan} onChange={e => setFJabatan(e.target.value)} className="input cursor-pointer font-medium text-slate-700">
+                <select value={fJabatan} onChange={e => setFJabatan(e.target.value)} className="input cursor-pointer font-medium text-slate-200">
                   <option value="Anggota">Anggota</option>
                   <option value="Ketua">Ketua</option>
                   <option value="Wakil">Wakil</option>
@@ -410,34 +430,34 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
               <div className="flex items-center gap-4">
                 {profileTarget?.foto_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={profileTarget.foto_url} alt={profileTarget.nama} className="w-16 h-16 rounded-2xl object-cover border border-slate-200" />
+                  <img src={profileTarget.foto_url} alt={profileTarget.nama} className="w-16 h-16 rounded-2xl object-cover border border-white/10" />
                 ) : (
-                  <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center justify-center text-2xl font-black">
+                  <div className="w-16 h-16 rounded-2xl bg-persian-blue/10 text-blue-300 border border-persian-blue/20 flex items-center justify-center text-2xl font-black">
                     {profileTarget?.nama.charAt(0).toUpperCase()}
                   </div>
                 )}
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">{profileTarget?.nama}</h3>
-                  <p className="text-xs text-slate-500">{profileTarget?.kelas || '-'} · {profileTarget?.jabatan || '-'}</p>
-                  <p className="text-xs text-slate-500">{profileTarget?.email || 'Email belum diisi'}</p>
+                  <h3 className="text-base font-bold text-white">{profileTarget?.nama}</h3>
+                  <p className="text-xs text-slate-400">{profileTarget?.kelas || '-'} · {profileTarget?.jabatan || '-'}</p>
+                  <p className="text-xs text-slate-400">{profileTarget?.email || 'Email belum diisi'}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
                   <p className="text-[10px] uppercase font-bold text-slate-400">EXP</p>
-                  <p className="text-lg font-black text-[#052659]">{profileTarget?.xp || 0}</p>
+                  <p className="text-lg font-black text-white">{profileTarget?.xp || 0}</p>
                 </div>
-                <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
                   <p className="text-[10px] uppercase font-bold text-slate-400">Level</p>
-                  <p className="text-lg font-black text-[#052659]">Lv {profileTarget?.level || 1}</p>
+                  <p className="text-lg font-black text-white">Lv {profileTarget?.level || 1}</p>
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <Award className="w-4 h-4 text-amber-500" />
-                  <h4 className="text-sm font-bold text-slate-900">Pencapaian</h4>
+                  <h4 className="text-sm font-bold text-white">Pencapaian</h4>
                 </div>
                 {profileLoading ? (
                   <div className="text-sm text-slate-400 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" />Memuat...</div>
@@ -446,12 +466,12 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
                 ) : (
                   <div className="space-y-2">
                     {profileAchievements.map(item => (
-                      <div key={item.id} className="rounded-xl border border-amber-100 bg-amber-50/60 p-3">
+                      <div key={item.id} className="rounded-xl border border-amber-100 bg-amber-500/10/60 p-3">
                         <div className="flex items-center justify-between gap-3">
-                          <p className="text-sm font-bold text-slate-900">{item.pencapaian.nama}</p>
-                          <span className="text-xs font-bold text-amber-700">+{item.pencapaian.exp_reward} EXP</span>
+                          <p className="text-sm font-bold text-white">{item.pencapaian.nama}</p>
+                          <span className="text-xs font-bold text-amber-400">+{item.pencapaian.exp_reward} EXP</span>
                         </div>
-                        <p className="text-xs text-slate-500 mt-0.5">{item.pencapaian.deskripsi}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">{item.pencapaian.deskripsi}</p>
                       </div>
                     ))}
                   </div>
@@ -478,27 +498,33 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
                 <div className="card p-16 text-center text-slate-400 text-sm">Belum ada anggota {orgLabel}</div>
               ) : (
                 <div className="card overflow-hidden">
-                  <div className={`px-5 py-3 border-b flex items-center justify-between flex-wrap gap-2 ${orgBgClass.replace('text-', 'border-')}`} style={{background: activeOrg==='osis'?'#f5f3ff':'#fff7ed', borderColor: activeOrg==='osis'?'#ede9fe':'#fed7aa'}}>
-                    <span className="text-sm font-bold">{orgLabel} — {formatDate(bulkDate)}</span>
+                  <div className={cn(
+                    "px-5 py-3 border-b flex items-center justify-between flex-wrap gap-2",
+                    activeOrg === 'osis' ? "bg-unit-osis/10 border-unit-osis/20" : "bg-unit-mpk/10 border-unit-mpk/20"
+                  )}>
+                    <span className={cn(
+                      "text-sm font-bold",
+                      activeOrg === 'osis' ? "text-unit-osis" : "text-unit-mpk"
+                    )}>{orgLabel} — {formatDate(bulkDate)}</span>
                     <div className="flex gap-1 flex-wrap">
-                      <span className="text-xs text-slate-500 self-center">Tandai semua:</span>
+                      <span className="text-xs text-slate-400 self-center">Tandai semua:</span>
                       {STATUS_OPTIONS.map(s => <button key={s.value} onClick={() => setAllStatus(s.value)} className={`text-xs font-semibold px-2 py-1 rounded-lg border ${s.color}`}>{s.label}</button>)}
                     </div>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full">
-                      <thead><tr className="bg-slate-50 border-b border-slate-200"><th className="th">#</th><th className="th">Nama</th><th className="th">Jabatan</th><th className="th w-48">Status</th><th className="th w-32">Kas (Rp)</th><th className="th w-36">Keterangan</th></tr></thead>
+                      <thead><tr className="bg-white/5 border-b border-white/10"><th className="th">#</th><th className="th">Nama</th><th className="th">Jabatan</th><th className="th w-48">Status</th><th className="th w-32">Kas (Rp)</th><th className="th w-36">Keterangan</th></tr></thead>
                       <tbody className="divide-y divide-slate-100">
                         {bulkRows.map((row, i) => (
-                          <tr key={row.anggota_id} className="hover:bg-slate-50/60">
+                          <tr key={row.anggota_id} className="hover:bg-white/10">
                             <td className="td text-slate-400 font-mono text-xs">{i+1}</td>
-                            <td className="td font-semibold text-slate-800 text-sm">{row.nama}</td>
-                            <td className="td text-xs text-slate-500">{row.jabatan || '-'}</td>
+                            <td className="td font-semibold text-white text-sm">{row.nama}</td>
+                            <td className="td text-xs text-slate-400">{row.jabatan || '-'}</td>
                             <td className="td">
                               <div className="flex gap-1">
                                 {STATUS_OPTIONS.map(s => { const Icon=s.icon; return (
                                   <button key={s.value} onClick={() => updateRow(i,'status',s.value)} title={s.label}
-                                    className={`flex items-center gap-1 px-1.5 py-1 rounded-lg border text-xs font-semibold transition-all ${row.status===s.value?s.color+' ring-1 ring-current':'border-slate-200 text-slate-300 hover:border-slate-300'}`}>
+                                    className={`flex items-center gap-1 px-1.5 py-1 rounded-lg border text-xs font-semibold transition-all ${row.status===s.value?s.color+' ring-1 ring-current':'border-white/10 text-slate-300 hover:border-slate-300'}`}>
                                     <Icon className="w-3 h-3"/><span className="hidden sm:inline">{s.label}</span>
                                   </button>
                                 )})}
@@ -511,11 +537,11 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
                       </tbody>
                     </table>
                   </div>
-                  <div className="px-5 py-3 bg-slate-50 border-t flex items-center justify-between gap-3 flex-wrap">
+                  <div className="px-5 py-3 bg-white/5 border-t flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex gap-4 text-xs font-semibold">
-                      <span className="text-green-600">✓ Hadir: {hadirCount}</span>
-                      <span className="text-slate-500">Total: {bulkRows.length}</span>
-                      <span className="text-amber-600">Kas: {formatCurrency(totalKasBulk)}</span>
+                      <span className="text-green-400">✓ Hadir: {hadirCount}</span>
+                      <span className="text-slate-400">Total: {bulkRows.length}</span>
+                      <span className="text-amber-400">Kas: {formatCurrency(totalKasBulk)}</span>
                     </div>
                     <button onClick={handleSaveAbsensi} disabled={savingAbsensi} className="btn-primary">
                       {savingAbsensi ? <><Loader2 className="w-4 h-4 animate-spin"/>Menyimpan...</> : <><Save className="w-4 h-4"/>Simpan Absensi</>}
@@ -534,15 +560,16 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
               ) : (
                 <div className="card overflow-hidden overflow-x-auto">
                   <table className="w-full">
-                    <thead><tr className="bg-slate-50 border-b border-slate-200"><th className="th">Nama</th><th className="th">Jabatan</th><th className="th">Tanggal</th><th className="th">Status</th><th className="th">Uang Kas</th><th className="th">Keterangan</th></tr></thead>
+                    <thead><tr className="bg-white/5 border-b border-white/10"><th className="th">Nama</th><th className="th">Organisasi</th><th className="th">Jabatan</th><th className="th">Tanggal</th><th className="th">Status</th><th className="th">Uang Kas</th><th className="th">Keterangan</th></tr></thead>
                     <tbody className="divide-y divide-slate-100">
                       {riwayat.map(a => {
                         const angg = activeOrg === 'osis' ? a.anggota_osis : a.anggota_mpk
                         return (
-                          <tr key={a.id} className="hover:bg-slate-50">
-                            <td className="td font-semibold text-slate-800">{angg?.nama || '-'}</td>
-                            <td className="td text-xs text-slate-500">{angg?.jabatan || '-'}</td>
-                            <td className="td text-xs font-mono text-slate-500">{formatDate(a.tanggal)}</td>
+                          <tr key={a.id} className="hover:bg-white/5">
+                            <td className="td font-semibold text-white">{angg?.nama || '-'}</td>
+                            <td className="td text-[10px] font-bold text-slate-400 uppercase">{activeOrg}</td>
+                            <td className="td text-xs text-slate-400">{angg?.jabatan || '-'}</td>
+                            <td className="td text-xs font-mono text-slate-400">{formatDate(a.tanggal)}</td>
                             <td className="td"><StatusBadge status={a.status}/></td>
                             <td className="td font-mono text-sm font-semibold text-green-600">{a.uang_kas > 0 ? formatCurrency(a.uang_kas) : '-'}</td>
                             <td className="td text-xs text-slate-400">{a.keterangan || '-'}</td>
