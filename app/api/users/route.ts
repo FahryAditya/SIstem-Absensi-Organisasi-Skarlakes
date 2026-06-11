@@ -31,7 +31,7 @@ const createSchema = z.object({
   nama: z.string().min(2),
   email: z.string().email(),
   password: z.string().min(6),
-  role: z.enum(['administrator', 'admin_programming', 'admin_english', 'admin_osis_mpk']),
+  role: z.enum(['administrator', 'organization_admin', 'admin_programming', 'admin_english', 'admin_osis_mpk']),
 })
 
 export async function POST(req: NextRequest) {
@@ -67,7 +67,7 @@ const updateSchema = z.object({
   nama: z.string().min(2).optional(),
   email: z.string().email().optional(),
   password: z.string().min(6).optional(),
-  role: z.enum(['administrator', 'admin_programming', 'admin_english', 'admin_osis_mpk']).optional(),
+  role: z.enum(['administrator', 'organization_admin', 'admin_programming', 'admin_english', 'admin_osis_mpk']).optional(),
 })
 
 export async function PUT(req: NextRequest) {
