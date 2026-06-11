@@ -15,12 +15,25 @@ import Select from '@/components/ui/Select'
 import { AWARDS_DATA } from '@/lib/awards'
 import AdminDropdownMenu from '@/components/admin/AdminDropdownMenu'
 
-interface UserData { id: number; nama: string; email: string; role: string; created_at: string }
+interface UserData { 
+  id: number; 
+  nama: string; 
+  email: string; 
+  role: string; 
+  created_at: string;
+  organization_admins?: {
+    organization: {
+      id: number;
+      nama: string;
+    }
+  }[];
+}
 interface Props { user: { id: number; nama: string; email: string; role: string } }
 
 export default function AdminClient({ user }: Props) {
   const router = useRouter()
   const [users, setUsers] = useState<UserData[]>([])
+  const [organizations, setOrganizations] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<UserData | null>(null)
@@ -67,7 +80,9 @@ export default function AdminClient({ user }: Props) {
       fetchJsonCachedUrl<{ data?: any[] }>('/api/organizations')
     ])
     setUsers(userJson.data || [])
-    setOrgCount(orgJson.data?.length || 0)
+    const orgs = orgJson.data || []
+    setOrganizations(orgs)
+    setOrgCount(orgs.length)
     setLoading(false)
   }, [])
 
@@ -120,7 +135,15 @@ export default function AdminClient({ user }: Props) {
   }
 
   function openEdit(u: UserData) {
-    setEditTarget(u); setFNama(u.nama); setFEmail(u.email); setFPassword(''); setFRole(u.role)
+    setEditTarget(u); setFNama(u.nama); setFEmail(u.email); setFPassword(''); 
+    
+    // Set fRole to org_id if it's an organization_admin
+    if (u.role === 'organization_admin' && u.organization_admins?.[0]) {
+      setFRole(`org_${u.organization_admins[0].organization.id}`)
+    } else {
+      setFRole(u.role)
+    }
+    
     setShowPass(false); setModalOpen(true)
   }
 
@@ -280,7 +303,16 @@ export default function AdminClient({ user }: Props) {
         {u.password?.startsWith('$2') ? '(Teracak)' : (u.password || '-')}
       </span>
     )},
-    { key: 'role', label: 'Role', render: (u: UserData) => <RoleBadge role={u.role} /> },
+    { key: 'role', label: 'Role', render: (u: UserData) => {
+      if (u.role === 'organization_admin' && u.organization_admins?.[0]) {
+        return (
+          <span className="px-2 py-1 rounded-lg text-[10px] font-black uppercase bg-indigo-500/10 text-indigo-400">
+            Admin {u.organization_admins[0].organization.nama}
+          </span>
+        )
+      }
+      return <RoleBadge role={u.role} />
+    }},
     { key: 'created_at', label: 'Dibuat', render: (u: UserData) => <span className="text-xs text-slate-400">{formatDateTime(u.created_at)}</span> },
     { key: 'actions', label: '', render: (u: UserData) => (
       <div className="flex gap-1">
@@ -394,7 +426,12 @@ export default function AdminClient({ user }: Props) {
             <Select
               value={fRole}
               onChange={setFRole}
-              options={Object.entries(ROLE_LABELS).map(([val, label]) => ({ value: val, label }))}
+              options={[
+                ...Object.entries(ROLE_LABELS).map(([val, label]) => ({ value: val, label })),
+                ...organizations
+                  .filter(o => !['osis', 'mpk', 'english-club', 'programming', 'english'].includes(o.slug))
+                  .map(o => ({ value: `org_${o.id}`, label: `Admin ${o.nama}` }))
+              ]}
             />
           </div>
           <div className="p-3 rounded-xl bg-amber-500/10 border border-white/10 flex gap-2.5 text-xs text-amber-400">

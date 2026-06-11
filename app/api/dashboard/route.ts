@@ -12,8 +12,21 @@ function getCtx(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const { userRole } = getCtx(req)
-  const orgs = getAccessibleOrgs(userRole)
+  const { userId, userRole } = getCtx(req)
+  let orgs = getAccessibleOrgs(userRole)
+  
+  // Fetch linked organizations for organization_admin
+  const linkedOrgs = await prisma.organizationAdmin.findMany({
+    where: { user_id: userId },
+    include: { organization: true }
+  })
+  const linkedSlugs = linkedOrgs.map(lo => lo.organization.slug).filter(Boolean) as string[]
+  
+  // Merge linked organizations if they are not already in orgs
+  linkedSlugs.forEach(slug => {
+    if (!orgs.includes(slug)) orgs.push(slug)
+  })
+
   const { searchParams } = new URL(req.url)
   const part = searchParams.get('part') || 'all'
 

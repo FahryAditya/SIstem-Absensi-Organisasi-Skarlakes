@@ -21,7 +21,21 @@ export async function GET(req: NextRequest) {
   if (!requireAdmin(userRole)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const users = await prisma.user.findMany({
-    select: { id: true, nama: true, email: true, role: true, password: true, created_at: true },
+    select: { 
+      id: true, 
+      nama: true, 
+      email: true, 
+      role: true, 
+      password: true, 
+      created_at: true,
+      organization_admins: {
+        include: {
+          organization: {
+            select: { id: true, nama: true }
+          }
+        }
+      }
+    },
     orderBy: { created_at: 'asc' }
   })
   return NextResponse.json({ data: users })
@@ -31,7 +45,7 @@ const createSchema = z.object({
   nama: z.string().min(2),
   email: z.string().email(),
   password: z.string().min(6),
-  role: z.enum(['administrator', 'organization_admin', 'admin_programming', 'admin_english', 'admin_osis_mpk']),
+  role: z.string(), // Allow strings for org_ format
 })
 
 export async function POST(req: NextRequest) {
@@ -45,17 +59,44 @@ export async function POST(req: NextRequest) {
   const existing = await prisma.user.findUnique({ where: { email: parsed.data.email } })
   if (existing) return NextResponse.json({ error: 'Email sudah digunakan' }, { status: 400 })
 
+  let targetRole = parsed.data.role
+  let organizationId: number | null = null
+
+  if (targetRole.startsWith('org_')) {
+    organizationId = parseInt(targetRole.replace('org_', ''))
+    targetRole = 'organization_admin'
+  }
+
   const hashedPassword = bcrypt.hashSync(parsed.data.password, 10)
-  const user = await prisma.user.create({
-    data: { ...parsed.data, password: hashedPassword },
-    select: { id: true, nama: true, email: true, role: true }
+  
+  const user = await prisma.$transaction(async (tx) => {
+    const newUser = await tx.user.create({
+      data: { 
+        nama: parsed.data.nama,
+        email: parsed.data.email,
+        password: hashedPassword,
+        role: targetRole as any
+      },
+      select: { id: true, nama: true, email: true, role: true }
+    })
+
+    if (organizationId) {
+      await tx.organizationAdmin.create({
+        data: {
+          user_id: newUser.id,
+          organization_id: organizationId
+        }
+      })
+    }
+
+    return newUser
   })
 
   await createLog({
     userId: ctx.userId, userNama: ctx.userNama, aksi: 'CREATE',
     tabel: 'users', recordId: user.id,
-    deskripsi: `${ctx.userNama} membuat akun baru untuk "${user.nama}" dengan role ${user.role}`,
-    dataBaru: { nama: user.nama, email: user.email, role: user.role },
+    deskripsi: `${ctx.userNama} membuat akun baru untuk "${user.nama}" dengan role ${user.role}${organizationId ? ` (Org ID: ${organizationId})` : ''}`,
+    dataBaru: { nama: user.nama, email: user.email, role: user.role, organizationId },
     ipAddress: getIp(req),
   })
 
@@ -67,7 +108,7 @@ const updateSchema = z.object({
   nama: z.string().min(2).optional(),
   email: z.string().email().optional(),
   password: z.string().min(6).optional(),
-  role: z.enum(['administrator', 'organization_admin', 'admin_programming', 'admin_english', 'admin_osis_mpk']).optional(),
+  role: z.string().optional(),
 })
 
 export async function PUT(req: NextRequest) {
@@ -78,19 +119,45 @@ export async function PUT(req: NextRequest) {
   const parsed = updateSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
 
-  const { id, password, ...rest } = parsed.data
+  const { id, password, role, ...rest } = parsed.data
   const existing = await prisma.user.findUnique({ where: { id }, select: { id: true, nama: true, role: true } })
   if (!existing) return NextResponse.json({ error: 'User tidak ditemukan' }, { status: 404 })
+
+  let targetRole = role
+  let organizationId: number | null = null
+
+  if (targetRole && targetRole.startsWith('org_')) {
+    organizationId = parseInt(targetRole.replace('org_', ''))
+    targetRole = 'organization_admin'
+  }
 
   const updateData: Record<string, unknown> = { ...rest }
   if (password) {
     updateData.password = bcrypt.hashSync(password, 10)
   }
+  if (targetRole) {
+    updateData.role = targetRole
+  }
 
-  const updated = await prisma.user.update({
-    where: { id },
-    data: updateData,
-    select: { id: true, nama: true, email: true, role: true }
+  const updated = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.update({
+      where: { id },
+      data: updateData as any,
+      select: { id: true, nama: true, email: true, role: true }
+    })
+
+    // Always sync organization_admin status
+    await tx.organizationAdmin.deleteMany({ where: { user_id: id } })
+    if (organizationId) {
+      await tx.organizationAdmin.create({
+        data: {
+          user_id: id,
+          organization_id: organizationId
+        }
+      })
+    }
+
+    return user
   })
 
   await createLog({
@@ -98,12 +165,13 @@ export async function PUT(req: NextRequest) {
     tabel: 'users', recordId: id,
     deskripsi: `${ctx.userNama} mengubah data user "${existing.nama}"${password ? ' (termasuk password)' : ''}`,
     dataLama: { nama: existing.nama, role: existing.role },
-    dataBaru: { nama: updated.nama, role: updated.role },
+    dataBaru: { nama: updated.nama, role: updated.role, organizationId },
     ipAddress: getIp(req),
   })
 
   return NextResponse.json({ data: updated })
 }
+
 
 export async function DELETE(req: NextRequest) {
   const ctx = getCtx(req)

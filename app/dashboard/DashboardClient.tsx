@@ -401,9 +401,13 @@ export default function DashboardClient({ user }: Props) {
             {orgs.length > 0 && (
               <div className="flex gap-2 mt-3 flex-wrap">
                 {orgs.map(o => (
-                  <span key={o} className="text-xs font-bold bg-white/15 border border-white/25 px-2.5 py-1 rounded-lg">
+                  <Link 
+                    key={o} 
+                    href={['programming', 'english', 'osis', 'mpk'].includes(o) ? '#' : `/admin/organizations/${o}`}
+                    className={`text-xs font-bold bg-white/15 border border-white/25 px-2.5 py-1 rounded-lg transition-all ${['programming', 'english', 'osis', 'mpk'].includes(o) ? 'cursor-default' : 'hover:bg-white/25 hover:border-white/40 cursor-pointer'}`}
+                  >
                     {ORG_LABELS[o as OrgType] || o}
-                  </span>
+                  </Link>
                 ))}
               </div>
             )}

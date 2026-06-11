@@ -48,8 +48,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  // Protect admin management - administrator only
-  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/email') && !pathname.startsWith('/admin/exp') && session.role.trim() !== 'administrator') {
+  // Protect admin management - administrator only, but allow organization_admin for workspace paths
+  const isWorkspacePath = pathname.startsWith('/admin/organizations')
+  if (pathname.startsWith('/admin') && 
+      !pathname.startsWith('/admin/email') && 
+      !pathname.startsWith('/admin/exp') && 
+      !isWorkspacePath &&
+      session.role.trim() !== 'administrator') {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
+  // If it is a workspace path, we still need to allow organization_admin
+  if (isWorkspacePath && session.role.trim() !== 'administrator' && session.role.trim() !== 'organization_admin') {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
