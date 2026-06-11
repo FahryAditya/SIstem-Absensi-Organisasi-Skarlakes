@@ -3,7 +3,8 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { 
-  ChevronDown, Mail, Plus, UserCheck, Link as LinkIcon, Cpu, Database, Trash2, ArrowUpRight 
+  ChevronDown, Mail, Plus, UserCheck, Link as LinkIcon, Cpu, Database, Trash2, ArrowUpRight,
+  Building2, Users, CalendarCheck, Wallet, Trophy, ShieldCheck
 } from 'lucide-react';
 
 interface AdminDropdownMenuProps {
@@ -172,10 +173,10 @@ const AdminDropdownMenu: React.FC<AdminDropdownMenuProps> = ({
       {/* Animated Dropdown Panel */}
       <div
         ref={menuRef}
-        className="absolute right-0 top-full mt-2 w-[95vw] sm:w-[640px] md:w-[720px] bg-deep-navy/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] overflow-hidden"
+        className="absolute right-0 top-full mt-2 w-[95vw] sm:w-[640px] md:w-[760px] lg:w-[960px] bg-deep-navy/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] overflow-hidden"
         style={{ display: isOpen ? 'block' : 'none' }}
       >
-        <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           
           {/* Kelompok 1: Pesan & Registrasi */}
           <div
@@ -330,6 +331,84 @@ const AdminDropdownMenu: React.FC<AdminDropdownMenuProps> = ({
                 <span className="flex items-center gap-2">
                   <Cpu className="w-3.5 h-3.5 text-amber-400" />
                   Statistik Sistem
+                </span>
+                <ArrowUpRight className="w-3 h-3 opacity-50" />
+              </button>
+            </div>
+          </div>
+
+          {/* Kelompok 4: Kelola Organisasi Eskul */}
+          <div
+            ref={setCardRef(3)}
+            className="flex flex-col rounded-xl border border-white/5 bg-white/[0.02] p-4 hover:bg-white/[0.04] transition-all duration-300"
+          >
+            <div className="text-sm font-black text-white/90 border-b border-white/10 pb-2 mb-3 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-persian-blue" />
+              Kelola Organisasi Eskul
+            </div>
+            <div className="flex flex-col gap-2 mt-auto">
+              <button
+                onClick={(e) => handleLinkClick(e, '/admin/organizations')}
+                className="flex items-center justify-between w-full px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white rounded-lg bg-white/5 hover:bg-white/10 transition-all text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <Building2 className="w-3.5 h-3.5 text-persian-blue" />
+                  Daftar Unit Eskul
+                </span>
+                <ArrowUpRight className="w-3 h-3 opacity-50" />
+              </button>
+
+              <button
+                onClick={(e) => handleLinkClick(e, '/admin/members')}
+                className="flex items-center justify-between w-full px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white rounded-lg bg-white/5 hover:bg-white/10 transition-all text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <Users className="w-3.5 h-3.5 text-persian-blue" />
+                  Manajemen Anggota
+                </span>
+                <ArrowUpRight className="w-3 h-3 opacity-50" />
+              </button>
+
+              <button
+                onClick={(e) => handleLinkClick(e, '/absensi')}
+                className="flex items-center justify-between w-full px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white rounded-lg bg-white/5 hover:bg-white/10 transition-all text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <CalendarCheck className="w-3.5 h-3.5 text-persian-blue" />
+                  Modul Absensi
+                </span>
+                <ArrowUpRight className="w-3 h-3 opacity-50" />
+              </button>
+
+              <button
+                onClick={(e) => handleLinkClick(e, '/kas')}
+                className="flex items-center justify-between w-full px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white rounded-lg bg-white/5 hover:bg-white/10 transition-all text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <Wallet className="w-3.5 h-3.5 text-persian-blue" />
+                  Manajemen Kas
+                </span>
+                <ArrowUpRight className="w-3 h-3 opacity-50" />
+              </button>
+
+              <button
+                onClick={(e) => handleLinkClick(e, '/admin/exp')}
+                className="flex items-center justify-between w-full px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white rounded-lg bg-white/5 hover:bg-white/10 transition-all text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <Trophy className="w-3.5 h-3.5 text-persian-blue" />
+                  Level & Progress
+                </span>
+                <ArrowUpRight className="w-3 h-3 opacity-50" />
+              </button>
+
+              <button
+                onClick={(e) => handleLinkClick(e, '/admin/organizations')}
+                className="flex items-center justify-between w-full px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white rounded-lg bg-white/5 hover:bg-white/10 transition-all text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <ShieldCheck className="w-3.5 h-3.5 text-persian-blue" />
+                  Administrator Unit
                 </span>
                 <ArrowUpRight className="w-3 h-3 opacity-50" />
               </button>
