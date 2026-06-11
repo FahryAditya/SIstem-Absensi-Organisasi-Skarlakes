@@ -331,8 +331,9 @@ export default function AdminClient({ user }: Props) {
   return (
     <div className="space-y-6 pt-24 pb-10">
       <CardNav 
-        logo="/logo.png" 
         items={navItems} 
+        logoText="Sistem Ekstrakurikuler"
+        logoSubText="V 18.5.10 Artemis Series ( Stable )"
         buttonBgColor="#1E90FF" 
         buttonTextColor="#FFFFFF"
         baseColor="rgba(15, 23, 42, 0.9)"

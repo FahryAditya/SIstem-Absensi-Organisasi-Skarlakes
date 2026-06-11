@@ -2,6 +2,7 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 // use your own icon import if react-icons is not available
 import { GoArrowUpRight } from 'react-icons/go';
+import { GraduationCap } from 'lucide-react';
 
 type CardNavLink = {
   label: string;
@@ -17,8 +18,10 @@ export type CardNavItem = {
 };
 
 export interface CardNavProps {
-  logo: string;
+  logo?: string;
   logoAlt?: string;
+  logoText?: string;
+  logoSubText?: string;
   items: CardNavItem[];
   className?: string;
   ease?: string;
@@ -31,6 +34,8 @@ export interface CardNavProps {
 const CardNav: React.FC<CardNavProps> = ({
   logo,
   logoAlt = 'Logo',
+  logoText = 'Sistem Ekstrakurikuler',
+  logoSubText,
   items,
   className = '',
   ease = 'power3.out',
@@ -185,8 +190,29 @@ const CardNav: React.FC<CardNavProps> = ({
             />
           </div>
 
-          <div className="logo-container flex items-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 order-1 md:order-none">
-            <img src={logo} alt={logoAlt} className="logo h-[28px]" />
+          <div className="logo-container flex items-center gap-2.5 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 order-1 md:order-none">
+            {logo ? (
+              <img src={logo} alt={logoAlt} className="logo h-[28px]" />
+            ) : (
+              <>
+                <div
+                  style={{ backgroundColor: buttonBgColor || '#1E90FF' }}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0"
+                >
+                  <GraduationCap className="w-4 h-4 text-white" />
+                </div>
+                <div className="leading-tight">
+                  <div className="text-sm font-black tracking-tight whitespace-nowrap" style={{ color: menuColor || '#000' }}>
+                    {logoText}
+                  </div>
+                  {logoSubText && (
+                    <div className="text-[9px] font-medium whitespace-nowrap" style={{ color: menuColor ? menuColor + '99' : '#00000066' }}>
+                      {logoSubText}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           <button
