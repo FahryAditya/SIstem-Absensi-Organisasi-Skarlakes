@@ -91,7 +91,7 @@ export default function LoginPage() {
             transition={{ delay: 0.3 }}
             className="text-3xl font-bold text-white tracking-tight mb-2"
           >
-            Sistem Ekstrakurikuler
+            Sisko Skarlakes
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
