@@ -14,7 +14,6 @@ import { UserCog, Plus, Pencil, Trash2, Loader2, Shield, Mail, User, Lock, Eye, 
 import Select from '@/components/ui/Select'
 import { AWARDS_DATA } from '@/lib/awards'
 import AdminDropdownMenu from '@/components/admin/AdminDropdownMenu'
-import CardNav, { CardNavItem } from '@/components/CardNav'
 
 interface UserData { id: number; nama: string; email: string; role: string; created_at: string }
 interface Props { user: { id: number; nama: string; email: string; role: string } }
@@ -300,46 +299,27 @@ export default function AdminClient({ user }: Props) {
     { role: 'admin_osis_mpk', label: 'Admin OSIS & MPK', color: 'bg-unit-osis/10 border-unit-osis/20 text-unit-osis', dot: 'bg-unit-osis' },
   ]
 
-  const navItems: CardNavItem[] = [
-    {
-      label: 'Manajemen Unit',
-      bgColor: '#1E90FF',
-      textColor: '#FFFFFF',
-      links: [
-        { label: 'Kelola Organisasi & Eskul', href: '/admin/organizations', ariaLabel: 'Buka Manajemen Unit' }
-      ]
-    },
-    {
-      label: 'Sistem & User',
-      bgColor: '#6366F1',
-      textColor: '#FFFFFF',
-      links: [
-        { label: 'Kelola Akun Admin', href: '/admin', ariaLabel: 'Buka Manajemen User' },
-        { label: 'Log Aktivitas', href: '/log', ariaLabel: 'Buka Log' }
-      ]
-    },
-    {
-      label: 'Pusat Bantuan',
-      bgColor: '#10B981',
-      textColor: '#FFFFFF',
-      links: [
-        { label: 'Dokumentasi Sistem', href: '/documentation', ariaLabel: 'Buka Dokumentasi' }
-      ]
-    }
-  ]
+
 
   return (
-    <div className="space-y-6 pt-24 pb-10">
-      <CardNav 
-        items={navItems} 
-        logoText="Sistem Ekstrakurikuler"
-        logoSubText="V 18.5.10 Artemis Series ( Stable )"
-        buttonBgColor="#1E90FF" 
-        buttonTextColor="#FFFFFF"
-        baseColor="rgba(15, 23, 42, 0.9)"
-        menuColor="#FFFFFF"
-        className="backdrop-blur-xl border border-white/5 !fixed top-4"
-      />
+    <div className="space-y-6 pb-10">
+      {/* Header Row: Judul + Tombol Menu Pengelola */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3 mb-1">
+            <UserCog className="w-6 h-6 text-persian-blue" />
+            <h2 className="text-xl font-black text-white">Kelola User &amp; Admin</h2>
+          </div>
+          <p className="text-xs text-slate-400">Buat, edit, dan hapus akun pengguna sistem</p>
+        </div>
+        <AdminDropdownMenu
+          onOpenEmailSetting={openEmailSetting}
+          onOpenAddUser={openAdd}
+          onOptimizeDb={handleOptimize}
+          onOpenCleanupWawancara={() => setCleanupModalOpen(true)}
+          userRole={user.role}
+        />
+      </div>
       
       {/* Organizations Overview Card */}
       <div className="grid grid-cols-1 gap-3">
