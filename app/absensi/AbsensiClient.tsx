@@ -5,7 +5,6 @@ import toast from 'react-hot-toast'
 import Table from '@/components/ui/Table'
 import { StatusBadge, OrgBadge } from '@/components/ui/Badges'
 import { cn, formatDate, formatCurrency, STATUS_LABELS } from '@/lib/utils'
-import { canAccessProgramming, canAccessEnglish } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import { ClipboardList, Save, Calendar, Filter, Loader2, CheckCircle2, XCircle, Clock, Heart, Banknote, Users, Sparkles, UserCheck } from 'lucide-react'
 import { AWARDS_DATA } from '@/lib/awards'
@@ -20,7 +19,7 @@ interface AbsensiRecord { id: number; siswa: Siswa; tanggal: string; status: str
 
 interface Props {
   user: { id: number; nama: string; email: string; role: string }
-  defaultOrg: 'programming' | 'english' | ''
+  defaultOrg: string
 }
 
 const STATUS_OPTIONS = [
@@ -34,12 +33,16 @@ const PAGE_SIZE = 100
 
 export default function AbsensiClient({ user, defaultOrg }: Props) {
   const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const [availableOrgs, setAvailableOrgs] = useState<{ slug: string; nama: string }[]>([])
+  
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const [mode, setMode] = useState<'input' | 'riwayat'>('input')
 
   // Input state
-  const [bulkOrg, setBulkOrg] = useState<'programming' | 'english'>(defaultOrg || (canAccessProgramming(user.role) ? 'programming' : 'english'))
+  const [bulkOrg, setBulkOrg] = useState<string>(defaultOrg || '')
   const [bulkDate, setBulkDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [bulkRows, setBulkRows] = useState<AbsensiRow[]>([])
   const [loadingBulk, setLoadingBulk] = useState(false)
@@ -60,8 +63,26 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
   const [total, setTotal] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
 
-  const canProg = canAccessProgramming(user.role)
-  const canEng = canAccessEnglish(user.role)
+  // Load available organizations
+  useEffect(() => {
+    async function loadOrgs() {
+      try {
+        const json = await fetchJsonCachedUrl<{ orgs?: { slug: string; nama: string }[] }>('/api/absensi?mode=orgs')
+        if (json.orgs) {
+          setAvailableOrgs(json.orgs)
+          if (!bulkOrg && json.orgs.length > 0) {
+            setBulkOrg(json.orgs[0].slug)
+          }
+          if (!filterOrg && json.orgs.length > 0) {
+            setFilterOrg(json.orgs[0].slug)
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load organizations', e)
+      }
+    }
+    loadOrgs()
+  }, [])
 
   // Load riwayat
   const loadRiwayat = useCallback(async (force = false, customParams?: any) => {
@@ -75,27 +96,30 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
       ...(activeTanggal && { tanggal: activeTanggal }),
       ...(activeOrg && { ekskul: activeOrg }),
     })
-    const json = await fetchJsonCachedUrl<{ data?: AbsensiRecord[]; total?: number; totalPages?: number }>(`/api/absensi?${params}`, { force })
+    const json = await fetchJsonCachedUrl<{ data?: AbsensiRecord[]; total?: number; totalPages?: number; orgs?: { slug: string; nama: string }[] }>(`/api/absensi?${params}`, { force })
     setRiwayat(json.data || [])
     setTotal(json.total || 0)
     setTotalPages(json.totalPages || 1)
+    if (json.orgs && !availableOrgs.length) setAvailableOrgs(json.orgs)
     setLoadingRiwayat(false)
-  }, [page, filterTanggal, filterOrg])
+  }, [page, filterTanggal, filterOrg, availableOrgs.length])
 
   // Load siswa & absensi for bulk input (Optimized combined call)
   const loadBulkData = useCallback(async () => {
+    if (!bulkOrg) return
     setLoadingBulk(true)
     try {
-      const json = await fetchJsonCachedUrl<{ data?: AbsensiRow[] }>(
+      const json = await fetchJsonCachedUrl<{ data?: AbsensiRow[]; orgs?: { slug: string; nama: string }[] }>(
         `/api/absensi?mode=input&tanggal=${bulkDate}&ekskul=${bulkOrg}`,
         { force: true } // Always force fresh data for input mode
       )
       setBulkRows(json.data || [])
+      if (json.orgs && !availableOrgs.length) setAvailableOrgs(json.orgs)
     } catch (e) {
       toast.error('Gagal memuat data absensi')
     }
     setLoadingBulk(false)
-  }, [bulkOrg, bulkDate])
+  }, [bulkOrg, bulkDate, availableOrgs.length])
 
   useEffect(() => { if (mode === 'input') loadBulkData() }, [mode, loadBulkData])
 
@@ -114,7 +138,7 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
     if (!bulkRows.length) { toast.error('Tidak ada siswa'); return }
     setSaving(true)
     try {
-      const res = await fetch('/api/absensi', {
+      const res = await fetch(`/api/absensi?ekskul=${bulkOrg}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -196,6 +220,8 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
 
   if (!mounted) return null;
 
+  const currentOrgName = availableOrgs.find(o => o.slug === bulkOrg)?.nama || bulkOrg
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -214,13 +240,6 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
           <button onClick={() => setMode('riwayat')} className={mode === 'riwayat' ? 'btn-primary' : 'btn-secondary'}>
             <ClipboardList className="w-4 h-4" /> Riwayat
           </button>
-          {/* <button 
-            onClick={() => window.location.href = `/admin/registration/acceptance?type=eskul&org=${bulkOrg}`}
-            className="btn-secondary border-blue-200 bg-blue-50/50 hover:bg-blue-100 text-blue-600 font-bold"
-          >
-            <UserCheck className="w-4 h-4" />
-            Lihat Calon Pendaftaran
-          </button> */}
         </div>
       </div>
 
@@ -232,15 +251,12 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
               <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input type="date" value={bulkDate} onChange={e => setBulkDate(e.target.value)} className="input pl-10" />
             </div>
-            {canProg && canEng && (
+            {availableOrgs.length > 0 && (
               <Select
                 value={bulkOrg}
-                onChange={v => setBulkOrg(v as 'programming' | 'english')}
+                onChange={v => setBulkOrg(v)}
                 className="sm:w-48"
-                options={[
-                  ...(canProg ? [{ value: 'programming', label: 'Programming' }] : []),
-                  ...(canEng  ? [{ value: 'english',     label: 'English Club' }] : []),
-                ]}
+                options={availableOrgs.map(o => ({ value: o.slug, label: o.nama }))}
               />
             )}
           </div>
@@ -260,15 +276,11 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
             <div className="card overflow-hidden">
               {/* Bulk header */}
               <div className={cn(
-                "px-5 py-3 border-b flex items-center justify-between flex-wrap gap-3",
-                bulkOrg === 'programming' ? "bg-unit-programming/10 border-unit-programming/20" : "bg-unit-english/10 border-unit-english/20"
+                "px-5 py-3 border-b flex items-center justify-between flex-wrap gap-3 bg-white/5 border-white/10"
               )}>
                 <div>
-                  <span className={cn(
-                    "text-sm font-bold",
-                    bulkOrg === 'programming' ? "text-unit-programming" : "text-blue-400"
-                  )}>
-                    {bulkOrg === 'programming' ? 'Programming' : 'English Club'} — {formatDate(bulkDate)}
+                  <span className="text-sm font-bold text-white">
+                    {currentOrgName} — {formatDate(bulkDate)}
                   </span>
                   <span className="text-xs text-white/50 ml-2">{bulkRows.length} siswa</span>
                 </div>
@@ -296,11 +308,10 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
                       <th className="th w-40">Keterangan</th>
                     </tr>
                   </thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-white/5">
                     {bulkRows.map((row, i) => {
-                      const statusOpt = STATUS_OPTIONS.find(s => s.value === row.status)
                       return (
-                        <tr key={row.siswa_id} className="hover:bg-white/10">
+                        <tr key={row.siswa_id} className="hover:bg-white/5">
                           <td className="td text-slate-400 font-mono text-xs">{i + 1}</td>
                           <td className="td">
                             <div className="font-semibold text-white text-sm">{row.nama}</div>
@@ -339,12 +350,6 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
                               onChange={e => updateRow(i, 'keterangan', e.target.value)}
                               className="input py-1.5 text-xs flex-1"
                               placeholder="Opsional..." />
-                            {/* <button onClick={() => { 
-                              setSelectedStudent({ id: row.siswa_id, nama: row.nama, org: bulkOrg })
-                              setAwardModalOpen(true) 
-                            }} className="btn-icon text-yellow-500 hover:bg-yellow-50" title="Beri Penghargaan">
-                              <Sparkles className="w-4 h-4" />
-                            </button> */}
                           </td>
                         </tr>
                       )
@@ -377,16 +382,13 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
               <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input type="date" value={filterTanggal} onChange={e => setFilterTanggal(e.target.value)} className="input pl-10" />
             </div>
-            {canProg && canEng && (
+            {availableOrgs.length > 0 && (
               <Select
                 value={filterOrg}
                 onChange={setFilterOrg}
-                placeholder="Semua Ekskul"
+                placeholder="Pilih Ekskul"
                 className="sm:w-44"
-                options={[
-                  ...(canProg ? [{ value: 'programming', label: 'Programming' }] : []),
-                  ...(canEng  ? [{ value: 'english',     label: 'English Club' }] : []),
-                ]}
+                options={availableOrgs.map(o => ({ value: o.slug, label: o.nama }))}
               />
             )}
           </div>

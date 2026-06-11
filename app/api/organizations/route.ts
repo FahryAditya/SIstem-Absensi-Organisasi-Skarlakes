@@ -4,12 +4,37 @@ import { getSessionFromRequest } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await getSessionFromRequest(req)
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { searchParams } = new URL(req.url)
+    const mode = searchParams.get('mode')
+
+    if (mode === 'mine') {
+      const { getAccessibleOrganizations } = await import('@/lib/services/organization-service')
+      const orgs = await getAccessibleOrganizations(session.id, session.role)
+      return NextResponse.json({ success: true, data: orgs })
+    }
+
+    // Default: all orgs (administrator only for full details)
+    const isAdmin = session.role === 'administrator'
     const orgs = await prisma.organization.findMany({
-      include: {
-        _count: {
-          select: { members: true }
+      ...(isAdmin ? {
+        include: {
+          admins: {
+            include: {
+              user: {
+                select: { nama: true }
+              }
+            }
+          },
+          _count: {
+            select: { members: true }
+          }
         }
-      },
+      } : {
+        select: { id: true, nama: true, slug: true, category: true, status: true }
+      }),
       orderBy: { created_at: 'desc' }
     })
     return NextResponse.json({ success: true, data: orgs })

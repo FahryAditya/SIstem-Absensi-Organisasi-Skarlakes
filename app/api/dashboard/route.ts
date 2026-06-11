@@ -47,16 +47,26 @@ export async function GET(req: NextRequest) {
     const statsCacheKey = `dashboard:stats:${userRole}:${todayStr}`
 
     const stats = await cacheGet(statsCacheKey, 30_000, async () => {
+      // 1. Get all dynamic organizations for this user
+      const linkedOrgsData = await prisma.organizationAdmin.findMany({
+        where: { user_id: userId },
+        include: { organization: true }
+      })
+      const linkedSlugs = linkedOrgsData.map(lo => lo.organization.slug).filter(Boolean) as string[]
+      
       const [
         totalSiswaCount,
         totalProgramming,
         totalEnglish,
         totalOsis,
         totalMpk,
+        totalMembersDynamic,
         hadirEkskulHariIni,
         hadirOrganisasiHariIni,
+        hadirDynamicHariIni,
         kasEkskulTotal,
         kasOrgTotal,
+        kasDynamicTotal,
         pengeluaranTotalData,
         leaderboardProgramming,
         leaderboardEnglish,
@@ -66,6 +76,10 @@ export async function GET(req: NextRequest) {
         prisma.siswa.count({ where: { ekskul: 'english' } }),
         prisma.anggotaOsis.count(),
         prisma.anggotaMpk.count(),
+        // Total members from dynamic orgs accessible to this user
+        prisma.member.count({ 
+          where: userRole !== 'administrator' ? { organization: { slug: { in: linkedSlugs } } } : {} 
+        }),
         ekskulOrgs.length ? prisma.absensi.count({
           where: {
             tanggal: new Date(todayStr),
@@ -80,6 +94,14 @@ export async function GET(req: NextRequest) {
             organisasi_type: { in: orgOrgs as ('osis' | 'mpk')[] }
           }
         }) : Promise.resolve(0),
+        // Attendance from dynamic orgs
+        prisma.attendanceV2.count({
+          where: {
+            date: new Date(todayStr),
+            attendance_status: 'hadir',
+            organization: userRole !== 'administrator' ? { slug: { in: linkedSlugs } } : {}
+          }
+        }),
         ekskulOrgs.length ? prisma.absensi.aggregate({
           where: { siswa: { ekskul: { in: ekskulOrgs } } },
           _sum: { uang_kas: true }
@@ -88,6 +110,11 @@ export async function GET(req: NextRequest) {
           where: { organisasi_type: { in: orgOrgs as ('osis' | 'mpk')[] } },
           _sum: { uang_kas: true }
         }) : Promise.resolve({ _sum: { uang_kas: 0 } }),
+        // Cash from dynamic orgs
+        prisma.attendanceV2.aggregate({
+          where: userRole !== 'administrator' ? { organization: { slug: { in: linkedSlugs } } } : {},
+          _sum: { cash_amount: true }
+        }),
         orgs.length ? (prisma as any).pengeluaranKas.aggregate({
           where: userRole !== 'administrator' ? { organisasi_type: { in: orgs as any[] } } : {},
           _sum: { nominal: true }
@@ -106,18 +133,21 @@ export async function GET(req: NextRequest) {
         })
       ])
 
-      const totalPemasukan = (kasEkskulTotal._sum?.uang_kas || 0) + (kasOrgTotal._sum?.uang_kas || 0)
+      const totalPemasukan = (kasEkskulTotal._sum?.uang_kas || 0) + 
+                             (kasOrgTotal._sum?.uang_kas || 0) + 
+                             (kasDynamicTotal._sum?.cash_amount || 0)
       const totalPengeluaran = pengeluaranTotalData._sum?.nominal || 0
 
       // Filter totalSiswa secara dinamis berdasarkan hak akses role
       let totalSiswa = 0
       if (userRole === 'administrator') {
-        totalSiswa = totalSiswaCount + totalOsis + totalMpk
+        totalSiswa = totalSiswaCount + totalOsis + totalMpk + totalMembersDynamic
       } else {
         if (orgs.includes('programming')) totalSiswa += totalProgramming
         if (orgs.includes('english')) totalSiswa += totalEnglish
         if (orgs.includes('osis')) totalSiswa += totalOsis
         if (orgs.includes('mpk')) totalSiswa += totalMpk
+        totalSiswa += totalMembersDynamic
       }
 
       return {
@@ -126,7 +156,7 @@ export async function GET(req: NextRequest) {
         totalEnglish,
         totalOsis,
         totalMpk,
-        hadirHariIni: hadirEkskulHariIni + hadirOrganisasiHariIni,
+        hadirHariIni: hadirEkskulHariIni + hadirOrganisasiHariIni + hadirDynamicHariIni,
         totalPemasukan,
         totalPengeluaran,
         totalKas: totalPemasukan - totalPengeluaran,

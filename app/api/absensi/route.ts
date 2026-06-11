@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
 import { getAccessibleOrgs } from '@/lib/auth-shared'
+import { getAccessibleOrganizations } from '@/lib/services/organization-service'
 import { pusherServer } from '@/lib/pusher-server'
 import { updateExp } from '@/lib/exp'
 import { z } from 'zod'
@@ -15,75 +16,161 @@ function getCtx(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const { userRole } = getCtx(req)
+  const { userId, userRole } = getCtx(req)
   const { searchParams } = new URL(req.url)
   const tanggal = searchParams.get('tanggal')
-  const ekskul = searchParams.get('ekskul') as 'programming' | 'english' | null
+  const ekskul = searchParams.get('ekskul')
   const mode = searchParams.get('mode')
   const page = parseInt(searchParams.get('page') || '1')
   const limit = parseInt(searchParams.get('limit') || '100')
 
   // Build accessible ekskul filter
-  const accessible = getAccessibleOrgs(userRole)
+  const accessibleOrgs = await getAccessibleOrganizations(userId, userRole)
+  const accessibleSlugs = accessibleOrgs.map(o => o.slug)
 
-  let ekskulFilter = accessible
-  if (ekskul && accessible.includes(ekskul)) ekskulFilter = [ekskul]
+  if (mode === 'orgs') {
+    return NextResponse.json({ orgs: accessibleOrgs })
+  }
+
+  let ekskulFilter = accessibleSlugs
+  if (ekskul && accessibleSlugs.includes(ekskul)) ekskulFilter = [ekskul]
+
+  const isDynamicOrg = (slug: string) => !['programming', 'english', 'osis', 'mpk'].includes(slug)
 
   // Optimized Input Mode: Combined Siswa + Absensi data
-  if (mode === 'input' && tanggal && ekskul && accessible.includes(ekskul)) {
-    const [siswaList, existingAbsensi] = await Promise.all([
-      prisma.siswa.findMany({
-        where: { ekskul: ekskul as any },
-        select: { id: true, nama: true, kelas: true, ekskul: true },
-        orderBy: { nama: 'asc' }
-      }),
-      prisma.absensi.findMany({
-        where: {
-          tanggal: new Date(tanggal),
-          siswa: { ekskul: ekskul as any }
-        },
-        select: { siswa_id: true, status: true, uang_kas: true, keterangan: true }
-      })
-    ])
+  if (mode === 'input' && tanggal && ekskul && accessibleSlugs.includes(ekskul)) {
+    if (isDynamicOrg(ekskul)) {
+      // Fetch from dynamic models
+      const org = await prisma.organization.findUnique({ where: { slug: ekskul } })
+      if (!org) return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
 
-    const absMap = Object.fromEntries(
-      existingAbsensi.map((a: { siswa_id: number; status: string; uang_kas: number; keterangan: string | null }) => [
-        a.siswa_id,
-        a
+      const [members, existingAttendance] = await Promise.all([
+        prisma.member.findMany({
+          where: { organization_id: org.id },
+          select: { id: true, name: true, class: true },
+          orderBy: { name: 'asc' }
+        }),
+        prisma.attendanceV2.findMany({
+          where: {
+            organization_id: org.id,
+            date: new Date(tanggal)
+          },
+          select: { member_id: true, attendance_status: true, cash_amount: true, notes: true }
+        })
       ])
-    )
-    const rows = siswaList.map((s: { id: number; nama: string; kelas: string | null; ekskul: string }) => ({
-      siswa_id: s.id,
-      nama: s.nama,
-      kelas: s.kelas,
-      ekskul: s.ekskul,
-      status: absMap[s.id]?.status || 'hadir',
-      uang_kas: absMap[s.id]?.uang_kas || 0,
-      keterangan: absMap[s.id]?.keterangan || '',
-    }))
 
-    return NextResponse.json({ data: rows })
+      const absMap = Object.fromEntries(
+        existingAttendance.map(a => [a.member_id, a])
+      )
+
+      const rows = members.map(m => ({
+        siswa_id: m.id,
+        nama: m.name,
+        kelas: m.class,
+        ekskul: ekskul,
+        status: absMap[m.id]?.attendance_status || 'hadir',
+        uang_kas: absMap[m.id]?.cash_amount || 0,
+        keterangan: absMap[m.id]?.notes || '',
+      }))
+
+      return NextResponse.json({ data: rows, orgs: accessibleOrgs })
+    } else {
+      // Original logic for programming/english
+      const [siswaList, existingAbsensi] = await Promise.all([
+        prisma.siswa.findMany({
+          where: { ekskul: ekskul as any },
+          select: { id: true, nama: true, kelas: true, ekskul: true },
+          orderBy: { nama: 'asc' }
+        }),
+        prisma.absensi.findMany({
+          where: {
+            tanggal: new Date(tanggal),
+            siswa: { ekskul: ekskul as any }
+          },
+          select: { siswa_id: true, status: true, uang_kas: true, keterangan: true }
+        })
+      ])
+
+      const absMap = Object.fromEntries(
+        existingAbsensi.map((a: { siswa_id: number; status: string; uang_kas: number; keterangan: string | null }) => [
+          a.siswa_id,
+          a
+        ])
+      )
+      const rows = siswaList.map((s: { id: number; nama: string; kelas: string | null; ekskul: string }) => ({
+        siswa_id: s.id,
+        nama: s.nama,
+        kelas: s.kelas,
+        ekskul: s.ekskul,
+        status: absMap[s.id]?.status || 'hadir',
+        uang_kas: absMap[s.id]?.uang_kas || 0,
+        keterangan: absMap[s.id]?.keterangan || '',
+      }))
+
+      return NextResponse.json({ data: rows, orgs: accessibleOrgs })
+    }
   }
 
-  const where: Record<string, unknown> = {
-    siswa: { ekskul: { in: ekskulFilter } },
-    ...(tanggal ? { 
-      tanggal: new Date(tanggal)
-    } : {}),
+  // Riwayat mode
+  let data: any[] = []
+  let total = 0
+
+  // This part is tricky because we might want to see riwayat from both systems.
+  // But usually, we filter by ekskul.
+  
+  if (ekskul && isDynamicOrg(ekskul)) {
+    const org = await prisma.organization.findUnique({ where: { slug: ekskul } })
+    if (org) {
+      const where: any = {
+        organization_id: org.id,
+        ...(tanggal ? { date: new Date(tanggal) } : {})
+      }
+      const [att, count] = await Promise.all([
+        prisma.attendanceV2.findMany({
+          where,
+          include: { member: true },
+          orderBy: { date: 'desc' },
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        prisma.attendanceV2.count({ where })
+      ])
+      
+      data = att.map(a => ({
+        id: a.id,
+        siswa: { id: a.member_id, nama: a.member.name, kelas: a.member.class, ekskul: ekskul },
+        tanggal: a.date,
+        status: a.attendance_status,
+        uang_kas: a.cash_amount,
+        keterangan: a.notes,
+        creator: { nama: 'System' } // AttendanceV2 doesn't have creator yet
+      }))
+      total = count
+    }
+  } else {
+    // Old system logic
+    const where: Record<string, unknown> = {
+      siswa: { ekskul: { in: ekskulFilter.filter(s => !isDynamicOrg(s)) } },
+      ...(tanggal ? { 
+        tanggal: new Date(tanggal)
+      } : {}),
+    }
+
+    const [oldData, oldCount] = await Promise.all([
+      prisma.absensi.findMany({
+        where,
+        include: { siswa: true, creator: { select: { id: true, nama: true } } },
+        orderBy: [{ tanggal: 'desc' }, { siswa: { nama: 'asc' } }],
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.absensi.count({ where }),
+    ])
+    data = oldData
+    total = oldCount
   }
 
-  const [data, total] = await Promise.all([
-    prisma.absensi.findMany({
-      where,
-      include: { siswa: true, creator: { select: { id: true, nama: true } } },
-      orderBy: [{ tanggal: 'desc' }, { siswa: { nama: 'asc' } }],
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-    prisma.absensi.count({ where }),
-  ])
-
-  return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / limit) })
+  return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / limit), orgs: accessibleOrgs })
 }
 
 // Bulk upsert absensi
@@ -105,8 +192,106 @@ export async function POST(req: NextRequest) {
 
   const { tanggal, rows } = parsed.data
   const tanggalDate = new Date(tanggal)
+  
+  const { searchParams } = new URL(req.url)
+  const ekskul = searchParams.get('ekskul')
+  
+  if (!ekskul) return NextResponse.json({ error: 'Ekskul is required' }, { status: 400 })
 
-  // Verify access for each siswa
+  const accessibleOrgs = await getAccessibleOrganizations(ctx.userId, ctx.userRole)
+  const accessibleSlugs = accessibleOrgs.map(o => o.slug)
+  
+  if (!accessibleSlugs.includes(ekskul)) {
+    return NextResponse.json({ error: `Akses ditolak untuk ekskul ${ekskul}` }, { status: 403 })
+  }
+
+  const isDynamicOrg = (slug: string) => !['programming', 'english', 'osis', 'mpk'].includes(slug)
+
+  if (isDynamicOrg(ekskul)) {
+    const org = await prisma.organization.findUnique({ where: { slug: ekskul } })
+    if (!org) return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
+
+    const memberIds = rows.map(r => r.siswa_id)
+    const members = await prisma.member.findMany({
+      where: { id: { in: memberIds } },
+      select: { id: true, name: true }
+    })
+
+    const existingAttendance = await prisma.attendanceV2.findMany({
+      where: {
+        organization_id: org.id,
+        date: tanggalDate,
+        member_id: { in: memberIds }
+      },
+      select: { member_id: true, attendance_status: true }
+    })
+    const existingMap = Object.fromEntries(
+      existingAttendance.map(a => [a.member_id, a.attendance_status])
+    )
+
+    const results = await prisma.$transaction(async (tx) => {
+      const saved = []
+      for (const row of rows) {
+        const prevStatus = existingMap[row.siswa_id]
+        const xpDiff = hitungSelisihExpAbsensi(prevStatus, row.status)
+
+        const upserted = await tx.attendanceV2.upsert({
+          where: { member_id_date: { member_id: row.siswa_id, date: tanggalDate } },
+          update: { attendance_status: row.status, cash_amount: row.uang_kas, notes: row.keterangan },
+          create: { 
+            organization_id: org.id, 
+            member_id: row.siswa_id, 
+            date: tanggalDate, 
+            attendance_status: row.status, 
+            cash_amount: row.uang_kas, 
+            notes: row.keterangan 
+          },
+        })
+
+        if (xpDiff !== 0) {
+          await updateExp({
+            tipeAnggota: 'member',
+            targetId: row.siswa_id,
+            selisih: xpDiff,
+            alasan: xpDiff > 0 ? 'Hadir kegiatan' : 'Tidak hadir kegiatan',
+            adminId: ctx.userId,
+            organisasi: ekskul,
+            tx,
+          })
+        }
+
+        saved.push(upserted)
+      }
+      return saved
+    })
+
+    // Log
+    const memberMap = Object.fromEntries(members.map(m => [m.id, m.name]))
+    const summary = rows.map(r => `${memberMap[r.siswa_id] || r.siswa_id}: ${r.status}`).join(', ')
+    await createLog({
+      userId: ctx.userId, userNama: ctx.userNama, aksi: 'UPDATE',
+      tabel: 'attendance_v2', deskripsi: `${ctx.userNama} menyimpan absensi ${org.nama} tanggal ${tanggal} (${rows.length} anggota): ${summary}`,
+      dataBaru: { tanggal, jumlah: rows.length, organizationId: org.id },
+      ipAddress: getIp(req),
+    })
+
+    if (pusherServer) {
+      try {
+        await pusherServer.trigger('absensi', 'absensi-updated', {
+          tanggal,
+          count: results.length,
+          userNama: ctx.userNama,
+          organizationSlug: ekskul
+        })
+      } catch (err) {
+        console.error('Failed to trigger Pusher absensi-updated:', err)
+      }
+    }
+
+    return NextResponse.json({ success: true, count: results.length })
+  }
+
+  // Verify access for each siswa (Old system)
   const siswaIds = rows.map(r => r.siswa_id)
   const siswaList = await prisma.siswa.findMany({
     where: { id: { in: siswaIds } },
@@ -114,8 +299,7 @@ export async function POST(req: NextRequest) {
   })
 
   for (const s of siswaList) {
-    const accessible = getAccessibleOrgs(ctx.userRole)
-    if (!accessible.includes(s.ekskul))
+    if (!accessibleSlugs.includes(s.ekskul))
       return NextResponse.json({ error: `Akses ditolak untuk ekskul ${s.ekskul}` }, { status: 403 })
   }
 

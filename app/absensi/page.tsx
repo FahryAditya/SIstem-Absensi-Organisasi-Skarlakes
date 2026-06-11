@@ -1,24 +1,25 @@
 import { getServerUser } from '@/lib/server-utils'
-import { canAccessProgramming, canAccessEnglish } from '@/lib/auth'
+import { getAccessibleOrganizations } from '@/lib/services/organization-service'
 import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import AbsensiClient from './AbsensiClient'
 
 export default async function AbsensiPage({ searchParams }: { searchParams: { org?: string } }) {
   const user = await getServerUser()
-  const org = (searchParams.org || '') as 'programming' | 'english' | ''
+  const accessible = await getAccessibleOrganizations(user.id, user.role)
+  
+  if (accessible.length === 0) redirect('/dashboard')
 
-  if (org === 'programming' && !canAccessProgramming(user.role)) redirect('/dashboard')
-  if (org === 'english' && !canAccessEnglish(user.role)) redirect('/dashboard')
-  if (!org && !canAccessProgramming(user.role) && !canAccessEnglish(user.role)) redirect('/dashboard')
+  const orgSlug = searchParams.org || ''
+  const selectedOrg = orgSlug ? accessible.find(o => o.slug === orgSlug) : null
+  
+  if (orgSlug && !selectedOrg) redirect('/dashboard')
 
-  const title = org === 'programming' ? 'Absensi Programming'
-    : org === 'english' ? 'Absensi English Club'
-    : 'Absensi Ekskul'
+  const title = selectedOrg ? `Absensi ${selectedOrg.nama}` : 'Absensi & Kas'
 
   return (
     <DashboardLayout user={user} pageTitle={title}>
-      <AbsensiClient user={user} defaultOrg={org} />
+      <AbsensiClient user={user} defaultOrg={orgSlug} />
     </DashboardLayout>
   )
 }

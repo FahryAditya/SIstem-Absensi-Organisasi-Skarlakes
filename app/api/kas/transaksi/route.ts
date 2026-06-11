@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAccessibleOrgs } from '@/lib/auth-shared'
+import { getAccessibleOrganizations } from '@/lib/services/organization-service'
 import { createLog, getIp } from '@/lib/log'
 import { withTransaction } from '@/lib/db-transaction'
 import { z } from 'zod'
@@ -15,7 +16,7 @@ function getCtx(req: NextRequest) {
 
 const schema = z.object({
   id_anggota: z.number().int().positive(),
-  org: z.enum(['programming', 'english', 'osis', 'mpk']),
+  org: z.string().min(1),
   nominal: z.number().int(), // positif untuk setor, negatif untuk tarik
   keterangan: z.string().min(1, 'Keterangan wajib diisi'),
 })
@@ -31,9 +32,10 @@ export async function POST(req: NextRequest) {
     }
 
     const { id_anggota, org, nominal, keterangan } = parsed.data
-    const accessible = getAccessibleOrgs(ctx.userRole)
+    const accessibleOrgs = await getAccessibleOrganizations(ctx.userId, ctx.userRole)
+    const accessibleSlugs = accessibleOrgs.map(o => o.slug)
 
-    if (!accessible.includes(org)) {
+    if (!accessibleSlugs.includes(org)) {
       return NextResponse.json({ error: 'Akses ditolak untuk unit ini' }, { status: 403 })
     }
 
@@ -55,9 +57,26 @@ export async function POST(req: NextRequest) {
     //    double-spending akibat dua admin submit bersamaan. ──────────────────
     let namaAnggota = ''
 
-    await withTransaction(async (tx) => {
+    const isDynamicOrg = (slug: string) => !['programming', 'english', 'osis', 'mpk'].includes(slug)
 
-      if (org === 'programming' || org === 'english') {
+    await withTransaction(async (tx) => {
+      if (isDynamicOrg(org)) {
+        const organization = await tx.organization.findUnique({ where: { slug: org } })
+        if (!organization) throw new Error('INVALID_ORG')
+        
+        const member = await tx.member.findUnique({ where: { id: id_anggota } })
+        if (!member || member.organization_id !== organization.id) throw new Error('INVALID_MEMBER')
+        namaAnggota = member.name
+
+        await tx.cashTransaction.create({
+          data: {
+            organization_id: organization.id,
+            member_id: id_anggota,
+            amount: nominal,
+            description: finalKeterangan
+          }
+        })
+      } else if (org === 'programming' || org === 'english') {
         // Validasi siswa dalam transaksi yang sama
         const siswa = await tx.siswa.findUnique({ where: { id: id_anggota } })
         if (!siswa || siswa.ekskul !== org) throw new Error('INVALID_SISWA')

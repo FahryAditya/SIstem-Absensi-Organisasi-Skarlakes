@@ -6,6 +6,13 @@ export default async function OrgDashboardPage({ params }: { params: { slug: str
   const org = await prisma.organization.findUnique({
     where: { slug: params.slug },
     include: {
+      admins: {
+        include: {
+          user: {
+            select: { id: true, nama: true, email: true }
+          }
+        }
+      },
       _count: {
         select: {
           members: true,
@@ -51,6 +58,20 @@ export default async function OrgDashboardPage({ params }: { params: { slug: str
             <div className="flex justify-between py-2 border-b border-white/5">
               <span className="text-xs text-slate-400">Asal Sekolah</span>
               <span className="text-xs font-bold text-white">{org.school_origin}</span>
+            </div>
+            <div className="flex justify-between py-2 border-b border-white/5">
+              <span className="text-xs text-slate-400">Administrator Unit</span>
+              <div className="text-right">
+                {org.admins.length > 0 ? (
+                  <div className="flex flex-col gap-1">
+                    {org.admins.map(a => (
+                      <span key={a.id} className="text-xs font-bold text-persian-blue">{a.user.nama}</span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-xs font-bold text-slate-500 italic">Belum ditentukan</span>
+                )}
+              </div>
             </div>
             <div className="flex justify-between py-2 border-b border-white/5">
               <span className="text-xs text-slate-400">Status</span>

@@ -27,7 +27,7 @@ const PAGE_SIZE = 20
 export default function KasClient({ user }: Props) {
   const [data, setData] = useState<KasData[]>([])
   const [totalKas, setTotalKas] = useState(0)
-  const [orgs, setOrgs] = useState<string[]>([])
+  const [orgs, setOrgs] = useState<{ slug: string; nama: string }[]>([])
   const [activeOrg, setActiveOrg] = useState<string>('')
   
   const [loading, setLoading] = useState(true)
@@ -37,22 +37,7 @@ export default function KasClient({ user }: Props) {
   const [totalPages, setTotalPages] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
 
-  // Member Selection State
-  const [members, setMembers] = useState<{ id: number; nama: string; kelas: string }[]>([])
-  const [memberLoading, setMemberLoading] = useState(false)
-
-  // Transaction Modal State
-  const [modalOpen, setModalOpen] = useState(false)
-  const [selectedMemberId, setSelectedMemberId] = useState<number | ''>('')
-  const [txType, setTxType] = useState<'setor' | 'tarik'>('setor')
-  const [txNominal, setTxNominal] = useState('')
-  const [txKet, setTxKet] = useState('')
-  const [txLoading, setTxLoading] = useState(false)
-
-  // Custom dropdown state
-  const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [memberSearch, setMemberSearch] = useState('')
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  // ... (rest of states)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -64,7 +49,7 @@ export default function KasClient({ user }: Props) {
       setTotalItems(json.total)
       setTotalKas(json.totalKas)
       setOrgs(json.orgs)
-      if (!activeOrg && json.orgs.length > 0) setActiveOrg(json.orgs[0])
+      if (!activeOrg && json.orgs.length > 0) setActiveOrg(json.orgs[0].slug)
     } catch (err: any) {
       toast.error(err.message)
     }
@@ -312,7 +297,7 @@ export default function KasClient({ user }: Props) {
                   setMembers([]) // Reset members when org changes
                 }}
                 className="w-full sm:w-48 flex-shrink-0"
-                options={orgs.map(o => ({ value: o, label: ORG_LABELS[o as OrgType] }))}
+                options={orgs.map(o => ({ value: o.slug, label: o.nama }))}
               />
             )}
           </div>

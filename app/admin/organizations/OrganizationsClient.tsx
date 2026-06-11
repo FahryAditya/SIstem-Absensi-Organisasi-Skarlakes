@@ -18,6 +18,11 @@ interface OrgData {
   school_origin: string
   status: string
   created_at: string
+  admins?: {
+    user: {
+      nama: string
+    }
+  }[]
   _count?: {
     members: number
   }
@@ -131,6 +136,23 @@ export default function OrganizationsClient({ user }: Props) {
         <div className="flex items-center gap-1.5 text-xs text-slate-300">
           <School className="w-3 h-3 text-slate-400" />
           {o.school_origin}
+        </div>
+      )
+    },
+    {
+      key: 'admins',
+      label: 'Administrator Unit',
+      render: (o: OrgData) => (
+        <div className="flex flex-col gap-0.5">
+          {o.admins && o.admins.length > 0 ? (
+            o.admins.map((a, idx) => (
+              <span key={idx} className="text-xs font-bold text-persian-blue truncate max-w-[120px]">
+                {a.user.nama}
+              </span>
+            ))
+          ) : (
+            <span className="text-xs text-slate-500 italic">Belum ada</span>
+          )}
         </div>
       )
     },

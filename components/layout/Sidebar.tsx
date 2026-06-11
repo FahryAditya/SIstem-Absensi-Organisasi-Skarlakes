@@ -26,7 +26,7 @@ type SidebarItem =
   | { type: 'section'; label: string }
   | { type: 'link'; label: string; href: string; icon: any; status?: string; target?: string }
 
-function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[] {
+function getFlattenedNavItems(role: string, isCollapsed: boolean, myOrgs: { slug: string; nama: string }[]): SidebarItem[] {
   const items: SidebarItem[] = []
   
   items.push({ type: 'logo', label: 'Sistem Ekstrakurikuler', version: 'V 18.5.10 Artemis Series ( Stable ) ' })
@@ -43,28 +43,40 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
   items.push({ type: 'link', href: '/materi', label: role === 'admin_osis_mpk' ? 'Jadwal Rapat' : 'Materi Hari Ini', icon: BookOpen })
   items.push({ type: 'link', href: '/jadwal', label: role === 'admin_osis_mpk' ? 'Pembawa Materi' : 'Jadwal Pengajar', icon: CalendarDays })
   items.push({ type: 'link', href: '/laporan', label: 'Laporan Statistik', icon: BarChart3 })
+  items.push({ type: 'link', href: '/absensi', label: 'Absensi & Kas', icon: ClipboardList })
   items.push({ type: 'link', href: '/rekap-absensi', label: 'Rekap Absensi', icon: ClipboardCheck })
   items.push({ type: 'link', href: '/kas', label: 'Buku Kas', icon: Wallet })
   items.push({ type: 'link', href: '/pengeluaran', label: 'Pengeluaran Kas', icon: HandCoins })
 
-  if (role === 'administrator' || role === 'admin_programming' || role === 'admin_english') {
+  if (role === 'administrator' || role === 'admin_programming' || role === 'admin_english' || role === 'organization_admin') {
     items.push({ type: 'section', label: 'Ekstrakurikuler' })
     if (role === 'administrator' || role === 'admin_programming') {
       items.push({ type: 'link', href: '/siswa?org=programming', label: 'Siswa Programming', icon: Users })
-      items.push({ type: 'link', href: '/absensi?org=programming', label: 'Absensi Programming', icon: ClipboardList })
     }
     if (role === 'administrator' || role === 'admin_english') {
       items.push({ type: 'link', href: '/siswa?org=english', label: 'Siswa English', icon: Users })
-      items.push({ type: 'link', href: '/absensi?org=english', label: 'Absensi English', icon: ClipboardList })
+    }
+    
+    // Dynamic Organizations for organization_admin
+    if (role === 'organization_admin') {
+      myOrgs.forEach(org => {
+        items.push({ type: 'link', href: `/admin/organizations/${org.slug}`, label: `Dashboard ${org.nama}`, icon: LayoutDashboard })
+        items.push({ type: 'link', href: `/admin/organizations/${org.slug}/members`, label: `Anggota ${org.nama}`, icon: Users })
+      })
+    } else if (role === 'administrator') {
+      items.push({ type: 'link', href: '/admin/organizations', label: 'Kelola Unit', icon: Building2 })
     }
   }
 
   if (role === 'administrator' || role === 'admin_osis_mpk') {
     items.push({ type: 'section', label: 'Organisasi' })
-    items.push({ type: 'link', href: '/organisasi?org=osis', label: 'OSIS', icon: Building2 })
-    items.push({ type: 'link', href: '/organisasi?org=mpk', label: 'MPK', icon: Building2 })
-    // items.push({ type: 'link', href: '/organisasi/kegiatan', label: 'Pengelompokan Kegiatan', icon: LayoutGrid })
-    items.push({ type: 'link', href: '/wawancara', label: 'Wawancara OSIS & MPK', icon: MessagesSquare })
+    if (role === 'administrator' || role === 'admin_osis_mpk') {
+      items.push({ type: 'link', href: '/organisasi?org=osis', label: 'OSIS', icon: Building2 })
+      items.push({ type: 'link', href: '/organisasi?org=mpk', label: 'MPK', icon: Building2 })
+    }
+    if (role !== 'organization_admin') {
+      items.push({ type: 'link', href: '/wawancara', label: 'Wawancara OSIS & MPK', icon: MessagesSquare })
+    }
   }
 
   items.push({ type: 'section', label: 'Tools' })
@@ -94,6 +106,7 @@ function RoleBadge({ role }: { role: string }) {
     admin_programming: 'bg-unit-programming/20 border-unit-programming/30 text-unit-programming font-extrabold',
     admin_english: 'bg-unit-english/20 border-unit-english/30 text-blue-400 font-extrabold',
     admin_osis_mpk: 'bg-unit-osis/20 border-unit-osis/30 text-unit-osis font-extrabold',
+    organization_admin: 'bg-amber-500/20 border-amber-500/30 text-amber-500 font-extrabold',
   }
   return (
     <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold ${colors[role] || 'bg-white/5 border-white/10 text-white'}`}>
@@ -107,7 +120,23 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const cleanRole = (user.role || '').trim().toLowerCase()
-  const navItems = getFlattenedNavItems(cleanRole, !!isCollapsed)
+  
+  const [myOrgs, setMyOrgs] = React.useState<{ slug: string; nama: string }[]>([])
+
+  React.useEffect(() => {
+    if (cleanRole === 'organization_admin') {
+      fetch('/api/organizations?mode=mine')
+        .then(res => res.json())
+        .then(json => {
+          if (json.success && json.data) {
+            setMyOrgs(json.data)
+          }
+        })
+        .catch(err => console.error('Failed to fetch my orgs', err))
+    }
+  }, [cleanRole])
+
+  const navItems = getFlattenedNavItems(cleanRole, !!isCollapsed, myOrgs)
   const routeKey = searchParams.size > 0 ? `${pathname}?${searchParams.toString()}` : pathname
 
   const isActive = (href: string) => {

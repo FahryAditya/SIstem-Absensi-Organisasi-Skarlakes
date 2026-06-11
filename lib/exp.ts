@@ -62,7 +62,7 @@ export function calculateProgress(xp: number, level: number) {
 // updateExp() — WAJIB dipakai semua perubahan EXP
 // ============================================================
 
-type TipeAnggota = 'siswa' | 'anggota_osis' | 'anggota_mpk'
+type TipeAnggota = 'siswa' | 'anggota_osis' | 'anggota_mpk' | 'member'
 
 interface UpdateExpParams {
   tipeAnggota: TipeAnggota
@@ -109,11 +109,17 @@ export async function updateExp({
       levelLama = anggota.level
       namaAnggota = anggota.nama
       emailAnggota = anggota.email
-    } else {
+    } else if (tipeAnggota === 'anggota_mpk') {
       const anggota = await client.anggotaMpk.findUniqueOrThrow({ where: { id: targetId } })
       xpLama = anggota.xp
       levelLama = anggota.level
       namaAnggota = anggota.nama
+      emailAnggota = anggota.email
+    } else {
+      const anggota = await client.member.findUniqueOrThrow({ where: { id: targetId } })
+      xpLama = anggota.exp
+      levelLama = anggota.level
+      namaAnggota = anggota.name
       emailAnggota = anggota.email
     }
 
@@ -133,17 +139,22 @@ export async function updateExp({
         where: { id: targetId },
         data: { xp: xpBaru, level: levelBaru },
       })
-    } else {
+    } else if (tipeAnggota === 'anggota_mpk') {
       await client.anggotaMpk.update({
         where: { id: targetId },
         data: { xp: xpBaru, level: levelBaru },
+      })
+    } else {
+      await client.member.update({
+        where: { id: targetId },
+        data: { exp: xpBaru, level: levelBaru },
       })
     }
 
     // 4. Catat di exp_log
     await client.expLog.create({
       data: {
-        tipe_anggota: tipeAnggota,
+        tipe_anggota: tipeAnggota as any,
         siswa_id: tipeAnggota === 'siswa' ? targetId : null,
         anggota_osis_id: tipeAnggota === 'anggota_osis' ? targetId : null,
         anggota_mpk_id: tipeAnggota === 'anggota_mpk' ? targetId : null,
