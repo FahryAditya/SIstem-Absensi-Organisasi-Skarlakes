@@ -70,13 +70,9 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean, myOrgs: { slug
 
   if (role === 'administrator' || role === 'admin_osis_mpk') {
     items.push({ type: 'section', label: 'Organisasi' })
-    if (role === 'administrator' || role === 'admin_osis_mpk') {
-      items.push({ type: 'link', href: '/organisasi?org=osis', label: 'OSIS', icon: Building2 })
-      items.push({ type: 'link', href: '/organisasi?org=mpk', label: 'MPK', icon: Building2 })
-    }
-    if (role !== 'organization_admin') {
-      items.push({ type: 'link', href: '/wawancara', label: 'Wawancara OSIS & MPK', icon: MessagesSquare })
-    }
+    items.push({ type: 'link', href: '/organisasi?org=osis', label: 'OSIS', icon: Building2 })
+    items.push({ type: 'link', href: '/organisasi?org=mpk', label: 'MPK', icon: Building2 })
+    items.push({ type: 'link', href: '/wawancara', label: 'Wawancara OSIS & MPK', icon: MessagesSquare })
   }
 
   items.push({ type: 'section', label: 'Tools' })

@@ -37,7 +37,18 @@ export default function KasClient({ user }: Props) {
   const [totalPages, setTotalPages] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
 
-  // ... (rest of states)
+  // Transaction states
+  const [memberLoading, setMemberLoading] = useState(false)
+  const [members, setMembers] = useState<{ id: number; nama: string; kelas: string }[]>([])
+  const [selectedMemberId, setSelectedMemberId] = useState<number | ''>('')
+  const [txNominal, setTxNominal] = useState('')
+  const [txKet, setTxKet] = useState('')
+  const [txType, setTxType] = useState<'setor' | 'tarik'>('setor')
+  const [modalOpen, setModalOpen] = useState(false)
+  const [txLoading, setTxLoading] = useState(false)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [memberSearch, setMemberSearch] = useState('')
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   const fetchData = useCallback(async () => {
     setLoading(true)

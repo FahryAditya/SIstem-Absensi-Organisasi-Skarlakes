@@ -18,8 +18,10 @@ export async function GET(req: NextRequest) {
 
     // Default: all orgs (administrator only for full details)
     const isAdmin = session.role === 'administrator'
-    const orgs = await prisma.organization.findMany({
-      ...(isAdmin ? {
+    
+    let orgs;
+    if (isAdmin) {
+      orgs = await prisma.organization.findMany({
         include: {
           admins: {
             include: {
@@ -31,12 +33,16 @@ export async function GET(req: NextRequest) {
           _count: {
             select: { members: true }
           }
-        }
-      } : {
-        select: { id: true, nama: true, slug: true, category: true, status: true }
-      }),
-      orderBy: { created_at: 'desc' }
-    })
+        },
+        orderBy: { created_at: 'desc' }
+      })
+    } else {
+      orgs = await prisma.organization.findMany({
+        select: { id: true, nama: true, slug: true, category: true, status: true },
+        orderBy: { created_at: 'desc' }
+      })
+    }
+    
     return NextResponse.json({ success: true, data: orgs })
   } catch (error) {
     console.error('Fetch orgs error:', error)
