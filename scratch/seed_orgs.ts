@@ -7,7 +7,10 @@ async function main() {
 
   const orgs = [
     {
-      nama: 'OSIS (Organisasi Siswa Intra Sekolah)',
+      nama: 'OSIS',
+      slug: 'osis',
+      category: 'Organisasi',
+      school_origin: 'SMK Airlangga',
       tipe: OrganisasiType.osis,
       deskripsi: 'Organisasi Siswa Intra Sekolah - Menjadi pemimpin masa depan.',
       hari_pertemuan: 'Jumat',
@@ -16,7 +19,10 @@ async function main() {
       lokasi: 'Ruang OSIS'
     },
     {
-      nama: 'MPK (Majelis Perwakilan Kelas)',
+      nama: 'MPK',
+      slug: 'mpk',
+      category: 'Organisasi',
+      school_origin: 'SMK Airlangga',
       tipe: OrganisasiType.mpk,
       deskripsi: 'Majelis Perwakilan Kelas - Suarakan aspirasi teman sekelasmu.',
       hari_pertemuan: 'Kamis',
@@ -25,7 +31,10 @@ async function main() {
       lokasi: 'Ruang MPK'
     },
     {
-      nama: 'Programming Club',
+      nama: 'Programming',
+      slug: 'programming',
+      category: 'Ekstrakurikuler',
+      school_origin: 'SMK Airlangga',
       tipe: OrganisasiType.programming,
       deskripsi: 'Asah kemampuan coding dan bangun aplikasi impianmu.',
       hari_pertemuan: 'Jumat',
@@ -35,6 +44,9 @@ async function main() {
     },
     {
       nama: 'English Club',
+      slug: 'english-club',
+      category: 'Ekstrakurikuler',
+      school_origin: 'SMK Airlangga',
       tipe: OrganisasiType.english,
       deskripsi: 'Improve your speaking skills and master English.',
       hari_pertemuan: 'Rabu',

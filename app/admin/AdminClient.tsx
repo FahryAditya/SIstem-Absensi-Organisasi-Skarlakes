@@ -10,10 +10,11 @@ import { RoleBadge } from '@/components/ui/Badges'
 import { formatDateTime } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
-import { UserCog, Plus, Pencil, Trash2, Loader2, Shield, Mail, User, Lock, Eye, EyeOff, AlertTriangle, Database, Cpu, Sparkles, Trophy, UserCheck, Link as LinkIcon, ArrowLeft } from 'lucide-react'
+import { UserCog, Plus, Pencil, Trash2, Loader2, Shield, Mail, User, Lock, Eye, EyeOff, AlertTriangle, Database, Cpu, Sparkles, Trophy, UserCheck, Link as LinkIcon, ArrowLeft, Building2 } from 'lucide-react'
 import Select from '@/components/ui/Select'
 import { AWARDS_DATA } from '@/lib/awards'
 import AdminDropdownMenu from '@/components/admin/AdminDropdownMenu'
+import CardNav, { CardNavItem } from '@/components/CardNav'
 
 interface UserData { id: number; nama: string; email: string; role: string; created_at: string }
 interface Props { user: { id: number; nama: string; email: string; role: string } }
@@ -58,10 +59,16 @@ export default function AdminClient({ user }: Props) {
   const [awardId, setAwardId] = useState<number | null>(null)
   const [givingAward, setGivingAward] = useState(false)
 
+  const [orgCount, setOrgCount] = useState(0)
+
   const load = useCallback(async () => {
     setLoading(true)
-    const json = await fetchJsonCachedUrl<{ data?: UserData[] }>('/api/users')
-    setUsers(json.data || [])
+    const [userJson, orgJson] = await Promise.all([
+      fetchJsonCachedUrl<{ data?: UserData[] }>('/api/users'),
+      fetchJsonCachedUrl<{ data?: any[] }>('/api/organizations')
+    ])
+    setUsers(userJson.data || [])
+    setOrgCount(orgJson.data?.length || 0)
     setLoading(false)
   }, [])
 
@@ -293,27 +300,69 @@ export default function AdminClient({ user }: Props) {
     { role: 'admin_osis_mpk', label: 'Admin OSIS & MPK', color: 'bg-unit-osis/10 border-unit-osis/20 text-unit-osis', dot: 'bg-unit-osis' },
   ]
 
+  const navItems: CardNavItem[] = [
+    {
+      label: 'Manajemen Unit',
+      bgColor: '#1E90FF',
+      textColor: '#FFFFFF',
+      links: [
+        { label: 'Kelola Organisasi & Eskul', href: '/admin/organizations', ariaLabel: 'Buka Manajemen Unit' }
+      ]
+    },
+    {
+      label: 'Sistem & User',
+      bgColor: '#6366F1',
+      textColor: '#FFFFFF',
+      links: [
+        { label: 'Kelola Akun Admin', href: '/admin', ariaLabel: 'Buka Manajemen User' },
+        { label: 'Log Aktivitas', href: '/log', ariaLabel: 'Buka Log' }
+      ]
+    },
+    {
+      label: 'Pusat Bantuan',
+      bgColor: '#10B981',
+      textColor: '#FFFFFF',
+      links: [
+        { label: 'Dokumentasi Sistem', href: '/documentation', ariaLabel: 'Buka Dokumentasi' }
+      ]
+    }
+  ]
+
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="page-header">
-          <div className="flex items-center gap-2.5">
-            <UserCog className="w-5 h-5 text-persian-blue" />
-            <h2 className="page-title">Kelola User & Admin</h2>
+    <div className="space-y-6 pt-24 pb-10">
+      <CardNav 
+        logo="/logo.png" 
+        items={navItems} 
+        buttonBgColor="#1E90FF" 
+        buttonTextColor="#FFFFFF"
+        baseColor="rgba(15, 23, 42, 0.9)"
+        menuColor="#FFFFFF"
+        className="backdrop-blur-xl border border-white/5 !fixed top-4"
+      />
+      
+      {/* Organizations Overview Card */}
+      <div className="grid grid-cols-1 gap-3">
+        <div 
+          onClick={() => router.push('/admin/organizations')}
+          className="card p-5 border border-persian-blue/20 bg-gradient-to-br from-persian-blue/5 to-transparent cursor-pointer hover:border-persian-blue/40 transition-all group"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-persian-blue/10 flex items-center justify-center text-persian-blue group-hover:scale-110 transition-transform">
+                <Building2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-white">Organisasi & Ekstrakurikuler</h3>
+                <p className="text-xs text-slate-400">Kelola seluruh unit sekolah secara terpusat</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Unit</div>
+              <div className="text-2xl font-black text-persian-blue font-mono">{orgCount}</div>
+            </div>
           </div>
-          <p className="page-sub mt-0.5">Buat, edit, dan hapus akun pengguna sistem</p>
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2 ml-auto">
-            <AdminDropdownMenu
-              onOpenEmailSetting={openEmailSetting}
-              onOpenAddUser={openAdd}
-              onOptimizeDb={handleOptimize}
-              onOpenCleanupWawancara={() => setCleanupModalOpen(true)}
-              userRole={user.role}
-            />
-          </div>
-        </div>
+      </div>
 
       {/* Role cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

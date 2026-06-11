@@ -30,7 +30,7 @@ export async function PATCH(req: NextRequest) {
       })
 
       if (!reg) return NextResponse.json({ error: 'Data pendaftaran tidak ditemukan' }, { status: 404 })
-      if (!accessibleOrgs.includes(reg.organization.tipe)) {
+      if (!reg.organization.tipe || !accessibleOrgs.includes(reg.organization.tipe)) {
         return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
       }
 
@@ -77,7 +77,7 @@ export async function PATCH(req: NextRequest) {
       })
 
       if (!reg) return NextResponse.json({ error: 'Data pendaftaran tidak ditemukan' }, { status: 404 })
-      if (!accessibleOrgs.includes(reg.organization.tipe)) {
+      if (!reg.organization.tipe || !accessibleOrgs.includes(reg.organization.tipe)) {
         return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
       }
 

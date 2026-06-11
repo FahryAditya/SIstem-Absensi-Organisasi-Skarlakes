@@ -35,6 +35,7 @@ model User {
   updates_created      SystemUpdate[]          @relation("UpdateCreatedBy")
   progression_executed SchoolYearProgression[] @relation("ProgressionExecutedBy")
   progression_reverted SchoolYearProgression[] @relation("ProgressionRevertedBy")
+  organization_admins OrganizationAdmin[]
 
   @@index([created_at])
   @@map("users")
@@ -43,18 +44,100 @@ model User {
 model Organization {
   id                     Int                   @id @default(autoincrement())
   nama                   String                @db.VarChar(100)
-  tipe                   OrganisasiType
+  slug                   String?               @unique @db.VarChar(100)
+  category               String                @db.VarChar(50) @default("Ekstrakurikuler")
+  school_origin          String                @db.VarChar(100) @default("SMK Airlangga")
+  status                 String                @db.VarChar(20) @default("Aktif")
+  tipe                   OrganisasiType?
   deskripsi              String?
   hari_pertemuan         String?               @db.VarChar(20)
   ketua_id               Int?
   lokasi                 String?               @db.VarChar(100)
   waktu_mulai            String?               @db.VarChar(10)
   waktu_selesai          String?               @db.VarChar(10)
+  created_at             DateTime              @default(now())
+  updated_at             DateTime              @default(now()) @updatedAt
+  
   documentations         Documentation[]
   registrations_eskul    RegistrationEskul[]
   registrations_osis_mpk RegistrationOsisMpk[]
+  admins                 OrganizationAdmin[]
+  members                Member[]
+  attendance             AttendanceV2[]
+  cash_transactions      CashTransaction[]
 
   @@map("organizations")
+}
+
+model OrganizationAdmin {
+  id              Int          @id @default(autoincrement())
+  user_id         Int
+  organization_id Int
+  created_at      DateTime     @default(now())
+  
+  user            User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, organization_id])
+  @@map("organization_admins")
+}
+
+model Member {
+  id              Int          @id @default(autoincrement())
+  organization_id Int
+  nis             String?      @db.VarChar(20)
+  name            String       @db.VarChar(100)
+  email           String?      @db.VarChar(150)
+  class           String?      @db.VarChar(20)
+  level           Int          @default(1)
+  exp             Int          @default(0)
+  progress        Int          @default(0)
+  created_at      DateTime     @default(now())
+  updated_at      DateTime     @updatedAt
+  
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  attendance      AttendanceV2[]
+  cash_transactions CashTransaction[]
+
+  @@index([organization_id])
+  @@index([nis])
+  @@index([name])
+  @@map("members")
+}
+
+model AttendanceV2 {
+  id                Int          @id @default(autoincrement())
+  organization_id   Int
+  member_id         Int
+  date              DateTime     @db.Date
+  attendance_status String       @db.VarChar(20)
+  cash_amount       Int          @default(0)
+  notes             String?      @db.Text
+  created_at        DateTime     @default(now())
+  
+  organization      Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  member            Member       @relation(fields: [member_id], references: [id], onDelete: Cascade)
+
+  @@unique([member_id, date])
+  @@index([organization_id])
+  @@index([date])
+  @@map("attendance_v2")
+}
+
+model CashTransaction {
+  id              Int          @id @default(autoincrement())
+  organization_id Int
+  member_id       Int
+  amount          Int
+  description     String       @db.VarChar(255)
+  created_at      DateTime     @default(now())
+  
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  member            Member       @relation(fields: [member_id], references: [id], onDelete: Cascade)
+
+  @@index([organization_id])
+  @@index([member_id])
+  @@map("cash_transactions")
 }
 
 model MasterKelas {
@@ -738,6 +821,7 @@ enum OrganisasiWawancara {
 
 enum Role {
   administrator
+  organization_admin
   admin_programming
   admin_english
   admin_osis_mpk
