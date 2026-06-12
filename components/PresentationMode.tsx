@@ -30,7 +30,7 @@ interface StatsData {
   totalPemasukan: number
   totalPengeluaran: number
   totalKas: number
-  orgs: string[]
+  orgs: { slug: string; nama: string; school_origin: string }[]
 }
 
 interface ChartData {
@@ -353,22 +353,22 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
                     {/* Org breakdown badges */}
                     {card.label === 'Total Siswa' && (
                       <div className="flex flex-wrap gap-1.5 mt-1">
-                        {orgs.includes('programming') && (
+                        {orgs.some(o => o.slug === 'programming') && (
                           <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/70">
                             Programming: <AnimatedCounter value={stats.totalProgramming} duration={1200} />
                           </span>
                         )}
-                        {orgs.includes('english') && (
+                        {orgs.some(o => o.slug === 'english') && (
                           <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/70">
                             English: <AnimatedCounter value={stats.totalEnglish} duration={1200} />
                           </span>
                         )}
-                        {orgs.includes('osis') && (
+                        {orgs.some(o => o.slug === 'osis') && (
                           <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/70">
                             OSIS: <AnimatedCounter value={stats.totalOsis} duration={1200} />
                           </span>
                         )}
-                        {orgs.includes('mpk') && (
+                        {orgs.some(o => o.slug === 'mpk') && (
                           <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/70">
                             MPK: <AnimatedCounter value={stats.totalMpk} duration={1200} />
                           </span>
@@ -460,8 +460,8 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
           <div className="relative flex flex-col md:flex-row items-center justify-between gap-3 px-4 md:px-8 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] border-t border-white/10 flex-shrink-0">
             <div className="flex items-center gap-3">
               {orgs.map(o => (
-                <span key={o} className="text-xs font-bold px-3 py-1 rounded-full bg-white/10 text-white/60 border border-white/10">
-                  {ORG_LABELS[o as OrgType] || o}
+                <span key={o.slug} className="text-xs font-bold px-3 py-1 rounded-full bg-white/10 text-white/60 border border-white/10">
+                  {ORG_LABELS[o.slug as OrgType] || o.nama}
                 </span>
               ))}
             </div>

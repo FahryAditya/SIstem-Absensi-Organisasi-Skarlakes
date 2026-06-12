@@ -41,9 +41,12 @@ export default async function OrgWorkspaceLayout({ children, params }: Props) {
     { label: 'Absensi', href: `/admin/organizations/${org.slug}/absensi`, icon: CheckCircle2 },
     { label: 'Kas', href: `/admin/organizations/${org.slug}/kas`, icon: Wallet },
     { label: 'Progress', href: `/admin/organizations/${org.slug}/progress`, icon: TrendingUp },
-    { label: 'Administrator', href: `/admin/organizations/${org.slug}/admins`, icon: ShieldCheck },
-    { label: 'Pengaturan', href: `/admin/organizations/${org.slug}/settings`, icon: Settings },
   ]
+
+  if (user.role === 'administrator') {
+    navItems.push({ label: 'Administrator', href: `/admin/organizations/${org.slug}/admins`, icon: ShieldCheck })
+    navItems.push({ label: 'Pengaturan', href: `/admin/organizations/${org.slug}/settings`, icon: Settings })
+  }
 
   return (
     <DashboardLayout user={user} pageTitle={org.nama}>

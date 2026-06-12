@@ -665,7 +665,7 @@ model MateriHariIni {
   judul      String         @db.VarChar(255)
   deskripsi  String
   tanggal    DateTime       @db.Date
-  organisasi OrganisasiType
+  organisasi String
   notulen    String?
   lokasi     String?        @db.VarChar(200)
   created_by Int

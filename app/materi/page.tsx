@@ -34,7 +34,7 @@ const emptyForm = { judul: '', deskripsi: '', tanggal: '', organisasi: 'programm
 export default function MateriPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
-  const [accessibleOrgs, setAccessibleOrgs] = useState<string[]>([])
+  const [myOrgs, setMyOrgs] = useState<{ slug: string; nama: string }[]>([])
   const [activeTab, setActiveTab] = useState('')
   const [data, setData] = useState<MateriItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -46,15 +46,19 @@ export default function MateriPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null)
 
   useEffect(() => {
-    async function fetchUser() {
+    async function init() {
       try {
-        const res = await fetch('/api/auth/me')
-        const json = await res.json()
-        if (json.user) {
-          setUser(json.user)
-          const orgs = getAccessibleOrgs(json.user.role)
-          setAccessibleOrgs(orgs)
-          if (orgs.length > 0) setActiveTab(orgs[0])
+        const [uRes, oRes] = await Promise.all([
+          fetch('/api/auth/me').then(r => r.json()),
+          fetch('/api/organizations?mode=mine').then(r => r.json())
+        ])
+        
+        if (uRes.user) {
+          setUser(uRes.user)
+          if (oRes.success && oRes.data) {
+            setMyOrgs(oRes.data)
+            if (oRes.data.length > 0) setActiveTab(oRes.data[0].slug)
+          }
         } else {
           router.push('/login')
         }
@@ -64,10 +68,11 @@ export default function MateriPage() {
         setAuthLoading(false)
       }
     }
-    fetchUser()
+    init()
   }, [router])
 
-  const isEkskul = ORG_TABS.find(t => t.key === activeTab)?.isEkskul ?? true
+  const currentOrg = myOrgs.find(o => o.slug === activeTab)
+  const isEkskul = !['osis', 'mpk'].includes(activeTab)
 
   const fetch_ = useCallback(async (org: string) => {
     if (!org) return
@@ -82,8 +87,6 @@ export default function MateriPage() {
   useEffect(() => { 
     if (activeTab) fetch_(activeTab) 
   }, [activeTab, fetch_])
-
-  const filteredTabs = ORG_TABS.filter(t => accessibleOrgs.includes(t.key))
 
   if (authLoading) return (
     <div className="min-h-screen bg-[#0f1117] flex items-center justify-center">
@@ -113,7 +116,16 @@ export default function MateriPage() {
     try {
       const method = editItem ? 'PUT' : 'POST'
       const body = editItem ? { ...form, id: editItem.id } : form
-      const res = await fetch('/api/materi', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const res = await fetch('/api/materi', { 
+        method, 
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': user.id.toString(),
+          'x-user-nama': user.nama,
+          'x-user-role': user.role,
+        }, 
+        body: JSON.stringify(body) 
+      })
       if (res.ok) { setShowModal(false); fetch_(activeTab) }
       else { const j = await res.json(); alert(j.error) }
     } finally { setSaving(false) }
@@ -121,11 +133,26 @@ export default function MateriPage() {
 
   async function handleDelete(id: number) {
     if (!confirm('Hapus materi ini?')) return
-    await fetch(`/api/materi?id=${id}`, { method: 'DELETE' })
+    await fetch(`/api/materi?id=${id}`, { 
+      method: 'DELETE',
+      headers: {
+        'x-user-id': user.id.toString(),
+        'x-user-nama': user.nama,
+        'x-user-role': user.role,
+      }
+    })
     fetch_(activeTab)
   }
 
-  const gradColor = ORG_COLORS[activeTab]
+  const getGradColor = (slug: string) => {
+    if (slug === 'programming') return 'from-blue-500 to-cyan-500'
+    if (slug === 'english') return 'from-emerald-500 to-teal-500'
+    if (slug === 'osis') return 'from-purple-500 to-persian-blue/100'
+    if (slug === 'mpk') return 'from-orange-500 to-amber-500'
+    return 'from-slate-600 to-slate-400'
+  }
+
+  const gradColor = getGradColor(activeTab)
 
   return (
     <div className="min-h-screen bg-[#0f1117] text-white p-4 md:p-8">
@@ -144,20 +171,22 @@ export default function MateriPage() {
             </div>
             <p className="text-slate-400 text-sm">{isEkskul ? 'Dokumentasi materi pertemuan ekskul' : 'Notulen dan agenda rapat organisasi'}</p>
           </div>
-          <button
-            onClick={openCreate}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r ${gradColor} text-white font-medium text-sm hover:opacity-90 transition`}
-          >
-            <Plus className="w-4 h-4" /> Tambah
-          </button>
+          {myOrgs.length > 0 && (
+            <button
+              onClick={openCreate}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r ${gradColor} text-white font-medium text-sm hover:opacity-90 transition`}
+            >
+              <Plus className="w-4 h-4" /> Tambah
+            </button>
+          )}
         </div>
 
         {/* Tabs */}
         <div className="flex gap-2 flex-wrap mb-6">
-          {filteredTabs.map(tab => (
-            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${activeTab === tab.key ? `bg-gradient-to-r ${ORG_COLORS[tab.key]} text-white border-transparent` : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}>
-              {tab.label}
+          {myOrgs.map(tab => (
+            <button key={tab.slug} onClick={() => setActiveTab(tab.slug)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${activeTab === tab.slug ? `bg-gradient-to-r ${getGradColor(tab.slug)} text-white border-transparent` : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}>
+              {tab.nama}
             </button>
           ))}
         </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { CalendarDays, Plus, Pencil, Trash2, Clock, MapPin, AlertCircle, ArrowLeft } from 'lucide-react'
+import { CalendarDays, Plus, Pencil, Trash2, Clock, MapPin, AlertCircle, ArrowLeft, Loader2 } from 'lucide-react'
 
 interface JadwalItem {
   id: number
@@ -15,13 +15,6 @@ interface JadwalItem {
   wajib_hadir: boolean
 }
 
-const ORG_TABS = [
-  { key: 'programming', label: 'Programming', color: 'from-blue-500 to-cyan-500', isEkskul: true },
-  { key: 'english', label: 'English Club', color: 'from-emerald-500 to-teal-500', isEkskul: true },
-  { key: 'osis', label: 'OSIS', color: 'from-purple-500 to-persian-blue/100', isEkskul: false },
-  { key: 'mpk', label: 'MPK', color: 'from-orange-500 to-amber-500', isEkskul: false },
-]
-
 const emptyForm = { judul: '', tanggal: '', waktu: '', lokasi: '', keterangan: '', organisasi: 'programming', wajib_hadir: false }
 
 function isUpcoming(tgl: string) {
@@ -30,15 +23,45 @@ function isUpcoming(tgl: string) {
 
 export default function JadwalPage() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState('programming')
+  const [user, setUser] = useState<any>(null)
+  const [myOrgs, setMyOrgs] = useState<{ slug: string; nama: string }[]>([])
+  const [activeTab, setActiveTab] = useState('')
   const [data, setData] = useState<JadwalItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [authLoading, setAuthLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editItem, setEditItem] = useState<JadwalItem | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
 
+  useEffect(() => {
+    async function init() {
+      try {
+        const [uRes, oRes] = await Promise.all([
+          fetch('/api/auth/me').then(r => r.json()),
+          fetch('/api/organizations?mode=mine').then(r => r.json())
+        ])
+        
+        if (uRes.user) {
+          setUser(uRes.user)
+          if (oRes.success && oRes.data) {
+            setMyOrgs(oRes.data)
+            if (oRes.data.length > 0) setActiveTab(oRes.data[0].slug)
+          }
+        } else {
+          router.push('/login')
+        }
+      } catch {
+        router.push('/login')
+      } finally {
+        setAuthLoading(false)
+      }
+    }
+    init()
+  }, [router])
+
   const fetch_ = useCallback(async (org: string) => {
+    if (!org) return
     setLoading(true)
     try {
       const res = await fetch(`/api/jadwal?organisasi=${org}&limit=30`)
@@ -47,7 +70,26 @@ export default function JadwalPage() {
     } catch { setData([]) } finally { setLoading(false) }
   }, [])
 
-  useEffect(() => { fetch_(activeTab) }, [activeTab, fetch_])
+  useEffect(() => { if (activeTab) fetch_(activeTab) }, [activeTab, fetch_])
+
+  if (authLoading) return (
+    <div className="min-h-screen bg-[#0f1117] flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+    </div>
+  )
+
+  const currentOrg = myOrgs.find(o => o.slug === activeTab)
+  const isEkskul = !['osis', 'mpk'].includes(activeTab)
+
+  const getGradColor = (slug: string) => {
+    if (slug === 'programming') return 'from-blue-500 to-cyan-500'
+    if (slug === 'english') return 'from-emerald-500 to-teal-500'
+    if (slug === 'osis') return 'from-purple-500 to-persian-blue/100'
+    if (slug === 'mpk') return 'from-orange-500 to-amber-500'
+    return 'from-slate-600 to-slate-400'
+  }
+
+  const gradColor = getGradColor(activeTab)
 
   function openCreate() {
     setForm({ ...emptyForm, organisasi: activeTab })
@@ -71,7 +113,16 @@ export default function JadwalPage() {
     try {
       const method = editItem ? 'PUT' : 'POST'
       const body = editItem ? { ...form, id: editItem.id } : form
-      const res = await fetch('/api/jadwal', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const res = await fetch('/api/jadwal', { 
+        method, 
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': user.id.toString(),
+          'x-user-nama': user.nama,
+          'x-user-role': user.role,
+        }, 
+        body: JSON.stringify(body) 
+      })
       if (res.ok) { setShowModal(false); fetch_(activeTab) }
       else { const j = await res.json(); alert(j.error) }
     } finally { setSaving(false) }
@@ -79,11 +130,17 @@ export default function JadwalPage() {
 
   async function handleDelete(id: number) {
     if (!confirm('Hapus jadwal ini?')) return
-    await fetch(`/api/jadwal?id=${id}`, { method: 'DELETE' })
+    await fetch(`/api/jadwal?id=${id}`, { 
+      method: 'DELETE',
+      headers: {
+        'x-user-id': user.id.toString(),
+        'x-user-nama': user.nama,
+        'x-user-role': user.role,
+      }
+    })
     fetch_(activeTab)
   }
 
-  const tabInfo = ORG_TABS.find(t => t.key === activeTab)!
   const upcoming = data.filter(d => isUpcoming(d.tanggal))
   const past = data.filter(d => !isUpcoming(d.tanggal))
 
@@ -99,22 +156,24 @@ export default function JadwalPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <CalendarDays className="w-5 h-5 text-blue-400" />
-              <h1 className="text-2xl font-bold">{tabInfo.isEkskul ? 'Jadwal Pengajar' : 'Pembawa Materi'}</h1>
+              <h1 className="text-2xl font-bold">{isEkskul ? 'Jadwal Pengajar' : 'Pembawa Materi'}</h1>
             </div>
-            <p className="text-slate-400 text-sm">{tabInfo.isEkskul ? 'Jadwal pengajar ekstrakurikuler' : 'Jadwal pembawa materi rapat organisasi'}</p>
+            <p className="text-slate-400 text-sm">{isEkskul ? 'Jadwal pengajar ekstrakurikuler' : 'Jadwal pembawa materi rapat organisasi'}</p>
           </div>
-          <button onClick={openCreate}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r ${tabInfo.color} text-white font-medium text-sm hover:opacity-90 transition`}>
-            <Plus className="w-4 h-4" /> Tambah
-          </button>
+          {myOrgs.length > 0 && (
+            <button onClick={openCreate}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r ${gradColor} text-white font-medium text-sm hover:opacity-90 transition`}>
+              <Plus className="w-4 h-4" /> Tambah
+            </button>
+          )}
         </div>
 
         {/* Tabs */}
         <div className="flex gap-2 flex-wrap mb-6">
-          {ORG_TABS.map(tab => (
-            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${activeTab === tab.key ? `bg-gradient-to-r ${tab.color} text-white border-transparent` : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}>
-              {tab.label}
+          {myOrgs.map(tab => (
+            <button key={tab.slug} onClick={() => setActiveTab(tab.slug)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${activeTab === tab.slug ? `bg-gradient-to-r ${getGradColor(tab.slug)} text-white border-transparent` : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}>
+              {tab.nama}
             </button>
           ))}
         </div>
@@ -132,7 +191,7 @@ export default function JadwalPage() {
               <div>
                 <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Mendatang</h2>
                 <div className="space-y-3">
-                  {upcoming.map(item => <JadwalCard key={item.id} item={item} onEdit={openEdit} onDelete={handleDelete} color={tabInfo.color} />)}
+                  {upcoming.map(item => <JadwalCard key={item.id} item={item} onEdit={openEdit} onDelete={handleDelete} color={gradColor} />)}
                 </div>
               </div>
             )}
@@ -140,7 +199,7 @@ export default function JadwalPage() {
               <div>
                 <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Sudah Lewat</h2>
                 <div className="space-y-3 opacity-60">
-                  {past.map(item => <JadwalCard key={item.id} item={item} onEdit={openEdit} onDelete={handleDelete} color={tabInfo.color} />)}
+                  {past.map(item => <JadwalCard key={item.id} item={item} onEdit={openEdit} onDelete={handleDelete} color={gradColor} />)}
                 </div>
               </div>
             )}
@@ -189,7 +248,7 @@ export default function JadwalPage() {
             <div className="flex gap-3 mt-6">
               <button onClick={() => setShowModal(false)} className="flex-1 py-2 rounded-xl border border-white/10 text-slate-400 hover:bg-white/5 text-sm transition">Batal</button>
               <button onClick={handleSave} disabled={saving}
-                className={`flex-1 py-2 rounded-xl bg-gradient-to-r ${tabInfo.color} text-white font-medium text-sm hover:opacity-90 transition disabled:opacity-50`}>
+                className={`flex-1 py-2 rounded-xl bg-gradient-to-r ${gradColor} text-white font-medium text-sm hover:opacity-90 transition disabled:opacity-50`}>
                 {saving ? 'Menyimpan...' : 'Simpan'}
               </button>
             </div>

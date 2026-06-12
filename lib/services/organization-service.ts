@@ -18,9 +18,9 @@ export async function getAccessibleOrganizations(userId: number, role: string) {
   // 3. If administrator, get ALL organizations
   if (cleanRole === 'administrator') {
     const allOrgs = await prisma.organization.findMany({
-      select: { slug: true, nama: true }
+      select: { slug: true, nama: true, school_origin: true }
     });
-    return allOrgs.map(o => ({ slug: o.slug!, nama: o.nama }));
+    return allOrgs.map(o => ({ slug: o.slug!, nama: o.nama, school_origin: o.school_origin }));
   }
   
   // Combine slugs and fetch details
@@ -30,8 +30,8 @@ export async function getAccessibleOrganizations(userId: number, role: string) {
     where: {
       slug: { in: allSlugs }
     },
-    select: { slug: true, nama: true }
+    select: { slug: true, nama: true, school_origin: true }
   });
   
-  return orgs.map(o => ({ slug: o.slug!, nama: o.nama }));
+  return orgs.map(o => ({ slug: o.slug!, nama: o.nama, school_origin: o.school_origin }));
 }

@@ -52,28 +52,34 @@ export default function MembersClient({ slug }: Props) {
         fetchJsonCachedUrl<{ success: boolean; data: any[] }>(`/api/organizations?mode=mine`)
       ])
       
-      setMembers(membersJson.data || [])
+      if (membersJson && membersJson.data) {
+        setMembers(membersJson.data)
+      }
       
-      if (orgsJson.success && orgsJson.data) {
+      if (orgsJson && orgsJson.success && orgsJson.data) {
         const currentOrg = orgsJson.data.find((o: any) => o.slug === slug)
         if (currentOrg) {
-          setSchoolOrigin(currentOrg.school_origin)
-          const vocations = currentOrg.school_origin.includes('Kesehatan') ? VOCATIONAL_KESEHATAN : VOCATIONAL_AIRLANGGA
+          setSchoolOrigin(currentOrg.school_origin || '')
+          const isKesehatan = (currentOrg.school_origin || '').includes('Kesehatan')
+          const vocations = isKesehatan ? VOCATIONAL_KESEHATAN : VOCATIONAL_AIRLANGGA
           setFVocation(vocations[0])
         }
       }
     } catch (e) {
       console.error('Failed to load data', e)
+      toast.error('Gagal memuat data anggota')
     }
     setLoading(false)
   }, [slug])
 
   useEffect(() => { load() }, [load])
 
-  const filteredMembers = members.filter(m => 
-    m.name.toLowerCase().includes(search.toLowerCase()) || 
-    (m.nis || '').includes(search)
-  )
+  const filteredMembers = useMemo(() => {
+    return members.filter(m => 
+      m.name.toLowerCase().includes(search.toLowerCase()) || 
+      (m.nis || '').includes(search)
+    )
+  }, [members, search])
 
   const currentVocations = useMemo(() => {
     return schoolOrigin.includes('Kesehatan') ? VOCATIONAL_KESEHATAN : VOCATIONAL_AIRLANGGA
@@ -122,30 +128,50 @@ export default function MembersClient({ slug }: Props) {
   }
 
   const columns = [
-    { key: 'name', label: 'Nama', render: (m: MemberData) => (
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-persian-blue/10 flex items-center justify-center text-persian-blue font-bold text-xs">
-          {m.name.charAt(0).toUpperCase()}
+    { 
+      key: 'name', 
+      label: 'Nama', 
+      render: (m: MemberData) => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-persian-blue/10 flex items-center justify-center text-persian-blue font-bold text-xs">
+            {m.name.charAt(0).toUpperCase()}
+          </div>
+          <div className="font-bold text-white text-sm">{m.name}</div>
         </div>
-        <div className="font-bold text-white text-sm">{m.name}</div>
-      </div>
-    )},
-    { key: 'nis', label: 'NIS', render: (m: MemberData) => <span className="text-xs text-slate-400 font-mono">{m.nis || '-'}</span> },
-    { key: 'class', label: 'Kelas', render: (m: MemberData) => <span className="text-xs text-slate-300 font-bold">{m.class || '-'}</span> },
-    { key: 'level', label: 'Level', render: (m: MemberData) => (
-      <div className="flex items-center gap-2">
-        <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[10px] font-black uppercase">Lvl {m.level}</span>
-        <div className="w-16 h-1 bg-white/5 rounded-full overflow-hidden">
-          <div className="h-full bg-amber-500" style={{ width: `${m.progress}%` }} />
+      )
+    },
+    { 
+      key: 'nis', 
+      label: 'NIS', 
+      render: (m: MemberData) => <span className="text-xs text-slate-400 font-mono">{m.nis || '-'}</span> 
+    },
+    { 
+      key: 'class', 
+      label: 'Kelas', 
+      render: (m: MemberData) => <span className="text-xs text-slate-300 font-bold">{m.class || '-'}</span> 
+    },
+    { 
+      key: 'level', 
+      label: 'Level', 
+      render: (m: MemberData) => (
+        <div className="flex items-center gap-2">
+          <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[10px] font-black uppercase">Lvl {m.level}</span>
+          <div className="w-16 h-1 bg-white/5 rounded-full overflow-hidden">
+            <div className="h-full bg-amber-500" style={{ width: `${m.progress}%` }} />
+          </div>
         </div>
-      </div>
-    )},
-    { key: 'actions', label: '', render: (m: MemberData) => (
-      <div className="flex gap-1">
-        <button className="btn-icon text-blue-400 hover:bg-blue-500/10"><Pencil className="w-3.5 h-3.5" /></button>
-        <button className="btn-icon text-red-400 hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" /></button>
-      </div>
-    )}
+      )
+    },
+    { 
+      key: 'actions', 
+      label: '', 
+      render: (m: MemberData) => (
+        <div className="flex gap-1">
+          <button className="btn-icon text-blue-400 hover:bg-blue-500/10"><Pencil className="w-3.5 h-3.5" /></button>
+          <button className="btn-icon text-red-400 hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" /></button>
+        </div>
+      )
+    }
   ]
 
   return (
@@ -178,7 +204,11 @@ export default function MembersClient({ slug }: Props) {
         rowKey={(m: MemberData) => m.id} 
       />
 
-      <Modal open={modalOpen} title="Tambah Anggota Baru" onClose={() => setModalOpen(false)} size="sm"
+      <Modal 
+        open={modalOpen} 
+        title="Tambah Anggota Baru" 
+        onClose={() => setModalOpen(false)} 
+        size="sm"
         footer={
           <div className="flex gap-2 justify-end">
             <button onClick={() => setModalOpen(false)} className="btn-secondary">Batal</button>
@@ -186,7 +216,8 @@ export default function MembersClient({ slug }: Props) {
               {saving ? <Loader2 className="w-4 h-4 animate-spin"/> : 'Simpan'}
             </button>
           </div>
-        }>
+        }
+      >
         <div className="space-y-4">
           <div className="form-group">
             <label className="label">Nama Lengkap *</label>

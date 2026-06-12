@@ -48,7 +48,7 @@ interface StatsData {
   totalPemasukan: number
   totalPengeluaran: number
   totalKas: number
-  orgs: string[]
+  orgs: { slug: string; nama: string; school_origin: string }[]
   leaderboardProgramming?: { id: number; nama: string; kelas: string; xp: number }[]
   leaderboardEnglish?: { id: number; nama: string; kelas: string; xp: number }[]
 }
@@ -104,23 +104,44 @@ export default function DashboardClient({ user }: Props) {
   const [quickOrg, setQuickOrg] = useState<string>('')
   const [quickName, setQuickName] = useState('')
   const [quickLevel, setQuickLevel] = useState('X')
-  const [quickSchool, setQuickSchool] = useState<'Skarla' | 'Skakes'>('Skarla')
-  const [quickMajor, setQuickMajor] = useState('PPLG')
+  const [quickMajor, setQuickMajor] = useState('')
   const [quickJabatan, setQuickJabatan] = useState('Anggota')
   const [quickLoading, setQuickLoading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const orgs = stats?.orgs || []
+  const currentOrg = orgs.find(o => o.slug === quickOrg)
+  const isKesehatan = (currentOrg?.school_origin || '').includes('Kesehatan')
+
+  const VOCATIONAL_AIRLANGGA = ['PPLG', 'AKL', 'DKV', 'MPLB 1', 'MPLB 2', 'TJKT 1', 'TJKT 2']
+  const VOCATIONAL_KESEHATAN = ['AKC 1', 'AKC 2', 'AKC 3', 'AKC 4', 'AKC 5', 'AKC 6', 'TLM', 'FARMASI']
+
+  useEffect(() => {
+    if (orgs.length > 0 && !quickOrg) {
+      setQuickOrg(orgs[0].slug)
+    }
+  }, [orgs, quickOrg])
+
+  useEffect(() => {
+    if (quickOrg) {
+      const org = orgs.find(o => o.slug === quickOrg)
+      if (org) {
+        const isK = (org.school_origin || '').includes('Kesehatan')
+        setQuickMajor(isK ? 'AKC 1' : 'PPLG')
+      }
+    }
+  }, [quickOrg, orgs])
+
   const [activeLeaderboardTab, setActiveLeaderboardTab] = useState<'programming' | 'english'>('programming')
 
   useEffect(() => {
-    if (orgs.length > 0 && !quickOrg) setQuickOrg(orgs[0])
-    if (orgs.includes('programming')) {
+    const slugs = orgs.map(o => o.slug)
+    if (slugs.includes('programming')) {
       setActiveLeaderboardTab('programming')
-    } else if (orgs.includes('english')) {
+    } else if (slugs.includes('english')) {
       setActiveLeaderboardTab('english')
     }
-  }, [orgs, quickOrg])
+  }, [orgs])
 
   async function fetchDashboardData(forceRefresh = false) {
     setLoading(true)
@@ -233,14 +254,30 @@ export default function DashboardClient({ user }: Props) {
     setQuickLoading(true)
     try {
       const finalClass = `${quickLevel} ${quickMajor}`.trim()
-      const data = [{ nama: quickName, kelas: finalClass, jabatan: quickJabatan }]
-      const res = await fetch('/api/import', {
+      
+      // Determine target API
+      let endpoint = '/api/import'
+      let body: any = { org: quickOrg, data: [{ nama: quickName, kelas: finalClass, jabatan: quickJabatan }] }
+
+      const slugs = ['programming', 'english', 'osis', 'mpk']
+      if (!slugs.includes(quickOrg)) {
+        endpoint = `/api/organizations/${quickOrg}/members`
+        body = { name: quickName, class: finalClass }
+      }
+
+      const res = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ org: quickOrg, data })
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': user.id.toString(),
+          'x-user-nama': user.nama,
+          'x-user-role': user.role,
+        },
+        body: JSON.stringify(body)
       })
       const json = await res.json()
-      if (!res.ok) throw new Error(json.error)
+      if (!res.ok) throw new Error(json.error || 'Gagal menambahkan anggota')
+      
       toast.success('Anggota berhasil ditambahkan')
       setQuickName(''); setQuickJabatan('Anggota')
       clearJsonCache()
@@ -282,10 +319,19 @@ export default function DashboardClient({ user }: Props) {
 
       if (mappedData.length === 0) throw new Error('Format kolom tidak sesuai atau file kosong. Pastikan ada kolom "Nama".')
 
-      const res = await fetch('/api/import', {
+      // Use the unified import-excel API for bulk
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('org', quickOrg)
+
+      const res = await fetch('/api/import-excel', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ org: quickOrg, data: mappedData })
+        headers: {
+          'x-user-id': user.id.toString(),
+          'x-user-nama': user.nama,
+          'x-user-role': user.role,
+        },
+        body: formData,
       })
       const apiJson = await res.json()
       if (!res.ok) throw new Error(apiJson.error)
@@ -310,41 +356,51 @@ export default function DashboardClient({ user }: Props) {
   )
 
   const statCards = stats ? ([
-    {
+    // For organization_admin, we show specific cards
+    user.role === 'organization_admin' ? {
+      label: 'Total Anggota',
+      value: stats.totalSiswa,
+      suffix: 'anggota',
+      icon: Users,
+      color: 'bg-persian-blue/10 text-persian-blue',
+    } : {
       label: 'Total Siswa Ekskul',
       value: stats.totalSiswa,
       suffix: 'siswa',
       icon: Users,
       color: 'bg-persian-blue/10 text-persian-blue',
     },
-    orgs.includes('programming') && {
+    
+    // Only show these if NOT organization_admin (they only manage dynamic ones)
+    user.role !== 'organization_admin' && orgs.some(o => o.slug === 'programming') && {
       label: 'Total Programming',
       value: stats.totalProgramming,
       suffix: 'siswa',
       icon: Users,
       color: 'bg-persian-blue/10 text-persian-blue',
     },
-    orgs.includes('english') && {
+    user.role !== 'organization_admin' && orgs.some(o => o.slug === 'english') && {
       label: 'Total English Club',
       value: stats.totalEnglish,
       suffix: 'siswa',
       icon: Users,
       color: 'bg-persian-blue/10 text-persian-blue',
     },
-    orgs.includes('osis') && {
+    user.role !== 'organization_admin' && orgs.some(o => o.slug === 'osis') && {
       label: 'Anggota OSIS',
       value: stats.totalOsis,
       suffix: 'anggota',
       icon: Users,
       color: 'bg-persian-blue/10 text-persian-blue',
     },
-    orgs.includes('mpk') && {
+    user.role !== 'organization_admin' && orgs.some(o => o.slug === 'mpk') && {
       label: 'Anggota MPK',
       value: stats.totalMpk,
       suffix: 'anggota',
       icon: Users,
       color: 'bg-persian-blue/10 text-persian-blue',
     },
+
     {
       label: 'Hadir Hari Ini',
       value: stats.hadirHariIni,
@@ -359,7 +415,7 @@ export default function DashboardClient({ user }: Props) {
       icon: Wallet,
       color: 'bg-persian-blue/10 text-persian-blue',
     },
-    {
+    user.role !== 'organization_admin' && {
       label: 'Total Pemasukan Kas',
       value: formatCurrency(stats.totalPemasukan),
       isCurrency: true,
@@ -402,11 +458,11 @@ export default function DashboardClient({ user }: Props) {
               <div className="flex gap-2 mt-3 flex-wrap">
                 {orgs.map(o => (
                   <Link 
-                    key={o} 
-                    href={['programming', 'english', 'osis', 'mpk'].includes(o) ? '#' : `/admin/organizations/${o}`}
-                    className={`text-xs font-bold bg-white/15 border border-white/25 px-2.5 py-1 rounded-lg transition-all ${['programming', 'english', 'osis', 'mpk'].includes(o) ? 'cursor-default' : 'hover:bg-white/25 hover:border-white/40 cursor-pointer'}`}
+                    key={o.slug} 
+                    href={['programming', 'english', 'osis', 'mpk'].includes(o.slug) ? '#' : `/admin/organizations/${o.slug}`}
+                    className={`text-xs font-bold bg-white/15 border border-white/25 px-2.5 py-1 rounded-lg transition-all ${['programming', 'english', 'osis', 'mpk'].includes(o.slug) ? 'cursor-default' : 'hover:bg-white/25 hover:border-white/40 cursor-pointer'}`}
                   >
-                    {ORG_LABELS[o as OrgType] || o}
+                    {ORG_LABELS[o.slug as OrgType] || o.nama}
                   </Link>
                 ))}
               </div>
@@ -460,7 +516,7 @@ export default function DashboardClient({ user }: Props) {
                 <Select
                   value={quickOrg}
                   onChange={setQuickOrg}
-                  options={orgs.map(o => ({ value: o, label: ORG_LABELS[o as OrgType] }))}
+                  options={orgs.map(o => ({ value: o.slug, label: o.nama }))}
                 />
               </div>
               <div className="form-group">
@@ -491,51 +547,22 @@ export default function DashboardClient({ user }: Props) {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="label">Pilih Sekolah</label>
-                  <Select
-                    value={quickSchool}
-                    onChange={v => {
-                      const school = v as 'Skarla' | 'Skakes'
-                      setQuickSchool(school)
-                      setQuickMajor(school === 'Skarla' ? 'PPLG' : 'FKK')
-                    }}
-                    options={[
-                      { value: 'Skarla', label: 'Skarla' },
-                      { value: 'Skakes', label: 'Skakes' },
-                    ]}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="form-group">
                   <label className="label">Kejuruan / Major</label>
                   <Select
                     value={quickMajor}
                     onChange={setQuickMajor}
-                    options={quickSchool === 'Skarla'
-                      ? [
-                          { value: 'PPLG', label: 'PPLG' }, { value: 'TJKT 1', label: 'TJKT 1' },
-                          { value: 'TJKT 2', label: 'TJKT 2' }, { value: 'DKV', label: 'DKV' },
-                          { value: 'MPLB 1', label: 'MPLB 1' }, { value: 'MPLB 2', label: 'MPLB 2' },
-                          { value: 'AKL', label: 'AKL' },
-                        ]
-                      : [
-                          { value: 'FKK', label: 'FKK' }, { value: 'AKC 1', label: 'AKC 1' },
-                          { value: 'AKC 2', label: 'AKC 2' }, { value: 'AKC 3', label: 'AKC 3' },
-                          { value: 'AKC 4', label: 'AKC 4' }, { value: 'AKC 5', label: 'AKC 5' },
-                          { value: 'AKC 6', label: 'AKC 6' }, { value: 'TLM', label: 'TLM' },
-                        ]
-                    }
+                    options={(isKesehatan ? VOCATIONAL_KESEHATAN : VOCATIONAL_AIRLANGGA).map(v => ({ value: v, label: v }))}
                   />
                 </div>
-                {(quickOrg === 'osis' || quickOrg === 'mpk') && (
-                  <div className="form-group">
-                    <label className="label">Jabatan</label>
-                    <input type="text" value={quickJabatan} onChange={e => setQuickJabatan(e.target.value)} className="input" placeholder="Anggota" />
-                  </div>
-                )}
               </div>
+
+              {(quickOrg === 'osis' || quickOrg === 'mpk') && (
+                <div className="form-group">
+                  <label className="label">Jabatan</label>
+                  <input type="text" value={quickJabatan} onChange={e => setQuickJabatan(e.target.value)} className="input" placeholder="Anggota" />
+                </div>
+              )}
+              
               <button type="submit" disabled={quickLoading} className="btn-primary w-full justify-center">
                 {quickLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Tambahkan'}
               </button>
@@ -643,7 +670,7 @@ export default function DashboardClient({ user }: Props) {
       </div>
 
       {/* ── Gamification Leaderboard ─────────────────────────── */}
-      {(orgs.includes('programming') || orgs.includes('english')) && (
+      {(orgs.some(o => o.slug === 'programming') || orgs.some(o => o.slug === 'english')) && (
         <div className="card p-5 relative overflow-hidden shadow-[0_0_20px_rgba(84,130,180,0.1)] border-t-2 border-t-[#1E90FF]">
           {/* Glowing neon bg accents */}
           <div className="absolute -top-12 -right-12 w-32 h-32 bg-persian-blue/100/10 rounded-full blur-2xl pointer-events-none" />
@@ -662,7 +689,7 @@ export default function DashboardClient({ user }: Props) {
 
             {/* Interactive Tabs */}
             <div className="flex bg-white/10 p-1 rounded-xl border border-white/10">
-              {orgs.includes('programming') && (
+              {orgs.some(o => o.slug === 'programming') && (
                 <button
                   type="button"
                   onClick={() => setActiveLeaderboardTab('programming')}
@@ -675,7 +702,7 @@ export default function DashboardClient({ user }: Props) {
                   Programming
                 </button>
               )}
-              {orgs.includes('english') && (
+              {orgs.some(o => o.slug === 'english') && (
                 <button
                   type="button"
                   onClick={() => setActiveLeaderboardTab('english')}

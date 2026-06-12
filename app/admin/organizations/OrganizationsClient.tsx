@@ -47,9 +47,15 @@ export default function OrganizationsClient({ user }: Props) {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const json = await fetchJsonCachedUrl<{ data?: OrgData[] }>('/api/organizations')
-    setOrgs(json.data || [])
-    setLoading(false)
+    try {
+      const json = await fetchJsonCachedUrl<{ data?: OrgData[] }>('/api/organizations')
+      setOrgs(json.data || [])
+    } catch (err: any) {
+      console.error('Failed to load organizations:', err)
+      toast.error(err.message || 'Gagal memuat data organisasi')
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => { load() }, [load])

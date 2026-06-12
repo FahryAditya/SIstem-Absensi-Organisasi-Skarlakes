@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAccessibleOrgs } from '@/lib/auth-shared'
+import { canAccessAmbilSiswa, getAccessibleOrgs } from '@/lib/auth-shared'
 import { createLog, getIp } from '@/lib/log'
 import * as XLSX from 'xlsx'
 import { z } from 'zod'
@@ -39,6 +39,11 @@ const reqSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const ctx = getCtx(req)
+    
+    if (!canAccessAmbilSiswa(ctx.userRole)) {
+      return NextResponse.json({ error: 'Akses ditolak: Fitur ini khusus OSIS & MPK' }, { status: 403 })
+    }
+
     const body = await req.json()
     const parsed = reqSchema.safeParse(body)
 
@@ -158,12 +163,6 @@ export async function POST(req: NextRequest) {
     }
 
     const ws = XLSX.utils.aoa_to_sheet(sheetData)
-
-    // Apply basic cell styling if possible with xlsx (limited in standard version)
-    // We will set background colors for the Organisasi cells based on their content
-    // Note: Standard 'xlsx' does not support cell styling (colors).
-    // To support colors, we would need 'xlsx-js-style' or 'exceljs'.
-    // However, I will implement the data changes first and use standard text.
 
     ws['!cols'] = [
       { wch: 6 },  // No

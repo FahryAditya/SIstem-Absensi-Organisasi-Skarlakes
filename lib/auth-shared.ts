@@ -35,6 +35,11 @@ export function canAccessMpk(role: string) {
   return r === 'administrator' || r === 'admin_osis_mpk'
 }
 
+export function canAccessAmbilSiswa(role: string) {
+  const r = (role || '').trim().toLowerCase()
+  return r === 'administrator' || r === 'admin_osis_mpk'
+}
+
 export function canManageSiswaData(role: string) {
   const r = (role || '').trim().toLowerCase()
   return r === 'administrator'

@@ -13,19 +13,9 @@ function getCtx(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   const { userId, userRole } = getCtx(req)
-  let orgs = getAccessibleOrgs(userRole)
-  
-  // Fetch linked organizations for organization_admin
-  const linkedOrgs = await prisma.organizationAdmin.findMany({
-    where: { user_id: userId },
-    include: { organization: true }
-  })
-  const linkedSlugs = linkedOrgs.map(lo => lo.organization.slug).filter(Boolean) as string[]
-  
-  // Merge linked organizations if they are not already in orgs
-  linkedSlugs.forEach(slug => {
-    if (!orgs.includes(slug)) orgs.push(slug)
-  })
+  const { getAccessibleOrganizations } = await import('@/lib/services/organization-service')
+  const accessibleOrgs = await getAccessibleOrganizations(userId, userRole)
+  const orgSlugs = accessibleOrgs.map(o => o.slug)
 
   const { searchParams } = new URL(req.url)
   const part = searchParams.get('part') || 'all'
@@ -35,11 +25,11 @@ export async function GET(req: NextRequest) {
   const start7 = subDays(today, 6)
 
   // Ekskul orgs (programming, english)
-  const ekskulOrgs = orgs.filter(o => o === 'programming' || o === 'english') as ('programming' | 'english')[]
+  const ekskulOrgs = orgSlugs.filter(o => o === 'programming' || o === 'english') as ('programming' | 'english')[]
   // Organisasi orgs (osis, mpk)
-  const orgOrgs = orgs.filter(o => o === 'osis' || o === 'mpk')
+  const orgOrgs = orgSlugs.filter(o => o === 'osis' || o === 'mpk')
 
-  const response: any = { orgs }
+  const response: any = { orgs: accessibleOrgs }
 
   if (part === 'all' || part === 'stats') {
     // Cache key: per-role (setiap role melihat data berbeda) + tanggal hari ini
@@ -115,8 +105,8 @@ export async function GET(req: NextRequest) {
           where: userRole !== 'administrator' ? { organization: { slug: { in: linkedSlugs } } } : {},
           _sum: { cash_amount: true }
         }),
-        orgs.length ? (prisma as any).pengeluaranKas.aggregate({
-          where: userRole !== 'administrator' ? { organisasi_type: { in: orgs as any[] } } : {},
+        orgSlugs.length ? (prisma as any).pengeluaranKas.aggregate({
+          where: userRole !== 'administrator' ? { organisasi_type: { in: orgSlugs as any[] } } : {},
           _sum: { nominal: true }
         }) : Promise.resolve({ _sum: { nominal: 0 } }),
         prisma.siswa.findMany({
@@ -143,10 +133,10 @@ export async function GET(req: NextRequest) {
       if (userRole === 'administrator') {
         totalSiswa = totalSiswaCount + totalOsis + totalMpk + totalMembersDynamic
       } else {
-        if (orgs.includes('programming')) totalSiswa += totalProgramming
-        if (orgs.includes('english')) totalSiswa += totalEnglish
-        if (orgs.includes('osis')) totalSiswa += totalOsis
-        if (orgs.includes('mpk')) totalSiswa += totalMpk
+        if (orgSlugs.includes('programming')) totalSiswa += totalProgramming
+        if (orgSlugs.includes('english')) totalSiswa += totalEnglish
+        if (orgSlugs.includes('osis')) totalSiswa += totalOsis
+        if (orgSlugs.includes('mpk')) totalSiswa += totalMpk
         totalSiswa += totalMembersDynamic
       }
 
@@ -209,7 +199,7 @@ export async function GET(req: NextRequest) {
           GROUP BY TO_CHAR(tanggal, 'YYYY-MM')
         ` : Promise.resolve([]),
 
-        orgs.length ? (
+        orgSlugs.length ? (
           userRole === 'administrator' 
             ? prisma.$queryRaw`
                 SELECT 
@@ -224,7 +214,7 @@ export async function GET(req: NextRequest) {
                   TO_CHAR(tanggal, 'YYYY-MM') AS bulan, 
                   SUM(nominal)::int AS total
                 FROM pengeluaran_kas
-                WHERE tanggal >= ${subMonths(startOfMonth(today), 5)} AND organisasi_type::text = ANY(${orgs})
+                WHERE tanggal >= ${subMonths(startOfMonth(today), 5)} AND organisasi_type::text = ANY(${orgSlugs})
                 GROUP BY TO_CHAR(tanggal, 'YYYY-MM')
               `
         ) : Promise.resolve([]),
