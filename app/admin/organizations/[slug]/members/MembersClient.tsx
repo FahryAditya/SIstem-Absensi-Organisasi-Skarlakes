@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import Table from '@/components/ui/Table'
 import Modal from '@/components/ui/Modal'
-import { Plus, Pencil, Trash2, Loader2, Search, Filter, Download, Upload, User, Mail, Hash, BookOpen } from 'lucide-react'
+import Select from '@/components/ui/Select'
+import { Plus, Pencil, Trash2, Loader2, Search, Download, User, Mail, Hash } from 'lucide-react'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import * as XLSX from 'xlsx'
 
@@ -23,23 +24,47 @@ interface Props {
   slug: string
 }
 
+const CLASS_LEVELS = ['X', 'XI', 'XII']
+
+const VOCATIONAL_AIRLANGGA = ['AKL', 'MPLB 1', 'MPLB 2', 'TJKT 1', 'TJKT 2', 'PPLG', 'DKV']
+const VOCATIONAL_KESEHATAN = ['AKC 1', 'AKC 2', 'AKC 3', 'AKC 4', 'AKC 5', 'AKC 6', 'TLM', 'Farmasi']
+
 export default function MembersClient({ slug }: Props) {
   const [members, setMembers] = useState<MemberData[]>([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [search, setSearch] = useState('')
+  const [schoolOrigin, setSchoolOrigin] = useState('')
 
   // Form state
   const [fName, setFName] = useState('')
   const [fNis, setFNis] = useState('')
   const [fEmail, setFEmail] = useState('')
-  const [fClass, setFClass] = useState('')
+  const [fLevel, setFLevel] = useState('X')
+  const [fVocation, setFVocation] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
-    const json = await fetchJsonCachedUrl<{ data?: MemberData[] }>(`/api/organizations/${slug}/members`)
-    setMembers(json.data || [])
+    try {
+      const [membersJson, orgsJson] = await Promise.all([
+        fetchJsonCachedUrl<{ data?: MemberData[] }>(`/api/organizations/${slug}/members`),
+        fetchJsonCachedUrl<{ success: boolean; data: any[] }>(`/api/organizations?mode=mine`)
+      ])
+      
+      setMembers(membersJson.data || [])
+      
+      if (orgsJson.success && orgsJson.data) {
+        const currentOrg = orgsJson.data.find((o: any) => o.slug === slug)
+        if (currentOrg) {
+          setSchoolOrigin(currentOrg.school_origin)
+          const vocations = currentOrg.school_origin.includes('Kesehatan') ? VOCATIONAL_KESEHATAN : VOCATIONAL_AIRLANGGA
+          setFVocation(vocations[0])
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load data', e)
+    }
     setLoading(false)
   }, [slug])
 
@@ -50,8 +75,14 @@ export default function MembersClient({ slug }: Props) {
     (m.nis || '').includes(search)
   )
 
+  const currentVocations = useMemo(() => {
+    return schoolOrigin.includes('Kesehatan') ? VOCATIONAL_KESEHATAN : VOCATIONAL_AIRLANGGA
+  }, [schoolOrigin])
+
   function openAdd() {
-    setFName(''); setFNis(''); setFEmail(''); setFClass('')
+    setFName(''); setFNis(''); setFEmail('')
+    setFLevel('X')
+    setFVocation(currentVocations[0])
     setModalOpen(true)
   }
 
@@ -59,10 +90,16 @@ export default function MembersClient({ slug }: Props) {
     if (!fName.trim()) { toast.error('Nama wajib diisi'); return }
     setSaving(true)
     try {
+      const fullClass = `${fLevel} ${fVocation}`
       const res = await fetch(`/api/organizations/${slug}/members`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: fName.trim(), nis: fNis.trim(), email: fEmail.trim(), class: fClass.trim() })
+        body: JSON.stringify({ 
+          name: fName.trim(), 
+          nis: fNis.trim(), 
+          email: fEmail.trim(), 
+          class: fullClass 
+        })
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Gagal menyimpan')
@@ -153,23 +190,44 @@ export default function MembersClient({ slug }: Props) {
         <div className="space-y-4">
           <div className="form-group">
             <label className="label">Nama Lengkap *</label>
-            <div className="relative"><User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/>
-              <input value={fName} onChange={e => setFName(e.target.value)} placeholder="Misal: Ahmad Dani" className="input pl-10" autoFocus /></div>
+            <div className="relative">
+              <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/>
+              <input value={fName} onChange={e => setFName(e.target.value)} placeholder="Misal: Ahmad Dani" className="input pl-10" autoFocus />
+            </div>
           </div>
           <div className="form-group">
             <label className="label">NIS (Opsional)</label>
-            <div className="relative"><Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/>
-              <input value={fNis} onChange={e => setFNis(e.target.value)} placeholder="Nomor Induk Siswa" className="input pl-10" /></div>
+            <div className="relative">
+              <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/>
+              <input value={fNis} onChange={e => setFNis(e.target.value)} placeholder="Nomor Induk Siswa" className="input pl-10" />
+            </div>
           </div>
-          <div className="form-group">
-            <label className="label">Kelas (Opsional)</label>
-            <div className="relative"><BookOpen className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/>
-              <input value={fClass} onChange={e => setFClass(e.target.value)} placeholder="Misal: X RPL 1" className="input pl-10" /></div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <div className="form-group">
+              <label className="label">Kelas</label>
+              <Select 
+                value={fLevel}
+                onChange={setFLevel}
+                options={CLASS_LEVELS.map(l => ({ value: l, label: l }))}
+              />
+            </div>
+            <div className="form-group">
+              <label className="label">Kejuruan</label>
+              <Select 
+                value={fVocation}
+                onChange={setFVocation}
+                options={currentVocations.map(v => ({ value: v, label: v }))}
+              />
+            </div>
           </div>
+
           <div className="form-group">
             <label className="label">Email (Opsional)</label>
-            <div className="relative"><Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/>
-              <input value={fEmail} onChange={e => setFEmail(e.target.value)} placeholder="email@sekolah.sch.id" className="input pl-10" /></div>
+            <div className="relative">
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/>
+              <input value={fEmail} onChange={e => setFEmail(e.target.value)} placeholder="email@sekolah.sch.id" className="input pl-10" />
+            </div>
           </div>
         </div>
       </Modal>
