@@ -32,7 +32,7 @@ interface AntrianItem {
 }
 
 interface Props {
-  user: { id: number; nama: string; email: string; role: string }
+  user: { id: number; nama: string; email: string; role: string; activeOrgId?: number; orgIds: number[] }
 }
 
 const orgLabelMap: Record<string, string> = {

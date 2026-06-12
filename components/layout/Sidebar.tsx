@@ -8,8 +8,8 @@ import { ROLE_LABELS } from '@/lib/auth-shared'
 import Image from 'next/image'
 import {
   LayoutDashboard, Users, ClipboardList, Building2, UserCog, Mail,
-  Download, ScrollText, GraduationCap, X, ChevronRight, Wallet, HandCoins, Database, MessagesSquare, QrCode, UserX, Megaphone, BarChart3,
-  Trophy, Star, BookOpen, CalendarDays, ClipboardCheck, Zap, LayoutGrid
+  Download, GraduationCap, X, Wallet, HandCoins, Database, ScrollText, Megaphone,
+  Trophy, BookOpen, CalendarDays, ClipboardCheck, Zap
 } from 'lucide-react'
 import AnimatedList from '../AnimatedList'
 
@@ -26,10 +26,10 @@ type SidebarItem =
   | { type: 'section'; label: string }
   | { type: 'link'; label: string; href: string; icon: any; status?: string; target?: string }
 
-function getFlattenedNavItems(role: string, isCollapsed: boolean, myOrgs: { slug: string; nama: string }[]): SidebarItem[] {
+function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[] {
   const items: SidebarItem[] = []
   
-  items.push({ type: 'logo', label: 'Sistem Ekstrakurikuler', version: 'V 18.5.10 Artemis Series ( Stable ) ' })
+  items.push({ type: 'logo', label: 'Sistem Ekstrakurikuler', version: 'V 20.6.12 Pro Series' })
   
   if (!isCollapsed) {
     items.push({ type: 'badge', role })
@@ -40,61 +40,30 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean, myOrgs: { slug
   items.push({ type: 'link', href: '/leaderboard', label: 'Leaderboard', icon: Trophy })
 
   items.push({ type: 'section', label: 'Kegiatan' })
-  items.push({ type: 'link', href: '/materi', label: role === 'admin_osis_mpk' ? 'Jadwal Rapat' : 'Materi Hari Ini', icon: BookOpen })
-  items.push({ type: 'link', href: '/jadwal', label: role === 'admin_osis_mpk' ? 'Pembawa Materi' : 'Jadwal Pengajar', icon: CalendarDays })
-  items.push({ type: 'link', href: '/laporan', label: 'Laporan Statistik', icon: BarChart3 })
+  items.push({ type: 'link', href: '/materi', label: 'Materi Hari Ini', icon: BookOpen })
+  items.push({ type: 'link', href: '/jadwal', label: 'Jadwal Kegiatan', icon: CalendarDays })
   items.push({ type: 'link', href: '/absensi', label: 'Absensi & Kas', icon: ClipboardList })
   items.push({ type: 'link', href: '/rekap-absensi', label: 'Rekap Absensi', icon: ClipboardCheck })
   items.push({ type: 'link', href: '/kas', label: 'Buku Kas', icon: Wallet })
   items.push({ type: 'link', href: '/pengeluaran', label: 'Pengeluaran Kas', icon: HandCoins })
 
-  if (role === 'administrator' || role === 'admin_programming' || role === 'admin_english' || role === 'organization_admin') {
-    items.push({ type: 'section', label: 'Ekstrakurikuler' })
-    if (role === 'administrator' || role === 'admin_programming') {
-      items.push({ type: 'link', href: '/siswa?org=programming', label: 'Siswa Programming', icon: Users })
-    }
-    if (role === 'administrator' || role === 'admin_english') {
-      items.push({ type: 'link', href: '/siswa?org=english', label: 'Siswa English', icon: Users })
-    }
-    
-    // Dynamic Organizations for organization_admin
-    if (role === 'organization_admin') {
-      myOrgs.forEach(org => {
-        items.push({ type: 'link', href: `/admin/organizations/${org.slug}`, label: `Dashboard ${org.nama}`, icon: LayoutDashboard })
-        items.push({ type: 'link', href: `/admin/organizations/${org.slug}/members`, label: `Anggota ${org.nama}`, icon: Users })
-      })
-    } else if (role === 'administrator') {
-      items.push({ type: 'link', href: '/admin/organizations', label: 'Kelola Unit', icon: Building2 })
-    }
-  }
-
-  if (role === 'administrator' || role === 'admin_osis_mpk') {
-    items.push({ type: 'section', label: 'Organisasi' })
-    items.push({ type: 'link', href: '/organisasi?org=osis', label: 'OSIS', icon: Building2 })
-    items.push({ type: 'link', href: '/organisasi?org=mpk', label: 'MPK', icon: Building2 })
-    items.push({ type: 'link', href: '/wawancara', label: 'Wawancara OSIS & MPK', icon: MessagesSquare })
-  }
+  items.push({ type: 'section', label: 'Manajemen Anggota' })
+  items.push({ type: 'link', href: '/siswa', label: 'Daftar Anggota', icon: Users })
+  items.push({ type: 'link', href: '/registration', label: 'Pendaftaran', icon: ClipboardList })
 
   items.push({ type: 'section', label: 'Tools' })
-  items.push({ type: 'link', href: '/admin/email', label: 'Pengumuman', icon: Mail })
-  items.push({ type: 'link', href: '/admin/exp', label: 'Kelola EXP', icon: Zap })
-  if (role === 'administrator') {
-    items.push({ type: 'link', href: '/admin', label: 'Kelola User', icon: UserCog })
-  }
-  items.push({ type: 'link', href: '/import', label: 'Import Excel', icon: Download })
+  items.push({ type: 'link', href: '/admin/email', label: 'Kirim Pengumuman', icon: Mail })
+  items.push({ type: 'link', href: '/admin/exp', label: 'Kelola XP', icon: Zap })
+  items.push({ type: 'link', href: '/import', label: 'Import Data', icon: Download })
   items.push({ type: 'link', href: '/export', label: 'Export Data', icon: Download })
   
-  const { canAccessAmbilSiswa } = require('@/lib/auth-shared')
-  if (canAccessAmbilSiswa(role)) {
-    items.push({ type: 'link', href: '/ambil-siswa', label: 'Ambil Siswa', icon: ScrollText })
-  }
-  
-  if (role === 'administrator') {
+  if (role === 'SUPER_ADMIN') {
+    items.push({ type: 'section', label: 'Administrator Utama' })
+    items.push({ type: 'link', href: '/admin/organizations', label: 'Manajemen Organisasi', icon: Building2 })
+    items.push({ type: 'link', href: '/admin', label: 'Manajemen User', icon: UserCog })
     items.push({ type: 'link', href: '/update-sistem', label: 'Update Sistem', icon: Megaphone })
-    items.push({ type: 'link', href: '/qr-code', label: 'QR Code Wawancara', icon: QrCode })
-    items.push({ type: 'link', href: '/hapus-peserta', label: 'Hapus Peserta Wawancara', icon: UserX })
     items.push({ type: 'link', href: '/log', label: 'Log Aktivitas', icon: ScrollText })
-    items.push({ type: 'link', href: '/api/admin/backup', label: 'Backup SQL', icon: Database, target: '_blank' })
+    items.push({ type: 'link', href: '/api/admin/backup', label: 'Backup Database', icon: Database, target: '_blank' })
   }
 
   return items
@@ -102,11 +71,8 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean, myOrgs: { slug
 
 function RoleBadge({ role }: { role: string }) {
   const colors: Record<string, string> = {
-    administrator: 'bg-persian-blue border-white/20 text-white font-extrabold',
-    admin_programming: 'bg-unit-programming/20 border-unit-programming/30 text-unit-programming font-extrabold',
-    admin_english: 'bg-unit-english/20 border-unit-english/30 text-blue-400 font-extrabold',
-    admin_osis_mpk: 'bg-unit-osis/20 border-unit-osis/30 text-unit-osis font-extrabold',
-    organization_admin: 'bg-amber-500/20 border-amber-500/30 text-amber-500 font-extrabold',
+    SUPER_ADMIN: 'bg-persian-blue border-white/20 text-white font-extrabold',
+    ORG_ADMIN: 'bg-amber-500/20 border-amber-500/30 text-amber-500 font-extrabold',
   }
   return (
     <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold ${colors[role] || 'bg-white/5 border-white/10 text-white'}`}>
@@ -119,24 +85,9 @@ function RoleBadge({ role }: { role: string }) {
 export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: SidebarProps) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const cleanRole = (user.role || '').trim().toLowerCase()
-  
-  const [myOrgs, setMyOrgs] = React.useState<{ slug: string; nama: string }[]>([])
+  const role = user.role as string
 
-  React.useEffect(() => {
-    if (cleanRole === 'organization_admin') {
-      fetch('/api/organizations?mode=mine')
-        .then(res => res.json())
-        .then(json => {
-          if (json.success && json.data) {
-            setMyOrgs(json.data)
-          }
-        })
-        .catch(err => console.error('Failed to fetch my orgs', err))
-    }
-  }, [cleanRole])
-
-  const navItems = getFlattenedNavItems(cleanRole, !!isCollapsed, myOrgs)
+  const navItems = getFlattenedNavItems(role, !!isCollapsed)
   const routeKey = searchParams.size > 0 ? `${pathname}?${searchParams.toString()}` : pathname
 
   const isActive = (href: string) => {
@@ -231,7 +182,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
 
        <div className="px-4 py-4 border-t border-white/10 flex-shrink-0 bg-deep-navy/80 backdrop-blur-sm">
         <div className="flex items-center gap-2.5">
-          {cleanRole === 'administrator' ? (
+          {role === 'SUPER_ADMIN' ? (
             <div className="relative w-8 h-8 rounded-full overflow-hidden shadow-sm border border-white/10 flex-shrink-0">
               <Image 
                 src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" 

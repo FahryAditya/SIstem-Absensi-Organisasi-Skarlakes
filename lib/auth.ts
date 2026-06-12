@@ -3,7 +3,21 @@ import { cookies } from 'next/headers'
 import { NextRequest } from 'next/server'
 import { SessionUser } from './auth-shared'
 
-export * from './auth-shared'
+export { 
+  isSuperAdmin, 
+  isOrgAdmin, 
+  canManageSystem, 
+  canManageMembers,
+  isAdministrator,
+  getAccessibleOrgs,
+  canAccessOsis,
+  canAccessMpk,
+  canAccessProgramming,
+  canAccessEnglish,
+  canAccessAmbilSiswa,
+  canManageSiswaData,
+  canManageSiswaEkskul
+} from './auth-shared'
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'fallback-secret-change-this'

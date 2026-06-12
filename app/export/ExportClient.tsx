@@ -9,7 +9,7 @@ import { format, startOfMonth } from 'date-fns'
 import Select from '@/components/ui/Select'
 
 interface Props {
-  user: { id: number; nama: string; email: string; role: string }
+  user: { id: number; nama: string; email: string; role: string; activeOrgId?: number; orgIds: number[] }
 }
 
 type ExportType = 'absensi' | 'kas' | 'kehadiran' | 'absensi_kehadiran' | 'semua'

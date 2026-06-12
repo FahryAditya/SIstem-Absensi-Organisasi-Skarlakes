@@ -1,23 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
-import { canManageSiswaData, canManageSiswaEkskul } from '@/lib/auth-shared'
 import { z } from 'zod'
-export const dynamic = 'force-dynamic'
-
-let isSiswaSchemaChecked = false
-
-async function ensureSiswaColumns() {
-  // Schema is now assumed to be managed or verified via migration.
-  // Dynamic column checking removed to prevent runtime overhead and potential errors.
-  return
-}
 
 function getCtx(req: NextRequest) {
   return {
     userId: parseInt(req.headers.get('x-user-id') || '0'),
     userNama: req.headers.get('x-user-nama') || '',
-    userRole: (req.headers.get('x-user-role') || '').trim(),
+    userRole: req.headers.get('x-user-role') || '',
+    activeOrgId: req.headers.get('x-active-org-id') ? parseInt(req.headers.get('x-active-org-id')!) : undefined
   }
 }
 
@@ -26,176 +17,143 @@ const schema = z.object({
     (val) => !val || /^\d+$/.test(val),
     'NIS hanya boleh berisi angka'
   ),
-  nama: z.string().min(1, 'Nama wajib diisi').regex(
+  name: z.string().min(1, 'Nama wajib diisi').regex(
     /^[a-zA-Z\s.'']*$/,
     'Nama hanya boleh berisi huruf'
   ),
-  kelas: z.string().nullable().optional(),
+  class: z.string().nullable().optional(),
   email: z.string().email('Email tidak valid').nullable().optional(),
-  foto_url: z.string().url('URL foto tidak valid').nullable().optional(),
-  ekskul: z.enum(['programming', 'english']),
+  jabatan: z.string().nullable().optional(),
+  status: z.string().default('ACTIVE'),
 })
 
 export async function GET(req: NextRequest) {
-  try {
-    await ensureSiswaColumns()
-    const { userRole } = getCtx(req)
-    const { searchParams } = new URL(req.url)
+  const { userRole, activeOrgId } = getCtx(req)
+  const { searchParams } = new URL(req.url)
 
-    const ekskul = searchParams.get('ekskul') as 'programming' | 'english' | null
-    const search = searchParams.get('search') || ''
-    const includeAlumni = searchParams.get('includeAlumni') === 'true'
-    
-    let page = parseInt(searchParams.get('page') || '1')
-    let limit = parseInt(searchParams.get('limit') || '10')
-    if (isNaN(page) || page < 1) page = 1
-    if (isNaN(limit) || limit < 1) limit = 10
+  const filterOrgId = userRole === 'SUPER_ADMIN' ? (searchParams.get('orgId') ? parseInt(searchParams.get('orgId')!) : activeOrgId) : activeOrgId
 
-    // Role check
-    const accessible: ('programming' | 'english')[] = canManageSiswaData(userRole) ? ['programming', 'english'] : []
-    let ekskulFilter: ('programming' | 'english')[] = accessible
-    if (ekskul && accessible.includes(ekskul)) ekskulFilter = [ekskul]
-
-    if (ekskulFilter.length === 0) {
-      return NextResponse.json({ data: [], total: 0, page, totalPages: 0 })
-    }
-
-    const where = {
-      ekskul: { in: ekskulFilter },
-      status: includeAlumni && canManageSiswaData(userRole) ? undefined : 'ACTIVE',
-      ...(search ? { nama: { contains: search, mode: 'insensitive' as any } } : {}),
-    }
-
-    const [data, total] = await Promise.all([
-      prisma.siswa.findMany({
-        where,
-        orderBy: [{ ekskul: 'asc' }, { nama: 'asc' }],
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      prisma.siswa.count({ where }),
-    ])
-
-    return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / limit) })
-  } catch (error: any) {
-    console.error('GET siswa error:', error)
-    return NextResponse.json({ error: 'Gagal memuat data siswa: ' + error.message }, { status: 500 })
+  if (!filterOrgId && userRole !== 'SUPER_ADMIN') {
+    return NextResponse.json({ error: 'No active organization selected' }, { status: 400 })
   }
+
+  const search = searchParams.get('search') || ''
+  const status = searchParams.get('status') || 'ACTIVE'
+  
+  let page = parseInt(searchParams.get('page') || '1')
+  let limit = parseInt(searchParams.get('limit') || '10')
+  if (isNaN(page) || page < 1) page = 1
+  if (isNaN(limit) || limit < 1) limit = 10
+
+  const where: any = {
+    ...(filterOrgId ? { organization_id: filterOrgId } : {}),
+    status,
+    ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
+  }
+
+  const [data, total] = await Promise.all([
+    prisma.member.findMany({
+      where,
+      orderBy: { name: 'asc' },
+      skip: (page - 1) * limit,
+      take: limit,
+      include: { organization: { select: { nama: true, slug: true } } }
+    }),
+    prisma.member.count({ where }),
+  ])
+
+  return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / limit) })
 }
 
 export async function POST(req: NextRequest) {
   const ctx = getCtx(req)
+  const activeOrgId = ctx.activeOrgId
+
+  if (!activeOrgId) {
+    return NextResponse.json({ error: 'No active organization selected' }, { status: 400 })
+  }
+
   const body = await req.json()
   const parsed = schema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
 
-  const { ekskul } = parsed.data
-  if (!canManageSiswaEkskul(ctx.userRole, ekskul))
-    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+  const nameTrimmed = parsed.data.name.trim()
 
-  // ── Cegah duplikat: cek nama yang sama (case-insensitive) di ekskul yang sama ──
-  const namaTrimmed = parsed.data.nama.trim()
-
-  const duplikat = await prisma.siswa.findFirst({
+  // Prevent duplicates in same organization
+  const duplikat = await prisma.member.findFirst({
     where: {
-      ekskul,
-      nama: { equals: namaTrimmed, mode: 'insensitive' },
+      organization_id: activeOrgId,
+      name: { equals: nameTrimmed, mode: 'insensitive' },
     },
   })
 
   if (duplikat) {
     return NextResponse.json(
-      { error: `Siswa "${duplikat.nama}" sudah terdaftar di ekskul ${ekskul}. Gunakan nama yang berbeda atau periksa data yang sudah ada.` },
+      { error: `Anggota "${duplikat.name}" sudah terdaftar di organisasi ini.` },
       { status: 409 }
     )
   }
 
-  // ── Cek duplikat NIS jika NIS diisi ──────────────────────────────────────
-  if (parsed.data.nis && parsed.data.nis.trim() !== '') {
-    const duplikatNis = await prisma.siswa.findFirst({
-      where: { ekskul, nis: parsed.data.nis.trim() },
-    })
-    if (duplikatNis) {
-      return NextResponse.json(
-        { error: `NIS "${parsed.data.nis}" sudah digunakan oleh siswa "${duplikatNis.nama}" di ekskul ${ekskul}.` },
-        { status: 409 }
-      )
-    }
-  }
-
-  const siswa = await prisma.siswa.create({
-    data: { ...parsed.data, nama: namaTrimmed, created_by: ctx.userId },
+  const member = await prisma.member.create({
+    data: { 
+      ...parsed.data, 
+      name: nameTrimmed, 
+      organization_id: activeOrgId 
+    },
   })
 
   await createLog({
-    userId: ctx.userId, userNama: ctx.userNama, aksi: 'CREATE',
-    tabel: 'siswa', recordId: siswa.id,
-    deskripsi: `${ctx.userNama} menambahkan siswa "${siswa.nama}" ke ${ekskul}`,
+    userId: ctx.userId, 
+    userNama: ctx.userNama, 
+    aksi: 'CREATE',
+    organizationId: activeOrgId,
+    tabel: 'members', 
+    recordId: member.id,
+    deskripsi: `Menambahkan anggota "${member.name}"`,
     dataBaru: { ...parsed.data },
     ipAddress: getIp(req),
   })
 
-  return NextResponse.json({ data: siswa }, { status: 201 })
+  return NextResponse.json({ data: member }, { status: 201 })
 }
 
 export async function PUT(req: NextRequest) {
   const ctx = getCtx(req)
+  const activeOrgId = ctx.activeOrgId
   const body = await req.json()
   const { id, ...rest } = body
-  if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
 
-  const existing = await prisma.siswa.findUnique({ where: { id } })
+  if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
+  if (!activeOrgId && ctx.userRole !== 'SUPER_ADMIN') return NextResponse.json({ error: 'No active organization' }, { status: 400 })
+
+  const existing = await prisma.member.findUnique({ where: { id } })
   if (!existing) return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
 
-  if (!canManageSiswaEkskul(ctx.userRole, existing.ekskul))
+  // Verify ownership unless super admin
+  if (ctx.userRole !== 'SUPER_ADMIN' && existing.organization_id !== activeOrgId) {
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+  }
 
   const parsed = schema.safeParse({ ...existing, ...rest })
   if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
-  if (!canManageSiswaEkskul(ctx.userRole, parsed.data.ekskul))
-    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
 
-  const namaTrimmed = parsed.data.nama.trim()
+  const nameTrimmed = parsed.data.name.trim()
 
-  // ── Cegah duplikat nama saat update (kecuali record sendiri) ─────────────
-  const duplikat = await prisma.siswa.findFirst({
-    where: {
-      ekskul: parsed.data.ekskul,
-      nama: { equals: namaTrimmed, mode: 'insensitive' },
-      NOT: { id },
-    },
-  })
-  if (duplikat) {
-    return NextResponse.json(
-      { error: `Siswa "${duplikat.nama}" sudah terdaftar di ekskul ${parsed.data.ekskul}.` },
-      { status: 409 }
-    )
-  }
-
-  // ── Cek duplikat NIS saat update ─────────────────────────────────────────
-  if (parsed.data.nis && parsed.data.nis.trim() !== '') {
-    const duplikatNis = await prisma.siswa.findFirst({
-      where: { ekskul: parsed.data.ekskul, nis: parsed.data.nis.trim(), NOT: { id } },
-    })
-    if (duplikatNis) {
-      return NextResponse.json(
-        { error: `NIS "${parsed.data.nis}" sudah digunakan oleh siswa "${duplikatNis.nama}".` },
-        { status: 409 }
-      )
-    }
-  }
-
-  const updated = await prisma.siswa.update({
+  const updated = await prisma.member.update({
     where: { id },
-    data: { ...parsed.data, nama: namaTrimmed },
+    data: { ...parsed.data, name: nameTrimmed },
   })
 
   await createLog({
-    userId: ctx.userId, userNama: ctx.userNama, aksi: 'UPDATE',
-    tabel: 'siswa', recordId: id,
-    deskripsi: `${ctx.userNama} mengubah data siswa "${updated.nama}"`,
-    dataLama: { nama: existing.nama, kelas: existing.kelas, nis: existing.nis },
-    dataBaru: { nama: updated.nama, kelas: updated.kelas, nis: updated.nis },
+    userId: ctx.userId, 
+    userNama: ctx.userNama, 
+    aksi: 'UPDATE',
+    organizationId: existing.organization_id,
+    tabel: 'members', 
+    recordId: id,
+    deskripsi: `Mengubah data anggota "${updated.name}"`,
+    dataLama: { name: existing.name, class: existing.class, nis: existing.nis },
+    dataBaru: { name: updated.name, class: updated.class, nis: updated.nis },
     ipAddress: getIp(req),
   })
 
@@ -206,47 +164,30 @@ export async function DELETE(req: NextRequest) {
   const ctx = getCtx(req)
   const { searchParams } = new URL(req.url)
   const idStr = searchParams.get('id')
-  const idsStr = searchParams.get('ids')
+  
+  if (!idStr) return NextResponse.json({ error: 'ID required' }, { status: 400 })
+  const id = parseInt(idStr)
 
-  let idsToDelete: number[] = []
+  const existing = await prisma.member.findUnique({ where: { id } })
+  if (!existing) return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
 
-  if (idStr) {
-    const id = parseInt(idStr)
-    if (id) idsToDelete.push(id)
-  } else if (idsStr) {
-    idsToDelete = idsStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n))
+  if (ctx.userRole !== 'SUPER_ADMIN' && existing.organization_id !== ctx.activeOrgId) {
+    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
   }
 
-  if (idsToDelete.length === 0) return NextResponse.json({ error: 'ID required' }, { status: 400 })
+  await prisma.member.delete({ where: { id } })
 
-  const existingRecords = await prisma.siswa.findMany({ where: { id: { in: idsToDelete } } })
-  if (existingRecords.length === 0) return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
-
-  for (const existing of existingRecords) {
-    if (!canManageSiswaEkskul(ctx.userRole, existing.ekskul))
-      return NextResponse.json({ error: `Akses ditolak untuk data ${existing.nama}` }, { status: 403 })
-  }
-
-  await prisma.siswa.deleteMany({ where: { id: { in: idsToDelete } } })
-
-  if (idsToDelete.length === 1) {
-    const existing = existingRecords[0]
-    await createLog({
-      userId: ctx.userId, userNama: ctx.userNama, aksi: 'DELETE',
-      tabel: 'siswa', recordId: existing.id,
-      deskripsi: `${ctx.userNama} menghapus siswa "${existing.nama}" dari ${existing.ekskul}`,
-      dataLama: { nama: existing.nama, ekskul: existing.ekskul },
-      ipAddress: getIp(req),
-    })
-  } else {
-    await createLog({
-      userId: ctx.userId, userNama: ctx.userNama, aksi: 'DELETE',
-      tabel: 'siswa', recordId: 0,
-      deskripsi: `${ctx.userNama} menghapus ${idsToDelete.length} data siswa sekaligus`,
-      dataLama: { count: idsToDelete.length, ids: idsToDelete },
-      ipAddress: getIp(req),
-    })
-  }
+  await createLog({
+    userId: ctx.userId, 
+    userNama: ctx.userNama, 
+    aksi: 'DELETE',
+    organizationId: existing.organization_id,
+    tabel: 'members', 
+    recordId: id,
+    deskripsi: `Menghapus anggota "${existing.name}"`,
+    dataLama: { name: existing.name },
+    ipAddress: getIp(req),
+  })
 
   return NextResponse.json({ success: true })
 }

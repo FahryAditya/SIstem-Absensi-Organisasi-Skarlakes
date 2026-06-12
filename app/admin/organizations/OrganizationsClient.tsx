@@ -29,7 +29,7 @@ interface OrgData {
 }
 
 interface Props {
-  user: { id: number; nama: string; email: string; role: string }
+  user: { id: number; nama: string; email: string; role: string; activeOrgId?: number; orgIds: number[] }
 }
 
 export default function OrganizationsClient({ user }: Props) {

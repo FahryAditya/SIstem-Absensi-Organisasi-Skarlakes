@@ -28,7 +28,7 @@ interface UserData {
     }
   }[];
 }
-interface Props { user: { id: number; nama: string; email: string; role: string } }
+interface Props { user: { id: number; nama: string; email: string; role: string; activeOrgId?: number; orgIds: number[] } }
 
 export default function AdminClient({ user }: Props) {
   const router = useRouter()

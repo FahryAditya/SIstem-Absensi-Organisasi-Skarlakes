@@ -35,7 +35,14 @@ const LineChart = dynamic<any>(() => import('recharts').then(mod => mod.LineChar
 const Line = dynamic<any>(() => import('recharts').then(mod => mod.Line) as any, { ssr: false })
 
 interface Props {
-  user: { id: number; nama: string; email: string; role: string }
+  user: { 
+    id: number; 
+    nama: string; 
+    email: string; 
+    role: string; 
+    activeOrgId?: number; 
+    orgIds: number[] 
+  }
 }
 
 interface StatsData {

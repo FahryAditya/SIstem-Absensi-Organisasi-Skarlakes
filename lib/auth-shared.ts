@@ -2,68 +2,78 @@ export interface SessionUser {
   id: number
   nama: string
   email: string
-  role: string
+  role: 'SUPER_ADMIN' | 'ORG_ADMIN'
+  activeOrgId?: number // The organization the user is currently managing
+  orgIds: number[]     // All organizations the user has access to
 }
 
 // Role labels
 export const ROLE_LABELS: Record<string, string> = {
-  administrator: 'Administrator',
-  organization_admin: 'Organization Admin',
-  admin_programming: 'Admin Programming',
-  admin_english: 'Admin English Club',
-  admin_osis_mpk: 'Admin OSIS & MPK',
+  SUPER_ADMIN: 'Super Administrator',
+  ORG_ADMIN: 'Organization Admin',
 }
 
-// Permission helpers
-export function canAccessProgramming(role: string) {
-  const r = (role || '').trim().toLowerCase()
-  return r === 'administrator' || r === 'admin_programming'
+export function isSuperAdmin(role: string) {
+  return role === 'SUPER_ADMIN'
 }
 
-export function canAccessEnglish(role: string) {
-  const r = (role || '').trim().toLowerCase()
-  return r === 'administrator' || r === 'admin_english'
+export function isOrgAdmin(role: string) {
+  return role === 'ORG_ADMIN' || role === 'SUPER_ADMIN' || role === 'organization_admin'
 }
 
-export function canAccessOsis(role: string) {
-  const r = (role || '').trim().toLowerCase()
-  return r === 'administrator' || r === 'admin_osis_mpk'
+export function canManageSystem(role: string) {
+  return role === 'SUPER_ADMIN' || role === 'administrator'
 }
 
-export function canAccessMpk(role: string) {
-  const r = (role || '').trim().toLowerCase()
-  return r === 'administrator' || r === 'admin_osis_mpk'
+export function canManageMembers(role: string) {
+  return isOrgAdmin(role)
 }
 
-export function canAccessAmbilSiswa(role: string) {
-  const r = (role || '').trim().toLowerCase()
-  return r === 'administrator' || r === 'admin_osis_mpk'
-}
-
-export function canManageSiswaData(role: string) {
-  const r = (role || '').trim().toLowerCase()
-  return r === 'administrator'
-    || r === 'admin_programming'
-    || r === 'admin_english'
-    || r === 'admin_osis_mpk'
-}
-
-export function canManageSiswaEkskul(role: string, ekskul: string) {
-  return canManageSiswaData(role) && (ekskul === 'programming' || ekskul === 'english')
-}
+// --- COMPATIBILITY SHIMS (For Legacy Code) ---
 
 export function isAdministrator(role: string) {
-  const r = (role || '').trim().toLowerCase()
-  return r === 'administrator'
+  return role === 'SUPER_ADMIN' || role === 'administrator'
 }
 
 export function getAccessibleOrgs(role: string): string[] {
-  const cleanRole = (role || '').trim().toLowerCase()
-  switch (cleanRole) {
-    case 'administrator':      return ['programming', 'english', 'osis', 'mpk']
-    case 'admin_programming':  return ['programming']
-    case 'admin_english':      return ['english']
-    case 'admin_osis_mpk':     return ['osis', 'mpk']
-    default:                   return []
-  }
+  const r = (role || '').trim()
+  if (r === 'SUPER_ADMIN' || r === 'administrator') return ['programming', 'english', 'osis', 'mpk']
+  if (r === 'admin_programming') return ['programming']
+  if (r === 'admin_english') return ['english']
+  if (r === 'admin_osis_mpk') return ['osis', 'mpk']
+  return []
+}
+
+export function canAccessOsis(role: string) {
+  const r = (role || '').trim()
+  return r === 'SUPER_ADMIN' || r === 'administrator' || r === 'admin_osis_mpk' || r === 'ORG_ADMIN'
+}
+
+export function canAccessMpk(role: string) {
+  return canAccessOsis(role)
+}
+
+export function canAccessProgramming(role: string) {
+  const r = (role || '').trim()
+  return r === 'SUPER_ADMIN' || r === 'administrator' || r === 'admin_programming' || r === 'ORG_ADMIN'
+}
+
+export function canAccessEnglish(role: string) {
+  const r = (role || '').trim()
+  return r === 'SUPER_ADMIN' || r === 'administrator' || r === 'admin_english' || r === 'ORG_ADMIN'
+}
+
+export function canAccessAmbilSiswa(role: string) {
+  return canAccessOsis(role)
+}
+
+export function canManageSiswaData(role: string) {
+  return isOrgAdmin(role)
+}
+
+export function canManageSiswaEkskul(role: string, ekskul: string) {
+  if (isSuperAdmin(role)) return true
+  if (ekskul === 'programming') return canAccessProgramming(role)
+  if (ekskul === 'english') return canAccessEnglish(role)
+  return isOrgAdmin(role)
 }

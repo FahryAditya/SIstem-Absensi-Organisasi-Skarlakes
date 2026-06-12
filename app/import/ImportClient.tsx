@@ -14,7 +14,7 @@ interface ImportRow {
 }
 
 interface Props {
-  user: { id: number; nama: string; email: string; role: string }
+  user: { id: number; nama: string; email: string; role: string; activeOrgId?: number; orgIds: number[] }
 }
 
 type OrgType = 'programming' | 'english' | 'osis' | 'mpk'

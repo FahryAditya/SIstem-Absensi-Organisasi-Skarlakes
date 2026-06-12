@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAccessibleOrgs } from '@/lib/auth-shared'
-import { getAccessibleOrganizations } from '@/lib/services/organization-service'
 import { createLog, getIp } from '@/lib/log'
-import { withTransaction } from '@/lib/db-transaction'
 import { z } from 'zod'
 
 function getCtx(req: NextRequest) {
@@ -11,19 +8,25 @@ function getCtx(req: NextRequest) {
     userId: parseInt(req.headers.get('x-user-id') || '0'),
     userNama: req.headers.get('x-user-nama') || '',
     userRole: req.headers.get('x-user-role') || '',
+    activeOrgId: req.headers.get('x-active-org-id') ? parseInt(req.headers.get('x-active-org-id')!) : undefined
   }
 }
 
 const schema = z.object({
-  id_anggota: z.number().int().positive(),
-  org: z.string().min(1),
-  nominal: z.number().int(), // positif untuk setor, negatif untuk tarik
-  keterangan: z.string().min(1, 'Keterangan wajib diisi'),
+  member_id: z.number().int().positive(),
+  amount: z.number().int(), // positive for income, negative for expense
+  description: z.string().min(1, 'Keterangan wajib diisi'),
 })
 
 export async function POST(req: NextRequest) {
   try {
     const ctx = getCtx(req)
+    const activeOrgId = ctx.activeOrgId
+
+    if (!activeOrgId) {
+      return NextResponse.json({ error: 'No active organization selected' }, { status: 400 })
+    }
+
     const body = await req.json()
     const parsed = schema.safeParse(body)
 
@@ -31,245 +34,85 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
     }
 
-    const { id_anggota, org, nominal, keterangan } = parsed.data
-    const accessibleOrgs = await getAccessibleOrganizations(ctx.userId, ctx.userRole)
-    const accessibleSlugs = accessibleOrgs.map(o => o.slug)
+    const { member_id, amount, description } = parsed.data
 
-    if (!accessibleSlugs.includes(org)) {
-      return NextResponse.json({ error: 'Akses ditolak untuk unit ini' }, { status: 403 })
-    }
-
-    if (nominal === 0) {
+    if (amount === 0) {
       return NextResponse.json({ error: 'Nominal tidak boleh nol' }, { status: 400 })
     }
 
-    const today = new Date()
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999)
+    // Verify member belongs to organization
+    const member = await prisma.member.findUnique({
+      where: { id: member_id, organization_id: activeOrgId }
+    })
 
-    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
-    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
-    const timeString = `${days[today.getDay()]}, ${today.getDate()} ${months[today.getMonth()]} ${today.getFullYear()} ${today.getHours().toString().padStart(2, '0')}:${today.getMinutes().toString().padStart(2, '0')}`
+    if (!member) {
+      return NextResponse.json({ error: 'Anggota tidak valid untuk organisasi ini' }, { status: 403 })
+    }
 
-    const finalKeterangan = `[${timeString}] ${keterangan}`
-
-    // ── Semua operasi baca-tulis dalam satu transaction agar tidak terjadi
-    //    double-spending akibat dua admin submit bersamaan. ──────────────────
-    let namaAnggota = ''
-
-    const isDynamicOrg = (slug: string) => !['programming', 'english', 'osis', 'mpk'].includes(slug)
-
-    await withTransaction(async (tx) => {
-      if (isDynamicOrg(org)) {
-        const organization = await tx.organization.findUnique({ where: { slug: org } })
-        if (!organization) throw new Error('INVALID_ORG')
-        
-        const member = await tx.member.findUnique({ where: { id: id_anggota } })
-        if (!member || member.organization_id !== organization.id) throw new Error('INVALID_MEMBER')
-        namaAnggota = member.name
-
-        await tx.cashTransaction.create({
-          data: {
-            organization_id: organization.id,
-            member_id: id_anggota,
-            amount: nominal,
-            description: finalKeterangan
-          }
-        })
-      } else if (org === 'programming' || org === 'english') {
-        // Validasi siswa dalam transaksi yang sama
-        const siswa = await tx.siswa.findUnique({ where: { id: id_anggota } })
-        if (!siswa || siswa.ekskul !== org) throw new Error('INVALID_SISWA')
-        namaAnggota = siswa.nama
-
-        // Cari record absensi hari ini (lock row dengan select within transaction)
-        const existing = await tx.absensi.findFirst({
-          where: { siswa_id: id_anggota, tanggal: { gte: startOfDay, lte: endOfDay } },
-        })
-
-        if (existing) {
-          // AMAN: increment atomic — tidak ada lost-update meski 2 admin bersamaan
-          await tx.absensi.update({
-            where: { id: existing.id },
-            data: {
-              uang_kas: { increment: nominal }, // ← atomic, bukan += read-then-write
-              keterangan: existing.keterangan
-                ? `${existing.keterangan} | ${finalKeterangan}`
-                : finalKeterangan,
-              updated_by: ctx.userId,
-            },
-          })
-        } else {
-          try {
-            await tx.absensi.create({
-              data: {
-                siswa_id: id_anggota,
-                tanggal: startOfDay,
-                status: 'kas_saja' as any,
-                uang_kas: nominal,
-                keterangan: finalKeterangan,
-                created_by: ctx.userId,
-              },
-            })
-          } catch (e: any) {
-            // Jika admin lain create duluan (P2002 unique constraint),
-            // fallback ke update dengan atomic increment
-            if (e?.code === 'P2002') {
-              const created = await tx.absensi.findFirst({
-                where: { siswa_id: id_anggota, tanggal: { gte: startOfDay, lte: endOfDay } },
-              })
-              if (created) {
-                await tx.absensi.update({
-                  where: { id: created.id },
-                  data: {
-                    uang_kas: { increment: nominal },
-                    keterangan: created.keterangan
-                      ? `${created.keterangan} | ${finalKeterangan}`
-                      : finalKeterangan,
-                    updated_by: ctx.userId,
-                  },
-                })
-              }
-            } else throw e
-          }
-        }
-
-      } else if (org === 'osis') {
-        const anggota = await tx.anggotaOsis.findUnique({ where: { id: id_anggota } })
-        if (!anggota) throw new Error('INVALID_ANGGOTA')
-        namaAnggota = anggota.nama
-
-        const existing = await tx.absensiOrganisasi.findFirst({
-          where: { organisasi_type: 'osis', anggota_osis_id: id_anggota, tanggal: { gte: startOfDay, lte: endOfDay } },
-        })
-
-        if (existing) {
-          await tx.absensiOrganisasi.update({
-            where: { id: existing.id },
-            data: {
-              uang_kas: { increment: nominal }, // ← atomic increment
-              keterangan: existing.keterangan
-                ? `${existing.keterangan} | ${finalKeterangan}`
-                : finalKeterangan,
-              updated_by: ctx.userId,
-            },
-          })
-        } else {
-          try {
-            await tx.absensiOrganisasi.create({
-              data: {
-                organisasi_type: 'osis',
-                anggota_osis_id: id_anggota,
-                tanggal: startOfDay,
-                status: 'kas_saja' as any,
-                uang_kas: nominal,
-                keterangan: finalKeterangan,
-                created_by: ctx.userId,
-              },
-            })
-          } catch (e: any) {
-            if (e?.code === 'P2002') {
-              const created = await tx.absensiOrganisasi.findFirst({
-                where: { organisasi_type: 'osis', anggota_osis_id: id_anggota, tanggal: { gte: startOfDay, lte: endOfDay } },
-              })
-              if (created) {
-                await tx.absensiOrganisasi.update({
-                  where: { id: created.id },
-                  data: {
-                    uang_kas: { increment: nominal },
-                    keterangan: created.keterangan
-                      ? `${created.keterangan} | ${finalKeterangan}`
-                      : finalKeterangan,
-                    updated_by: ctx.userId,
-                  },
-                })
-              }
-            } else throw e
-          }
-        }
-
-      } else if (org === 'mpk') {
-        const anggota = await tx.anggotaMpk.findUnique({ where: { id: id_anggota } })
-        if (!anggota) throw new Error('INVALID_ANGGOTA')
-        namaAnggota = anggota.nama
-
-        const existing = await tx.absensiOrganisasi.findFirst({
-          where: { organisasi_type: 'mpk', anggota_mpk_id: id_anggota, tanggal: { gte: startOfDay, lte: endOfDay } },
-        })
-
-        if (existing) {
-          await tx.absensiOrganisasi.update({
-            where: { id: existing.id },
-            data: {
-              uang_kas: { increment: nominal }, // ← atomic increment
-              keterangan: existing.keterangan
-                ? `${existing.keterangan} | ${finalKeterangan}`
-                : finalKeterangan,
-              updated_by: ctx.userId,
-            },
-          })
-        } else {
-          try {
-            await tx.absensiOrganisasi.create({
-              data: {
-                organisasi_type: 'mpk',
-                anggota_mpk_id: id_anggota,
-                tanggal: startOfDay,
-                status: 'kas_saja' as any,
-                uang_kas: nominal,
-                keterangan: finalKeterangan,
-                created_by: ctx.userId,
-              },
-            })
-          } catch (e: any) {
-            if (e?.code === 'P2002') {
-              const created = await tx.absensiOrganisasi.findFirst({
-                where: { organisasi_type: 'mpk', anggota_mpk_id: id_anggota, tanggal: { gte: startOfDay, lte: endOfDay } },
-              })
-              if (created) {
-                await tx.absensiOrganisasi.update({
-                  where: { id: created.id },
-                  data: {
-                    uang_kas: { increment: nominal },
-                    keterangan: created.keterangan
-                      ? `${created.keterangan} | ${finalKeterangan}`
-                      : finalKeterangan,
-                    updated_by: ctx.userId,
-                  },
-                })
-              }
-            } else throw e
-          }
-        }
+    const transaction = await prisma.cashTransaction.create({
+      data: {
+        organization_id: activeOrgId,
+        member_id: member_id,
+        amount: Math.abs(amount),
+        type: amount > 0 ? 'INCOME' : 'EXPENSE',
+        description: description
       }
     })
 
-    // Lempar error validasi setelah transaction selesai
-    if (!namaAnggota) {
-      return NextResponse.json({ error: 'Data anggota tidak valid' }, { status: 400 })
-    }
-
-    const actionText = nominal > 0 ? 'menambahkan' : 'mengurangi'
-    const absNominal = Math.abs(nominal)
+    const actionText = amount > 0 ? 'menambahkan' : 'mengurangi'
+    const absAmount = Math.abs(amount)
 
     await createLog({
       userId: ctx.userId,
       userNama: ctx.userNama,
       aksi: 'CREATE',
-      tabel: 'transaksi_kas',
-      recordId: id_anggota.toString(),
-      deskripsi: `${ctx.userNama} ${actionText} kas Rp ${absNominal.toLocaleString('id-ID')} untuk ${namaAnggota} (${org.toUpperCase()}). Ket: ${keterangan}`,
+      organizationId: activeOrgId,
+      tabel: 'cash_transactions',
+      recordId: transaction.id.toString(),
+      deskripsi: `${actionText} kas Rp ${absAmount.toLocaleString('id-ID')} untuk ${member.name}. Ket: ${description}`,
       ipAddress: getIp(req),
     })
 
     return NextResponse.json({ success: true, message: 'Transaksi kas berhasil disimpan' })
   } catch (e: any) {
-    if (e?.message === 'INVALID_SISWA')
-      return NextResponse.json({ error: 'Siswa tidak valid' }, { status: 400 })
-    if (e?.message === 'INVALID_ANGGOTA')
-      return NextResponse.json({ error: 'Anggota tidak valid' }, { status: 400 })
-
     console.error('[KAS TRANSAKSI ERROR]', e)
     return NextResponse.json({ error: 'Terjadi kesalahan server saat menyimpan kas' }, { status: 500 })
   }
+}
+
+export async function GET(req: NextRequest) {
+  const { userRole, activeOrgId } = getCtx(req)
+  const { searchParams } = new URL(req.url)
+
+  const filterOrgId = userRole === 'SUPER_ADMIN' ? (searchParams.get('orgId') ? parseInt(searchParams.get('orgId')!) : activeOrgId) : activeOrgId
+
+  if (!filterOrgId && userRole !== 'SUPER_ADMIN') {
+    return NextResponse.json({ error: 'No active organization selected' }, { status: 400 })
+  }
+
+  const page = parseInt(searchParams.get('page') || '1')
+  const limit = parseInt(searchParams.get('limit') || '20')
+
+  const where = filterOrgId ? { organization_id: filterOrgId } : {}
+
+  const [data, total] = await Promise.all([
+    prisma.cashTransaction.findMany({
+      where,
+      orderBy: { created_at: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+      include: { 
+        member: { select: { name: true, class: true } },
+        organization: { select: { nama: true } }
+      }
+    }),
+    prisma.cashTransaction.count({ where }),
+  ])
+
+  return NextResponse.json({ 
+    data, 
+    total, 
+    page, 
+    totalPages: Math.ceil(total / limit) 
+  })
 }

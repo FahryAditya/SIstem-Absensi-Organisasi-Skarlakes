@@ -38,7 +38,12 @@ export async function POST(req: NextRequest) {
 
     const { nama, email, password } = parsed.data
 
-    const user = await prisma.user.findUnique({ where: { email } })
+    // Fetch user with organizations
+    const user = await prisma.user.findUnique({ 
+      where: { email },
+      include: { organizations: true }
+    })
+    
     if (!user) {
       return NextResponse.json({ error: 'Email tidak ditemukan' }, { status: 401 })
     }
@@ -56,8 +61,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Password salah' }, { status: 401 })
     }
 
+    const orgIds = user.organizations.map(o => o.organization_id)
+    
     // Create JWT
-    const sessionUser = { id: user.id, nama: user.nama, email: user.email, role: user.role }
+    const sessionUser = { 
+      id: user.id, 
+      nama: user.nama, 
+      email: user.email, 
+      role: user.role as 'SUPER_ADMIN' | 'ORG_ADMIN',
+      orgIds: orgIds,
+      activeOrgId: orgIds.length > 0 ? orgIds[0] : undefined
+    }
     const token = await signToken(sessionUser)
 
     // Create log

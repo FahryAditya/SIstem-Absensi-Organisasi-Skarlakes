@@ -40,26 +40,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Protect log aktivitas - administrator only
-  if (pathname.startsWith('/log') && session.role.trim() !== 'administrator') {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-  if (pathname.startsWith('/api/log') && session.role.trim() !== 'administrator') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+  // Role names in DB are SUPER_ADMIN / ORG_ADMIN
+  const role = session.role
 
-  // Protect admin management - administrator only, but allow organization_admin for workspace paths
-  const isWorkspacePath = pathname.startsWith('/admin/organizations')
-  if (pathname.startsWith('/admin') && 
-      !pathname.startsWith('/admin/email') && 
-      !pathname.startsWith('/admin/exp') && 
-      !isWorkspacePath &&
-      session.role.trim() !== 'administrator') {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
+  // Protect log aktivitas & system settings - SUPER_ADMIN only
+  const isSuperAdminOnlyPath = pathname.startsWith('/log') || 
+                               pathname.startsWith('/api/log') ||
+                               pathname.startsWith('/admin/system') ||
+                               pathname.startsWith('/api/admin/system')
 
-  // If it is a workspace path, we still need to allow organization_admin
-  if (isWorkspacePath && session.role.trim() !== 'administrator' && session.role.trim() !== 'organization_admin') {
+  if (isSuperAdminOnlyPath && role !== 'SUPER_ADMIN') {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
@@ -67,7 +60,10 @@ export async function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-user-id', session.id.toString())
   requestHeaders.set('x-user-nama', session.nama)
-  requestHeaders.set('x-user-role', session.role)
+  requestHeaders.set('x-user-role', role)
+  if (session.activeOrgId) {
+    requestHeaders.set('x-active-org-id', session.activeOrgId.toString())
+  }
 
   return NextResponse.next({ request: { headers: requestHeaders } })
 }

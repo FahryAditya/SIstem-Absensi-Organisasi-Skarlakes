@@ -22,7 +22,7 @@ import toast from 'react-hot-toast'
 import * as XLSX from 'xlsx'
 
 interface Props {
-  user: { id: number; nama: string; email: string; role: string }
+  user: { id: number; nama: string; email: string; role: string; activeOrgId?: number; orgIds: number[] }
 }
 
 const formatDate = (date: Date, formatStr: string) => {

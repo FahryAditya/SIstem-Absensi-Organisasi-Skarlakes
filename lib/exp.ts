@@ -2,9 +2,6 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { pusherServer } from '@/lib/pusher-server'
 
-// ============================================================
-// Level thresholds — EXP minimum untuk masuk level tsb
-// ============================================================
 export const LEVEL_THRESHOLDS = [0, 150, 350, 600, 900] as const
 
 export const LEVEL_NAMES: Record<number, string> = {
@@ -15,13 +12,6 @@ export const LEVEL_NAMES: Record<number, string> = {
   5: 'Master',
 }
 
-// EXP yang dibutuhkan PER level (jarak antar threshold)
-export const EXP_PER_LEVEL = [150, 200, 250, 300] // Lv1→2, Lv2→3, Lv3→4, Lv4→5
-
-/**
- * Hitung level dari total EXP.
- * Lv1: 0-149 | Lv2: 150-349 | Lv3: 350-599 | Lv4: 600-899 | Lv5: 900+
- */
 export function calculateLevel(xp: number): number {
   if (xp >= 900) return 5
   if (xp >= 600) return 4
@@ -30,10 +20,6 @@ export function calculateLevel(xp: number): number {
   return 1
 }
 
-/**
- * Hitung progress bar EXP menuju level berikutnya.
- * Return: { expSaatIni, expUntukLevel, persen, levelName, nextLevelName }
- */
 export function calculateProgress(xp: number, level: number) {
   if (level >= 5) {
     return {
@@ -58,20 +44,14 @@ export function calculateProgress(xp: number, level: number) {
   }
 }
 
-// ============================================================
-// updateExp() — WAJIB dipakai semua perubahan EXP
-// ============================================================
-
-type TipeAnggota = 'siswa' | 'anggota_osis' | 'anggota_mpk' | 'member'
-
 interface UpdateExpParams {
-  tipeAnggota: TipeAnggota
   targetId: number
   selisih: number
   alasan: string
   adminId: number
-  organisasi: string
+  organizationId: number
   tx?: Prisma.TransactionClient
+  tipeAnggota?: string // Kept for compatibility but we mostly use 'member' now
 }
 
 interface UpdateExpResult {
@@ -82,115 +62,57 @@ interface UpdateExpResult {
 }
 
 export async function updateExp({
-  tipeAnggota,
   targetId,
   selisih,
   alasan,
   adminId,
-  organisasi,
+  organizationId,
   tx,
 }: UpdateExpParams): Promise<UpdateExpResult> {
   const run = async (client: Prisma.TransactionClient): Promise<UpdateExpResult> => {
-    let xpLama = 0
-    let levelLama = 1
-    let namaAnggota = ''
-    let emailAnggota: string | null = null
-
     // 1. Ambil data anggota & XP lama
-    if (tipeAnggota === 'siswa') {
-      const siswa = await client.siswa.findUniqueOrThrow({ where: { id: targetId } })
-      xpLama = siswa.xp
-      levelLama = siswa.level
-      namaAnggota = siswa.nama
-      emailAnggota = siswa.email
-    } else if (tipeAnggota === 'anggota_osis') {
-      const anggota = await client.anggotaOsis.findUniqueOrThrow({ where: { id: targetId } })
-      xpLama = anggota.xp
-      levelLama = anggota.level
-      namaAnggota = anggota.nama
-      emailAnggota = anggota.email
-    } else if (tipeAnggota === 'anggota_mpk') {
-      const anggota = await client.anggotaMpk.findUniqueOrThrow({ where: { id: targetId } })
-      xpLama = anggota.xp
-      levelLama = anggota.level
-      namaAnggota = anggota.nama
-      emailAnggota = anggota.email
-    } else {
-      const anggota = await client.member.findUniqueOrThrow({ where: { id: targetId } })
-      xpLama = anggota.exp
-      levelLama = anggota.level
-      namaAnggota = anggota.name
-      emailAnggota = anggota.email
-    }
+    const member = await client.member.findUniqueOrThrow({ 
+      where: { id: targetId } 
+    })
+    
+    const xpLama = member.exp
+    const levelLama = member.level
 
-    // 2. Hitung XP baru (tidak boleh di bawah 0)
+    // 2. Hitung XP baru
     const xpBaru = Math.max(0, xpLama + selisih)
     const levelBaru = calculateLevel(xpBaru)
     const levelNaik = levelBaru > levelLama
 
-    // 3. Update ke tabel yang sesuai
-    if (tipeAnggota === 'siswa') {
-      await client.siswa.update({
-        where: { id: targetId },
-        data: { xp: xpBaru, level: levelBaru },
-      })
-    } else if (tipeAnggota === 'anggota_osis') {
-      await client.anggotaOsis.update({
-        where: { id: targetId },
-        data: { xp: xpBaru, level: levelBaru },
-      })
-    } else if (tipeAnggota === 'anggota_mpk') {
-      await client.anggotaMpk.update({
-        where: { id: targetId },
-        data: { xp: xpBaru, level: levelBaru },
-      })
-    } else {
-      await client.member.update({
-        where: { id: targetId },
-        data: { exp: xpBaru, level: levelBaru },
-      })
-    }
+    // 3. Update member
+    await client.member.update({
+      where: { id: targetId },
+      data: { exp: xpBaru, level: levelBaru },
+    })
 
     // 4. Catat di exp_log
     await client.expLog.create({
       data: {
-        tipe_anggota: tipeAnggota as any,
-        siswa_id: tipeAnggota === 'siswa' ? targetId : null,
-        anggota_osis_id: tipeAnggota === 'anggota_osis' ? targetId : null,
-        anggota_mpk_id: tipeAnggota === 'anggota_mpk' ? targetId : null,
+        member_id: targetId,
+        organization_id: organizationId,
         admin_id: adminId,
-        exp_sebelum: xpLama,
-        exp_sesudah: xpBaru,
-        selisih,
-        alasan,
-        organisasi,
+        exp_before: xpLama,
+        exp_after: xpBaru,
+        amount: selisih,
+        reason: alasan,
       },
     })
 
     const result = { xpBaru, levelBaru, levelNaik, levelLama }
-    if (levelNaik) {
-      await sendLevelUpNotification({
-        nama: namaAnggota,
-        email: emailAnggota,
-        levelLama,
-        levelBaru,
-        organisasi,
-        alasan,
-      })
-    }
 
     if (pusherServer) {
       try {
         await pusherServer.trigger('leaderboard', 'xp-updated', {
-          tipeAnggota,
-          targetId,
-          organisasi,
+          memberId: targetId,
+          organizationId,
           xp: xpBaru,
           level: levelBaru,
         })
-      } catch (error) {
-        console.error('[LEADERBOARD PUSHER ERROR]', error)
-      }
+      } catch (error) {}
     }
 
     return result
@@ -198,42 +120,4 @@ export async function updateExp({
 
   if (tx) return run(tx)
   return await prisma.$transaction(run)
-}
-
-async function sendLevelUpNotification(params: {
-  nama: string
-  email?: string | null
-  levelLama: number
-  levelBaru: number
-  organisasi: string
-  alasan: string
-}) {
-  const apiKey = process.env.RESEND_API_KEY
-  const to = params.email || process.env.LEVEL_UP_NOTIFICATION_EMAIL
-  if (!apiKey || !to) return
-
-  try {
-    await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL || 'SKARLAKE ARTEMIS <noreply@skarlake.sch.id>',
-        to: [to],
-        subject: `Level Up: ${params.nama} naik ke Lv ${params.levelBaru}`,
-        html: `
-          <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
-            <h2>Level Up ARTEMIS</h2>
-            <p><strong>${params.nama}</strong> naik dari Lv ${params.levelLama} ke Lv ${params.levelBaru}.</p>
-            <p>Organisasi: <strong>${params.organisasi.toUpperCase()}</strong></p>
-            <p>Alasan EXP: ${params.alasan}</p>
-          </div>
-        `,
-      }),
-    })
-  } catch (error) {
-    console.error('[LEVEL UP EMAIL ERROR]', error)
-  }
 }

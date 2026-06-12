@@ -20,7 +20,7 @@ interface Member {
 }
 
 interface Props {
-  user: { id: number; nama: string; email: string; role: string }
+  user: { id: number; nama: string; email: string; role: string; activeOrgId?: number; orgIds: number[] }
 }
 
 const ORG_LABELS: Record<string, string> = {

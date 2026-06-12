@@ -12,7 +12,14 @@ const Sidebar = dynamic(() => import('@/components/layout/Sidebar'), {
 })
 
 interface DashboardLayoutProps {
-  user: { id: number; nama: string; email: string; role: string }
+  user: { 
+    id: number; 
+    nama: string; 
+    email: string; 
+    role: string;
+    activeOrgId?: number;
+    orgIds: number[];
+  }
   pageTitle: string
   children: React.ReactNode
 }
@@ -20,7 +27,7 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ user, pageTitle, children }: DashboardLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const themeClass = user.role === 'administrator' ? 'theme-admin' : ''
+  const themeClass = user.role === 'SUPER_ADMIN' ? 'theme-admin' : ''
 
   return (
     <div className={`flex h-[100dvh] overflow-hidden bg-white/5 ${themeClass}`}>

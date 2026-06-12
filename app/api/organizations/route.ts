@@ -11,16 +11,19 @@ export async function GET(req: NextRequest) {
     const mode = searchParams.get('mode')
 
     if (mode === 'mine') {
-      const { getAccessibleOrganizations } = await import('@/lib/services/organization-service')
-      const orgs = await getAccessibleOrganizations(session.id, session.role)
+      const orgs = await prisma.organization.findMany({
+        where: session.role === 'SUPER_ADMIN' ? {} : {
+          admins: { some: { user_id: session.id } }
+        },
+        orderBy: { nama: 'asc' }
+      })
       return NextResponse.json({ success: true, data: orgs })
     }
 
-    // Default: all orgs (administrator only for full details)
-    const isAdmin = session.role === 'administrator'
+    const isSuperAdmin = session.role === 'SUPER_ADMIN'
     
     let orgs;
-    if (isAdmin) {
+    if (isSuperAdmin) {
       orgs = await prisma.organization.findMany({
         include: {
           admins: {
@@ -38,6 +41,7 @@ export async function GET(req: NextRequest) {
       })
     } else {
       orgs = await prisma.organization.findMany({
+        where: { admins: { some: { user_id: session.id } } },
         select: { id: true, nama: true, slug: true, category: true, status: true },
         orderBy: { created_at: 'desc' }
       })
@@ -53,7 +57,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await getSessionFromRequest(req)
-    if (!session || session.role !== 'administrator') {
+    if (!session || session.role !== 'SUPER_ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -63,7 +67,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Nama, kategori, dan asal sekolah wajib diisi' }, { status: 400 })
     }
 
-    // Generate slug from nama
     const slug = nama.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '')
 
     const org = await prisma.organization.create({
@@ -89,7 +92,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const session = await getSessionFromRequest(req)
-    if (!session || session.role !== 'administrator') {
+    if (!session || session.role !== 'SUPER_ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

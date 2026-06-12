@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAccessibleOrgs } from '@/lib/auth'
 import { cacheGet } from '@/lib/mem-cache'
 import { format, subDays, startOfMonth, subMonths } from 'date-fns'
 
@@ -8,14 +7,17 @@ function getCtx(req: NextRequest) {
   return {
     userId: parseInt(req.headers.get('x-user-id') || '0'),
     userRole: req.headers.get('x-user-role') || '',
+    activeOrgId: req.headers.get('x-active-org-id') ? parseInt(req.headers.get('x-active-org-id')!) : undefined
   }
 }
 
 export async function GET(req: NextRequest) {
-  const { userId, userRole } = getCtx(req)
-  const { getAccessibleOrganizations } = await import('@/lib/services/organization-service')
-  const accessibleOrgs = await getAccessibleOrganizations(userId, userRole)
-  const orgSlugs = accessibleOrgs.map(o => o.slug)
+  const { userId, userRole, activeOrgId } = getCtx(req)
+  
+  // If ORG_ADMIN and no activeOrgId, we have a problem
+  if (userRole === 'ORG_ADMIN' && !activeOrgId) {
+    return NextResponse.json({ error: 'No active organization selected' }, { status: 400 })
+  }
 
   const { searchParams } = new URL(req.url)
   const part = searchParams.get('part') || 'all'
@@ -24,134 +26,65 @@ export async function GET(req: NextRequest) {
   const todayStr = format(today, 'yyyy-MM-dd')
   const start7 = subDays(today, 6)
 
-  // Ekskul orgs (programming, english)
-  const ekskulOrgs = orgSlugs.filter(o => o === 'programming' || o === 'english') as ('programming' | 'english')[]
-  // Organisasi orgs (osis, mpk)
-  const orgOrgs = orgSlugs.filter(o => o === 'osis' || o === 'mpk')
+  // Fetch accessible organizations for context
+  const accessibleOrgs = await prisma.organization.findMany({
+    where: userRole === 'SUPER_ADMIN' ? {} : {
+      admins: { some: { user_id: userId } }
+    }
+  })
 
   const response: any = { orgs: accessibleOrgs }
 
+  // Determine current context for filtering
+  const filterOrgId = userRole === 'SUPER_ADMIN' ? undefined : activeOrgId
+
   if (part === 'all' || part === 'stats') {
-    // Cache key: per-role (setiap role melihat data berbeda) + tanggal hari ini
-    // TTL 30 detik: cukup untuk menyerap burst 12 user, tapi data masih fresh
-    const statsCacheKey = `dashboard:stats:${userRole}:${todayStr}`
+    const statsCacheKey = `dashboard:stats:${userRole}:${activeOrgId || 'global'}:${todayStr}`
 
     const stats = await cacheGet(statsCacheKey, 30_000, async () => {
-      // 1. Get all dynamic organizations for this user
-      const linkedOrgsData = await prisma.organizationAdmin.findMany({
-        where: { user_id: userId },
-        include: { organization: true }
-      })
-      const linkedSlugs = linkedOrgsData.map(lo => lo.organization.slug).filter(Boolean) as string[]
+      const where = filterOrgId ? { organization_id: filterOrgId } : {}
       
       const [
-        totalSiswaCount,
-        totalProgramming,
-        totalEnglish,
-        totalOsis,
-        totalMpk,
-        totalMembersDynamic,
-        hadirEkskulHariIni,
-        hadirOrganisasiHariIni,
-        hadirDynamicHariIni,
-        kasEkskulTotal,
-        kasOrgTotal,
-        kasDynamicTotal,
-        pengeluaranTotalData,
-        leaderboardProgramming,
-        leaderboardEnglish,
+        totalMembers,
+        hadirHariIni,
+        totalPemasukanData,
+        totalPengeluaranData,
+        leaderboard,
       ] = await Promise.all([
-        prisma.siswa.count(),
-        prisma.siswa.count({ where: { ekskul: 'programming' } }),
-        prisma.siswa.count({ where: { ekskul: 'english' } }),
-        prisma.anggotaOsis.count(),
-        prisma.anggotaMpk.count(),
-        // Total members from dynamic orgs accessible to this user
-        prisma.member.count({ 
-          where: userRole !== 'administrator' ? { organization: { slug: { in: linkedSlugs } } } : {} 
-        }),
-        ekskulOrgs.length ? prisma.absensi.count({
+        prisma.member.count({ where }),
+        prisma.attendance.count({
           where: {
-            tanggal: new Date(todayStr),
-            status: 'hadir',
-            siswa: { ekskul: { in: ekskulOrgs } }
-          }
-        }) : Promise.resolve(0),
-        orgOrgs.length ? prisma.absensiOrganisasi.count({
-          where: {
-            tanggal: new Date(todayStr),
-            status: 'hadir',
-            organisasi_type: { in: orgOrgs as ('osis' | 'mpk')[] }
-          }
-        }) : Promise.resolve(0),
-        // Attendance from dynamic orgs
-        prisma.attendanceV2.count({
-          where: {
+            ...where,
             date: new Date(todayStr),
-            attendance_status: 'hadir',
-            organization: userRole !== 'administrator' ? { slug: { in: linkedSlugs } } : {}
+            status: 'hadir',
           }
         }),
-        ekskulOrgs.length ? prisma.absensi.aggregate({
-          where: { siswa: { ekskul: { in: ekskulOrgs } } },
-          _sum: { uang_kas: true }
-        }) : Promise.resolve({ _sum: { uang_kas: 0 } }),
-        orgOrgs.length ? prisma.absensiOrganisasi.aggregate({
-          where: { organisasi_type: { in: orgOrgs as ('osis' | 'mpk')[] } },
-          _sum: { uang_kas: true }
-        }) : Promise.resolve({ _sum: { uang_kas: 0 } }),
-        // Cash from dynamic orgs
-        prisma.attendanceV2.aggregate({
-          where: userRole !== 'administrator' ? { organization: { slug: { in: linkedSlugs } } } : {},
-          _sum: { cash_amount: true }
+        prisma.cashTransaction.aggregate({
+          where: { ...where, type: 'INCOME' },
+          _sum: { amount: true }
         }),
-        orgSlugs.length ? (prisma as any).pengeluaranKas.aggregate({
-          where: userRole !== 'administrator' ? { organisasi_type: { in: orgSlugs as any[] } } : {},
-          _sum: { nominal: true }
-        }) : Promise.resolve({ _sum: { nominal: 0 } }),
-        prisma.siswa.findMany({
-          where: { ekskul: 'programming' },
-          orderBy: { xp: 'desc' },
-          take: 10,
-          select: { id: true, nama: true, kelas: true, xp: true }
+        prisma.cashTransaction.aggregate({
+          where: { ...where, type: 'EXPENSE' },
+          _sum: { amount: true }
         }),
-        prisma.siswa.findMany({
-          where: { ekskul: 'english' },
-          orderBy: { xp: 'desc' },
+        prisma.member.findMany({
+          where,
+          orderBy: { exp: 'desc' },
           take: 10,
-          select: { id: true, nama: true, kelas: true, xp: true }
+          select: { id: true, name: true, class: true, exp: true }
         })
       ])
 
-      const totalPemasukan = (kasEkskulTotal._sum?.uang_kas || 0) + 
-                             (kasOrgTotal._sum?.uang_kas || 0) + 
-                             (kasDynamicTotal._sum?.cash_amount || 0)
-      const totalPengeluaran = pengeluaranTotalData._sum?.nominal || 0
-
-      // Filter totalSiswa secara dinamis berdasarkan hak akses role
-      let totalSiswa = 0
-      if (userRole === 'administrator') {
-        totalSiswa = totalSiswaCount + totalOsis + totalMpk + totalMembersDynamic
-      } else {
-        if (orgSlugs.includes('programming')) totalSiswa += totalProgramming
-        if (orgSlugs.includes('english')) totalSiswa += totalEnglish
-        if (orgSlugs.includes('osis')) totalSiswa += totalOsis
-        if (orgSlugs.includes('mpk')) totalSiswa += totalMpk
-        totalSiswa += totalMembersDynamic
-      }
+      const totalPemasukan = totalPemasukanData._sum?.amount || 0
+      const totalPengeluaran = totalPengeluaranData._sum?.amount || 0
 
       return {
-        totalSiswa,
-        totalProgramming,
-        totalEnglish,
-        totalOsis,
-        totalMpk,
-        hadirHariIni: hadirEkskulHariIni + hadirOrganisasiHariIni + hadirDynamicHariIni,
+        totalSiswa: totalMembers,
+        hadirHariIni,
         totalPemasukan,
         totalPengeluaran,
         totalKas: totalPemasukan - totalPengeluaran,
-        leaderboardProgramming,
-        leaderboardEnglish,
+        leaderboard,
       }
     })
 
@@ -159,92 +92,62 @@ export async function GET(req: NextRequest) {
   }
 
   if (part === 'all' || part === 'charts') {
-    // Cache charts per role, per minggu-ke (7 hari terakhir cukup stale 2 menit)
-    const chartsCacheKey = `dashboard:charts:${userRole}:${format(today, 'yyyy-MM-dd-HH')}` // per jam
+    const chartsCacheKey = `dashboard:charts:${userRole}:${activeOrgId || 'global'}:${format(today, 'yyyy-MM-dd-HH')}`
 
     const charts = await cacheGet(chartsCacheKey, 120_000, async () => {
-      const [
-        absensiMingguEkskul,
-        kasEkskulBulanan,
-        kasOrgBulanan,
-        pengeluaranBulanan,
-      ] = await Promise.all([
-        ekskulOrgs.length ? prisma.$queryRaw`
-          SELECT 
-            TO_CHAR(a.tanggal, 'YYYY-MM-DD') AS tanggal, 
-            a.status::text AS status, 
-            COUNT(*)::int AS count
-          FROM absensi a
-          INNER JOIN siswa s ON a.siswa_id = s.id
-          WHERE a.tanggal >= ${start7} AND s.ekskul::text = ANY(${ekskulOrgs})
-          GROUP BY TO_CHAR(a.tanggal, 'YYYY-MM-DD'), a.status
-        ` : Promise.resolve([]),
+      const where = filterOrgId ? { organization_id: filterOrgId } : {}
+      
+      // Kehadiran 7 hari terakhir
+      // Note: In real app, you might use a more complex query or raw SQL for grouping
+      const attendanceRaw: any[] = await prisma.$queryRaw`
+        SELECT 
+          TO_CHAR(date, 'YYYY-MM-DD') as date_str,
+          status,
+          COUNT(*)::int as count
+        FROM attendance
+        WHERE date >= ${start7}
+        ${filterOrgId ? prisma.$queryRaw`AND organization_id = ${filterOrgId}` : prisma.$queryRaw``}
+        GROUP BY TO_CHAR(date, 'YYYY-MM-DD'), status
+      `
 
-        ekskulOrgs.length ? prisma.$queryRaw`
-          SELECT 
-            TO_CHAR(a.tanggal, 'YYYY-MM') AS bulan, 
-            SUM(a.uang_kas)::int AS total
-          FROM absensi a
-          INNER JOIN siswa s ON a.siswa_id = s.id
-          WHERE a.tanggal >= ${subMonths(startOfMonth(today), 5)} AND s.ekskul::text = ANY(${ekskulOrgs})
-          GROUP BY TO_CHAR(a.tanggal, 'YYYY-MM')
-        ` : Promise.resolve([]),
+      // Kas 6 bulan terakhir
+      const months = Array.from({ length: 6 }, (_, i) => subMonths(today, 5 - i))
+      const kasPerBulan = await Promise.all(months.map(async (m) => {
+        const start = startOfMonth(m)
+        const nextMonth = startOfMonth(subMonths(m, -1))
+        const monthWhere = {
+          ...where,
+          created_at: {
+            gte: start,
+            lt: nextMonth
+          }
+        }
+        
+        const income = await prisma.cashTransaction.aggregate({
+          where: { ...monthWhere, type: 'INCOME' },
+          _sum: { amount: true }
+        })
+        const expense = await prisma.cashTransaction.aggregate({
+          where: { ...monthWhere, type: 'EXPENSE' },
+          _sum: { amount: true }
+        })
+        
+        return {
+          bulan: format(m, 'MMM'),
+          total: (income._sum?.amount || 0) - (expense._sum?.amount || 0)
+        }
+      }))
 
-        orgOrgs.length ? prisma.$queryRaw`
-          SELECT 
-            TO_CHAR(tanggal, 'YYYY-MM') AS bulan, 
-            SUM(uang_kas)::int AS total
-          FROM absensi_organisasi
-          WHERE tanggal >= ${subMonths(startOfMonth(today), 5)} AND organisasi_type::text = ANY(${orgOrgs})
-          GROUP BY TO_CHAR(tanggal, 'YYYY-MM')
-        ` : Promise.resolve([]),
-
-        orgSlugs.length ? (
-          userRole === 'administrator' 
-            ? prisma.$queryRaw`
-                SELECT 
-                  TO_CHAR(tanggal, 'YYYY-MM') AS bulan, 
-                  SUM(nominal)::int AS total
-                FROM pengeluaran_kas
-                WHERE tanggal >= ${subMonths(startOfMonth(today), 5)}
-                GROUP BY TO_CHAR(tanggal, 'YYYY-MM')
-              `
-            : prisma.$queryRaw`
-                SELECT 
-                  TO_CHAR(tanggal, 'YYYY-MM') AS bulan, 
-                  SUM(nominal)::int AS total
-                FROM pengeluaran_kas
-                WHERE tanggal >= ${subMonths(startOfMonth(today), 5)} AND organisasi_type::text = ANY(${orgSlugs})
-                GROUP BY TO_CHAR(tanggal, 'YYYY-MM')
-              `
-        ) : Promise.resolve([]),
-      ])
-
-      // Process kehadiran mingguan
+      // Process attendance data
       const kehadiranMingguan = Array.from({ length: 7 }, (_, i) => {
         const d = subDays(today, 6 - i)
         const dStr = format(d, 'yyyy-MM-dd')
-        const dayStats = (absensiMingguEkskul as any[]).filter(
-          a => a.tanggal === dStr
-        )
+        const dayStats = attendanceRaw.filter(a => a.date_str === dStr)
         return {
           day: format(d, 'EEE'),
           hadir: dayStats.find(s => s.status === 'hadir')?.count || 0,
-          tidak_hadir: dayStats.find(s => s.status !== 'hadir' && s.status !== 'kas_saja')?.count || 0,
+          tidak_hadir: dayStats.filter(s => s.status !== 'hadir').reduce((sum, s) => sum + s.count, 0)
         }
-      })
-
-      // Process kas per bulan
-      const months = Array.from({ length: 6 }, (_, i) => subMonths(today, 5 - i))
-      const kasPerBulan = months.map(m => {
-        const mStr = format(m, 'yyyy-MM')
-        const ekskulTotal = (kasEkskulBulanan as any[])
-          .find(a => a.bulan === mStr)?.total || 0
-        const orgTotal = (kasOrgBulanan as any[])
-          .find(a => a.bulan === mStr)?.total || 0
-        const pengeluaranTotal = (pengeluaranBulanan as any[])
-          .find(a => a.bulan === mStr)?.total || 0
-        return { bulan: format(m, 'MMM'), total: (ekskulTotal + orgTotal) - pengeluaranTotal }
       })
 
       return { kehadiranMingguan, kasPerBulan }
@@ -255,83 +158,17 @@ export async function GET(req: NextRequest) {
   }
 
   if (part === 'all' || part === 'logs') {
-    if (userRole === 'administrator') {
-      // Log terbaru: cache pendek 10 detik agar masih terasa real-time
-      const logsCacheKey = `dashboard:logs:${userRole}`
-      response.recentLog = await cacheGet(logsCacheKey, 10_000, () =>
-        prisma.logAktivitas.findMany({
-          orderBy: { created_at: 'desc' },
-          take: 5,
-          select: { id: true, user_nama: true, deskripsi: true, created_at: true, aksi: true }
-        })
-      )
-    } else {
-      response.recentLog = []
-    }
-  }
-
-  // ─── Request Statistics (administrator only) ─────────────────────────────────
-  if ((part === 'request_stats') && userRole === 'administrator') {
-    // Cache stats selama 5 menit — data historis tidak perlu real-time
-    const reqStatsCacheKey = `dashboard:request_stats`
-    const requestStats = await cacheGet(reqStatsCacheKey, 300_000, async () => {
-      const since30 = subDays(new Date(), 29)
-
-      // 1) Total per aksi (all time summary)
-      const totalPerAksi: { aksi: string; count: number }[] = await prisma.$queryRaw`
-        SELECT 
-          aksi::text AS aksi, 
-          COUNT(*)::int AS count
-        FROM log_aktivitas
-        GROUP BY aksi
-      `
-
-      // 2) Daily breakdown for last 30 days
-      // Gunakan created_at::date cast via raw untuk hasil yang lebih efisien
-      const dailyRaw: { aksi: string; date: string; count: number }[] = await prisma.$queryRaw`
-        SELECT 
-          aksi::text, 
-          TO_CHAR(created_at, 'YYYY-MM-DD') AS date, 
-          COUNT(*)::int AS count
-        FROM log_aktivitas
-        WHERE created_at >= ${since30}
-        GROUP BY aksi, TO_CHAR(created_at, 'YYYY-MM-DD')
-        ORDER BY date ASC
-      `
-
-      const dayMap: Record<string, Record<string, number>> = {}
-      for (const row of dailyRaw) {
-        const d = row.date
-        if (!dayMap[d]) dayMap[d] = {}
-        dayMap[d][row.aksi] = row.count
-      }
-
-      const AKSI_TYPES = ['CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT']
-      const daily30 = Array.from({ length: 30 }, (_, i) => {
-        const d = subDays(new Date(), 29 - i)
-        const key = format(d, 'yyyy-MM-dd')
-        const entry: Record<string, any> = { date: key, label: format(d, 'dd/MM') }
-        for (const a of AKSI_TYPES) entry[a] = dayMap[key]?.[a] || 0
-        return entry
+    const logsCacheKey = `dashboard:logs:${userRole}:${activeOrgId || 'global'}`
+    const logWhere = userRole === 'SUPER_ADMIN' ? {} : { organization_id: activeOrgId }
+    
+    response.recentLog = await cacheGet(logsCacheKey, 10_000, () =>
+      prisma.logAktivitas.findMany({
+        where: logWhere,
+        orderBy: { created_at: 'desc' },
+        take: 5,
+        select: { id: true, user_nama: true, deskripsi: true, created_at: true, aksi: true }
       })
-
-      const grandTotal = totalPerAksi.reduce((s: number, r: any) => s + r.count, 0)
-      const METHOD_MAP: Record<string, string> = {
-        CREATE: 'POST', UPDATE: 'PUT', DELETE: 'DELETE', LOGIN: 'GET', LOGOUT: 'GET',
-      }
-
-      return {
-        grandTotal,
-        perAksi: totalPerAksi.map((r: any) => ({
-          aksi: r.aksi,
-          method: METHOD_MAP[r.aksi] || 'GET',
-          count: r.count,
-        })),
-        daily30,
-      }
-    })
-
-    response.requestStats = requestStats
+    )
   }
 
   return NextResponse.json(response)
