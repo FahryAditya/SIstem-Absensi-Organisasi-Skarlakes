@@ -49,7 +49,7 @@ export async function middleware(request: NextRequest) {
                                pathname.startsWith('/admin/system') ||
                                pathname.startsWith('/api/admin/system')
 
-  if (isSuperAdminOnlyPath && role !== 'SUPER_ADMIN') {
+  if (isSuperAdminOnlyPath && role !== 'SUPER_ADMIN' && (role as string) !== 'administrator') {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }

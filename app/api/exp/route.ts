@@ -2,103 +2,105 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
 import { updateExp } from '@/lib/exp'
-import { isAdministrator, getAccessibleOrgs } from '@/lib/auth'
+import { getSessionFromRequest } from '@/lib/auth'
 import { z } from 'zod'
 
-function getCtx(req: NextRequest) {
-  return {
-    userId: parseInt(req.headers.get('x-user-id') || '0'),
-    userNama: req.headers.get('x-user-nama') || '',
-    userRole: req.headers.get('x-user-role') || '',
-  }
-}
-
 const postSchema = z.object({
-  tipe_anggota: z.enum(['siswa', 'anggota_osis', 'anggota_mpk']),
-  target_id: z.number().int().positive(),
-  selisih: z.number().int().refine((n) => n !== 0, 'Selisih tidak boleh 0'),
-  alasan: z.string().min(3, 'Alasan minimal 3 karakter').max(500),
-  organisasi: z.enum(['programming', 'english', 'osis', 'mpk']),
+  memberId: z.number().int().positive(),
+  amount: z.number().int().refine((n) => n !== 0, 'Selisih tidak boleh 0'),
+  reason: z.string().min(3, 'Alasan minimal 3 karakter').max(500),
 })
 
-// GET: Riwayat exp_log (filter by tipe + id, atau semua)
 export async function GET(req: NextRequest) {
-  const { userRole } = getCtx(req)
-  const accessible = getAccessibleOrgs(userRole)
-  if (accessible.length === 0) {
-    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+  try {
+    const session = await getSessionFromRequest(req)
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { searchParams } = new URL(req.url)
+    const orgId = searchParams.get('orgId')
+    const memberId = searchParams.get('memberId')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
+
+    const filterOrgId = orgId ? parseInt(orgId) : session.activeOrgId
+
+    if (!filterOrgId && session.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'No active organization selected' }, { status: 400 })
+    }
+
+    // RBAC Check
+    if (session.role !== 'SUPER_ADMIN' && filterOrgId && !session.orgIds.includes(filterOrgId)) {
+      return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+    }
+
+    const where: any = {
+      ...(filterOrgId ? { organization_id: filterOrgId } : {}),
+      ...(memberId ? { member_id: parseInt(memberId) } : {})
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.expLog.findMany({
+        where,
+        include: { 
+          member: { select: { name: true, class: true } },
+          admin: { select: { nama: true } }
+        },
+        orderBy: { created_at: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.expLog.count({ where }),
+    ])
+
+    return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / limit) })
+  } catch (error) {
+    console.error('[EXP LOG ERROR]', error)
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
-
-  const { searchParams } = new URL(req.url)
-  const tipeAnggota = searchParams.get('tipe_anggota')
-  const targetId = searchParams.get('target_id')
-  const organisasi = searchParams.get('organisasi')
-  const page = parseInt(searchParams.get('page') || '1')
-  const limit = parseInt(searchParams.get('limit') || '20')
-
-  const where: Record<string, unknown> = { organisasi: { in: accessible } }
-  if (tipeAnggota) where.tipe_anggota = tipeAnggota
-  if (organisasi && accessible.includes(organisasi)) {
-    where.organisasi = organisasi
-  }
-  if (targetId) {
-    const tid = parseInt(targetId)
-    if (tipeAnggota === 'siswa') where.siswa_id = tid
-    else if (tipeAnggota === 'anggota_osis') where.anggota_osis_id = tid
-    else if (tipeAnggota === 'anggota_mpk') where.anggota_mpk_id = tid
-  }
-
-  const [data, total] = await Promise.all([
-    prisma.expLog.findMany({
-      where,
-      orderBy: { created_at: 'desc' },
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-    prisma.expLog.count({ where }),
-  ])
-
-  return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / limit) })
 }
 
-// POST: Admin tambah/kurangi EXP manual
 export async function POST(req: NextRequest) {
-  const ctx = getCtx(req)
-  const accessible = getAccessibleOrgs(ctx.userRole)
-  if (accessible.length === 0) {
-    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
-  }
-
   try {
+    const session = await getSessionFromRequest(req)
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const body = await req.json()
     const parsed = postSchema.safeParse(body)
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
     }
 
-    const { tipe_anggota, target_id, selisih, alasan, organisasi } = parsed.data
+    const { memberId, amount, reason } = parsed.data
 
-    if (!accessible.includes(organisasi)) {
-      return NextResponse.json({ error: 'Anda tidak memiliki akses ke organisasi ini' }, { status: 403 })
+    const member = await prisma.member.findUnique({
+      where: { id: memberId },
+      select: { organization_id: true, name: true }
+    })
+
+    if (!member) return NextResponse.json({ error: 'Anggota tidak ditemukan' }, { status: 404 })
+
+    // RBAC Check
+    if (session.role !== 'SUPER_ADMIN' && !session.orgIds.includes(member.organization_id)) {
+      return NextResponse.json({ error: 'Akses ditolak untuk organisasi ini' }, { status: 403 })
     }
 
     const result = await updateExp({
-      tipeAnggota: tipe_anggota,
-      targetId: target_id,
-      selisih,
-      alasan: `[Manual Admin] ${alasan}`,
-      adminId: ctx.userId,
-      organisasi,
+      targetId: memberId,
+      selisih: amount,
+      alasan: `[Manual Admin] ${reason}`,
+      adminId: session.id,
+      organizationId: member.organization_id,
     })
 
     await createLog({
-      userId: ctx.userId,
-      userNama: ctx.userNama,
+      userId: session.id,
+      userNama: session.nama,
       aksi: 'UPDATE',
-      tabel: tipe_anggota,
-      recordId: target_id,
-      deskripsi: `${ctx.userNama} mengubah EXP ${tipe_anggota} #${target_id} sebesar ${selisih > 0 ? '+' : ''}${selisih} EXP. Alasan: ${alasan}`,
-      dataLama: { xp: result.xpBaru - selisih, level: result.levelLama },
+      organizationId: member.organization_id,
+      tabel: 'members',
+      recordId: memberId,
+      deskripsi: `${session.nama} mengubah EXP "${member.name}" sebesar ${amount > 0 ? '+' : ''}${amount}. Alasan: ${reason}`,
+      dataLama: { xp: result.xpBaru - amount, level: result.levelLama },
       dataBaru: { xp: result.xpBaru, level: result.levelBaru },
       ipAddress: getIp(req),
     })
@@ -109,9 +111,8 @@ export async function POST(req: NextRequest) {
       levelBaru: result.levelBaru,
       levelNaik: result.levelNaik,
     })
-  } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : 'Unknown error'
+  } catch (error: any) {
     console.error('[EXP POST ERROR]', error)
-    return NextResponse.json({ error: 'Gagal update EXP: ' + msg }, { status: 500 })
+    return NextResponse.json({ error: 'Gagal update EXP' }, { status: 500 })
   }
 }

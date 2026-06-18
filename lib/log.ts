@@ -4,6 +4,7 @@ interface LogParams {
   userId: number
   userNama: string
   aksi: 'CREATE' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'LOGOUT'
+  organizationId?: number
   tabel: string
   recordId?: string | number
   deskripsi: string
@@ -19,6 +20,7 @@ export async function createLog(params: LogParams) {
         user_id: params.userId,
         user_nama: params.userNama,
         aksi: params.aksi,
+        organization_id: params.organizationId,
         tabel: params.tabel,
         record_id: params.recordId?.toString(),
         deskripsi: params.deskripsi,

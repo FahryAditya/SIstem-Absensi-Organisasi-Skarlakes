@@ -23,7 +23,7 @@ export default async function OrgWorkspaceLayout({ children, params }: Props) {
   if (!org) notFound()
 
   // Basic RBAC check
-  if (user.role !== 'administrator') {
+  if (user.role !== 'SUPER_ADMIN') {
     const isOrgAdmin = await prisma.organizationAdmin.findUnique({
       where: {
         user_id_organization_id: {
@@ -43,7 +43,7 @@ export default async function OrgWorkspaceLayout({ children, params }: Props) {
     { label: 'Progress', href: `/admin/organizations/${org.slug}/progress`, icon: TrendingUp },
   ]
 
-  if (user.role === 'administrator') {
+  if (user.role === 'SUPER_ADMIN') {
     navItems.push({ label: 'Administrator', href: `/admin/organizations/${org.slug}/admins`, icon: ShieldCheck })
     navItems.push({ label: 'Pengaturan', href: `/admin/organizations/${org.slug}/settings`, icon: Settings })
   }

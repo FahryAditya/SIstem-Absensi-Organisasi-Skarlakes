@@ -34,7 +34,14 @@ interface Member {
 }
 
 interface Props {
-  user: { id: number; nama: string; email: string; role: string; activeOrgId?: number }
+  user: { 
+    id: number; 
+    nama: string; 
+    email: string; 
+    role: string; 
+    activeOrgId?: number; 
+    orgIds: number[] 
+  }
 }
 
 const PAGE_SIZE = 15

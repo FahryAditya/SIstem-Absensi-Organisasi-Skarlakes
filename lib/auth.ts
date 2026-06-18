@@ -3,6 +3,8 @@ import { cookies } from 'next/headers'
 import { NextRequest } from 'next/server'
 import { SessionUser } from './auth-shared'
 
+export type { SessionUser } from './auth-shared'
+
 export { 
   isSuperAdmin, 
   isOrgAdmin, 

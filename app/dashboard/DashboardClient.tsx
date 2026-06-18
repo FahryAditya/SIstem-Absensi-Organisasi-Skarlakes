@@ -8,7 +8,7 @@ import { createPortal } from 'react-dom'
 import toast from 'react-hot-toast'
 import * as XLSX from 'xlsx'
 import { formatCurrency, formatDate, formatDateTime, ORG_LABELS, OrgType } from '@/lib/utils'
-import { ROLE_LABELS } from '@/lib/auth-shared'
+import { ROLE_LABELS, isAdministrator } from '@/lib/auth-shared'
 import { clearJsonCache, fetchJsonCachedUrl, clientQueryClient } from '@/lib/client-cache'
 import { pusherClient } from '@/lib/pusher-client'
 import TextType from '@/components/TextType'
@@ -168,7 +168,7 @@ export default function DashboardClient({ user }: Props) {
     } catch {}
     setLoading(false)
     setLoadingCharts(false)
-    if (user.role === 'administrator') {
+    if (isAdministrator(user.role)) {
       try {
         const [l, rsRaw] = await Promise.all([
           fetchJsonCachedUrl<LogData>('/api/dashboard?part=logs'),
@@ -214,11 +214,11 @@ export default function DashboardClient({ user }: Props) {
           setLatestUpdate(data.latestUpdate)
           if (data.latestUpdate.id > data.lastSeenId) {
             setShowWelcomeModal(true)
-          } else if (user.role === 'administrator' && !sessionStorage.getItem('welcome_shown')) {
+          } else if (isAdministrator(user.role) && !sessionStorage.getItem('welcome_shown')) {
             setShowWelcomeModal(true)
             sessionStorage.setItem('welcome_shown', 'true')
           }
-        } else if (user.role === 'administrator' && !sessionStorage.getItem('welcome_shown')) {
+        } else if (isAdministrator(user.role) && !sessionStorage.getItem('welcome_shown')) {
           setShowWelcomeModal(true)
           sessionStorage.setItem('welcome_shown', 'true')
         }
@@ -363,14 +363,7 @@ export default function DashboardClient({ user }: Props) {
   )
 
   const statCards = stats ? ([
-    // For organization_admin, we show specific cards
-    user.role === 'organization_admin' ? {
-      label: 'Total Anggota',
-      value: stats.totalSiswa,
-      suffix: 'anggota',
-      icon: Users,
-      color: 'bg-persian-blue/10 text-persian-blue',
-    } : {
+    {
       label: 'Total Siswa Ekskul',
       value: stats.totalSiswa,
       suffix: 'siswa',
@@ -378,29 +371,30 @@ export default function DashboardClient({ user }: Props) {
       color: 'bg-persian-blue/10 text-persian-blue',
     },
     
-    // Only show these if NOT organization_admin (they only manage dynamic ones)
-    user.role !== 'organization_admin' && orgs.some(o => o.slug === 'programming') && {
+    // Per-ekskul cards - shown based on accessible orgs (API filters by role)
+    // Administrator sees all, other admins only see their own orgs
+    orgs.some(o => o.slug === 'programming') && {
       label: 'Total Programming',
       value: stats.totalProgramming,
       suffix: 'siswa',
       icon: Users,
       color: 'bg-persian-blue/10 text-persian-blue',
     },
-    user.role !== 'organization_admin' && orgs.some(o => o.slug === 'english') && {
+    orgs.some(o => o.slug === 'english') && {
       label: 'Total English Club',
       value: stats.totalEnglish,
       suffix: 'siswa',
       icon: Users,
       color: 'bg-persian-blue/10 text-persian-blue',
     },
-    user.role !== 'organization_admin' && orgs.some(o => o.slug === 'osis') && {
+    orgs.some(o => o.slug === 'osis') && {
       label: 'Anggota OSIS',
       value: stats.totalOsis,
       suffix: 'anggota',
       icon: Users,
       color: 'bg-persian-blue/10 text-persian-blue',
     },
-    user.role !== 'organization_admin' && orgs.some(o => o.slug === 'mpk') && {
+    orgs.some(o => o.slug === 'mpk') && {
       label: 'Anggota MPK',
       value: stats.totalMpk,
       suffix: 'anggota',
@@ -422,7 +416,7 @@ export default function DashboardClient({ user }: Props) {
       icon: Wallet,
       color: 'bg-persian-blue/10 text-persian-blue',
     },
-    user.role !== 'organization_admin' && {
+    {
       label: 'Total Pemasukan Kas',
       value: formatCurrency(stats.totalPemasukan),
       isCurrency: true,
@@ -850,7 +844,7 @@ export default function DashboardClient({ user }: Props) {
       )}
 
       {/* Recent activity log (administrator only) */}
-      {user.role === 'administrator' && (
+      {isAdministrator(user.role) && (
         <div className="card p-5 min-h-[150px]">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -886,7 +880,7 @@ export default function DashboardClient({ user }: Props) {
       )}
 
       {/* ── Request Statistics (administrator only) ─────────────────────────── */}
-      {user.role === 'administrator' && (
+      {isAdministrator(user.role) && (
         <div className="card p-5">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">

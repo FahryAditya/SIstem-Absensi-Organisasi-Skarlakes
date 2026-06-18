@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     // Kelompokkan per organisasi
     const byOrg: Record<string, typeof jadwalEsok> = {}
     for (const j of jadwalEsok) {
-      const org = j.organisasi
+      const org = j.organisasi || 'unknown'
       if (!byOrg[org]) byOrg[org] = []
       byOrg[org].push(j)
     }

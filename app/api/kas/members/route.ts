@@ -1,52 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAccessibleOrgs } from '@/lib/auth-shared'
+import { getSessionFromRequest } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
-function getCtx(req: NextRequest) {
-  return {
-    userId: parseInt(req.headers.get('x-user-id') || '0'),
-    userRole: req.headers.get('x-user-role') || '',
-  }
-}
-
 export async function GET(req: NextRequest) {
   try {
-    const { userRole } = getCtx(req)
-    const { searchParams } = new URL(req.url)
-    const org = searchParams.get('org') || ''
+    const session = await getSessionFromRequest(req)
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const accessible = getAccessibleOrgs(userRole)
-    if (!org || !accessible.includes(org)) {
+    const { searchParams } = new URL(req.url)
+    const orgId = searchParams.get('orgId')
+
+    const filterOrgId = orgId ? parseInt(orgId) : session.activeOrgId
+
+    if (!filterOrgId && session.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'No active organization selected' }, { status: 400 })
+    }
+
+    // RBAC Check
+    if (session.role !== 'SUPER_ADMIN' && filterOrgId && !session.orgIds.includes(filterOrgId)) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 
-    let results: any[] = []
+    const where = filterOrgId ? { organization_id: filterOrgId, status: 'ACTIVE' } : { status: 'ACTIVE' }
 
-    if (org === 'programming' || org === 'english') {
-      results = await prisma.siswa.findMany({
-        where: { ekskul: org as any },
-        select: { id: true, nama: true, kelas: true },
-        orderBy: { nama: 'asc' }
-      })
-    } else if (org === 'osis') {
-      results = await prisma.anggotaOsis.findMany({
-        select: { id: true, nama: true, kelas: true, jabatan: true },
-        orderBy: { nama: 'asc' }
-      })
-    } else if (org === 'mpk') {
-      results = await prisma.anggotaMpk.findMany({
-        select: { id: true, nama: true, kelas: true, jabatan: true },
-        orderBy: { nama: 'asc' }
-      })
-    }
+    const members = await prisma.member.findMany({
+      where,
+      select: { id: true, name: true, class: true, jabatan: true },
+      orderBy: { name: 'asc' }
+    })
 
     return NextResponse.json({
-      data: results.map(r => ({
-        id: r.id,
-        nama: r.nama,
-        kelas: r.kelas ? `${r.kelas}${r.jabatan ? ` (${r.jabatan})` : ''}` : (r.jabatan || '-')
+      data: members.map(m => ({
+        id: m.id,
+        nama: m.name,
+        kelas: m.class ? `${m.class}${m.jabatan ? ` (${m.jabatan})` : ''}` : (m.jabatan || '-')
       }))
     })
   } catch (e: any) {

@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     const { orgId } = parsed.data
 
     // Verify user has access to this organization
-    if (session.role !== 'SUPER_ADMIN') {
+    if ((session.role as string) !== 'SUPER_ADMIN' && (session.role as string) !== 'administrator') {
       const access = await prisma.organizationAdmin.findUnique({
         where: {
           user_id_organization_id: {

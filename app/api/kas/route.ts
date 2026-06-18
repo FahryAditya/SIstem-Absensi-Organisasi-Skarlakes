@@ -1,214 +1,92 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAccessibleOrgs } from '@/lib/auth-shared'
-import { getAccessibleOrganizations } from '@/lib/services/organization-service'
+import { getSessionFromRequest } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
-function getCtx(req: NextRequest) {
-  return {
-    userId: parseInt(req.headers.get('x-user-id') || '0'),
-    userRole: req.headers.get('x-user-role') || '',
-  }
-}
-
 export async function GET(req: NextRequest) {
   try {
-    const { userId, userRole } = getCtx(req)
+    const session = await getSessionFromRequest(req)
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const { searchParams } = new URL(req.url)
-    const orgFilter = searchParams.get('org') || ''
+    const orgId = searchParams.get('orgId')
     const searchQuery = searchParams.get('search') || ''
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
 
-    const accessibleOrgs = await getAccessibleOrganizations(userId, userRole)
-    const accessibleSlugs = accessibleOrgs.map(o => o.slug)
-    const org = (orgFilter && accessibleSlugs.includes(orgFilter)) ? orgFilter : accessibleSlugs[0]
+    const filterOrgId = orgId ? parseInt(orgId) : session.activeOrgId
 
-    if (!org) {
-      return NextResponse.json({ data: [], totalKas: 0, orgs: [], total: 0, totalPages: 0 })
+    if (!filterOrgId && session.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'No active organization selected' }, { status: 400 })
     }
 
-    let results: any[] = []
-    let totalItems = 0
-    let totalKasSum = 0
-
-    const searchCondition = searchQuery ? { nama: { contains: searchQuery, mode: 'insensitive' as any } } : {}
-    const memberSearchCondition = searchQuery ? { name: { contains: searchQuery, mode: 'insensitive' as any } } : {}
-
-    const isDynamicOrg = (slug: string) => !['programming', 'english', 'osis', 'mpk'].includes(slug)
-
-    if (isDynamicOrg(org)) {
-      const organization = await prisma.organization.findUnique({ where: { slug: org } })
-      if (!organization) return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
-
-      const [members, total, totalAttendanceKas] = await Promise.all([
-        prisma.member.findMany({
-          where: { organization_id: organization.id, ...memberSearchCondition },
-          include: { 
-            attendance: { select: { cash_amount: true, created_at: true } },
-            cash_transactions: { select: { amount: true, created_at: true } }
-          },
-          orderBy: { name: 'asc' },
-          skip: (page - 1) * limit,
-          take: limit,
-        }),
-        prisma.member.count({ where: { organization_id: organization.id, ...memberSearchCondition } }),
-        prisma.attendanceV2.aggregate({
-          where: { organization_id: organization.id },
-          _sum: { cash_amount: true }
-        })
-      ])
-
-      totalItems = total
-      totalKasSum = (totalAttendanceKas._sum?.cash_amount || 0)
-      results = members.map(m => {
-        let terakhir_bayar = null
-        const allTransactions = [
-          ...m.attendance.filter(a => a.cash_amount !== 0).map(a => ({ amount: a.cash_amount, date: a.created_at })),
-          ...m.cash_transactions.map(t => ({ amount: t.amount, date: t.created_at }))
-        ]
-        
-        if (allTransactions.length > 0) {
-          const latest = allTransactions.reduce((a, b) => new Date(a.date) > new Date(b.date) ? a : b)
-          terakhir_bayar = latest.date.toISOString()
-        }
-
-        const total_kas = m.attendance.reduce((sum, a) => sum + (a.cash_amount || 0), 0) + 
-                         m.cash_transactions.reduce((sum, t) => sum + (t.amount || 0), 0)
-
-        return {
-          id: m.id,
-          nama: m.name,
-          kelas: m.class || '-',
-          total_kas,
-          terakhir_bayar,
-          organisasi: org
-        }
-      })
-    } else if (org === 'programming' || org === 'english') {
-      const [siswaList, total, totalKasData, totalPengeluaran] = await Promise.all([
-        prisma.siswa.findMany({
-          where: { ekskul: org as any, ...searchCondition },
-          include: { absensi: { select: { uang_kas: true, updated_at: true } } },
-          orderBy: { nama: 'asc' },
-          skip: (page - 1) * limit,
-          take: limit,
-        }),
-        prisma.siswa.count({ where: { ekskul: org as any, ...searchCondition } }),
-        prisma.absensi.aggregate({
-          where: { siswa: { ekskul: org as any } },
-          _sum: { uang_kas: true }
-        }),
-        prisma.pengeluaranKas.aggregate({
-          where: { organisasi_type: org as any },
-          _sum: { nominal: true }
-        })
-      ])
-
-      totalItems = total
-      totalKasSum = (totalKasData._sum?.uang_kas || 0) - (totalPengeluaran._sum?.nominal || 0)
-      results = siswaList.map(s => {
-        let terakhir_bayar = null
-        const paidAbsensi = s.absensi.filter((a: any) => a.uang_kas !== 0)
-        if (paidAbsensi.length > 0) {
-          const latest = paidAbsensi.reduce((a: any, b: any) => new Date(a.updated_at) > new Date(b.updated_at) ? a : b)
-          terakhir_bayar = latest.updated_at.toISOString()
-        }
-        return {
-          id: s.id,
-          nama: s.nama,
-          kelas: s.kelas || '-',
-          total_kas: s.absensi.reduce((sum: number, a: any) => sum + (a.uang_kas || 0), 0),
-          terakhir_bayar,
-          organisasi: s.ekskul
-        }
-      })
-    } else if (org === 'osis') {
-      const [anggotaList, total, totalKasData, totalPengeluaran] = await Promise.all([
-        prisma.anggotaOsis.findMany({
-          where: searchCondition,
-          include: { absensi: { select: { uang_kas: true, updated_at: true } } },
-          orderBy: { nama: 'asc' },
-          skip: (page - 1) * limit,
-          take: limit,
-        }),
-        prisma.anggotaOsis.count({ where: searchCondition }),
-        prisma.absensiOrganisasi.aggregate({
-          where: { organisasi_type: 'osis' },
-          _sum: { uang_kas: true }
-        }),
-        prisma.pengeluaranKas.aggregate({
-          where: { organisasi_type: 'osis' },
-          _sum: { nominal: true }
-        })
-      ])
-
-      totalItems = total
-      totalKasSum = (totalKasData._sum?.uang_kas || 0) - (totalPengeluaran._sum?.nominal || 0)
-      results = anggotaList.map(a => {
-        let terakhir_bayar = null
-        const paidAbsensi = a.absensi.filter((ab: any) => ab.uang_kas !== 0)
-        if (paidAbsensi.length > 0) {
-          const latest = paidAbsensi.reduce((ab1: any, ab2: any) => new Date(ab1.updated_at) > new Date(ab2.updated_at) ? ab1 : ab2)
-          terakhir_bayar = latest.updated_at.toISOString()
-        }
-        return {
-          id: a.id,
-          nama: a.nama,
-          kelas: a.kelas ? `${a.kelas} ${a.jabatan ? `(${a.jabatan})` : ''}` : (a.jabatan || '-'),
-          total_kas: a.absensi.reduce((sum: number, ab: any) => sum + (ab.uang_kas || 0), 0),
-          terakhir_bayar,
-          organisasi: 'osis'
-        }
-      })
-    } else if (org === 'mpk') {
-      const [anggotaList, total, totalKasData, totalPengeluaran] = await Promise.all([
-        prisma.anggotaMpk.findMany({
-          where: searchCondition,
-          include: { absensi: { select: { uang_kas: true, updated_at: true } } },
-          orderBy: { nama: 'asc' },
-          skip: (page - 1) * limit,
-          take: limit,
-        }),
-        prisma.anggotaMpk.count({ where: searchCondition }),
-        prisma.absensiOrganisasi.aggregate({
-          where: { organisasi_type: 'mpk' },
-          _sum: { uang_kas: true }
-        }),
-        prisma.pengeluaranKas.aggregate({
-          where: { organisasi_type: 'mpk' },
-          _sum: { nominal: true }
-        })
-      ])
-
-      totalItems = total
-      totalKasSum = (totalKasData._sum?.uang_kas || 0) - (totalPengeluaran._sum?.nominal || 0)
-      results = anggotaList.map(a => {
-        let terakhir_bayar = null
-        const paidAbsensi = a.absensi.filter((ab: any) => ab.uang_kas !== 0)
-        if (paidAbsensi.length > 0) {
-          const latest = paidAbsensi.reduce((ab1: any, ab2: any) => new Date(ab1.updated_at) > new Date(ab2.updated_at) ? ab1 : ab2)
-          terakhir_bayar = latest.updated_at.toISOString()
-        }
-        return {
-          id: a.id,
-          nama: a.nama,
-          kelas: a.kelas ? `${a.kelas} ${a.jabatan ? `(${a.jabatan})` : ''}` : (a.jabatan || '-'),
-          total_kas: a.absensi.reduce((sum: number, ab: any) => sum + (ab.uang_kas || 0), 0),
-          terakhir_bayar,
-          organisasi: 'mpk'
-        }
-      })
+    // RBAC Check
+    if (session.role !== 'SUPER_ADMIN' && filterOrgId && !session.orgIds.includes(filterOrgId)) {
+      return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
+
+    const where: any = {
+      ...(filterOrgId ? { organization_id: filterOrgId } : {}),
+      status: 'ACTIVE',
+      ...(searchQuery ? { name: { contains: searchQuery, mode: 'insensitive' } } : {}),
+    }
+
+    const [members, total, totalIncome, totalExpense] = await Promise.all([
+      prisma.member.findMany({
+        where,
+        include: { 
+          attendance: { select: { cash_amount: true, date: true } },
+          cash_transactions: { select: { amount: true, created_at: true, type: true } }
+        },
+        orderBy: { name: 'asc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.member.count({ where }),
+      prisma.cashTransaction.aggregate({
+        where: { ...(filterOrgId ? { organization_id: filterOrgId } : {}), type: 'INCOME' },
+        _sum: { amount: true }
+      }),
+      prisma.cashTransaction.aggregate({
+        where: { ...(filterOrgId ? { organization_id: filterOrgId } : {}), type: 'EXPENSE' },
+        _sum: { amount: true }
+      })
+    ])
+
+    const totalKasSum = (totalIncome._sum?.amount || 0) - (totalExpense._sum?.amount || 0)
+
+    const results = members.map(m => {
+      let terakhir_bayar = null
+      
+      const allIncome = [
+        ...m.attendance.filter(a => a.cash_amount > 0).map(a => ({ date: a.date })),
+        ...m.cash_transactions.filter(t => t.type === 'INCOME').map(t => ({ date: t.created_at }))
+      ]
+      
+      if (allIncome.length > 0) {
+        const latest = allIncome.reduce((a, b) => new Date(a.date) > new Date(b.date) ? a : b)
+        terakhir_bayar = latest.date.toISOString()
+      }
+
+      const total_kas = m.attendance.reduce((sum, a) => sum + (a.cash_amount || 0), 0) + 
+                       m.cash_transactions.filter(t => t.type === 'INCOME').reduce((sum, t) => sum + (t.amount || 0), 0) -
+                       m.cash_transactions.filter(t => t.type === 'EXPENSE').reduce((sum, t) => sum + (t.amount || 0), 0)
+
+      return {
+        id: m.id,
+        nama: m.name,
+        kelas: m.class || '-',
+        total_kas,
+        terakhir_bayar,
+      }
+    })
 
     return NextResponse.json({
       data: results,
       totalKas: totalKasSum,
-      orgs: accessibleOrgs,
-      activeOrg: org,
-      total: totalItems,
-      totalPages: Math.ceil(totalItems / limit)
+      total,
+      totalPages: Math.ceil(total / limit)
     })
   } catch (e: any) {
     console.error('[KAS ERROR]', e)

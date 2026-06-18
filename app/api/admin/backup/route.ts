@@ -9,7 +9,6 @@ function escapeSqlValue(value: any): string {
   if (value === null || value === undefined) return 'NULL'
   if (typeof value === 'number' || typeof value === 'boolean') return String(value)
   if (value instanceof Date) {
-    // Format date to PostgreSQL TIMESTAMP format YYYY-MM-DD HH:MM:SS
     const pad = (n: number) => (n < 10 ? '0' + n : n)
     const y = value.getUTCFullYear()
     const m = pad(value.getUTCMonth() + 1)
@@ -19,32 +18,17 @@ function escapeSqlValue(value: any): string {
     const s = pad(value.getUTCSeconds())
     return `'${y}-${m}-${d} ${h}:${min}:${s}'`
   }
-  if (typeof value === 'object') {
-    // For JSON fields
-    value = JSON.stringify(value)
-  }
-  // Escape string for SQL
-  const escapedStr = String(value)
-    .replace(/\\/g, '\\\\')
-    .replace(/'/g, "''")
-    .replace(/\n/g, '\\n')
-    .replace(/\r/g, '\\r')
+  if (typeof value === 'object') value = JSON.stringify(value)
+  const escapedStr = String(value).replace(/\\/g, '\\\\').replace(/'/g, "''").replace(/\n/g, '\\n').replace(/\r/g, '\\r')
   return `'${escapedStr}'`
 }
 
 function generateInsertQuery(tableName: string, rows: any[]): string {
-  if (!rows || rows.length === 0) return ''
-
+  if (!rows || rows.length === 0) return `-- Tabel ${tableName}: 0 rows\n\n`
   const columns = Object.keys(rows[0])
-const columnsStr = columns.map(c => `"${c}"`).join(', ')
-
+  const columnsStr = columns.map(c => `"${c}"`).join(', ')
   let sql = `INSERT INTO "${tableName}" (${columnsStr}) VALUES\n`
-
-  const valuesStrs = rows.map(row => {
-    const rowValues = columns.map(c => escapeSqlValue(row[c]))
-    return `  (${rowValues.join(', ')})`
-  })
-
+  const valuesStrs = rows.map(row => `  (${columns.map(c => escapeSqlValue(row[c])).join(', ')})`)
   sql += valuesStrs.join(',\n') + ';\n\n'
   return sql
 }
@@ -54,66 +38,57 @@ export async function GET() {
     const reqHeaders = headers()
     const userRole = reqHeaders.get('x-user-role')
 
-    if (userRole !== 'administrator') {
+    if (userRole !== 'SUPER_ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    // Fetch all data
     const [
       users,
-      siswa,
-      anggotaOsis,
-      anggotaMpk,
-      absensi,
-      absensiOrganisasi,
-      pengeluaranKas,
-      logAktivitas
+      organizations,
+      organization_admins,
+      members,
+      attendance,
+      cash_transactions,
+      cash_expenses,
+      registrations,
+      log_aktivitas,
+      achievements,
+      member_achievements
     ] = await Promise.all([
       prisma.user.findMany(),
-      prisma.siswa.findMany(),
-      prisma.anggotaOsis.findMany(),
-      prisma.anggotaMpk.findMany(),
-      prisma.absensi.findMany(),
-      prisma.absensiOrganisasi.findMany(),
-      prisma.pengeluaranKas.findMany(),
-      prisma.logAktivitas.findMany()
+      prisma.organization.findMany(),
+      prisma.organizationAdmin.findMany(),
+      prisma.member.findMany(),
+      prisma.attendance.findMany(),
+      prisma.cashTransaction.findMany(),
+      prisma.cashExpense.findMany(),
+      prisma.registration.findMany(),
+      prisma.logAktivitas.findMany(),
+      prisma.achievement.findMany(),
+      prisma.memberAchievement.findMany()
     ])
 
-    let sqlDump = `-- Database Backup (Format SQL)\n`
+    let sqlDump = `-- Multi-Tenant Extracurricular System Backup\n`
     sqlDump += `-- Dibuat pada: ${new Date().toISOString()}\n\n`
 
-    sqlDump += `-- Tabel: users\n`
     sqlDump += generateInsertQuery('users', users)
-
-    sqlDump += `-- Tabel: siswa\n`
-    sqlDump += generateInsertQuery('siswa', siswa)
-
-    sqlDump += `-- Tabel: anggota_osis\n`
-    sqlDump += generateInsertQuery('anggota_osis', anggotaOsis)
-
-    sqlDump += `-- Tabel: anggota_mpk\n`
-    sqlDump += generateInsertQuery('anggota_mpk', anggotaMpk)
-
-    sqlDump += `-- Tabel: absensi\n`
-    sqlDump += generateInsertQuery('absensi', absensi)
-
-    sqlDump += `-- Tabel: absensi_organisasi\n`
-    sqlDump += generateInsertQuery('absensi_organisasi', absensiOrganisasi)
-
-    sqlDump += `-- Tabel: pengeluaran_kas\n`
-    sqlDump += generateInsertQuery('pengeluaran_kas', pengeluaranKas)
-
-    sqlDump += `-- Tabel: log_aktivitas\n`
-    sqlDump += generateInsertQuery('log_aktivitas', logAktivitas)
+    sqlDump += generateInsertQuery('organizations', organizations)
+    sqlDump += generateInsertQuery('organization_admins', organization_admins)
+    sqlDump += generateInsertQuery('members', members)
+    sqlDump += generateInsertQuery('attendance', attendance)
+    sqlDump += generateInsertQuery('cash_transactions', cash_transactions)
+    sqlDump += generateInsertQuery('cash_expenses', cash_expenses)
+    sqlDump += generateInsertQuery('registrations', registrations)
+    sqlDump += generateInsertQuery('log_aktivitas', log_aktivitas)
+    sqlDump += generateInsertQuery('achievements', achievements)
+    sqlDump += generateInsertQuery('member_achievements', member_achievements)
 
     const dateStr = format(new Date(), 'yyyy-MM-dd_HH-mm-ss')
-    const fileName = `backup-ekskul-${dateStr}.sql`
-
     return new NextResponse(sqlDump, {
       status: 200,
       headers: {
         'Content-Type': 'application/sql',
-        'Content-Disposition': `attachment; filename="${fileName}"`
+        'Content-Disposition': `attachment; filename="full-backup-${dateStr}.sql"`
       }
     })
   } catch (error) {

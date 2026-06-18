@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 import { formatDateTime } from '@/lib/utils'
 
 interface Props {
-  user: { id: number; nama: string; email: string; role: string }
+  user: { id: number; nama: string; email: string; role: string; activeOrgId?: number; orgIds: number[] }
 }
 
 type UpdateType = 'update' | 'pengumuman' | 'perbaikan'

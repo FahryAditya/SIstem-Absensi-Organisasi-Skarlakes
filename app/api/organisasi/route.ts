@@ -1,284 +1,210 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
-import { canAccessOsis, canAccessMpk } from '@/lib/auth'
-import { jsonWithPrivateCache } from '@/lib/api-cache'
+import { getSessionFromRequest } from '@/lib/auth'
 import { z } from 'zod'
 
-function getCtx(req: NextRequest) {
-  return {
-    userId: parseInt(req.headers.get('x-user-id') || '0'),
-    userNama: req.headers.get('x-user-nama') || '',
-    userRole: req.headers.get('x-user-role') || '',
-  }
-}
+export const dynamic = 'force-dynamic'
 
-const anggotaSchema = z.object({
-  nis: z.string().nullable().optional().refine(val => !val || /^\d+$/.test(val), { message: 'NIS hanya boleh berisi angka' }),
-  nama: z.string().min(1, 'Nama wajib diisi').regex(/^[a-zA-Z\s.'\']*$/, 'Nama hanya boleh berisi huruf'),
-  kelas: z.string().nullable().optional(),
-  email: z.string().email('Email tidak valid').nullable().optional(),
-  foto_url: z.string().url('URL foto tidak valid').nullable().optional(),
+const schema = z.object({
+  name: z.string().min(1, 'Nama wajib diisi'),
+  nis: z.string().nullable().optional(),
+  class: z.string().nullable().optional(),
+  email: z.string().email().nullable().optional(),
   jabatan: z.string().nullable().optional(),
-  tipe: z.enum(['osis', 'mpk']),
+  tipe: z.string().optional(), // For legacy compatibility
 })
 
-// GET: list anggota OSIS atau MPK
 export async function GET(req: NextRequest) {
   try {
-    const ctx = getCtx(req)
-    console.log('GET /api/organisasi context:', ctx)
-    const { userRole } = ctx
+    const session = await getSessionFromRequest(req)
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const { searchParams } = new URL(req.url)
-    const tipe = searchParams.get('tipe') as 'osis' | 'mpk' | null
+    const orgId = searchParams.get('orgId')
     const search = searchParams.get('search') || ''
-    const includeAlumni = searchParams.get('includeAlumni') === 'true'
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 100)
+    const limit = parseInt(searchParams.get('limit') || '15')
 
-    console.log('GET /api/organisasi params:', { tipe, search, page, limit, includeAlumni })
+    // Find orgId from slug if provided (legacy UI compatibility)
+    let filterOrgId = orgId ? parseInt(orgId) : session.activeOrgId
+    const slug = searchParams.get('tipe') // old UI uses 'tipe' for 'osis' or 'mpk'
+    if (!filterOrgId && slug) {
+       const org = await prisma.organization.findUnique({ where: { slug } })
+       filterOrgId = org?.id
+    }
 
-    if (tipe === 'osis' && !canAccessOsis(userRole))
+    if (!filterOrgId && session.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'No active organization selected' }, { status: 400 })
+    }
+
+    // RBAC Check
+    if (session.role !== 'SUPER_ADMIN' && filterOrgId && !session.orgIds.includes(filterOrgId)) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
-    if (tipe === 'mpk' && !canAccessMpk(userRole))
-      return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
-
-    const whereSearch = {
-      ...(search ? { nama: { contains: search } } : {}),
-      status: includeAlumni && (userRole === 'administrator') ? undefined : 'ACTIVE'
     }
 
-    if (tipe === 'osis') {
-      const [data, total] = await Promise.all([
-        prisma.anggotaOsis.findMany({ where: whereSearch, orderBy: { nama: 'asc' }, skip: (page-1)*limit, take: limit }),
-        prisma.anggotaOsis.count({ where: whereSearch }),
-      ])
-      return NextResponse.json({ data, total, totalPages: Math.ceil(total/limit) })
+    const where: any = {
+      ...(filterOrgId ? { organization_id: filterOrgId } : {}),
+      ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
+      status: 'ACTIVE'
     }
 
-    if (tipe === 'mpk') {
-      const [data, total] = await Promise.all([
-        prisma.anggotaMpk.findMany({ where: whereSearch, orderBy: { nama: 'asc' }, skip: (page-1)*limit, take: limit }),
-        prisma.anggotaMpk.count({ where: whereSearch }),
-      ])
-      return NextResponse.json({ data, total, totalPages: Math.ceil(total/limit) })
-    }
+    const [data, total] = await Promise.all([
+      prisma.member.findMany({
+        where,
+        orderBy: { name: 'asc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.member.count({ where }),
+    ])
 
-    // Both (if admin has access to both)
-    const results: Record<string, unknown> = {}
-    if (canAccessOsis(userRole)) {
-      results.osis = await prisma.anggotaOsis.findMany({ where: whereSearch, orderBy: { nama: 'asc' } })
-    }
-    if (canAccessMpk(userRole)) {
-      results.mpk = await prisma.anggotaMpk.findMany({ where: whereSearch, orderBy: { nama: 'asc' } })
-    }
-    return NextResponse.json(results)
-  } catch (error: any) {
-    console.error('GET organisasi error:', error)
-    return NextResponse.json({ error: 'Gagal memuat data organisasi: ' + error.message }, { status: 500 })
+    // Map to legacy 'nama' for UI if needed
+    const formattedData = data.map(m => ({
+       ...m,
+       nama: m.name, // compatibility with legacy UI
+       kelas: m.class
+    }))
+
+    return NextResponse.json({ 
+      data: formattedData, 
+      total, 
+      page, 
+      totalPages: Math.ceil(total / limit) 
+    })
+  } catch (error) {
+    console.error('[ORGANISASI GET ERROR]', error)
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
 
 export async function POST(req: NextRequest) {
-  const ctx = getCtx(req)
-  const body = await req.json()
-  const parsed = anggotaSchema.safeParse(body)
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
+  try {
+    const session = await getSessionFromRequest(req)
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { tipe, ...data } = parsed.data
+    const body = await req.json()
+    const parsed = schema.safeParse(body)
+    if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
 
-  if (tipe === 'osis' && !canAccessOsis(ctx.userRole))
-    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
-  if (tipe === 'mpk' && !canAccessMpk(ctx.userRole))
-    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
-
-  const namaTrimmed = data.nama.trim()
-
-  // ── Cegah duplikat nama (case-insensitive) dalam organisasi yang sama ──────
-  if (tipe === 'osis') {
-    const duplikat = await prisma.anggotaOsis.findFirst({
-      where: { nama: { equals: namaTrimmed, mode: 'insensitive' } },
-    })
-    if (duplikat) {
-      return NextResponse.json(
-        { error: `Anggota "${duplikat.nama}" sudah terdaftar di OSIS. Periksa data yang sudah ada.` },
-        { status: 409 }
-      )
+    let activeOrgId = session.activeOrgId
+    if (!activeOrgId && body.tipe) {
+      const org = await prisma.organization.findUnique({ where: { slug: body.tipe } })
+      activeOrgId = org?.id
     }
 
-    // Cek duplikat NIS jika diisi
-    if (data.nis && data.nis.trim() !== '') {
-      const duplikatNis = await prisma.anggotaOsis.findFirst({
-        where: { nis: data.nis.trim() },
-      })
-      if (duplikatNis) {
-        return NextResponse.json(
-          { error: `NIS "${data.nis}" sudah digunakan oleh "${duplikatNis.nama}" di OSIS.` },
-          { status: 409 }
-        )
+    if (!activeOrgId) return NextResponse.json({ error: 'No active organization' }, { status: 400 })
+
+    if (session.role !== 'SUPER_ADMIN' && !session.orgIds.includes(activeOrgId)) {
+      return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+    }
+
+    const member = await prisma.member.create({
+      data: {
+        name: parsed.data.name,
+        nis: parsed.data.nis,
+        class: parsed.data.class,
+        email: parsed.data.email,
+        jabatan: parsed.data.jabatan,
+        organization_id: activeOrgId,
       }
-    }
-  }
-
-  if (tipe === 'mpk') {
-    const duplikat = await prisma.anggotaMpk.findFirst({
-      where: { nama: { equals: namaTrimmed, mode: 'insensitive' } },
     })
-    if (duplikat) {
-      return NextResponse.json(
-        { error: `Anggota "${duplikat.nama}" sudah terdaftar di MPK. Periksa data yang sudah ada.` },
-        { status: 409 }
-      )
-    }
 
-    if (data.nis && data.nis.trim() !== '') {
-      const duplikatNis = await prisma.anggotaMpk.findFirst({
-        where: { nis: data.nis.trim() },
-      })
-      if (duplikatNis) {
-        return NextResponse.json(
-          { error: `NIS "${data.nis}" sudah digunakan oleh "${duplikatNis.nama}" di MPK.` },
-          { status: 409 }
-        )
-      }
-    }
+    await createLog({
+      userId: session.id,
+      userNama: session.nama,
+      aksi: 'CREATE',
+      organizationId: activeOrgId,
+      tabel: 'members',
+      recordId: member.id,
+      deskripsi: `Tambah anggota "${member.name}"`,
+      ipAddress: getIp(req),
+    })
+
+    return NextResponse.json({ success: true, data: member })
+  } catch (error) {
+    console.error('[ORGANISASI POST ERROR]', error)
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
-
-  let anggota: Record<string, unknown>
-  if (tipe === 'osis') {
-    anggota = await prisma.anggotaOsis.create({ data: { ...data, nama: namaTrimmed } })
-  } else {
-    anggota = await prisma.anggotaMpk.create({ data: { ...data, nama: namaTrimmed } })
-  }
-
-  await createLog({
-    userId: ctx.userId, userNama: ctx.userNama, aksi: 'CREATE',
-    tabel: `anggota_${tipe}`, recordId: (anggota as { id: number }).id,
-    deskripsi: `${ctx.userNama} menambahkan anggota "${namaTrimmed}" ke ${tipe.toUpperCase()}`,
-    dataBaru: data, ipAddress: getIp(req),
-  })
-
-  return NextResponse.json({ data: anggota }, { status: 201 })
 }
 
 export async function PUT(req: NextRequest) {
-  const ctx = getCtx(req)
-  const body = await req.json()
-  const { id, ...rest } = body
-  const parsed = anggotaSchema.safeParse(rest)
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
-  const { tipe, ...data } = parsed.data
-  if (!id || !tipe) return NextResponse.json({ error: 'ID dan tipe required' }, { status: 400 })
+  try {
+    const session = await getSessionFromRequest(req)
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  if (tipe === 'osis' && !canAccessOsis(ctx.userRole))
-    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
-  if (tipe === 'mpk' && !canAccessMpk(ctx.userRole))
-    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+    const body = await req.json()
+    const { id, ...rest } = body
+    if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
 
-  const namaTrimmed = data.nama.trim()
-
-  let existing: Record<string, unknown> | null = null
-  let updated: Record<string, unknown>
-
-  if (tipe === 'osis') {
-    existing = await prisma.anggotaOsis.findUnique({ where: { id } })
+    const existing = await prisma.member.findUnique({ where: { id } })
     if (!existing) return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
 
-    // Cek duplikat nama (kecuali record sendiri)
-    const duplikat = await prisma.anggotaOsis.findFirst({
-      where: { nama: { equals: namaTrimmed, mode: 'insensitive' }, NOT: { id } },
-    })
-    if (duplikat) {
-      return NextResponse.json(
-        { error: `Anggota "${duplikat.nama}" sudah terdaftar di OSIS.` },
-        { status: 409 }
-      )
+    if (session.role !== 'SUPER_ADMIN' && !session.orgIds.includes(existing.organization_id)) {
+      return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 
-    // Cek duplikat NIS (kecuali record sendiri)
-    if (data.nis && data.nis.trim() !== '') {
-      const duplikatNis = await prisma.anggotaOsis.findFirst({
-        where: { nis: data.nis.trim(), NOT: { id } },
-      })
-      if (duplikatNis) {
-        return NextResponse.json(
-          { error: `NIS "${data.nis}" sudah digunakan oleh "${duplikatNis.nama}" di OSIS.` },
-          { status: 409 }
-        )
+    const updated = await prisma.member.update({
+      where: { id },
+      data: {
+        name: rest.name || rest.nama,
+        nis: rest.nis,
+        class: rest.class || rest.kelas,
+        email: rest.email,
+        jabatan: rest.jabatan,
       }
-    }
-
-    updated = await prisma.anggotaOsis.update({ where: { id }, data: { ...data, nama: namaTrimmed } })
-  } else {
-    existing = await prisma.anggotaMpk.findUnique({ where: { id } })
-    if (!existing) return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
-
-    // Cek duplikat nama (kecuali record sendiri)
-    const duplikat = await prisma.anggotaMpk.findFirst({
-      where: { nama: { equals: namaTrimmed, mode: 'insensitive' }, NOT: { id } },
     })
-    if (duplikat) {
-      return NextResponse.json(
-        { error: `Anggota "${duplikat.nama}" sudah terdaftar di MPK.` },
-        { status: 409 }
-      )
-    }
 
-    // Cek duplikat NIS (kecuali record sendiri)
-    if (data.nis && data.nis.trim() !== '') {
-      const duplikatNis = await prisma.anggotaMpk.findFirst({
-        where: { nis: data.nis.trim(), NOT: { id } },
-      })
-      if (duplikatNis) {
-        return NextResponse.json(
-          { error: `NIS "${data.nis}" sudah digunakan oleh "${duplikatNis.nama}" di MPK.` },
-          { status: 409 }
-        )
-      }
-    }
+    await createLog({
+      userId: session.id,
+      userNama: session.nama,
+      aksi: 'UPDATE',
+      organizationId: existing.organization_id,
+      tabel: 'members',
+      recordId: id,
+      deskripsi: `Ubah data anggota "${updated.name}"`,
+      ipAddress: getIp(req),
+    })
 
-    updated = await prisma.anggotaMpk.update({ where: { id }, data: { ...data, nama: namaTrimmed } })
+    return NextResponse.json({ success: true, data: updated })
+  } catch (error) {
+    console.error('[ORGANISASI PUT ERROR]', error)
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
-
-  await createLog({
-    userId: ctx.userId, userNama: ctx.userNama, aksi: 'UPDATE',
-    tabel: `anggota_${tipe}`, recordId: id,
-    deskripsi: `${ctx.userNama} mengubah data anggota "${namaTrimmed}" di ${tipe.toUpperCase()}`,
-    dataLama: existing as Record<string, unknown>, dataBaru: data, ipAddress: getIp(req),
-  })
-
-  return NextResponse.json({ data: updated })
 }
 
 export async function DELETE(req: NextRequest) {
-  const ctx = getCtx(req)
-  const { searchParams } = new URL(req.url)
-  const id = parseInt(searchParams.get('id') || '0')
-  const tipe = searchParams.get('tipe') as 'osis' | 'mpk'
-  if (!id || !tipe) return NextResponse.json({ error: 'ID dan tipe required' }, { status: 400 })
+  try {
+    const session = await getSessionFromRequest(req)
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  if (tipe === 'osis' && !canAccessOsis(ctx.userRole))
-    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
-  if (tipe === 'mpk' && !canAccessMpk(ctx.userRole))
-    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+    const { searchParams } = new URL(req.url)
+    const id = parseInt(searchParams.get('id') || '0')
+    if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
 
-  let nama = ''
-  if (tipe === 'osis') {
-    const ex = await prisma.anggotaOsis.findUnique({ where: { id } })
-    nama = ex?.nama || ''
-    await prisma.anggotaOsis.delete({ where: { id } })
-  } else {
-    const ex = await prisma.anggotaMpk.findUnique({ where: { id } })
-    nama = ex?.nama || ''
-    await prisma.anggotaMpk.delete({ where: { id } })
+    const existing = await prisma.member.findUnique({ where: { id } })
+    if (!existing) return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
+
+    if (session.role !== 'SUPER_ADMIN' && !session.orgIds.includes(existing.organization_id)) {
+      return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+    }
+
+    await prisma.member.delete({ where: { id } })
+
+    await createLog({
+      userId: session.id,
+      userNama: session.nama,
+      aksi: 'DELETE',
+      organizationId: existing.organization_id,
+      tabel: 'members',
+      recordId: id,
+      deskripsi: `Hapus anggota "${existing.name}"`,
+      ipAddress: getIp(req),
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('[ORGANISASI DELETE ERROR]', error)
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
-
-  await createLog({
-    userId: ctx.userId, userNama: ctx.userNama, aksi: 'DELETE',
-    tabel: `anggota_${tipe}`, recordId: id,
-    deskripsi: `${ctx.userNama} menghapus anggota "${nama}" dari ${tipe.toUpperCase()}`,
-    ipAddress: getIp(req),
-  })
-
-  return NextResponse.json({ success: true })
 }

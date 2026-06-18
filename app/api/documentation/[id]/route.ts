@@ -48,7 +48,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Documentation not found' }, { status: 404 })
     }
 
-    if (!canManageDocumentation(userRole, doc.createdBy, userId, doc.type)) {
+    if (!canManageDocumentation(userRole, doc.created_by, userId, doc.type)) {
       return NextResponse.json({ error: 'You do not have permission to edit this documentation' }, { status: 403 })
     }
 
@@ -65,7 +65,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         title: title ?? undefined,
         description: description ?? undefined,
         category: category ?? undefined,
-        dateTaken: dateTaken ? new Date(dateTaken) : undefined,
+        date_taken: dateTaken ? new Date(dateTaken) : undefined,
         // Convert comma‑separated URLs & publicIds into an array of objects for the `photos` JSON field
         photos: photoUrl ? photoUrl.split(',').map((url: string, i: number) => ({
           url: url.trim(),
@@ -115,7 +115,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       return NextResponse.json({ error: 'Documentation not found' }, { status: 404 })
     }
 
-    if (!canManageDocumentation(userRole, doc.createdBy, userId, doc.type)) {
+    if (!canManageDocumentation(userRole, doc.created_by, userId, doc.type)) {
       return NextResponse.json({ error: 'You do not have permission to delete this documentation' }, { status: 403 })
     }
 

@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
         title,
         description,
         category,
-        dateTaken: dateTaken ? new Date(dateTaken) : new Date(),
+        date_taken: dateTaken ? new Date(dateTaken) : new Date(),
         photos: photosArray,
         type: type as any,
         organizationId: parseInt(organizationId),
