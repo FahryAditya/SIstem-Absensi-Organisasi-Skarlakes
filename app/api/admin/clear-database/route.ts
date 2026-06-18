@@ -4,6 +4,10 @@ import { createLog, getIp } from '@/lib/log'
 import { z } from 'zod'
 import { getSessionFromRequest } from '@/lib/auth'
 
+function isSuperAdmin(role: string) {
+  return role === 'SUPER_ADMIN' || role === 'administrator'
+}
+
 const clearSchema = z.object({
   orgId: z.number().int().positive(),
   tipe: z.enum(['absensi', 'kas', 'anggota', 'semua']),
@@ -13,7 +17,7 @@ const clearSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const session = await getSessionFromRequest(req)
-    if (!session || session.role !== 'SUPER_ADMIN') {
+    if (!session || !isSuperAdmin(session.role as string)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

@@ -3,13 +3,13 @@ import { redirect } from 'next/navigation'
 import HapusPesertaClient from './HapusPesertaClient'
 
 export default async function HapusPesertaPage() {
-  const user = await getServerUser('administrator')
+  const user = await getServerUser()
 
   if (!user) {
     redirect('/login')
   }
 
-  if (user.role !== 'administrator') {
+  if (user.role !== 'SUPER_ADMIN' && (user.role as string) !== 'administrator') {
     redirect('/dashboard')
   }
 

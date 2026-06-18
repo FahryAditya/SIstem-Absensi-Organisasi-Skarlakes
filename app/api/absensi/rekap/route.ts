@@ -4,6 +4,10 @@ import { getSessionFromRequest } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
+function isSuperAdmin(role: string) {
+  return role === 'SUPER_ADMIN' || role === 'administrator'
+}
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getSessionFromRequest(req)
@@ -22,7 +26,7 @@ export async function GET(req: NextRequest) {
     if (!member) return NextResponse.json({ error: 'Anggota tidak ditemukan' }, { status: 404 })
 
     // RBAC Check: Ensure admin has access to this member's organization
-    if (session.role !== 'SUPER_ADMIN' && !session.orgIds.includes(member.organization_id)) {
+    if (!isSuperAdmin(session.role as string) && !session.orgIds.includes(member.organization_id)) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 

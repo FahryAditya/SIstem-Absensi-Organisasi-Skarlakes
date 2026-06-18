@@ -4,6 +4,10 @@ import { getSessionFromRequest } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 
+function isSuperAdmin(role: string) {
+  return role === 'SUPER_ADMIN' || role === 'administrator'
+}
+
 const userSchema = z.object({
   nama: z.string().min(1),
   email: z.string().email(),
@@ -15,7 +19,7 @@ const userSchema = z.object({
 export async function GET(req: NextRequest) {
   try {
     const session = await getSessionFromRequest(req)
-    if (!session || session.role !== 'SUPER_ADMIN') {
+    if (!session || !isSuperAdmin(session.role as string)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -41,7 +45,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await getSessionFromRequest(req)
-    if (!session || session.role !== 'SUPER_ADMIN') {
+    if (!session || !isSuperAdmin(session.role as string)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -76,7 +80,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const session = await getSessionFromRequest(req)
-    if (!session || session.role !== 'SUPER_ADMIN') {
+    if (!session || !isSuperAdmin(session.role as string)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -117,7 +121,7 @@ export async function PUT(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const session = await getSessionFromRequest(req)
-    if (!session || session.role !== 'SUPER_ADMIN') {
+    if (!session || !isSuperAdmin(session.role as string)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

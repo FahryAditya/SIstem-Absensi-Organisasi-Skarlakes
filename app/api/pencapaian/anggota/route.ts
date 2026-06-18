@@ -3,6 +3,10 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/auth'
 import { z } from 'zod'
 
+function isSuperAdmin(role: string) {
+  return role === 'SUPER_ADMIN' || role === 'administrator'
+}
+
 const querySchema = z.object({
   targetId: z.coerce.number().int().positive(),
 })
@@ -31,7 +35,7 @@ export async function GET(req: NextRequest) {
     if (!member) return NextResponse.json({ error: 'Anggota tidak ditemukan' }, { status: 404 })
 
     // RBAC Check
-    if (session.role !== 'SUPER_ADMIN' && !session.orgIds.includes(member.organization_id)) {
+    if (!isSuperAdmin(session.role as string) && !session.orgIds.includes(member.organization_id)) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 

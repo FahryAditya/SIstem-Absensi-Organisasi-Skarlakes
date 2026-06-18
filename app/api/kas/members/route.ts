@@ -4,6 +4,10 @@ import { getSessionFromRequest } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
+function isSuperAdmin(role: string) {
+  return role === 'SUPER_ADMIN' || role === 'administrator'
+}
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getSessionFromRequest(req)
@@ -14,12 +18,12 @@ export async function GET(req: NextRequest) {
 
     const filterOrgId = orgId ? parseInt(orgId) : session.activeOrgId
 
-    if (!filterOrgId && session.role !== 'SUPER_ADMIN') {
+    if (!filterOrgId && !isSuperAdmin(session.role as string)) {
       return NextResponse.json({ error: 'No active organization selected' }, { status: 400 })
     }
 
     // RBAC Check
-    if (session.role !== 'SUPER_ADMIN' && filterOrgId && !session.orgIds.includes(filterOrgId)) {
+    if (!isSuperAdmin(session.role as string) && filterOrgId && !session.orgIds.includes(filterOrgId)) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 

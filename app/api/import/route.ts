@@ -5,6 +5,10 @@ import { getSessionFromRequest } from '@/lib/auth'
 import { pusherServer } from '@/lib/pusher-server'
 import { z } from 'zod'
 
+function isSuperAdmin(role: string) {
+  return role === 'SUPER_ADMIN' || role === 'administrator'
+}
+
 const itemSchema = z.object({
   nama: z.string().min(1),
   kelas: z.string().optional().nullable(),
@@ -46,7 +50,7 @@ export async function POST(req: NextRequest) {
     }
 
     // RBAC Check
-    if (session.role !== 'SUPER_ADMIN' && !session.orgIds.includes(targetOrgId)) {
+    if (!isSuperAdmin(session.role as string) && !session.orgIds.includes(targetOrgId)) {
       return NextResponse.json({ error: 'Akses ditolak untuk organisasi ini' }, { status: 403 })
     }
 

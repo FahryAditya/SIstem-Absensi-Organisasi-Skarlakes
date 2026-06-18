@@ -64,7 +64,7 @@ export default function AbsensiClient({ user }: Props) {
   }, [user.activeOrgId, bulkDate])
 
   const loadRiwayat = useCallback(async (force = false, customParams?: any) => {
-    if (!user.activeOrgId && user.role !== 'SUPER_ADMIN') return
+    if (!user.activeOrgId && user.role !== 'SUPER_ADMIN' && (user.role as string) !== 'administrator') return
     setLoadingRiwayat(true)
     const activePage = customParams?.page || page
     const activeTanggal = customParams?.tanggal !== undefined ? customParams.tanggal : filterTanggal

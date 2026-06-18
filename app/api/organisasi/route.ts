@@ -6,6 +6,10 @@ import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
 
+function isSuperAdmin(role: string) {
+  return role === 'SUPER_ADMIN' || role === 'administrator'
+}
+
 const schema = z.object({
   name: z.string().min(1, 'Nama wajib diisi'),
   nis: z.string().nullable().optional(),
@@ -34,12 +38,12 @@ export async function GET(req: NextRequest) {
        filterOrgId = org?.id
     }
 
-    if (!filterOrgId && session.role !== 'SUPER_ADMIN') {
+    if (!filterOrgId && !isSuperAdmin(session.role as string)) {
       return NextResponse.json({ error: 'No active organization selected' }, { status: 400 })
     }
 
     // RBAC Check
-    if (session.role !== 'SUPER_ADMIN' && filterOrgId && !session.orgIds.includes(filterOrgId)) {
+    if (!isSuperAdmin(session.role as string) && filterOrgId && !session.orgIds.includes(filterOrgId)) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 
@@ -95,7 +99,7 @@ export async function POST(req: NextRequest) {
 
     if (!activeOrgId) return NextResponse.json({ error: 'No active organization' }, { status: 400 })
 
-    if (session.role !== 'SUPER_ADMIN' && !session.orgIds.includes(activeOrgId)) {
+    if (!isSuperAdmin(session.role as string) && !session.orgIds.includes(activeOrgId)) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 
@@ -140,7 +144,7 @@ export async function PUT(req: NextRequest) {
     const existing = await prisma.member.findUnique({ where: { id } })
     if (!existing) return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
 
-    if (session.role !== 'SUPER_ADMIN' && !session.orgIds.includes(existing.organization_id)) {
+    if (!isSuperAdmin(session.role as string) && !session.orgIds.includes(existing.organization_id)) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 
@@ -185,7 +189,7 @@ export async function DELETE(req: NextRequest) {
     const existing = await prisma.member.findUnique({ where: { id } })
     if (!existing) return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
 
-    if (session.role !== 'SUPER_ADMIN' && !session.orgIds.includes(existing.organization_id)) {
+    if (!isSuperAdmin(session.role as string) && !session.orgIds.includes(existing.organization_id)) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 

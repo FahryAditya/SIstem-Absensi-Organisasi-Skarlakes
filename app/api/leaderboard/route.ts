@@ -3,6 +3,10 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/auth'
 import { calculateProgress, LEVEL_NAMES } from '@/lib/exp'
 
+function isSuperAdmin(role: string) {
+  return role === 'SUPER_ADMIN' || role === 'administrator'
+}
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getSessionFromRequest(req)
@@ -15,12 +19,12 @@ export async function GET(req: NextRequest) {
     // If orgId is provided, use it. Otherwise use activeOrgId from session.
     let filterOrgId = orgId ? parseInt(orgId) : session.activeOrgId
 
-    if (!filterOrgId && session.role !== 'SUPER_ADMIN') {
+    if (!filterOrgId && !isSuperAdmin(session.role as string)) {
       return NextResponse.json({ error: 'No active organization selected' }, { status: 400 })
     }
 
     // RBAC Check
-    if (session.role !== 'SUPER_ADMIN' && filterOrgId && !session.orgIds.includes(filterOrgId)) {
+    if (!isSuperAdmin(session.role as string) && filterOrgId && !session.orgIds.includes(filterOrgId)) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 

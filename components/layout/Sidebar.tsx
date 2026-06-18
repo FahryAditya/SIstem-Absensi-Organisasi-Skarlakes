@@ -4,7 +4,7 @@ import React from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { ROLE_LABELS } from '@/lib/auth-shared'
+import { ROLE_LABELS, isAdministrator } from '@/lib/auth-shared'
 import Image from 'next/image'
 import {
   LayoutDashboard, Users, ClipboardList, Building2, UserCog, Mail,
@@ -57,7 +57,7 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
   items.push({ type: 'link', href: '/import', label: 'Import Data', icon: Download })
   items.push({ type: 'link', href: '/export', label: 'Export Data', icon: Download })
   
-  if (role === 'SUPER_ADMIN') {
+  if (role === 'SUPER_ADMIN' || isAdministrator(role)) {
     items.push({ type: 'section', label: 'Administrator Utama' })
     items.push({ type: 'link', href: '/admin/organizations', label: 'Manajemen Organisasi', icon: Building2 })
     items.push({ type: 'link', href: '/admin', label: 'Manajemen User', icon: UserCog })
@@ -182,7 +182,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
 
        <div className="px-4 py-4 border-t border-white/10 flex-shrink-0 bg-deep-navy/80 backdrop-blur-sm">
         <div className="flex items-center gap-2.5">
-          {role === 'SUPER_ADMIN' ? (
+          {role === 'SUPER_ADMIN' || isAdministrator(role) ? (
             <div className="relative w-8 h-8 rounded-full overflow-hidden shadow-sm border border-white/10 flex-shrink-0">
               <Image 
                 src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" 

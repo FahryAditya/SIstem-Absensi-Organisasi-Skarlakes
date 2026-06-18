@@ -3,6 +3,10 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/auth'
 import { createLog, getIp } from '@/lib/log'
 
+function isSuperAdmin(role: string) {
+  return role === 'SUPER_ADMIN' || role === 'administrator'
+}
+
 export async function GET(req: NextRequest, { params }: { params: { slug: string } }) {
   try {
     const org = await prisma.organization.findUnique({
@@ -35,7 +39,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
 export async function POST(req: NextRequest, { params }: { params: { slug: string } }) {
   try {
     const session = await getSessionFromRequest(req)
-    if (!session || session.role !== 'administrator') {
+    if (!session || !isSuperAdmin(session.role as string)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -89,7 +93,7 @@ export async function POST(req: NextRequest, { params }: { params: { slug: strin
 export async function DELETE(req: NextRequest, { params }: { params: { slug: string } }) {
   try {
     const session = await getSessionFromRequest(req)
-    if (!session || session.role !== 'administrator') {
+    if (!session || !isSuperAdmin(session.role as string)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

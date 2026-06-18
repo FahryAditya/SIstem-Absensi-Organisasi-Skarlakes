@@ -76,7 +76,7 @@ export default function SiswaClient({ user }: Props) {
   const [fJabatan, setFJabatan] = useState('Anggota')
 
   const load = useCallback(async () => {
-    if (!user.activeOrgId && user.role !== 'SUPER_ADMIN') return
+    if (!user.activeOrgId && user.role !== 'SUPER_ADMIN' && (user.role as string) !== 'administrator') return
     setLoading(true)
     const params = new URLSearchParams({
       page: String(page),

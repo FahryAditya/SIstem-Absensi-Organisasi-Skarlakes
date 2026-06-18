@@ -3,6 +3,10 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/auth'
 import { createLog, getIp } from '@/lib/log'
 
+function isSuperAdmin(role: string) {
+  return role === 'SUPER_ADMIN' || role === 'administrator'
+}
+
 export async function PATCH(req: NextRequest) {
   try {
     const session = await getSessionFromRequest(req)
@@ -23,7 +27,7 @@ export async function PATCH(req: NextRequest) {
     if (!reg) return NextResponse.json({ error: 'Data pendaftaran tidak ditemukan' }, { status: 404 })
 
     // RBAC Check
-    if (session.role !== 'SUPER_ADMIN' && !session.orgIds.includes(reg.organization_id)) {
+    if (!isSuperAdmin(session.role as string) && !session.orgIds.includes(reg.organization_id)) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 

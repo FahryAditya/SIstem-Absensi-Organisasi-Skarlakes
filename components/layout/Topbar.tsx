@@ -138,7 +138,7 @@ export default function Topbar({
           onClick={() => setOpen(!open)}
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
         >
-          {user.role === 'SUPER_ADMIN' ? (
+          {(user.role === 'SUPER_ADMIN' || (user.role as string) === 'administrator') ? (
             <div className="relative w-7 h-7 rounded-full overflow-hidden shadow-sm border border-white/10">
               <Image
                 src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg"

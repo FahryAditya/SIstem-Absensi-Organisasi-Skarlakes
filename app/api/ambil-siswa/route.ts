@@ -5,6 +5,10 @@ import { createLog, getIp } from '@/lib/log'
 import * as XLSX from 'xlsx'
 import { z } from 'zod'
 
+function isSuperAdmin(role: string) {
+  return role === 'SUPER_ADMIN' || role === 'administrator'
+}
+
 const reqSchema = z.object({
   orgIds: z.array(z.number()).min(1, 'Pilih minimal satu organisasi'),
   judulKegiatan: z.string().min(1, 'Judul kegiatan wajib diisi'),
@@ -43,7 +47,7 @@ export async function POST(req: NextRequest) {
     const { orgIds, judulKegiatan, siswaSelections, groups, isGrouped } = parsed.data
 
     // RBAC check
-    if (session.role !== 'SUPER_ADMIN') {
+    if (!isSuperAdmin(session.role as string)) {
       const allAuthorized = orgIds.every((oid) => session.orgIds.includes(oid))
       if (!allAuthorized) {
         return NextResponse.json({ error: 'Akses ditolak untuk satu atau lebih organisasi terpilih' }, { status: 403 })

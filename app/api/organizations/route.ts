@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/auth'
 
+function isSuperAdmin(role: string) {
+  return role === 'SUPER_ADMIN' || role === 'administrator'
+}
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getSessionFromRequest(req)
@@ -12,7 +16,7 @@ export async function GET(req: NextRequest) {
 
     if (mode === 'mine') {
       const orgs = await prisma.organization.findMany({
-        where: session.role === 'SUPER_ADMIN' ? {} : {
+        where: isSuperAdmin(session.role as string) ? {} : {
           admins: { some: { user_id: session.id } }
         },
         orderBy: { nama: 'asc' }
@@ -20,10 +24,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, data: orgs })
     }
 
-    const isSuperAdmin = session.role === 'SUPER_ADMIN'
+    const superAdmin = isSuperAdmin(session.role as string)
     
     let orgs;
-    if (isSuperAdmin) {
+    if (superAdmin) {
       orgs = await prisma.organization.findMany({
         include: {
           admins: {
@@ -57,7 +61,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await getSessionFromRequest(req)
-    if (!session || session.role !== 'SUPER_ADMIN') {
+    if (!session || !isSuperAdmin(session.role as string)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -92,7 +96,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const session = await getSessionFromRequest(req)
-    if (!session || session.role !== 'SUPER_ADMIN') {
+    if (!session || !isSuperAdmin(session.role as string)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

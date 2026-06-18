@@ -5,6 +5,10 @@ import { updateExp } from '@/lib/exp'
 import { getSessionFromRequest } from '@/lib/auth'
 import { z } from 'zod'
 
+function isSuperAdmin(role: string) {
+  return role === 'SUPER_ADMIN' || role === 'administrator'
+}
+
 const postSchema = z.object({
   memberId: z.number().int().positive(),
   amount: z.number().int().refine((n) => n !== 0, 'Selisih tidak boleh 0'),
@@ -24,12 +28,12 @@ export async function GET(req: NextRequest) {
 
     const filterOrgId = orgId ? parseInt(orgId) : session.activeOrgId
 
-    if (!filterOrgId && session.role !== 'SUPER_ADMIN') {
+    if (!filterOrgId && !isSuperAdmin(session.role as string)) {
       return NextResponse.json({ error: 'No active organization selected' }, { status: 400 })
     }
 
     // RBAC Check
-    if (session.role !== 'SUPER_ADMIN' && filterOrgId && !session.orgIds.includes(filterOrgId)) {
+    if (!isSuperAdmin(session.role as string) && filterOrgId && !session.orgIds.includes(filterOrgId)) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 
@@ -80,7 +84,7 @@ export async function POST(req: NextRequest) {
     if (!member) return NextResponse.json({ error: 'Anggota tidak ditemukan' }, { status: 404 })
 
     // RBAC Check
-    if (session.role !== 'SUPER_ADMIN' && !session.orgIds.includes(member.organization_id)) {
+    if (!isSuperAdmin(session.role as string) && !session.orgIds.includes(member.organization_id)) {
       return NextResponse.json({ error: 'Akses ditolak untuk organisasi ini' }, { status: 403 })
     }
 
