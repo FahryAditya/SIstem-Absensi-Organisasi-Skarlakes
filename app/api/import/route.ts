@@ -6,7 +6,7 @@ import { pusherServer } from '@/lib/pusher-server'
 import { z } from 'zod'
 
 function isSuperAdmin(role: string) {
-  return role === 'SUPER_ADMIN' || role === 'administrator'
+  return role === 'SUPER_ADMIN' || role === 'administrator' || role === 'admin_osis_mpk'
 }
 
 const itemSchema = z.object({

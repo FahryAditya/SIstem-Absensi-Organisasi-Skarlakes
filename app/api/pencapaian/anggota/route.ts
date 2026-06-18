@@ -4,7 +4,7 @@ import { getSessionFromRequest } from '@/lib/auth'
 import { z } from 'zod'
 
 function isSuperAdmin(role: string) {
-  return role === 'SUPER_ADMIN' || role === 'administrator'
+  return role === 'SUPER_ADMIN' || role === 'administrator' || role === 'admin_osis_mpk'
 }
 
 const querySchema = z.object({

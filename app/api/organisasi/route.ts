@@ -7,7 +7,7 @@ import { z } from 'zod'
 export const dynamic = 'force-dynamic'
 
 function isSuperAdmin(role: string) {
-  return role === 'SUPER_ADMIN' || role === 'administrator'
+  return role === 'SUPER_ADMIN' || role === 'administrator' || role === 'admin_osis_mpk'
 }
 
 const schema = z.object({

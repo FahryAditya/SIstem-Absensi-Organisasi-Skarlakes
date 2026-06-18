@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/auth'
 
 function isSuperAdmin(role: string) {
-  return role === 'SUPER_ADMIN' || role === 'administrator'
+  return role === 'SUPER_ADMIN' || role === 'administrator' || role === 'admin_osis_mpk'
 }
 
 export async function GET(req: NextRequest) {

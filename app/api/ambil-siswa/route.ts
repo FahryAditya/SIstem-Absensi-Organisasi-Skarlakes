@@ -6,7 +6,7 @@ import * as XLSX from 'xlsx'
 import { z } from 'zod'
 
 function isSuperAdmin(role: string) {
-  return role === 'SUPER_ADMIN' || role === 'administrator'
+  return role === 'SUPER_ADMIN' || role === 'administrator' || role === 'admin_osis_mpk'
 }
 
 const reqSchema = z.object({

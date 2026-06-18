@@ -3,6 +3,10 @@ import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
 import { z } from 'zod'
 
+function isSuperAdmin(role: string) {
+  return role === 'SUPER_ADMIN' || role === 'administrator'
+}
+
 function getCtx(req: NextRequest) {
   return {
     userId: parseInt(req.headers.get('x-user-id') || '0'),
@@ -31,9 +35,9 @@ export async function GET(req: NextRequest) {
   const { userRole, activeOrgId } = getCtx(req)
   const { searchParams } = new URL(req.url)
 
-  const filterOrgId = userRole === 'SUPER_ADMIN' ? (searchParams.get('orgId') ? parseInt(searchParams.get('orgId')!) : activeOrgId) : activeOrgId
+  const filterOrgId = isSuperAdmin(userRole) ? (searchParams.get('orgId') ? parseInt(searchParams.get('orgId')!) : activeOrgId) : activeOrgId
 
-  if (!filterOrgId && userRole !== 'SUPER_ADMIN') {
+  if (!filterOrgId && !isSuperAdmin(userRole)) {
     return NextResponse.json({ error: 'No active organization selected' }, { status: 400 })
   }
 
@@ -69,7 +73,7 @@ export async function POST(req: NextRequest) {
   const ctx = getCtx(req)
   const activeOrgId = ctx.activeOrgId
 
-  if (!activeOrgId) {
+  if (!activeOrgId && !isSuperAdmin(ctx.userRole)) {
     return NextResponse.json({ error: 'No active organization selected' }, { status: 400 })
   }
 
@@ -98,7 +102,7 @@ export async function POST(req: NextRequest) {
     data: { 
       ...parsed.data, 
       name: nameTrimmed, 
-      organization_id: activeOrgId 
+      organization_id: activeOrgId! 
     },
   })
 
@@ -124,13 +128,13 @@ export async function PUT(req: NextRequest) {
   const { id, ...rest } = body
 
   if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
-  if (!activeOrgId && ctx.userRole !== 'SUPER_ADMIN') return NextResponse.json({ error: 'No active organization' }, { status: 400 })
+  if (!activeOrgId && !isSuperAdmin(ctx.userRole)) return NextResponse.json({ error: 'No active organization' }, { status: 400 })
 
   const existing = await prisma.member.findUnique({ where: { id } })
   if (!existing) return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
 
   // Verify ownership unless super admin
-  if (ctx.userRole !== 'SUPER_ADMIN' && existing.organization_id !== activeOrgId) {
+  if (!isSuperAdmin(ctx.userRole) && existing.organization_id !== activeOrgId) {
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
   }
 
@@ -171,7 +175,7 @@ export async function DELETE(req: NextRequest) {
   const existing = await prisma.member.findUnique({ where: { id } })
   if (!existing) return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
 
-  if (ctx.userRole !== 'SUPER_ADMIN' && existing.organization_id !== ctx.activeOrgId) {
+  if (!isSuperAdmin(ctx.userRole) && existing.organization_id !== ctx.activeOrgId) {
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
   }
 

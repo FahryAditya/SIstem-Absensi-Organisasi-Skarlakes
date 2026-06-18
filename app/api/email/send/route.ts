@@ -8,7 +8,7 @@ import { createLog, getIp } from '@/lib/log'
 export const dynamic = 'force-dynamic'
 
 function isSuperAdmin(role: string) {
-  return role === 'SUPER_ADMIN' || role === 'administrator'
+  return role === 'SUPER_ADMIN' || role === 'administrator' || role === 'admin_osis_mpk'
 }
 
 export async function POST(req: NextRequest) {

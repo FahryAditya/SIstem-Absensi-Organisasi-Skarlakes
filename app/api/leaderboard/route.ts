@@ -4,7 +4,7 @@ import { getSessionFromRequest } from '@/lib/auth'
 import { calculateProgress, LEVEL_NAMES } from '@/lib/exp'
 
 function isSuperAdmin(role: string) {
-  return role === 'SUPER_ADMIN' || role === 'administrator'
+  return role === 'SUPER_ADMIN' || role === 'administrator' || role === 'admin_osis_mpk'
 }
 
 export async function GET(req: NextRequest) {

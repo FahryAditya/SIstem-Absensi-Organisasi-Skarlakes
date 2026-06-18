@@ -9,7 +9,7 @@ import Image from 'next/image'
 import {
   LayoutDashboard, Users, ClipboardList, Building2, UserCog, Mail,
   Download, GraduationCap, X, Wallet, HandCoins, Database, ScrollText, Megaphone,
-  Trophy, BookOpen, CalendarDays, ClipboardCheck, Zap
+  Trophy, BookOpen, CalendarDays, ClipboardCheck, Zap, Mic
 } from 'lucide-react'
 import AnimatedList from '../AnimatedList'
 
@@ -50,6 +50,11 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
   items.push({ type: 'section', label: 'Manajemen Anggota' })
   items.push({ type: 'link', href: '/siswa', label: 'Daftar Anggota', icon: Users })
   items.push({ type: 'link', href: '/registration', label: 'Pendaftaran', icon: ClipboardList })
+
+  // Wawancara OSIS & MPK - hanya untuk role yang punya akses
+  if (role === 'SUPER_ADMIN' || isAdministrator(role) || role === 'admin_osis_mpk') {
+    items.push({ type: 'link', href: '/wawancara', label: 'Wawancara OSIS & MPK', icon: Mic })
+  }
 
   items.push({ type: 'section', label: 'Tools' })
   items.push({ type: 'link', href: '/admin/email', label: 'Kirim Pengumuman', icon: Mail })
