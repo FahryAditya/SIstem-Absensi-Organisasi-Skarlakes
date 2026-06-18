@@ -55,8 +55,8 @@ export async function POST(req: NextRequest) {
         date_taken: dateTaken ? new Date(dateTaken) : new Date(),
         photos: photosArray,
         type: type as any,
-        organizationId: parseInt(organizationId),
-        createdBy: userId,
+        organization_id: parseInt(organizationId),
+        created_by: userId,
       }
     })
 
