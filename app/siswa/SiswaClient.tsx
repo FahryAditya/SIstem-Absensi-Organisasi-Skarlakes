@@ -8,7 +8,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { formatDate } from '@/lib/utils'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
 import { useDebounce } from '@/lib/hooks'
-import { Plus, Search, Pencil, Trash2, Users, Loader2, Contact, Zap, Award, Mail, Image as ImageIcon } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, Users, Loader2, Contact, Zap, Award, Mail, Image as ImageIcon, CheckSquare, Square, XSquare } from 'lucide-react'
 import Select from '@/components/ui/Select'
 import { LevelBadge } from '@/components/ui/LevelBadge'
 import { ExpProgressBar } from '@/components/ui/ExpProgressBar'
@@ -60,6 +60,11 @@ export default function SiswaClient({ user }: Props) {
   const [deleteTarget, setDeleteTarget] = useState<Member | null>(null)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+
+  // Bulk selection states
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [bulkDeleting, setBulkDeleting] = useState(false)
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false)
 
   // XP awarding states
   const [xpModalTarget, setXpModalTarget] = useState<Member | null>(null)
@@ -150,6 +155,52 @@ export default function SiswaClient({ user }: Props) {
     setDeleting(false); setDeleteTarget(null); load()
   }, [deleteTarget, load])
 
+  // Bulk selection handlers
+  function toggleSelectAll() {
+    if (selectedIds.length === data.length && data.length > 0) {
+      setSelectedIds([])
+    } else {
+      setSelectedIds(data.map(m => m.id))
+    }
+  }
+
+  function toggleSelect(id: number) {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter(x => x !== id))
+    } else {
+      setSelectedIds([...selectedIds, id])
+    }
+  }
+
+  function deselectAll() {
+    setSelectedIds([])
+  }
+
+  async function handleBulkDelete() {
+    if (selectedIds.length === 0) return
+    setBulkDeleting(true)
+    try {
+      const deletePromises = selectedIds.map(id =>
+        fetch(`/api/siswa?id=${id}`, { method: 'DELETE' })
+      )
+      const results = await Promise.all(deletePromises)
+      const failedCount = results.filter(r => !r.ok).length
+      if (failedCount > 0) {
+        toast.error(`${failedCount} anggota gagal dihapus`)
+      } else {
+        toast.success(`${selectedIds.length} anggota berhasil dihapus`)
+      }
+      clearJsonCache()
+      setSelectedIds([])
+      setBulkDeleteConfirmOpen(false)
+      load()
+    } catch (e: any) {
+      toast.error(e.message || 'Gagal menghapus anggota')
+    } finally {
+      setBulkDeleting(false)
+    }
+  }
+
   const handleAwardXp = useCallback(async () => {
     if (!xpModalTarget) return
     setXpSaving(true)
@@ -175,6 +226,19 @@ export default function SiswaClient({ user }: Props) {
   }, [xpModalTarget, fXpAmount, fXpActivity, load])
 
   const columns = useMemo(() => [
+    { key: 'checkbox', label: (
+      <button onClick={toggleSelectAll} className="p-1 hover:bg-white/10 rounded transition-colors" title={selectedIds.length === data.length ? 'Batal pilih semua' : 'Pilih semua'}>
+        {selectedIds.length === data.length && data.length > 0 
+          ? <CheckSquare className="w-4 h-4 text-persian-blue" /> 
+          : <Square className="w-4 h-4 text-slate-400" />}
+      </button>
+    ), render: (m: Member) => (
+      <button onClick={() => toggleSelect(m.id)} className="p-1 hover:bg-white/10 rounded transition-colors">
+        {selectedIds.includes(m.id) 
+          ? <CheckSquare className="w-4 h-4 text-persian-blue" /> 
+          : <Square className="w-4 h-4 text-slate-500" />}
+      </button>
+    )},
     { key: 'no', label: 'No', render: (m: Member) => {
       const idx = data.indexOf(m)
       return <span className="text-slate-400 font-mono text-xs">{(page - 1) * PAGE_SIZE + idx + 1}</span>
@@ -212,7 +276,7 @@ export default function SiswaClient({ user }: Props) {
         </div>
       )
     },
-  ], [data, page, openEdit])
+  ], [data, page, openEdit, selectedIds])
 
   return (
     <div className="space-y-5">
@@ -226,6 +290,16 @@ export default function SiswaClient({ user }: Props) {
           <p className="page-sub mt-0.5">Kelola daftar anggota organisasi aktif</p>
         </div>
         <div className="flex flex-wrap gap-2 items-center">
+          {selectedIds.length > 0 && (
+            <>
+              <button onClick={deselectAll} className="btn-secondary btn-sm">
+                <XSquare className="w-4 h-4" /> Batal Pilih ({selectedIds.length})
+              </button>
+              <button onClick={() => setBulkDeleteConfirmOpen(true)} className="btn-danger btn-sm">
+                <Trash2 className="w-4 h-4" /> Hapus Terpilih ({selectedIds.length})
+              </button>
+            </>
+          )}
           <button onClick={openAdd} disabled={!user.activeOrgId} className="btn-primary">
             <Plus className="w-4 h-4" /> Tambah Anggota
           </button>
@@ -316,6 +390,22 @@ export default function SiswaClient({ user }: Props) {
         confirmLabel="Ya, Hapus"
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <ConfirmDialog
+        open={bulkDeleteConfirmOpen}
+        title="Hapus Anggota Terpilih?"
+        message={`${selectedIds.length} anggota akan dihapus permanen dari sistem. Tindakan ini tidak dapat dibatalkan.`}
+        loading={bulkDeleting}
+        confirmLabel="Ya, Hapus Semua"
+        confirmClass="bg-red-600 hover:bg-red-700 text-white"
+        confirmInput={{
+          expectedValue: 'HAPUS',
+          placeholder: 'Ketik HAPUS untuk konfirmasi',
+          hint: 'Ketik HAPUS lalu klik tombol hapus untuk melanjutkan'
+        }}
+        onConfirm={handleBulkDelete}
+        onCancel={() => setBulkDeleteConfirmOpen(false)}
       />
 
       <Modal
