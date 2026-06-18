@@ -42,13 +42,18 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'No active organization selected' }, { status: 400 })
     }
 
+    // ALWAYS require org filter to prevent data leakage across organizations
+    if (!filterOrgId) {
+      return NextResponse.json({ data: [], total: 0, page: 1, totalPages: 0 })
+    }
+
     // RBAC Check
     if (!isSuperAdmin(session.role as string) && filterOrgId && !session.orgIds.includes(filterOrgId)) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 
     const where: any = {
-      ...(filterOrgId ? { organization_id: filterOrgId } : {}),
+      organization_id: filterOrgId,
       ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
       status: 'ACTIVE'
     }

@@ -37,8 +37,9 @@ export async function GET(req: NextRequest) {
 
   const filterOrgId = isSuperAdmin(userRole) ? (searchParams.get('orgId') ? parseInt(searchParams.get('orgId')!) : activeOrgId) : activeOrgId
 
-  if (!filterOrgId && !isSuperAdmin(userRole)) {
-    return NextResponse.json({ error: 'No active organization selected' }, { status: 400 })
+  // ALWAYS require org filter to prevent data leakage across organizations
+  if (!filterOrgId) {
+    return NextResponse.json({ data: [], total: 0, page: 1, totalPages: 0 })
   }
 
   const search = searchParams.get('search') || ''
@@ -50,7 +51,7 @@ export async function GET(req: NextRequest) {
   if (isNaN(limit) || limit < 1) limit = 10
 
   const where: any = {
-    ...(filterOrgId ? { organization_id: filterOrgId } : {}),
+    organization_id: filterOrgId,
     status,
     ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
   }
