@@ -6,7 +6,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 export default async function UpdateSistemPage() {
   const user = await getSession()
   
-  if (!user || user.role !== 'administrator') {
+  if (!user || (user.role !== 'SUPER_ADMIN' && user.role !== 'ORG_ADMIN')) {
     redirect('/dashboard')
   }
 

@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     const [docs, total] = await Promise.all([
       prisma.documentation.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { created_at: 'desc' },
         skip,
         take: limit,
         include: {

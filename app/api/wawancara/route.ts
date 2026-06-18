@@ -107,7 +107,6 @@ export async function GET(req: NextRequest) {
       ...(activeOnly ? { status: 'ACTIVE' as const } : {}),
     },
     include: {
-      creator: { select: { nama: true } },
       antrian: {
         where: {
           ...(validasi ? { status_validasi: validasi as any } : {}),

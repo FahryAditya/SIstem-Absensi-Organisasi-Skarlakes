@@ -214,8 +214,6 @@ export default function SiswaClient({ user }: Props) {
     },
   ], [data, page, openEdit])
 
-  if (!mounted) return null;
-
   return (
     <div className="space-y-5">
       <div className="page-header">

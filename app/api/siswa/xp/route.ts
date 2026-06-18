@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       selisih: xpToAdd,
       alasan: activityLabels[activity] ?? activity,
       adminId: ctx.userId,
-      organisasi: siswa.ekskul,
+      organizationId: 0,
     })
 
     const description = `${ctx.userNama} memberikan ${xpToAdd > 0 ? '+' : ''}${xpToAdd} EXP kepada "${siswa.nama}" untuk ${activityLabels[activity] ?? activity}`

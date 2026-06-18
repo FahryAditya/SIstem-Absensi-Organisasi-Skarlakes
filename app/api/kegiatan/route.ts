@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const tipe = searchParams.get('tipe')
     
-    const activities = await prisma.kegiatan.findMany({
+    const activities = await (prisma as any).kegiatan.findMany({
       where: tipe ? { tipe: tipe as any } : undefined,
       include: {
         _count: { select: { pengelompokan: true } }
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Nama kegiatan dan tipe wajib diisi' }, { status: 400 })
     }
 
-    const activity = await prisma.kegiatan.create({
+    const activity = await (prisma as any).kegiatan.create({
       data: {
         nama_kegiatan,
         tipe,
@@ -82,7 +82,7 @@ export async function DELETE(req: NextRequest) {
 
     if (!id) return NextResponse.json({ error: 'ID tidak valid' }, { status: 400 })
 
-    const deleted = await prisma.kegiatan.delete({
+    const deleted = await (prisma as any).kegiatan.delete({
       where: { id }
     })
 

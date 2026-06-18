@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
 import { getAccessibleOrganizations } from '@/lib/services/organization-service'
-import { OrganisasiType } from '@prisma/client'
 import { z } from 'zod'
 
 function getCtx(req: NextRequest) {
@@ -19,7 +18,7 @@ const createSchema = z.object({
   waktu: z.string().optional().nullable(),
   lokasi: z.string().optional().nullable(),
   keterangan: z.string().optional().nullable(),
-  organisasi: z.nativeEnum(OrganisasiType),
+  organisasi: z.string(),
   wajib_hadir: z.boolean().default(false),
 })
 
@@ -68,8 +67,13 @@ export async function POST(req: NextRequest) {
 
     const jadwal = await prisma.jadwalKegiatan.create({
       data: { 
-        ...parsed.data, 
+        judul: parsed.data.judul,
         tanggal: new Date(parsed.data.tanggal), 
+        waktu: parsed.data.waktu,
+        lokasi: parsed.data.lokasi,
+        keterangan: parsed.data.keterangan,
+        organisasi: parsed.data.organisasi as any,
+        wajib_hadir: parsed.data.wajib_hadir,
         created_by: ctx.userId,
       },
     })
@@ -99,21 +103,26 @@ export async function PUT(req: NextRequest) {
     if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
 
     const { id, ...data } = parsed.data
-    const existing = await prisma.jadwalKegiatan.findUnique({ where: { id } })
+    const existing = await prisma.jadwalKegiatan.findUnique({ where: { id: id as number } })
     if (!existing) return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
-    if (!accessible.includes(existing.organisasi)) return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+    if (!accessible.includes(existing.organisasi as string)) return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
 
     const updated = await prisma.jadwalKegiatan.update({
-      where: { id }, 
+      where: { id: id as number }, 
       data: { 
-        ...data, 
+        judul: data.judul,
         tanggal: new Date(data.tanggal),
+        waktu: data.waktu,
+        lokasi: data.lokasi,
+        keterangan: data.keterangan,
+        organisasi: data.organisasi as any,
+        wajib_hadir: data.wajib_hadir,
       },
     })
 
     await createLog({
       userId: ctx.userId, userNama: ctx.userNama, aksi: 'UPDATE',
-      tabel: 'jadwal_kegiatan', recordId: id,
+      tabel: 'jadwal_kegiatan', recordId: id as number,
       deskripsi: `${ctx.userNama} mengedit jadwal "${updated.judul}"`,
       dataLama: existing, dataBaru: updated, ipAddress: getIp(req),
     })
@@ -137,7 +146,7 @@ export async function DELETE(req: NextRequest) {
   const id = parseInt(idStr)
   const existing = await prisma.jadwalKegiatan.findUnique({ where: { id } })
   if (!existing) return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
-  if (!accessible.includes(existing.organisasi)) return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+  if (!accessible.includes(existing.organisasi as string)) return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
 
   await prisma.jadwalKegiatan.delete({ where: { id } })
 

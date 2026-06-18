@@ -37,9 +37,9 @@ export async function GET(req: NextRequest) {
         orderBy: { tanggal: 'desc' }
       }),
       org === 'programming' || org === 'english' 
-        ? prisma.absensi.aggregate({ where: { siswa: { ekskul: org as any } }, _sum: { uang_kas: true } })
-        : prisma.absensiOrganisasi.aggregate({ where: { organisasi_type: org as any }, _sum: { uang_kas: true } }),
-      prisma.pengeluaranKas.aggregate({ where: { organisasi_type: org as any }, _sum: { nominal: true } })
+        ? (prisma as any).absensi.aggregate({ where: { siswa: { ekskul: org as any } }, _sum: { uang_kas: true } })
+        : (prisma as any).absensiOrganisasi.aggregate({ where: { organisasi_type: org as any }, _sum: { uang_kas: true } }),
+      (prisma as any).pengeluaranKas.aggregate({ where: { organisasi_type: org as any }, _sum: { nominal: true } })
     ])
 
     const balance = (totalKasData._sum?.uang_kas || 0) - (totalPengeluaran._sum?.nominal || 0)

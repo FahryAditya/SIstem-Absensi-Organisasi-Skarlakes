@@ -3,7 +3,6 @@ import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
 import { updateExp } from '@/lib/exp'
 import { isAdministrator } from '@/lib/auth'
-import { TxClient } from '@/lib/db-transaction'
 import { z } from 'zod'
 
 function getCtx(req: NextRequest) {
@@ -41,7 +40,7 @@ export async function POST(req: NextRequest) {
     const notifications: { nama: string; email: string; pencapaianNama: string; expReward: number }[] = []
     const { pencapaian_id, penerima, override_duplikat } = parsed.data
 
-    const pencapaian = await prisma.$transaction(async (tx: TxClient) => {
+    const pencapaian = await (prisma as any).$transaction(async (tx: any) => {
       const item = await tx.pencapaian.findUnique({ where: { id: pencapaian_id } })
       if (!item) return null
 
@@ -97,19 +96,19 @@ export async function POST(req: NextRequest) {
           selisih: item.exp_reward,
           alasan: `Pencapaian: ${item.nama}`,
           adminId: ctx.userId,
-          organisasi,
+          organizationId: 0,
           tx,
         })
 
         const kontak = p.tipe_anggota === 'siswa'
-          ? await tx.siswa.findUnique({ where: { id: p.target_id }, select: { nama: true, email: true } })
+          ? await tx.siswa.findUnique({ where: { id: p.target_id }, select: { nama: true } })
           : p.tipe_anggota === 'anggota_osis'
-            ? await tx.anggotaOsis.findUnique({ where: { id: p.target_id }, select: { nama: true, email: true } })
-            : await tx.anggotaMpk.findUnique({ where: { id: p.target_id }, select: { nama: true, email: true } })
-        if (kontak?.email) {
+            ? await tx.anggotaOsis.findUnique({ where: { id: p.target_id }, select: { nama: true } })
+            : await tx.anggotaMpk.findUnique({ where: { id: p.target_id }, select: { nama: true } })
+        if (kontak?.nama) {
           notifications.push({
             nama: kontak.nama,
-            email: kontak.email,
+            email: '' as string,
             pencapaianNama: item.nama,
             expReward: item.exp_reward,
           })
@@ -154,7 +153,7 @@ export async function GET(req: NextRequest) {
   const pencapaian_id = searchParams.get('pencapaian_id')
   if (!pencapaian_id) return NextResponse.json({ error: 'pencapaian_id required' }, { status: 400 })
 
-  const penerima = await prisma.siswaPencapaian.findMany({
+  const penerima = await (prisma as any).siswaPencapaian.findMany({
     where: { pencapaian_id: parseInt(pencapaian_id) },
     include: {
       pencapaian: true,

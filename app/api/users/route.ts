@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
       role: true, 
       password: true, 
       created_at: true,
-      organization_admins: {
+      organizations: {
         include: {
           organization: {
             select: { id: true, nama: true }
@@ -219,11 +219,11 @@ export async function DELETE(req: NextRequest) {
         where: { created_by: id },
         data: { created_by: activeAdminId }
       }),
-      prisma.hasilWawancaraTable.updateMany({
+      prisma.hasilWawancara.updateMany({
         where: { interviewer_id: id },
         data: { interviewer_id: activeAdminId }
       }),
-      prisma.hasilWawancaraTable.updateMany({
+      prisma.hasilWawancara.updateMany({
         where: { override_by: id },
         data: { override_by: activeAdminId }
       }),

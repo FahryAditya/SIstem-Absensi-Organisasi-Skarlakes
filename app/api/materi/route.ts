@@ -45,13 +45,13 @@ export async function GET(req: NextRequest) {
   }
 
   const [data, total] = await Promise.all([
-    prisma.materiHariIni.findMany({
+    (prisma as any).materiHariIni.findMany({
       where,
       orderBy: [{ tanggal: 'desc' }, { created_at: 'desc' }],
       skip: (page - 1) * limit,
       take: limit,
     }),
-    prisma.materiHariIni.count({ where }),
+    (prisma as any).materiHariIni.count({ where }),
   ])
 
   return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / limit) })
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 
-    const materi = await prisma.materiHariIni.create({
+    const materi = await (prisma as any).materiHariIni.create({
       data: {
         ...parsed.data,
         tanggal: new Date(parsed.data.tanggal),
@@ -113,7 +113,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const { id, ...data } = parsed.data
-    const existing = await prisma.materiHariIni.findUnique({ where: { id } })
+    const existing = await (prisma as any).materiHariIni.findUnique({ where: { id } })
     if (!existing) {
       return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
     }
@@ -122,7 +122,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 
-    const updated = await prisma.materiHariIni.update({
+    const updated = await (prisma as any).materiHariIni.update({
       where: { id },
       data: {
         ...data,
@@ -162,7 +162,7 @@ export async function DELETE(req: NextRequest) {
   }
 
   const id = parseInt(idStr)
-  const existing = await prisma.materiHariIni.findUnique({ where: { id } })
+  const existing = await (prisma as any).materiHariIni.findUnique({ where: { id } })
   if (!existing) {
     return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
   }
@@ -170,7 +170,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
   }
 
-  await prisma.materiHariIni.delete({ where: { id } })
+  await (prisma as any).materiHariIni.delete({ where: { id } })
 
   await createLog({
     userId: ctx.userId,

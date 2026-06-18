@@ -15,7 +15,6 @@ export default async function QrCodePage() {
     where: { valid_until: { gte: now } },
     include: {
       sesi: { select: { id: true, status: true } },
-      creator: { select: { nama: true } },
       _count: { select: { antrian: true } },
     },
     orderBy: { created_at: 'desc' },
@@ -38,7 +37,7 @@ export default async function QrCodePage() {
           valid_from: item.valid_from.toISOString(),
           valid_until: item.valid_until.toISOString(),
           created_at: item.created_at.toISOString(),
-        }))}
+        })) as any}
       />
     </DashboardLayout>
   )

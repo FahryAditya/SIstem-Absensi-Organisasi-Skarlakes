@@ -31,7 +31,6 @@ export async function GET(req: NextRequest) {
   const data = await prisma.qrWawancara.findMany({
     include: {
       sesi: { select: { id: true, status: true, jadwal_mulai: true, jadwal_selesai: true } },
-      creator: { select: { nama: true } },
       _count: { select: { antrian: true } },
     },
     orderBy: { created_at: 'desc' },

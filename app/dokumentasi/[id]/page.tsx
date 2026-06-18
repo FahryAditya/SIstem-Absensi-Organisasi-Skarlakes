@@ -10,7 +10,7 @@ import { getDocumentationPhotoFields } from '@/lib/documentation'
 
 export default async function DokumentasiDetailPage({ params }: { params: { id: string } }) {
   const user = await getUserSession()
-  const guestUser = { id: 0, nama: 'Tamu', email: '', role: 'guest' }
+  const guestUser = { id: 0, nama: 'Tamu', email: '', role: 'guest', orgIds: [] as number[] }
   const id = parseInt(params.id)
 
   const doc = await prisma.documentation.findUnique({
@@ -51,7 +51,7 @@ export default async function DokumentasiDetailPage({ params }: { params: { id: 
                 </span>
                 <span className="bg-white/5 text-slate-400 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 border border-white/10">
                   <Calendar className="w-3.5 h-3.5" />
-                  {new Date(doc.dateTaken).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  {new Date(doc.date_taken).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </span>
               </div>
 

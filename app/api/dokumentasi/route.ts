@@ -232,13 +232,12 @@ export async function POST(req: NextRequest) {
       data: {
         organisasi_type: organisasiType as any,
         judul,
-        deskripsi,
         image_url: imageUrl,
         public_id: publicId,
         media_type: resourceType,
         tanggal: tanggalVal,
         created_by: userId,
-      },
+      } as any,
       include: {
         creator: {
           select: { nama: true },
@@ -295,7 +294,7 @@ export async function DELETE(req: NextRequest) {
 
     // Pastikan user memiliki hak akses terhadap organisasi ini
     const accessible = getAccessibleOrgs(userRole)
-    if (!accessible.includes(photo.organisasi_type)) {
+    if (!accessible.includes(photo.organisasi_type ?? '')) {
       return NextResponse.json({ error: 'Anda tidak memiliki hak akses untuk menghapus foto ini' }, { status: 403 })
     }
 
@@ -321,7 +320,7 @@ export async function DELETE(req: NextRequest) {
       aksi: 'DELETE',
       tabel: 'dokumentasi_foto',
       recordId: id.toString(),
-      deskripsi: `Menghapus foto dokumentasi kegiatan "${photo.judul}" organisasi ${photo.organisasi_type.toUpperCase()}`,
+      deskripsi: `Menghapus foto dokumentasi kegiatan "${photo.judul}" organisasi ${(photo.organisasi_type ?? 'unknown').toUpperCase()}`,
       ipAddress: getIp(req),
     })
 

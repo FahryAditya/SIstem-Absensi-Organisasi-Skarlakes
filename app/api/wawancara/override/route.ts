@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   const parsed = overrideSchema.safeParse(await req.json())
   if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
 
-  const existing = await prisma.hasilWawancaraTable.findUnique({
+  const existing = await prisma.hasilWawancara.findUnique({
     where: { id: parsed.data.hasil_id },
     include: { antrian: { include: { sesi: true } } },
   })
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
   }
 
   const now = new Date()
-  const updated = await prisma.hasilWawancaraTable.update({
+  const updated = await prisma.hasilWawancara.update({
     where: { id: parsed.data.hasil_id },
     data: {
       hasil: 'LOLOS',

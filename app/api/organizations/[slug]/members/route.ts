@@ -30,7 +30,7 @@ export async function POST(req: NextRequest, { params }: { params: { slug: strin
     if (!org) return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
 
     // RBAC Check
-    if (session.role !== 'administrator') {
+    if ((session.role as string) !== 'administrator' && session.role !== 'SUPER_ADMIN') {
       const isOrgAdmin = await prisma.organizationAdmin.findUnique({
         where: {
           user_id_organization_id: {

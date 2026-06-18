@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   const { pencapaianId, memberId, tipe } = parsed.data
 
   try {
-    const pencapaian = await prisma.pencapaian.findUnique({ where: { id: pencapaianId } })
+    const pencapaian = await (prisma as any).pencapaian.findUnique({ where: { id: pencapaianId } })
     if (!pencapaian) {
       return NextResponse.json({ error: 'Pencapaian tidak ditemukan' }, { status: 404 })
     }
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
         ? 'anggota_osis'
         : 'anggota_mpk'
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await (prisma as any).$transaction(async (tx: any) => {
       if (tipeAnggota === 'siswa') {
         const siswa = await tx.siswa.findUnique({ where: { id: memberId } })
         if (!siswa) throw new Error('Siswa tidak ditemukan')
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
           throw new Error('Pencapaian tidak sesuai organisasi siswa')
         }
 
-        const alreadyAwarded = await tx.siswaPencapaian.findUnique({
+        const alreadyAwarded = await (tx as any).siswaPencapaian.findUnique({
           where: {
             pencapaian_id_siswa_id: { pencapaian_id: pencapaianId, siswa_id: memberId },
           },
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
           throw new Error(`Siswa "${siswa.nama}" sudah memiliki pencapaian ini`)
         }
 
-        await tx.siswaPencapaian.create({
+        await (tx as any).siswaPencapaian.create({
           data: {
             pencapaian_id: pencapaianId,
             tipe_anggota: 'siswa',
@@ -90,11 +90,11 @@ export async function POST(req: NextRequest) {
           selisih: pencapaian.exp_reward,
           alasan: `Pencapaian: ${pencapaian.nama}`,
           adminId: ctx.userId,
-          organisasi: pencapaian.organisasi === 'semua' ? siswa.ekskul : pencapaian.organisasi,
+          organizationId: 0, // Will be resolved inside updateExp
           tx,
         })
 
-        return { nama: siswa.nama, email: siswa.email, expResult }
+        return { nama: siswa.nama, email: null, expResult }
       }
 
       if (tipeAnggota === 'anggota_osis') {
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
           throw new Error('Pencapaian tidak sesuai organisasi OSIS')
         }
 
-        const alreadyAwarded = await tx.siswaPencapaian.findUnique({
+        const alreadyAwarded = await (tx as any).siswaPencapaian.findUnique({
           where: {
             pencapaian_id_anggota_osis_id: {
               pencapaian_id: pencapaianId,
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
           throw new Error(`Anggota "${anggota.nama}" sudah memiliki pencapaian ini`)
         }
 
-        await tx.siswaPencapaian.create({
+        await (tx as any).siswaPencapaian.create({
           data: {
             pencapaian_id: pencapaianId,
             tipe_anggota: 'anggota_osis',
@@ -130,11 +130,11 @@ export async function POST(req: NextRequest) {
           selisih: pencapaian.exp_reward,
           alasan: `Pencapaian: ${pencapaian.nama}`,
           adminId: ctx.userId,
-          organisasi: 'osis',
+          organizationId: 0,
           tx,
         })
 
-        return { nama: anggota.nama, email: anggota.email, expResult }
+        return { nama: anggota.nama, email: null, expResult }
       }
 
       const anggota = await tx.anggotaMpk.findUnique({ where: { id: memberId } })
@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
         throw new Error('Pencapaian tidak sesuai organisasi MPK')
       }
 
-      const alreadyAwarded = await tx.siswaPencapaian.findUnique({
+      const alreadyAwarded = await (tx as any).siswaPencapaian.findUnique({
         where: {
           pencapaian_id_anggota_mpk_id: {
             pencapaian_id: pencapaianId,
@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
         throw new Error(`Anggota "${anggota.nama}" sudah memiliki pencapaian ini`)
       }
 
-      await tx.siswaPencapaian.create({
+      await (tx as any).siswaPencapaian.create({
         data: {
           pencapaian_id: pencapaianId,
           tipe_anggota: 'anggota_mpk',
@@ -169,11 +169,11 @@ export async function POST(req: NextRequest) {
         selisih: pencapaian.exp_reward,
         alasan: `Pencapaian: ${pencapaian.nama}`,
         adminId: ctx.userId,
-        organisasi: 'mpk',
+        organizationId: 0,
         tx,
       })
 
-      return { nama: anggota.nama, email: anggota.email, expResult }
+      return { nama: anggota.nama, email: null, expResult }
     })
 
     await sendAchievementNotification({

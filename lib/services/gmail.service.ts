@@ -17,8 +17,8 @@ async function getEmailCredentials(): Promise<{ email: string; appPassword: stri
   const defaultName = process.env.GMAIL_FROM_NAME || 'Sistem Ekstrakurikuler'
   try {
     const setting = await prisma.emailSetting.findFirst()
-    if (setting && setting.email && setting.appPassword) {
-      return { email: setting.email, appPassword: setting.appPassword, name: defaultName }
+    if (setting && setting.email && setting.app_password) {
+      return { email: setting.email, appPassword: setting.app_password, name: defaultName }
     }
   } catch (e) {
     console.warn('Gagal membaca email setting dari DB, fallback ke env:', e)

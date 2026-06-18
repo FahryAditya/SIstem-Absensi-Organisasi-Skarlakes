@@ -16,7 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const id = parseInt(params.id)
     if (!id) return NextResponse.json({ error: 'ID tidak valid' }, { status: 400 })
 
-    const pengelompokan = await prisma.pengelompokanKegiatan.findMany({
+    const pengelompokan = await (prisma as any).pengelompokanKegiatan.findMany({
       where: { kegiatan_id: id },
       include: {
         siswa: {
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Siswa dan organisasi wajib diisi' }, { status: 400 })
     }
 
-    const entry = await prisma.pengelompokanKegiatan.create({
+    const entry = await (prisma as any).pengelompokanKegiatan.create({
       data: {
         kegiatan_id,
         siswa_id,
@@ -97,7 +97,7 @@ export async function DELETE(req: NextRequest) {
 
     if (!id) return NextResponse.json({ error: 'ID tidak valid' }, { status: 400 })
 
-    const deleted = await prisma.pengelompokanKegiatan.delete({
+    const deleted = await (prisma as any).pengelompokanKegiatan.delete({
       where: { id },
       include: {
         siswa: { select: { nama: true } },

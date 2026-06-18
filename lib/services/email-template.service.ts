@@ -225,14 +225,13 @@ export async function renderEmailTemplate(
   try {
     const dbTemplate = await prisma.emailTemplate.findFirst({
       where: {
-        organizationType: cleanOrg as any,
-        emailType: cleanType,
-        isActive: true,
-      },
+        email_type: cleanType,
+        is_active: true,
+      } as any,
     })
     if (dbTemplate) {
       subject = dbTemplate.subject
-      html = dbTemplate.bodyTemplate
+      html = dbTemplate.body_template
     }
   } catch (error) {
     console.error('Error loading template from DB:', error)
