@@ -359,7 +359,7 @@ const AdminDropdownMenu: React.FC<AdminDropdownMenuProps> = ({
               </button>
 
               <button
-                onClick={(e) => handleLinkClick(e, '/admin/members')}
+                onClick={(e) => handleLinkClick(e, '/siswa')}
                 className="flex items-center justify-between w-full px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white rounded-lg bg-white/5 hover:bg-white/10 transition-all text-left"
               >
                 <span className="flex items-center gap-2">

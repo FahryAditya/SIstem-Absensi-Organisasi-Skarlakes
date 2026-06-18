@@ -21,12 +21,24 @@ export async function GET(req: NextRequest) {
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { searchParams } = new URL(req.url)
+    const orgSlug = searchParams.get('organisasi') // slug like 'programming', 'osis', etc
     const orgId = searchParams.get('orgId')
     const memberId = searchParams.get('memberId')
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
 
-    const filterOrgId = orgId ? parseInt(orgId) : session.activeOrgId
+    // Resolve org ID from slug if provided
+    let filterOrgId: number | null = null
+    if (orgId) {
+      filterOrgId = parseInt(orgId)
+    } else if (orgSlug) {
+      const org = await prisma.organization.findFirst({
+        where: { slug: orgSlug }
+      })
+      if (org) filterOrgId = org.id
+    } else {
+      filterOrgId = session.activeOrgId || null
+    }
 
     if (!filterOrgId && !isSuperAdmin(session.role as string)) {
       return NextResponse.json({ error: 'No active organization selected' }, { status: 400 })

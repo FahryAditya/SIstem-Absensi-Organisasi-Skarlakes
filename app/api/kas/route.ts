@@ -14,12 +14,25 @@ export async function GET(req: NextRequest) {
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { searchParams } = new URL(req.url)
+    const orgSlug = searchParams.get('org') // slug like 'programming', 'english', etc
     const orgId = searchParams.get('orgId')
     const searchQuery = searchParams.get('search') || ''
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
 
-    const filterOrgId = orgId ? parseInt(orgId) : session.activeOrgId
+    // Resolve org ID from slug if provided
+    let filterOrgId: number | null = null
+    if (orgId) {
+      filterOrgId = parseInt(orgId)
+    } else if (orgSlug) {
+      // Look up org by slug
+      const org = await prisma.organization.findFirst({
+        where: { slug: orgSlug }
+      })
+      if (org) filterOrgId = org.id
+    } else {
+      filterOrgId = session.activeOrgId || null
+    }
 
     if (!filterOrgId && !isSuperAdmin(session.role as string)) {
       return NextResponse.json({ error: 'No active organization selected' }, { status: 400 })
@@ -86,11 +99,19 @@ export async function GET(req: NextRequest) {
       }
     })
 
+    // Fetch all organizations for the org selector
+    const orgs = await prisma.organization.findMany({
+      where: { status: 'ACTIVE' },
+      select: { id: true, nama: true, slug: true },
+      orderBy: { nama: 'asc' }
+    })
+
     return NextResponse.json({
       data: results,
       totalKas: totalKasSum,
       total,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
+      orgs: orgs.map(o => ({ slug: o.slug, nama: o.nama }))
     })
   } catch (e: any) {
     console.error('[KAS ERROR]', e)

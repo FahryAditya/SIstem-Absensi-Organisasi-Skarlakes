@@ -28,17 +28,29 @@ const STATUS_COLORS: Record<string, string> = {
   kas_saja: 'bg-white/50/20 text-slate-400 border-slate-500/30',
 }
 
-const ORG_TABS = [
+const ORG_TABS_DEFAULT = [
   { key: 'siswa', ekskul: 'programming', label: 'Programming', color: 'from-blue-500 to-cyan-500' },
   { key: 'siswa', ekskul: 'english', label: 'English Club', color: 'from-emerald-500 to-teal-500' },
   { key: 'osis', ekskul: 'osis', label: 'OSIS', color: 'from-purple-500 to-persian-blue/100' },
   { key: 'mpk', ekskul: 'mpk', label: 'MPK', color: 'from-orange-500 to-amber-500' },
 ]
 
+const ORG_COLORS = [
+  'from-blue-500 to-cyan-500',
+  'from-emerald-500 to-teal-500',
+  'from-purple-500 to-pink-500',
+  'from-orange-500 to-amber-500',
+  'from-rose-500 to-red-500',
+  'from-indigo-500 to-violet-500',
+  'from-teal-500 to-green-500',
+  'from-cyan-500 to-blue-500',
+]
+
 export default function RekapAbsensiPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [accessibleOrgs, setAccessibleOrgs] = useState<string[]>([])
+  const [orgTabs, setOrgTabs] = useState(ORG_TABS_DEFAULT)
   const [activeTab, setActiveTab] = useState(0)
   const [members, setMembers] = useState<{ id: number; nama: string; kelas?: string | null }[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
@@ -57,9 +69,33 @@ export default function RekapAbsensiPage() {
           setUser(json.user)
           const orgs = getAccessibleOrgs(json.user.role)
           setAccessibleOrgs(orgs)
-          // Find first tab that is accessible
-          const firstIdx = ORG_TABS.findIndex(t => orgs.includes(t.ekskul))
-          if (firstIdx !== -1) setActiveTab(firstIdx)
+          
+          // Fetch all active organizations to build dynamic tabs
+          const orgsRes = await fetch('/api/organizations')
+          const orgsJson = await orgsRes.json()
+          const allOrgs = orgsJson.data || []
+          
+          // Build tabs from all organizations
+          const dynamicTabs = allOrgs.map((org: any, idx: number) => {
+            // For OSIS and MPK, use their specific keys
+            if (org.slug === 'osis') return { key: 'osis', ekskul: 'osis', label: 'OSIS', color: ORG_COLORS[idx % ORG_COLORS.length] }
+            if (org.slug === 'mpk') return { key: 'mpk', ekskul: 'mpk', label: 'MPK', color: ORG_COLORS[idx % ORG_COLORS.length] }
+            // For other ekskul, use 'siswa' key
+            return { key: 'siswa', ekskul: org.slug, label: org.nama, color: ORG_COLORS[idx % ORG_COLORS.length] }
+          })
+          
+          // Filter tabs based on accessible orgs
+          const filteredDynamicTabs = dynamicTabs.filter((t: any) => orgs.includes(t.ekskul))
+          
+          // If no dynamic tabs, fallback to default
+          if (filteredDynamicTabs.length > 0) {
+            setOrgTabs(filteredDynamicTabs)
+            setActiveTab(0)
+          } else {
+            // Fallback: find first tab from default that is accessible
+            const firstIdx = ORG_TABS_DEFAULT.findIndex(t => orgs.includes(t.ekskul))
+            if (firstIdx !== -1) setActiveTab(firstIdx)
+          }
         } else {
           router.push('/login')
         }
@@ -72,8 +108,8 @@ export default function RekapAbsensiPage() {
     fetchUser()
   }, [router])
 
-  const filteredTabs = ORG_TABS.filter(t => accessibleOrgs.includes(t.ekskul))
-  const tab = ORG_TABS[activeTab]
+  const filteredTabs = orgTabs.filter((t: any) => accessibleOrgs.includes(t.ekskul))
+  const tab = orgTabs[activeTab]
 
   // Fetch list anggota
   const fetchMembers = useCallback(async () => {
@@ -133,10 +169,10 @@ export default function RekapAbsensiPage() {
 
         {/* Tabs */}
         <div className="flex gap-2 flex-wrap mb-6">
-          {filteredTabs.map((t) => {
-            const idx = ORG_TABS.indexOf(t)
+          {filteredTabs.map((t: any, mapIdx: number) => {
+            const idx = orgTabs.indexOf(t)
             return (
-              <button key={idx} onClick={() => setActiveTab(idx)}
+              <button key={mapIdx} onClick={() => setActiveTab(idx)}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${activeTab === idx ? `bg-gradient-to-r ${t.color} text-white border-transparent` : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}>
                 {t.label}
               </button>

@@ -2,7 +2,7 @@ export interface SessionUser {
   id: number
   nama: string
   email: string
-  role: 'SUPER_ADMIN' | 'ORG_ADMIN'
+  role: string // 'SUPER_ADMIN' | 'administrator' | 'admin_programming' | 'admin_english' | 'admin_osis_mpk' | 'organization_admin'
   activeOrgId?: number // The organization the user is currently managing
   orgIds: number[]     // All organizations the user has access to
 }
@@ -10,7 +10,11 @@ export interface SessionUser {
 // Role labels
 export const ROLE_LABELS: Record<string, string> = {
   SUPER_ADMIN: 'Super Administrator',
-  ORG_ADMIN: 'Organization Admin',
+  administrator: 'Administrator',
+  admin_programming: 'Admin Programming',
+  admin_english: 'Admin English Club',
+  admin_osis_mpk: 'Admin OSIS & MPK',
+  organization_admin: 'Organization Admin',
 }
 
 export function isSuperAdmin(role: string) {

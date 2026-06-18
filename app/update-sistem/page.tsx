@@ -1,12 +1,13 @@
-import { getSession } from '@/lib/auth'
+import { getServerUser } from '@/lib/server-utils'
 import { redirect } from 'next/navigation'
 import UpdateSistemClient from '@/app/update-sistem/UpdateSistemClient'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 
 export default async function UpdateSistemPage() {
-  const user = await getSession()
+  const user = await getServerUser()
   
-  if (!user || (user.role !== 'SUPER_ADMIN' && user.role !== 'ORG_ADMIN')) {
+  // Allow SUPER_ADMIN and administrator to access
+  if (user.role !== 'SUPER_ADMIN' && (user.role as string) !== 'administrator') {
     redirect('/dashboard')
   }
 
