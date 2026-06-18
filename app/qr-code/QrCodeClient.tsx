@@ -213,7 +213,7 @@ export default function QrCodeClient({ baseUrl, initialItems }: QrCodeClientProp
       <div className="space-y-5">
         <div className="card p-5">
           <div className="flex items-center gap-2 mb-3">
-            <ShieldCheck className="w-5 h-5 text-green-600" />
+            <ShieldCheck className="w-5 h-5 text-green-400" />
             <h3 className="text-sm font-bold text-white">Validasi Otomatis</h3>
           </div>
           <div className="space-y-2 text-sm text-slate-300">
@@ -233,7 +233,7 @@ export default function QrCodeClient({ baseUrl, initialItems }: QrCodeClientProp
                   setDeleteMode((value) => !value)
                   setSelectedDeleteId(null)
                 }}
-                className={deleteMode ? 'btn-secondary btn-sm text-slate-300' : 'btn-secondary btn-sm text-red-600'}
+                className={deleteMode ? 'btn-secondary btn-sm text-slate-300' : 'btn-secondary btn-sm text-red-400'}
               >
                 {deleteMode ? <X className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
                 {deleteMode ? 'Batal Pilih' : 'Pilih QR'}

@@ -100,7 +100,7 @@ export default function ExportClient({ user }: Props) {
       const res = await fetch('/api/admin/clear-database', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ org: clearOrg, tipe: clearType, konfirmasi: clearConfirm }),
+        body: JSON.stringify({ orgId: clearOrg, tipe: clearType, konfirmasi: clearConfirm }),
       })
       const data = await res.json().catch((e) => {
         console.error('Clear database: failed to parse server response', res.status, res.statusText, e)
@@ -231,8 +231,8 @@ export default function ExportClient({ user }: Props) {
         {isSuperAdmin && (
           <div className="card p-5 border-white/10 bg-red-500/10/40">
             <div className="flex items-center gap-2.5 mb-4">
-              <ShieldAlert className="w-5 h-5 text-red-600" />
-              <h3 className="text-sm font-bold text-red-800">Clear Database</h3>
+              <ShieldAlert className="w-5 h-5 text-red-400" />
+              <h3 className="text-sm font-bold text-red-400">Clear Database</h3>
             </div>
             <div className="space-y-3">
               <div className="form-group">

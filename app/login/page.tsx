@@ -97,7 +97,7 @@ export default function LoginPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-blue-400/80 text-[10px] font-black uppercase tracking-[0.3em]"
+            className="text-blue-400/80 text-[11px] font-bold uppercase tracking-[0.3em]"
           >
             Admin & Administrator Gateway
           </motion.p>
@@ -125,30 +125,30 @@ export default function LoginPage() {
             <form onSubmit={handleLogin} className="space-y-6" autoComplete="off">
               <div className="space-y-4">
                 <div className="form-group">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Nama Lengkap</label>
+                  <label className="text-[11px] font-bold text-slate-300 uppercase tracking-widest ml-1 mb-2 block">Nama Lengkap</label>
                   <div className="relative group/input">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-blue-400 transition-colors" />
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within/input:text-blue-400 transition-colors" />
                     <input
                       type="text"
                       value={nama}
                       onChange={e => setNama(e.target.value)}
                       placeholder="Nama lengkap"
-                      className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/50 focus:bg-white/[0.08] transition-all duration-300"
+                      className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/50 focus:bg-white/[0.08] transition-all duration-300"
                       autoComplete="off"
                     />
                   </div>
                 </div>
                 
                 <div className="form-group">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Alamat Email</label>
+                  <label className="text-[11px] font-bold text-slate-300 uppercase tracking-widest ml-1 mb-2 block">Alamat Email</label>
                   <div className="relative group/input">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-blue-400 transition-colors" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within/input:text-blue-400 transition-colors" />
                     <input
                       type="email"
                       value={email}
                       onChange={e => setEmail(e.target.value)}
                       placeholder="email@sekolah.sch.id"
-                      className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/50 focus:bg-white/[0.08] transition-all duration-300"
+                      className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/50 focus:bg-white/[0.08] transition-all duration-300"
                       autoComplete="off"
                     />
                   </div>
@@ -156,19 +156,19 @@ export default function LoginPage() {
               </div>
 
               <div className="form-group">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Kata Sandi</label>
+                <label className="text-[11px] font-bold text-slate-300 uppercase tracking-widest ml-1 mb-2 block">Kata Sandi</label>
                 <div className="relative group/input">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-blue-400 transition-colors" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within/input:text-blue-400 transition-colors" />
                   <input
                     type={showPass ? 'text' : 'password'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-12 pr-12 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/50 focus:bg-white/[0.08] transition-all duration-300"
+                    className="w-full pl-12 pr-12 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/50 focus:bg-white/[0.08] transition-all duration-300"
                     autoComplete="new-password"
                   />
                   <button type="button" onClick={() => setShowPass(!showPass)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors">
                     {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
@@ -196,7 +196,7 @@ export default function LoginPage() {
             </form>
 
             <div className="mt-10 pt-8 border-t border-white/5 text-center">
-              <p className="text-slate-500 text-sm">
+              <p className="text-slate-400 text-sm">
                 Belum terdaftar?{' '}
                 <button 
                   onClick={() => router.push('/registration')}
@@ -218,9 +218,9 @@ export default function LoginPage() {
         >
           <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/5">
             <Shield className="w-3 h-3 text-blue-500" />
-            <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Artemis Secured Gateway</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Artemis Secured Gateway</span>
           </div>
-          <p className="text-[9px] font-bold text-slate-600 tracking-wider">© 2026 SMK AIRLANGGA BALIKPAPAN</p>
+          <p className="text-[10px] font-bold text-slate-400 tracking-wider">© 2026 SMK AIRLANGGA BALIKPAPAN</p>
         </motion.div>
       </motion.div>
     </div>

@@ -240,7 +240,7 @@ export default function KasClient({ user }: Props) {
         <div className="flex items-center gap-2">
           <button 
             onClick={() => openModal(item.id)}
-            className="p-2 bg-green-500/10 text-green-600 hover:bg-green-600 hover:text-white rounded-lg transition-all duration-200"
+            className="p-2 bg-green-500/10 text-green-400 hover:bg-green-600 hover:text-white rounded-lg transition-all duration-200"
             title="Setor Kas"
           >
             <Plus className="w-4 h-4" />
@@ -265,7 +265,7 @@ export default function KasClient({ user }: Props) {
             <Plus className="w-4 h-4 mr-1.5" />
             Setor Kas
           </button>
-          <a href="/pengeluaran" className="btn bg-red-500/10 text-red-600 hover:bg-red-600 hover:text-white border-white/10 whitespace-nowrap shadow-sm">
+          <a href="/pengeluaran" className="btn bg-red-500/10 text-red-400 hover:bg-red-600 hover:text-white border-white/10 whitespace-nowrap shadow-sm">
             <Minus className="w-4 h-4 mr-1.5" />
             Tarik Kas
           </a>

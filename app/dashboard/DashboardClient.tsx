@@ -76,18 +76,18 @@ interface RequestStatsData {
 }
 
 const AKSI_COLORS: Record<string, string> = {
-  CREATE: 'text-green-600 bg-green-500/10',
-  UPDATE: 'text-blue-600 bg-white/5',
-  DELETE: 'text-red-600 bg-red-500/10',
+  CREATE: 'text-green-400 bg-green-500/10',
+  UPDATE: 'text-blue-300 bg-white/5',
+  DELETE: 'text-red-400 bg-red-500/10',
   LOGIN:  'text-persian-blue bg-persian-blue/10',
   LOGOUT: 'text-slate-300 bg-white/10',
 }
 
 // Request stats visual config per aksi
 const REQUEST_META: Record<string, { label: string; method: string; color: string; chartColor: string; icon: React.ElementType; bg: string }> = {
-  CREATE: { label: 'Create',  method: 'POST',   color: 'text-emerald-700', chartColor: '#10b981', icon: PlusCircle,         bg: 'bg-emerald-50 border-emerald-200' },
+  CREATE: { label: 'Create',  method: 'POST',   color: 'text-emerald-400', chartColor: '#10b981', icon: PlusCircle,         bg: 'bg-emerald-500/10 border-emerald-500/20' },
   UPDATE: { label: 'Update',  method: 'PUT',    color: 'text-blue-300',    chartColor: '#3b82f6', icon: RefreshCw,          bg: 'bg-white/5   border-white/10'    },
-  DELETE: { label: 'Delete',  method: 'DELETE', color: 'text-red-400',     chartColor: '#ef4444', icon: Trash2,             bg: 'bg-red-500/10    border-white/10'     },
+  DELETE: { label: 'Delete',  method: 'DELETE', color: 'text-red-400',     chartColor: '#ef4444', icon: Trash2,             bg: 'bg-red-500/10    border-red-500/20'     },
   LOGIN:  { label: 'Login',   method: 'GET',    color: 'text-blue-300',  chartColor: '#1E90FF', icon: MousePointerClick,  bg: 'bg-persian-blue/10 border-white/10'  },
   LOGOUT: { label: 'Logout',  method: 'GET',    color: 'text-slate-300',   chartColor: '#94a3b8', icon: ArrowUpDown,        bg: 'bg-white/5  border-white/10'   },
 }
@@ -407,7 +407,7 @@ export default function DashboardClient({ user }: Props) {
       value: stats.hadirHariIni,
       suffix: 'orang',
       icon: CheckCircle2,
-      color: 'bg-green-500/10 text-green-600',
+      color: 'bg-green-500/10 text-green-400',
     },
     {
       label: 'Sisa Saldo Kas',
@@ -428,7 +428,7 @@ export default function DashboardClient({ user }: Props) {
       value: formatCurrency(stats.totalPengeluaran),
       isCurrency: true,
       icon: HandCoins,
-      color: 'bg-red-500/10 text-red-600',
+      color: 'bg-red-500/10 text-red-400',
     },
   ].filter(Boolean) as { label: string; value: number | string; suffix?: string; isCurrency?: boolean; icon: React.ElementType; color: string }[]) : []
 

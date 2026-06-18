@@ -305,8 +305,15 @@ export default function SiswaClient({ user }: Props) {
       <ConfirmDialog
         open={!!deleteTarget}
         title="Hapus Anggota?"
-        message={`Data "${deleteTarget?.name}" akan dihapus permanen.`}
+        message="Data anggota akan dihapus permanen dari sistem. Tindakan ini tidak dapat dibatalkan."
+        details={deleteTarget ? [
+          { label: 'Nama', value: deleteTarget.name },
+          { label: 'NIS', value: deleteTarget.nis || '-' },
+          { label: 'Kelas', value: deleteTarget.class || '-' },
+          { label: 'Jabatan', value: deleteTarget.jabatan || 'Anggota' },
+        ] : []}
         loading={deleting}
+        confirmLabel="Ya, Hapus"
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />

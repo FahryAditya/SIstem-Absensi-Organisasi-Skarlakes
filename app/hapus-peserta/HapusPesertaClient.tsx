@@ -201,7 +201,7 @@ export default function HapusPesertaClient({ user }: Props) {
             <ArrowLeft className="w-4 h-4" /> Kembali
           </button>
           {selectedIds.length > 0 && (
-            <button onClick={() => setBulkDeleteConfirmOpen(true)} className="btn-secondary text-red-600 border-white/10 hover:bg-red-500/10">
+            <button onClick={() => setBulkDeleteConfirmOpen(true)} className="btn-secondary text-red-400 border-white/10 hover:bg-red-500/10">
               <Trash2 className="w-4 h-4" /> Hapus Terpilih ({selectedIds.length})
             </button>
           )}
@@ -368,7 +368,7 @@ export default function HapusPesertaClient({ user }: Props) {
                         {deletable ? (
                           <button
                             onClick={() => setDeleteTarget(item)}
-                            className="btn-secondary btn-sm text-red-600 hover:bg-red-500/10"
+                            className="btn-secondary btn-sm text-red-400 hover:bg-red-500/10"
                             title="Hapus peserta"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -394,11 +394,13 @@ export default function HapusPesertaClient({ user }: Props) {
       <ConfirmDialog
         open={!!deleteTarget}
         title="Hapus Peserta Wawancara?"
-        message={
-          deleteTarget
-            ? `Peserta <strong>${deleteTarget.nama}</strong> (${deleteTarget.kelas}) akan dihapus permanen dari antrian wawancara. Data hasil wawancara juga akan terhapus. Tindakan ini tidak dapat dibatalkan.`
-            : ''
-        }
+        message="Peserta akan dihapus permanen dari antrian wawancara. Data hasil wawancara juga akan terhapus."
+        details={deleteTarget ? [
+          { label: 'Nama', value: deleteTarget.nama },
+          { label: 'Kelas', value: deleteTarget.kelas },
+          { label: 'Ekskul', value: orgLabelMap[deleteTarget.sesi_org] || deleteTarget.sesi_org },
+          { label: 'Status', value: statusLabelMap[deleteTarget.status] },
+        ] : []}
         loading={deleting}
         confirmLabel="Ya, Hapus"
         cancelLabel="Batal"
@@ -410,11 +412,16 @@ export default function HapusPesertaClient({ user }: Props) {
       <ConfirmDialog
         open={bulkDeleteConfirmOpen}
         title="Hapus Peserta Terpilih?"
-        message={`Sebanyak <strong>${selectedIds.length}</strong> peserta akan dihapus permanen dari antrian wawancara beserta hasil wawancaranya. Tindakan ini tidak dapat dibatalkan.`}
+        message={`${selectedIds.length} peserta akan dihapus permanen dari antrian wawancara beserta hasil wawancaranya. Tindakan ini tidak dapat dibatalkan.`}
         loading={bulkDeleting}
         confirmLabel="Ya, Hapus Semua"
         cancelLabel="Batal"
         confirmClass="bg-red-600 hover:bg-red-700 text-white"
+        confirmInput={{
+          expectedValue: 'HAPUS',
+          placeholder: 'Ketik HAPUS untuk konfirmasi',
+          hint: 'Ketik HAPUS lalu klik tombol hapus untuk melanjutkan'
+        }}
         onConfirm={handleBulkDelete}
         onCancel={() => setBulkDeleteConfirmOpen(false)}
       />

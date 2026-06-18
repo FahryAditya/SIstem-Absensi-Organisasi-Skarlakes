@@ -707,8 +707,8 @@ export default function WawancaraClient({ user }: Props) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="card p-4"><div className="text-xs font-bold text-slate-400">Status</div><div className="mt-2"><span className={`badge border ${selectedSession ? statusStyle[selectedSession.status] : 'bg-white/5 border-white/10 text-slate-400'}`}>{selectedSession?.status || 'NONAKTIF'}</span></div></div>
             <div className="card p-4"><div className="text-xs font-bold text-slate-400">Antrian</div><div className="text-2xl font-black font-mono text-white">{queue.length}</div></div>
-            <div className="card p-4"><div className="text-xs font-bold text-slate-400">Sudah Dinilai</div><div className="text-2xl font-black font-mono text-green-600">{done}</div></div>
-            <div className="card p-4"><div className="text-xs font-bold text-slate-400">Belum Dinilai</div><div className="text-2xl font-black font-mono text-amber-600">{Math.max(queue.length - done, 0)}</div></div>
+            <div className="card p-4"><div className="text-xs font-bold text-slate-300">Sudah Dinilai</div><div className="text-2xl font-black font-mono text-green-400">{done}</div></div>
+            <div className="card p-4"><div className="text-xs font-bold text-slate-300">Belum Dinilai</div><div className="text-2xl font-black font-mono text-amber-400">{Math.max(queue.length - done, 0)}</div></div>
           </div>
 
           <div className="card overflow-hidden">
@@ -739,9 +739,9 @@ export default function WawancaraClient({ user }: Props) {
                 <div className="flex flex-wrap gap-2">
                   {admin && selectedSession.status === 'SCHEDULED' && <button onClick={() => updateSession(selectedSession.id, 'activate')} className="btn-secondary btn-sm"><Play className="w-3.5 h-3.5" />Aktifkan</button>}
                   {admin && ['SCHEDULED', 'ACTIVE'].includes(selectedSession.status) && <button onClick={() => openEdit(selectedSession)} className="btn-secondary btn-sm text-persian-blue"><SquarePen className="w-3.5 h-3.5" />Edit Jadwal</button>}
-                  {admin && <button onClick={() => window.location.href = '/hapus-peserta'} className="btn-secondary btn-sm text-red-600"><UserX className="w-3.5 h-3.5" />Hapus Peserta</button>}
+                  {admin && <button onClick={() => window.location.href = '/hapus-peserta'} className="btn-secondary btn-sm text-red-400"><UserX className="w-3.5 h-3.5" />Hapus Peserta</button>}
                   {admin && selectedSession.status === 'ACTIVE' && <button onClick={() => setConfirmAction({ id: selectedSession.id, action: 'finish', title: 'Finalisasi hasil?', message: 'Setelah finalisasi, semua data wawancara akan terkunci permanen.' })} className="btn-primary btn-sm bg-gradient-to-r from-slate-900 to-slate-800 shadow-md hover:shadow-lg"><CheckCircle2 className="w-3.5 h-3.5" />Finalisasi</button>}
-                  {admin && ['SCHEDULED', 'ACTIVE'].includes(selectedSession.status) && <button onClick={() => setConfirmAction({ id: selectedSession.id, action: 'cancel', title: 'Batalkan sesi?', message: 'Sesi dibatalkan dan tidak bisa diedit lagi. Buat jadwal baru jika diperlukan.' })} className="btn-secondary btn-sm text-red-600"><XCircle className="w-3.5 h-3.5" />Batal</button>}
+                  {admin && ['SCHEDULED', 'ACTIVE'].includes(selectedSession.status) && <button onClick={() => setConfirmAction({ id: selectedSession.id, action: 'cancel', title: 'Batalkan sesi?', message: 'Sesi dibatalkan dan tidak bisa diedit lagi. Buat jadwal baru jika diperlukan.' })} className="btn-secondary btn-sm text-red-400"><XCircle className="w-3.5 h-3.5" />Batal</button>}
                   <button onClick={() => setExportModal(true)} className="btn-secondary btn-sm"><Download className="w-3.5 h-3.5" />Excel</button>
                 </div>
               )}
@@ -826,10 +826,10 @@ export default function WawancaraClient({ user }: Props) {
                             <div className="flex gap-1 justify-end items-center">
                               {q.status === 'WAWANCARA' && (
                                 <div className="flex gap-1 items-center">
-                                  <span className="text-xs font-semibold text-red-600 px-2 py-1 flex items-center gap-1"><Lock className="w-3 h-3" /> Dikunci</span>
+                                  <span className="text-xs font-semibold text-red-400 px-2 py-1 flex items-center gap-1"><Lock className="w-3 h-3" /> Dikunci</span>
                                   {(admin || user.role === 'admin_osis_mpk') && (
                                     <>
-                                      <button onClick={() => setQueueStatus(q.id, 'MENUNGGU')} className="btn-secondary btn-sm px-2 text-red-600 border-red-200 hover:bg-red-50" title="Kembalikan ke antrian">
+                                      <button onClick={() => setQueueStatus(q.id, 'MENUNGGU')} className="btn-secondary btn-sm px-2 text-red-400 border-red-400/30 hover:bg-red-500/10" title="Kembalikan ke antrian">
                                         <RefreshCcw className="w-3.5 h-3.5" />
                                         Reset
                                       </button>

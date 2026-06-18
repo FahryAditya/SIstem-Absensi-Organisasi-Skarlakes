@@ -108,7 +108,7 @@ export default function LogClient() {
           <p className="page-sub mt-0.5">Rekam jejak semua perubahan data dalam sistem</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setClearConfirmOpen(true)} className="btn-secondary text-red-600 border-white/10 hover:bg-red-500/10 flex items-center gap-2">
+          <button onClick={() => setClearConfirmOpen(true)} className="btn-secondary text-red-400 border-white/10 hover:bg-red-500/10 flex items-center gap-2">
             <Trash2 className="w-4 h-4" />
             Bersihkan Log
           </button>

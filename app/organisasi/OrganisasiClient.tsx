@@ -578,7 +578,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
                             <td className="td text-xs text-slate-400">{angg?.jabatan || '-'}</td>
                             <td className="td text-xs font-mono text-slate-400">{formatDate(a.tanggal)}</td>
                             <td className="td"><StatusBadge status={a.status}/></td>
-                            <td className="td font-mono text-sm font-semibold text-green-600">{a.uang_kas > 0 ? formatCurrency(a.uang_kas) : '-'}</td>
+                            <td className="td font-mono text-sm font-semibold text-green-400">{a.uang_kas > 0 ? formatCurrency(a.uang_kas) : '-'}</td>
                             <td className="td text-xs text-slate-400">{a.keterangan || '-'}</td>
                           </tr>
                         )
