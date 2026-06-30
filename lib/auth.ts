@@ -34,6 +34,18 @@ export async function signToken(payload: SessionUser): Promise<string> {
     .sign(JWT_SECRET)
 }
 
+export async function refreshToken(currentToken: string): Promise<string | null> {
+  try {
+    const session = await verifyToken(currentToken)
+    if (!session) return null
+    
+    // Generate new token with same payload but extended expiration
+    return await signToken(session)
+  } catch {
+    return null
+  }
+}
+
 export async function verifyToken(token: string): Promise<SessionUser | null> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET)
@@ -53,7 +65,27 @@ export async function getSession(): Promise<SessionUser | null> {
 export async function getSessionFromRequest(req: NextRequest): Promise<SessionUser | null> {
   const token = req.cookies.get(COOKIE_NAME)?.value
   if (!token) return null
-  return verifyToken(token)
+  
+  const session = await verifyToken(token)
+  if (!session) return null
+  
+  // Check if token is close to expiration (within 2 hours)
+  const payload = JSON.parse(atob(token.split('.')[1]))
+  const exp = payload.exp * 1000 // Convert to milliseconds
+  const now = Date.now()
+  const twoHours = 2 * 60 * 60 * 1000 // 2 hours in milliseconds
+  
+  if (exp - now < twoHours) {
+    // Token will expire within 2 hours, refresh it
+    const newToken = await refreshToken(token)
+    if (newToken) {
+      // Set new token in response headers for client to update
+      // This will be handled by middleware
+      req.headers.set('x-refresh-token', newToken)
+    }
+  }
+  
+  return session
 }
 
 export function setSessionCookie(token: string) {

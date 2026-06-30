@@ -53,7 +53,7 @@ export default function AbsensiClient({ user }: Props) {
     setLoadingBulk(true)
     try {
       const json = await fetchJsonCachedUrl<{ data?: AbsensiRow[] }>(
-        `/api/absensi?mode=input&tanggal=${bulkDate}`,
+        `/api/absensi?mode=input&tanggal=${bulkDate}&orgId=${user.activeOrgId}`,
         { force: true }
       )
       setBulkRows(json.data || [])
@@ -72,6 +72,7 @@ export default function AbsensiClient({ user }: Props) {
     const params = new URLSearchParams({
       page: String(activePage), 
       limit: String(PAGE_SIZE),
+      orgId: String(user.activeOrgId || ''),
       ...(activeTanggal && { tanggal: activeTanggal }),
     })
     const json = await fetchJsonCachedUrl<{ data?: AbsensiRecord[]; total?: number; totalPages?: number }>(`/api/absensi?${params}`, { force })
@@ -80,6 +81,12 @@ export default function AbsensiClient({ user }: Props) {
     setTotalPages(json.totalPages || 1)
     setLoadingRiwayat(false)
   }, [page, filterTanggal, user.activeOrgId, user.role])
+
+  useEffect(() => {
+    setBulkRows([])
+    setRiwayat([])
+    setPage(1)
+  }, [user.activeOrgId])
 
   useEffect(() => { if (mode === 'input') loadBulkData() }, [mode, loadBulkData, user.activeOrgId])
   useEffect(() => { if (mode === 'riwayat') loadRiwayat() }, [mode, loadRiwayat, user.activeOrgId])

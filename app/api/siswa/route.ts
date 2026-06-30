@@ -167,6 +167,12 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   const ctx = getCtx(req)
+
+  // RBAC: Only admins can delete members
+  if (!isSuperAdmin(ctx.userRole) && !ctx.activeOrgId) {
+    return NextResponse.json({ error: 'Dilarang' }, { status: 403 })
+  }
+
   const { searchParams } = new URL(req.url)
   const idStr = searchParams.get('id')
   

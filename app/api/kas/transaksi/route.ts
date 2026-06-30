@@ -28,7 +28,15 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const parsed = schema.safeParse(body)
+    
+    // Map client keys (id_anggota, nominal, keterangan) to database schema (member_id, amount, description)
+    const mappedBody = {
+      member_id: body.member_id !== undefined ? Number(body.member_id) : (body.id_anggota !== undefined ? Number(body.id_anggota) : undefined),
+      amount: body.amount !== undefined ? Number(body.amount) : (body.nominal !== undefined ? Number(body.nominal) : undefined),
+      description: body.description !== undefined ? body.description : body.keterangan,
+    }
+
+    const parsed = schema.safeParse(mappedBody)
 
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
@@ -58,6 +66,15 @@ export async function POST(req: NextRequest) {
         description: description
       }
     })
+
+    // Verify database persistence
+    const verification = await prisma.cashTransaction.findUnique({
+      where: { id: transaction.id }
+    })
+
+    if (!verification) {
+      throw new Error('Data tidak tersimpan di database')
+    }
 
     const actionText = amount > 0 ? 'menambahkan' : 'mengurangi'
     const absAmount = Math.abs(amount)

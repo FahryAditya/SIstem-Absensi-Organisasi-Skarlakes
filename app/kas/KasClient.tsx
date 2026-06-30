@@ -53,19 +53,28 @@ export default function KasClient({ user }: Props) {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const url = `/api/kas?org=${activeOrg}&search=${debouncedSearch}&page=${page}&limit=${PAGE_SIZE}`
+      const url = `/api/kas?org=${activeOrg}&orgId=${user.activeOrgId || ''}&search=${debouncedSearch}&page=${page}&limit=${PAGE_SIZE}`
       const json = await fetchJsonCachedUrl<any>(url)
       setData(json.data)
       setTotalPages(json.totalPages)
       setTotalItems(json.total)
       setTotalKas(json.totalKas)
       setOrgs(json.orgs)
-      if (!activeOrg && json.orgs.length > 0) setActiveOrg(json.orgs[0].slug)
+      if (!activeOrg && json.orgs.length > 0) {
+        const matchedOrg = json.orgs.find((o: any) => o.id === user.activeOrgId)
+        setActiveOrg(matchedOrg ? matchedOrg.slug : json.orgs[0].slug)
+      }
     } catch (err: any) {
       toast.error(err.message)
     }
     setLoading(false)
-  }, [activeOrg, debouncedSearch, page])
+  }, [activeOrg, debouncedSearch, page, user.activeOrgId])
+
+  useEffect(() => {
+    setData([])
+    setActiveOrg('')
+    setPage(1)
+  }, [user.activeOrgId])
 
   useEffect(() => {
     fetchData()

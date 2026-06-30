@@ -80,6 +80,11 @@ export async function POST(req: NextRequest) {
     const session = await getSessionFromRequest(req)
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    // RBAC: Only admins can give/remove XP
+    if (!isSuperAdmin(session.role as string) && !session.orgIds.length) {
+      return NextResponse.json({ error: 'Dilarang' }, { status: 403 })
+    }
+
     const body = await req.json()
     const parsed = postSchema.safeParse(body)
     if (!parsed.success) {

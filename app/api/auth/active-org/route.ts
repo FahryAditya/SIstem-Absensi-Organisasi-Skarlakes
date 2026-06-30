@@ -47,7 +47,11 @@ export async function POST(req: NextRequest) {
     const newSession = { ...session, activeOrgId: orgId }
     const token = await signToken(newSession)
 
-    const response = NextResponse.json({ success: true, activeOrgId: orgId })
+    const response = NextResponse.json({ 
+      success: true, 
+      activeOrgId: orgId,
+      clearState: true // Signal frontend to clear all cached data
+    })
     response.cookies.set('ekskul_session', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

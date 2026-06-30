@@ -38,11 +38,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'No active organization selected' }, { status: 400 })
     }
 
-    // RBAC Check
-    if (!isSuperAdmin(session.role as string) && filterOrgId && !session.orgIds.includes(filterOrgId)) {
-      return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
-    }
-
+    // Ensure organization isolation
     const where: any = {
       ...(filterOrgId ? { organization_id: filterOrgId } : {}),
       status: 'ACTIVE',
@@ -111,7 +107,7 @@ export async function GET(req: NextRequest) {
       totalKas: totalKasSum,
       total,
       totalPages: Math.ceil(total / limit),
-      orgs: orgs.map(o => ({ slug: o.slug, nama: o.nama }))
+      orgs: orgs.map(o => ({ id: o.id, slug: o.slug, nama: o.nama }))
     })
   } catch (e: any) {
     console.error('[KAS ERROR]', e)

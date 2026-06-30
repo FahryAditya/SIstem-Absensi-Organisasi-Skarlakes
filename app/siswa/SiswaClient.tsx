@@ -86,6 +86,7 @@ export default function SiswaClient({ user }: Props) {
     const params = new URLSearchParams({
       page: String(page),
       limit: String(PAGE_SIZE),
+      orgId: String(user.activeOrgId || ''),
       ...(debouncedSearch && { search: debouncedSearch }),
     })
     
@@ -99,6 +100,12 @@ export default function SiswaClient({ user }: Props) {
     }
     setLoading(false)
   }, [page, debouncedSearch, user.activeOrgId, user.role])
+
+  useEffect(() => {
+    setData([])
+    setLoading(true)
+    setPage(1)
+  }, [user.activeOrgId])
 
   useEffect(() => { load() }, [load])
   useEffect(() => { setPage(1) }, [debouncedSearch])

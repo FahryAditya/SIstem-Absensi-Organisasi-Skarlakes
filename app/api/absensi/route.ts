@@ -146,7 +146,12 @@ export async function POST(req: NextRequest) {
 
       const upserted = await tx.attendance.upsert({
         where: { member_id_date: { member_id: row.member_id, date: tanggalDate } },
-        update: { status: row.status, cash_amount: row.uang_kas, notes: row.keterangan },
+        update: { 
+          status: row.status, 
+          cash_amount: row.uang_kas, 
+          notes: row.keterangan,
+          organization_id: activeOrgId // Ensure organization context is maintained
+        },
         create: { 
           organization_id: activeOrgId, 
           member_id: row.member_id, 
@@ -169,43 +174,54 @@ export async function POST(req: NextRequest) {
         })
       }
 
-      // If there is cash_amount, create a transaction too? 
-      // Usually, we track total kas per day, but detailed per-member is better.
+      // Create dedicated cash transaction for better tracking
       if (row.uang_kas > 0) {
-        await tx.cashTransaction.upsert({
-          where: { 
-            // Unique per member per date for attendance kas
-            id: -1 // This is a placeholder, usually we'd have a specific relation or just create
-          },
-          // For simplicity, we'll just use a more generic approach in a real implementation
-          // but for now, we'll just keep it in attendance table as it was.
-          create: {
+        // First, check if a cash transaction for this member on this date already exists
+        const existingCashTx = await tx.cashTransaction.findFirst({
+          where: {
             organization_id: activeOrgId,
             member_id: row.member_id,
-            amount: row.uang_kas,
-            type: 'INCOME',
-            description: `Uang kas tanggal ${tanggal}`,
-          },
-          update: {
-            amount: row.uang_kas,
+            description: { contains: tanggal },
+            type: 'INCOME'
           }
-        }).catch(() => {
-           // Handle unique constraint if needed
-           return tx.cashTransaction.create({
-             data: {
-                organization_id: activeOrgId,
-                member_id: row.member_id,
-                amount: row.uang_kas,
-                type: 'INCOME',
-                description: `Uang kas tanggal ${tanggal}`,
-             }
-           })
         })
+
+        if (existingCashTx) {
+          // Update existing transaction
+          await tx.cashTransaction.update({
+            where: { id: existingCashTx.id },
+            data: { 
+              amount: row.uang_kas,
+              description: `Uang kas tanggal ${tanggal} - ${row.status}`
+            }
+          })
+        } else {
+          // Create new transaction
+          await tx.cashTransaction.create({
+            data: {
+              organization_id: activeOrgId,
+              member_id: row.member_id,
+              amount: row.uang_kas,
+              type: 'INCOME',
+              description: `Uang kas tanggal ${tanggal} - ${row.status}`,
+            }
+          })
+        }
       }
 
       saved.push(upserted)
     }
     return saved
+  })
+
+  // Verify persistence by re-fetching the data
+  const verification = await prisma.attendance.findMany({
+    where: {
+      organization_id: activeOrgId,
+      date: tanggalDate,
+      member_id: { in: memberIds }
+    },
+    select: { member_id: true, status: true, cash_amount: true, notes: true }
   })
 
   // Log
@@ -233,7 +249,12 @@ export async function POST(req: NextRequest) {
     } catch (err) {}
   }
 
-  return NextResponse.json({ success: true, count: results.length })
+  return NextResponse.json({ 
+    success: true, 
+    count: results.length,
+    verified: verification.length,
+    message: `${results.length} data absensi berhasil disimpan dan diverifikasi persisten` 
+  })
 }
 
 function hitungSelisihExpAbsensi(statusLama: string | undefined, statusBaru: string) {

@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import Topbar from '@/components/layout/Topbar'
+import toast from 'react-hot-toast'
 
 const Sidebar = dynamic(() => import('@/components/layout/Sidebar'), {
   ssr: false,
@@ -28,6 +29,25 @@ export default function DashboardLayout({ user, pageTitle, children }: Dashboard
   const [mobileOpen, setMobileOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
   const themeClass = (user.role === 'SUPER_ADMIN' || (user.role as string) === 'administrator') ? 'theme-admin' : ''
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const res = await fetch('/api/auth/me')
+        if (res.status === 401) {
+          toast.error('Sesi Anda telah berakhir. Silakan login kembali.')
+          sessionStorage.removeItem('welcome_shown')
+          await fetch('/api/auth/logout', { method: 'POST' })
+          window.location.href = '/login'
+        }
+      } catch (err) {
+        console.error('Session check failed:', err)
+      }
+    }
+
+    const interval = setInterval(checkSession, 5 * 60 * 1000) // Check every 5 minutes
+    return () => clearInterval(interval)
+  }, [])
 
   return (
     <div className={`flex h-[100dvh] overflow-hidden bg-white/5 ${themeClass}`}>

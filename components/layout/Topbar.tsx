@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
-import { Menu, LogOut, ChevronDown, Loader2, Contact, Building2, Check } from 'lucide-react';
 import { ROLE_LABELS } from '@/lib/auth-shared';
+import { clearJsonCache } from '@/lib/client-cache';
 
 interface TopbarProps {
   user: { 
@@ -66,6 +66,7 @@ export default function Topbar({
         body: JSON.stringify({ orgId })
       });
       if (res.ok) {
+        clearJsonCache();
         toast.success('Organisasi dialihkan');
         router.refresh();
         setOrgOpen(false);

@@ -48,7 +48,7 @@ export default function ExportClient({ user }: Props) {
 
   const currentOption = useMemo(() => exportOptions.find(o => o.value === exportType) ?? exportOptions[0], [exportType])
   const selectedExportOrgs = orgFilter ? [orgFilter] : orgs
-  const expectedConfirm = `HAPUS ${clearOrg.toUpperCase()}`
+  const expectedConfirm = `HAPUS ${(ORG_LABELS[clearOrg as OrgType] || clearOrg).toUpperCase()}`
 
   async function handleExport() {
     if (!startDate || !endDate) {
