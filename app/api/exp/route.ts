@@ -80,9 +80,14 @@ export async function POST(req: NextRequest) {
     const session = await getSessionFromRequest(req)
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // RBAC: Only admins can give/remove XP
-    if (!isSuperAdmin(session.role as string) && !session.orgIds.length) {
-      return NextResponse.json({ error: 'Dilarang' }, { status: 403 })
+    // STRICT RBAC: Only specific admin roles can give/remove XP
+    const canGiveXP = isSuperAdmin(session.role as string) || 
+                     (session.role as string) === 'ORG_ADMIN'
+    
+    if (!canGiveXP) {
+      return NextResponse.json({ 
+        error: 'Dilarang - Hanya admin yang dapat mengubah XP' 
+      }, { status: 403 })
     }
 
     const body = await req.json()
@@ -100,9 +105,13 @@ export async function POST(req: NextRequest) {
 
     if (!member) return NextResponse.json({ error: 'Anggota tidak ditemukan' }, { status: 404 })
 
-    // RBAC Check
-    if (!isSuperAdmin(session.role as string) && !session.orgIds.includes(member.organization_id)) {
-      return NextResponse.json({ error: 'Akses ditolak untuk organisasi ini' }, { status: 403 })
+    // STRICT RBAC: Verify admin has access to this specific organization
+    if (!isSuperAdmin(session.role as string)) {
+      if (!session.orgIds.includes(member.organization_id)) {
+        return NextResponse.json({ 
+          error: 'Dilarang - Akses ditolak untuk organisasi ini' 
+        }, { status: 403 })
+      }
     }
 
     const result = await updateExp({
@@ -119,7 +128,7 @@ export async function POST(req: NextRequest) {
       aksi: 'UPDATE',
       organizationId: member.organization_id,
       tabel: 'members',
-      recordId: memberId,
+      recordId: memberId.toString(),
       deskripsi: `${session.nama} mengubah EXP "${member.name}" sebesar ${amount > 0 ? '+' : ''}${amount}. Alasan: ${reason}`,
       dataLama: { xp: result.xpBaru - amount, level: result.levelLama },
       dataBaru: { xp: result.xpBaru, level: result.levelBaru },

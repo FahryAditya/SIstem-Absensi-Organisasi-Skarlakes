@@ -4,6 +4,15 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
+import { 
+  Menu, 
+  Building2, 
+  ChevronDown, 
+  Check, 
+  Loader2, 
+  Contact, 
+  LogOut 
+} from 'lucide-react';
 import { ROLE_LABELS } from '@/lib/auth-shared';
 import { clearJsonCache } from '@/lib/client-cache';
 
