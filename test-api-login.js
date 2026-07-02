@@ -1,56 +1,55 @@
-const { PrismaClient } = require('@prisma/client');
-const fetch = require('node-fetch');
-
-async function testApiLogin() {
+// Test API Login endpoint
+const testLoginAPI = async (nama, email, password) => {
+  console.log('\n=== Testing Login API ===')
+  console.log(`Nama: ${nama}`)
+  console.log(`Email: ${email}`)
+  console.log(`Password: ${password}\n`)
+  
   try {
-    const prisma = new PrismaClient();
-    
-    // Get a test user
-    const user = await prisma.user.findFirst({
-      select: { nama: true, email: true }
-    });
-    
-    if (!user) {
-      console.log('No users found in database');
-      return;
-    }
-    
-    console.log(`Testing login with: ${user.nama} (${user.email})`);
-    
-    // Test with incorrect password first to see if we get proper error
-    const testData = {
-      nama: user.nama,
-      email: user.email,
-      password: 'wrongpassword123'
-    };
-    
-    console.log('Testing with wrong password...');
     const response = await fetch('http://localhost:3000/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(testData),
-    });
+      body: JSON.stringify({ nama, email, password }),
+    })
     
-    console.log('Response status:', response.status);
-    console.log('Response headers:', Object.fromEntries(response.headers));
+    const data = await response.json()
     
-    const responseText = await response.text();
-    console.log('Response body:', responseText);
+    console.log(`Status: ${response.status}`)
+    console.log('Response:', JSON.stringify(data, null, 2))
     
-    if (response.status >= 400 && response.status < 500) {
-      console.log('✓ Properly handled authentication error');
-    } else if (response.status >= 500) {
-      console.log('✗ Server error occurred!');
+    if (response.ok) {
+      console.log('\n✅ LOGIN SUCCESS!')
+      console.log(`Welcome, ${data.user.nama}!`)
+      console.log(`Role: ${data.user.role}`)
+      
+      // Check cookies
+      const cookies = response.headers.get('set-cookie')
+      if (cookies) {
+        console.log('\nCookie set:', cookies.substring(0, 100) + '...')
+      }
+    } else {
+      console.log('\n❌ LOGIN FAILED!')
+      console.log(`Error: ${data.error}`)
     }
     
-    await prisma.$disconnect();
   } catch (error) {
-    console.error('Test failed:', error.message);
-    console.error('Full error:', error);
+    console.error('❌ Error:', error.message)
+    console.log('\nMake sure the development server is running:')
+    console.log('  npm run dev')
   }
 }
 
-// Wait a bit for server to be ready
-setTimeout(testApiLogin, 2000);
+// Test with multiple accounts
+const runTests = async () => {
+  await testLoginAPI('Fahry Aditya Setiawan', 'Fahryadityasetiawann@gmail.com', 'AdministratorFahry')
+  await testLoginAPI('Samuel Alden', 'programmingakarlakes1@gmail.com', 'pgskarlakes1')
+  await testLoginAPI('Eunike Devina', 'osismpkskarlakes1@gmail.com', 'osismpk1')
+  
+  // Test with wrong credentials
+  console.log('\n\n=== Testing Wrong Credentials ===')
+  await testLoginAPI('Wrong Name', 'Fahryadityasetiawann@gmail.com', 'WrongPassword')
+}
+
+runTests()
