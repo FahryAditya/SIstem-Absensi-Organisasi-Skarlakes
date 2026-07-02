@@ -473,7 +473,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
                 ) : (
                   <div className="space-y-2">
                     {profileAchievements.map(item => (
-                      <div key={item.id} className="rounded-xl border border-amber-100 bg-amber-500/10/60 p-3">
+                      <div key={item.id} className="rounded-xl border border-amber-100 bg-amber-500/60 p-3">
                         <div className="flex items-center justify-between gap-3">
                           <p className="text-sm font-bold text-white">{item.pencapaian.nama}</p>
                           <span className="text-xs font-bold text-amber-400">+{item.pencapaian.exp_reward} EXP</span>

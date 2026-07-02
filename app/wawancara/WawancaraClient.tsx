@@ -780,7 +780,7 @@ export default function WawancaraClient({ user }: Props) {
                       return (
                       <tr
                         key={q.id}
-                        className="hover:bg-white/5/80 transition-colors group fade-in"
+                        className="hover:bg-white/80 transition-colors group fade-in"
                       >
                         <td className="td font-mono text-slate-400">
                           {q.kelas.includes('[MPK]') ? 'MP' : q.kelas.includes('[OSIS]') ? 'OS' : ((q as any).sesiOrg === 'osis' ? 'OS' : 'MP')}

@@ -1,6 +1,28 @@
-import React, { memo } from 'react'
+'use client'
+
+import React, { memo, useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, ChevronRight, Inbox, Loader2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react'
+
+function SkeletonRows({ selectable, columns }: { selectable?: boolean; columns: Column<any>[] }) {
+  const [widths] = useState(() =>
+    Array.from({ length: 6 }, () => `${50 + Math.random() * 40}%`)
+  )
+  return (
+    <>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <tr key={i} className="border-b border-white/10">
+          {selectable && <td className="td w-10"></td>}
+          {columns.map(col => (
+            <td key={col.key} className="td">
+              <div className="h-4 bg-white/10 rounded animate-pulse" style={{ width: widths[i] }} />
+            </td>
+          ))}
+        </tr>
+      ))}
+    </>
+  )
+}
 
 export interface Column<T> {
   key: string
@@ -98,16 +120,7 @@ export default function Table<T>({
           </thead>
           <tbody>
             {loading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <tr key={i} className="border-b border-white/10">
-                  {selectable && <td className="td w-10"></td>}
-                  {columns.map(col => (
-                    <td key={col.key} className="td">
-                      <div className="h-4 bg-white/10 rounded animate-pulse" style={{ width: `${50 + Math.random() * 40}%` }} />
-                    </td>
-                  ))}
-                </tr>
-              ))
+              <SkeletonRows selectable={selectable} columns={columns} />
             ) : data.length === 0 ? (
               <tr>
                 <td colSpan={columns.length + (selectable ? 1 : 0)}>

@@ -22,7 +22,7 @@ export function ExpProgressBar({ exp, showLabels = true }: ExpProgressBarProps) 
     1: 'from-slate-400 to-slate-500 shadow-slate-200/50',
     2: 'from-blue-400 to-blue-500 shadow-blue-200/50',
     3: 'from-teal-400 to-teal-500 shadow-teal-200/50',
-    4: 'from-persian-blue/100 to-persian-blue shadow-persian-blue/30/50',
+    4: 'from-persian-blue/100 to-persian-blue shadow-persian-blue/50',
     5: 'from-amber-500 to-amber-600 shadow-amber-200/50',
   }[level as 1 | 2 | 3 | 4 | 5] || 'from-slate-400 to-slate-500'
 
@@ -53,7 +53,7 @@ export function ExpProgressBar({ exp, showLabels = true }: ExpProgressBarProps) 
       )}
 
       {/* Progress Track */}
-      <div className="w-full h-2.5 bg-white/10 rounded-full border border-white/10/40 p-[1.5px] overflow-hidden shadow-inner">
+      <div className="w-full h-2.5 bg-white/10 rounded-full border border-white/40 p-[1.5px] overflow-hidden shadow-inner">
         <div
           className={`h-full rounded-full bg-gradient-to-r ${gradientClass} transition-all duration-1000 ease-out shadow-sm`}
           style={{ width: `${persen}%` }}

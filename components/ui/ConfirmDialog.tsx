@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertTriangle, Loader2, Info } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface ConfirmDialogProps {
   open: boolean
@@ -30,16 +30,18 @@ export default function ConfirmDialog({
   const [inputValue, setInputValue] = useState('')
 
   // Reset input saat dialog dibuka/ditutup
-  if (open && inputValue !== '' && !confirmInput) {
-    setInputValue('')
-  }
+  useEffect(() => {
+    if (open && !confirmInput) {
+      setInputValue('')
+    }
+  }, [open, confirmInput])
 
   if (!open) return null
 
   const isInputValid = !confirmInput || inputValue === confirmInput.expectedValue
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="alertdialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
       <div className="relative bg-[#051525] rounded-2xl shadow-2xl w-full max-w-md p-6 slide-up border border-white/10">
         {/* Header Icon & Title */}
@@ -49,7 +51,7 @@ export default function ConfirmDialog({
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-bold text-white">{title}</h3>
-            <p className="text-sm text-slate-300 mt-1.5 leading-relaxed" dangerouslySetInnerHTML={{ __html: message }} />
+            <p className="text-sm text-slate-300 mt-1.5 leading-relaxed">{message}</p>
           </div>
         </div>
 

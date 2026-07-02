@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
 
     const [logs, total] = await Promise.all([
       prisma.emailLog.findMany({
-        where: {} as any,
+        where: { admin: { organizations: { some: { organization: { slug: organisasi } } } } },
         orderBy: { created_at: 'desc' },
         skip,
         take: limit,
@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
         },
       }),
       prisma.emailLog.count({
-        where: {} as any,
+        where: { admin: { organizations: { some: { organization: { slug: organisasi } } } } },
       }),
     ])
 

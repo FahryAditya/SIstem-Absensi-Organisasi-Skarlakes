@@ -109,7 +109,19 @@ async function getAdminEmails(organisasi: string): Promise<string[]> {
 
   const users = await prisma.user.findMany({
     where: { role: { in: roleFilter as any } },
-    select: { email: true },
+    select: { id: true, email: true },
   })
-  return users.map(u => u.email)
+
+  if (users.length === 0) return []
+
+  const admins = await prisma.organizationAdmin.findMany({
+    where: {
+      user_id: { in: users.map(u => u.id) },
+      organization: { slug: organisasi }
+    },
+    include: { user: { select: { email: true } } }
+  })
+
+  const emails = admins.map(a => a.user.email)
+  return [...new Set(emails)]
 }

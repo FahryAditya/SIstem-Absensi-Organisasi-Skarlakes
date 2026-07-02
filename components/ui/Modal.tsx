@@ -65,7 +65,7 @@ export default function Modal({ open, title, onClose, children, size = 'md', foo
 
         {/* Footer */}
         {footer && (
-          <div className="flex-shrink-0 px-6 py-5 border-t border-slate-50 bg-white/5/50 rounded-b-[24px]">
+          <div className="flex-shrink-0 px-6 py-5 border-t border-slate-50 bg-white/5 rounded-b-[24px]">
             {footer}
           </div>
         )}

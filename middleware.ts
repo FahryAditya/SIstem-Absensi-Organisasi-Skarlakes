@@ -10,7 +10,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/auth/login') ||
     pathname.startsWith('/api/auth/register') ||
-    pathname.includes('.') ||
+    /\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|avif|woff2?|ttf|eot|map|json)$/i.test(pathname) ||
     pathname === '/login'
   ) {
     return NextResponse.next()

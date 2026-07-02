@@ -52,11 +52,11 @@ export default function AttendanceCharts({ data }: Props) {
           <h3 className="text-sm font-bold text-white mb-4">Kehadiran 7 Hari Terakhir</h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={data.kehadiranMingguan} barSize={20} barGap={4}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
               <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <Tooltip 
-                contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,.08)' }}
+                contentStyle={{ fontSize: 12, borderRadius: 8, background: '#1e293b', border: '1px solid #334155', color: '#f1f5f9' }}
               />
               <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
               <Bar dataKey="hadir" name="Hadir" fill="#1E90FF" radius={[4,4,0,0]} animationDuration={1000} />
@@ -72,11 +72,11 @@ export default function AttendanceCharts({ data }: Props) {
           <h3 className="text-sm font-bold text-white mb-4">Tren Kehadiran 30 Hari</h3>
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={data.kehadiranBulanan}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
               <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} interval={3} />
               <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <Tooltip 
-                contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}
+                contentStyle={{ fontSize: 12, borderRadius: 8, background: '#1e293b', border: '1px solid #334155', color: '#f1f5f9' }}
               />
               <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
               <Line 
@@ -110,11 +110,11 @@ export default function AttendanceCharts({ data }: Props) {
           <h3 className="text-sm font-bold text-white mb-4">Kehadiran Tahunan per Bulan</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={data.kehadiranTahunan} barSize={24} barGap={6}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <Tooltip 
-                contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}
+                contentStyle={{ fontSize: 12, borderRadius: 8, background: '#1e293b', border: '1px solid #334155', color: '#f1f5f9' }}
                 formatter={(value: number, name: string) => [
                   name === 'persentase' ? `${value}%` : value,
                   name === 'persentase' ? 'Persentase' : name

@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify member belongs to organization
-    const member = await prisma.member.findUnique({
+    const member = await prisma.member.findFirst({
       where: { id: member_id, organization_id: activeOrgId }
     })
 

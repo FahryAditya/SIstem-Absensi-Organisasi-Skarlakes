@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Search, Filter, Loader2, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import DocumentationCard from './DocumentationCard'
 import { canManageDocumentation } from '@/lib/documentation-auth'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 
 interface Props {
   organizationId?: number
@@ -19,6 +20,9 @@ export default function DocumentationList({ organizationId, type, user, onAddCli
   const [page, setPage] = useState(1)
   const [pagination, setPagination] = useState<any>(null)
   const [search, setSearch] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const searchTimer = useRef<NodeJS.Timeout>()
 
   const fetchDocs = async () => {
     setLoading(true)
@@ -26,6 +30,7 @@ export default function DocumentationList({ organizationId, type, user, onAddCli
       const params = new URLSearchParams()
       if (organizationId) params.append('organizationId', organizationId.toString())
       if (type) params.append('type', type)
+      if (search) params.append('search', search)
       params.append('page', page.toString())
       params.append('limit', '8')
 
@@ -43,22 +48,24 @@ export default function DocumentationList({ organizationId, type, user, onAddCli
   }
 
   useEffect(() => {
-    fetchDocs()
-  }, [organizationId, type, page])
+    if (searchTimer.current) clearTimeout(searchTimer.current)
+    searchTimer.current = setTimeout(fetchDocs, 300)
+    return () => { if (searchTimer.current) clearTimeout(searchTimer.current) }
+  }, [organizationId, type, page, search])
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus dokumentasi ini?')) return
-    
+  const handleDeleteConfirm = async () => {
+    if (deleteTarget === null) return
+    setDeleting(true)
     try {
-      const res = await fetch(`/api/documentation/${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/documentation/${deleteTarget}`, { method: 'DELETE' })
       if (res.ok) {
         fetchDocs()
-      } else {
-        const data = await res.json()
-        alert(data.error || 'Gagal menghapus')
       }
     } catch (err) {
       console.error(err)
+    } finally {
+      setDeleting(false)
+      setDeleteTarget(null)
     }
   }
 
@@ -71,8 +78,8 @@ export default function DocumentationList({ organizationId, type, user, onAddCli
             type="text"
             placeholder="Cari dokumentasi..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-sm border border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-persian-blue/100/20"
+            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+            className="w-full pl-10 pr-4 py-2 text-sm border border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-persian-blue/20"
           />
         </div>
         
@@ -106,7 +113,7 @@ export default function DocumentationList({ organizationId, type, user, onAddCli
                 doc={doc} 
                 canManage={canManageDocumentation(user.role, doc.createdBy, user.id, doc.type)}
                 onEdit={onEditClick}
-                onDelete={handleDelete}
+                onDelete={(id) => setDeleteTarget(id)}
               />
             ))}
           </div>
@@ -134,6 +141,16 @@ export default function DocumentationList({ organizationId, type, user, onAddCli
           )}
         </>
       )}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Hapus Dokumentasi"
+        message="Apakah Anda yakin ingin menghapus dokumentasi ini? Tindakan ini tidak dapat dibatalkan."
+        confirmLabel={deleting ? 'Menghapus...' : 'Hapus'}
+        loading={deleting}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   )
 }

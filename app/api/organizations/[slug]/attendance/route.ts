@@ -66,6 +66,7 @@ export async function POST(req: NextRequest, { params }: { params: { slug: strin
             organization_id: org.id,
             member_id,
             amount: cash_amount,
+            type: 'INCOME',
             description: `Iuran Kas via Absensi (${date})`
           }
         })

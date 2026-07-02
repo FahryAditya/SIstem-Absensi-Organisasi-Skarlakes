@@ -604,7 +604,7 @@ export default function ReportsClient({ user }: Props) {
           
           {/* Custom Cool Select Dropdown period pickers (Administrator Only) */}
           {user.role === 'administrator' && data?.keuanganBulanan && data.keuanganBulanan.length > 0 && (
-            <div className="flex items-center gap-2 bg-white/10 hover:bg-slate-200/50 border border-white/10/80 px-3 py-2 rounded-2xl transition-all">
+            <div className="flex items-center gap-2 bg-white/10 hover:bg-slate-200/50 border border-white/80 px-3 py-2 rounded-2xl transition-all">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider hidden sm:inline">Periode:</span>
               
               {/* Cool Select Year */}

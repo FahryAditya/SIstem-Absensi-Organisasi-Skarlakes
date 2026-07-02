@@ -106,7 +106,7 @@ export async function PUT(req: NextRequest) {
         data: {
           ...updateData,
           organizations: {
-            create: orgIds?.map(oid => ({ organization_id: id }))
+            create: orgIds?.map(oid => ({ organization_id: oid }))
           }
         }
       })

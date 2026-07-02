@@ -44,8 +44,9 @@ function useReducedAnimation() {
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     const mobileMq = window.matchMedia('(max-width: 1023px)');
+    const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
     const update = () => {
-      setReduced(mq.matches || mobileMq.matches || 'ontouchstart' in window);
+      setReduced(mq.matches || mobileMq.matches || isTouchDevice);
     };
     update();
     const handler = () => update();
@@ -217,11 +218,11 @@ const AnimatedList = <T,>({
   useEffect(() => {
     if (!enableArrowNavigation) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey)) {
+      if (e.key === 'ArrowDown') {
         e.preventDefault();
         setKeyboardNav(true);
         setSelectedIndex(Math.min(selectedIndex + 1, resolvedItems.length - 1));
-      } else if (e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey)) {
+      } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         setKeyboardNav(true);
         setSelectedIndex(Math.max(selectedIndex - 1, 0));

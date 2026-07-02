@@ -2,6 +2,7 @@ import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import { NextRequest } from 'next/server'
 import { SessionUser } from './auth-shared'
+import { z } from 'zod'
 
 export type { SessionUser } from './auth-shared'
 
@@ -21,17 +22,32 @@ export {
   canManageSiswaEkskul
 } from './auth-shared'
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'fallback-secret-change-this'
-)
+function getJwtSecret(): Uint8Array {
+  const secret = process.env.JWT_SECRET
+  if (!secret || secret === 'fallback-secret-change-this' || secret === 'ganti-dengan-secret-anda-yang-panjang-dan-aman-sekali-12345') {
+    throw new Error('JWT_SECRET environment variable is not set. Set it in .env file with a secure random string.')
+  }
+  return new TextEncoder().encode(secret)
+}
+
+const sessionUserSchema = z.object({
+  id: z.number().positive(),
+  nama: z.string().min(1),
+  email: z.string().email(),
+  role: z.string().min(1),
+  activeOrgId: z.number().optional(),
+  orgIds: z.array(z.number()).default([]),
+})
+
 const COOKIE_NAME = 'ekskul_session'
 
 export async function signToken(payload: SessionUser): Promise<string> {
+  const secret = getJwtSecret()
   return new SignJWT({ ...payload })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('8h')
-    .sign(JWT_SECRET)
+    .sign(secret)
 }
 
 export async function refreshToken(currentToken: string): Promise<string | null> {
@@ -48,8 +64,11 @@ export async function refreshToken(currentToken: string): Promise<string | null>
 
 export async function verifyToken(token: string): Promise<SessionUser | null> {
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET)
-    return payload as unknown as SessionUser
+    const secret = getJwtSecret()
+    const { payload } = await jwtVerify(token, secret)
+    const parsed = sessionUserSchema.safeParse(payload)
+    if (!parsed.success) return null
+    return parsed.data as SessionUser
   } catch {
     return null
   }
@@ -69,27 +88,29 @@ export async function getSessionFromRequest(req: NextRequest): Promise<SessionUs
   const session = await verifyToken(token)
   if (!session) return null
   
-  // Check if token is close to expiration (within 2 hours)
-  const payload = JSON.parse(atob(token.split('.')[1]))
-  const exp = payload.exp * 1000 // Convert to milliseconds
-  const now = Date.now()
-  const twoHours = 2 * 60 * 60 * 1000 // 2 hours in milliseconds
-  
-  if (exp - now < twoHours) {
-    // Token will expire within 2 hours, refresh it
-    const newToken = await refreshToken(token)
-    if (newToken) {
-      // Set new token in response headers for client to update
-      // This will be handled by middleware
-      req.headers.set('x-refresh-token', newToken)
+  // Check if token is close to expiration (within 2 hours) using verified payload
+  try {
+    const secret = getJwtSecret()
+    const { payload } = await jwtVerify(token, secret)
+    const exp = (payload.exp as number) * 1000
+    const now = Date.now()
+    const twoHours = 2 * 60 * 60 * 1000
+    
+    if (exp - now < twoHours) {
+      const newToken = await refreshToken(token)
+      if (newToken) {
+        req.headers.set('x-refresh-token', newToken)
+      }
     }
+  } catch {
+    // Token verification already succeeded above, this is just for refresh logic
   }
   
   return session
 }
 
-export function setSessionCookie(token: string) {
-  const cookieStore = cookies()
+export async function setSessionCookie(token: string) {
+  const cookieStore = await cookies()
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -99,7 +120,7 @@ export function setSessionCookie(token: string) {
   })
 }
 
-export function clearSessionCookie() {
-  const cookieStore = cookies()
+export async function clearSessionCookie() {
+  const cookieStore = await cookies()
   cookieStore.delete(COOKIE_NAME)
 }

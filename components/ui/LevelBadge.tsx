@@ -29,7 +29,7 @@ export function LevelBadge({ exp, size = 'md' }: LevelBadgeProps) {
       gradient: 'from-teal-400 to-teal-500',
     },
     4: {
-      bg: 'bg-persian-blue/10 border-persian-blue/30 text-blue-300 shadow-persian-blue/20/50',
+      bg: 'bg-persian-blue/10 border-persian-blue/30 text-blue-300 shadow-persian-blue/50',
       icon: <Trophy className="w-3.5 h-3.5 text-persian-blue/100 fill-blue-300" />,
       gradient: 'from-persian-blue/100 to-persian-blue',
     },

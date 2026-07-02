@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useLayoutEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { gsap } from 'gsap';
 import { 
   ChevronDown, Mail, Plus, UserCheck, Link as LinkIcon, Cpu, Database, Trash2, ArrowUpRight,
@@ -22,6 +23,7 @@ const AdminDropdownMenu: React.FC<AdminDropdownMenuProps> = ({
   onOpenCleanupWawancara,
   userRole
 }) => {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -142,7 +144,7 @@ const AdminDropdownMenu: React.FC<AdminDropdownMenuProps> = ({
     e.preventDefault();
     toggleMenu();
     setTimeout(() => {
-      window.location.href = href;
+      router.push(href);
     }, 300);
   };
 

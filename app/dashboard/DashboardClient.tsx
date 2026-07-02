@@ -674,7 +674,7 @@ export default function DashboardClient({ user }: Props) {
       {(orgs.some(o => o.slug === 'programming') || orgs.some(o => o.slug === 'english')) && (
         <div className="card p-5 relative overflow-hidden shadow-[0_0_20px_rgba(84,130,180,0.1)] border-t-2 border-t-[#1E90FF]">
           {/* Glowing neon bg accents */}
-          <div className="absolute -top-12 -right-12 w-32 h-32 bg-persian-blue/100/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute -top-12 -right-12 w-32 h-32 bg-persian-blue/10 rounded-full blur-2xl pointer-events-none" />
           <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-[#93C5FD]/20 rounded-full blur-2xl pointer-events-none" />
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 relative z-10">

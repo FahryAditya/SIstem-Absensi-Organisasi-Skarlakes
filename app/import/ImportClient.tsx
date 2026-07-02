@@ -181,7 +181,7 @@ export default function ImportClient({ user }: Props) {
       </div>
 
       {/* Instruksi */}
-      <div className="card p-4 bg-white/5/40 border-white/10">
+      <div className="card p-4 bg-white/40 border-white/10">
         <h3 className="text-sm font-bold text-blue-200 mb-2 flex items-center gap-2">
           <AlertCircle className="w-4 h-4" />
           Panduan Format Excel

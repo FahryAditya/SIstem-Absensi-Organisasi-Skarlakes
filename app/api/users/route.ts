@@ -26,7 +26,6 @@ export async function GET(req: NextRequest) {
       nama: true, 
       email: true, 
       role: true, 
-      password: true, 
       created_at: true,
       organizations: {
         include: {

@@ -35,8 +35,13 @@ export async function POST(req: NextRequest) {
     // Validate photo URLs
     const urls = photoUrl.split(',')
     for (const url of urls) {
-      if (!url.trim().includes('cloudinary.com')) {
-        return NextResponse.json({ error: 'Invalid photo URL' }, { status: 400 })
+      try {
+        const parsed = new URL(url.trim())
+        if (!parsed.hostname.endsWith('cloudinary.com')) {
+          return NextResponse.json({ error: 'Invalid photo URL' }, { status: 400 })
+        }
+      } catch {
+        return NextResponse.json({ error: 'Invalid photo URL format' }, { status: 400 })
       }
     }
 

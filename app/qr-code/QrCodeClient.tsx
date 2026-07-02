@@ -244,7 +244,7 @@ export default function QrCodeClient({ baseUrl, initialItems }: QrCodeClientProp
             {items.length === 0 ? (
               <div className="p-5 text-sm text-slate-400">Belum ada riwayat.</div>
             ) : items.map((item) => (
-              <div key={item.id} className={`p-4 ${deleteMode && selectedDeleteId === item.id ? 'bg-red-500/10/50' : ''}`}>
+              <div key={item.id} className={`p-4 ${deleteMode && selectedDeleteId === item.id ? 'bg-red-500/50' : ''}`}>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     {deleteMode && (

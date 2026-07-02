@@ -216,7 +216,7 @@ export default function PengeluaranClient({ user }: Props) {
                     </td>
                     <td className="font-medium text-white">{item.keterangan}</td>
                     <td className="text-slate-300 text-sm">{item.creator_nama}</td>
-                    <td className="text-right font-mono font-bold text-red-400 bg-red-500/10/30">
+                    <td className="text-right font-mono font-bold text-red-400 bg-red-500/30">
                       - {formatCurrency(item.nominal)}
                     </td>
                     <td className="text-center">

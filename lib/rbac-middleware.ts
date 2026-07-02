@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSessionFromRequest, SessionUser } from '@/lib/auth'
+import { getSessionFromRequest, SessionUser, isSuperAdmin } from '@/lib/auth'
 
 interface RBACOptions {
   requiredRoles?: string[]
@@ -25,6 +25,7 @@ export async function withRBAC(
   // Get session
   const session = await getSessionFromRequest(req)
   if (!session) {
+    console.warn(`[RBAC] 401 Unauthorized - No session: ${req.url}`)
     return {
       success: false,
       response: NextResponse.json({ error: 'Unauthorized - Login required' }, { status: 401 })
@@ -38,6 +39,7 @@ export async function withRBAC(
 
   // Check required roles
   if (requiredRoles.length > 0 && !requiredRoles.includes(session.role)) {
+    console.warn(`[RBAC] 403 Forbidden - Role ${session.role} not in [${requiredRoles.join(', ')}]: ${req.url}`)
     return {
       success: false,
       response: NextResponse.json({ 
@@ -51,6 +53,7 @@ export async function withRBAC(
     const targetOrgId = organizationId || session.activeOrgId
     
     if (!targetOrgId) {
+      console.warn(`[RBAC] 400 Bad Request - No active org for user ${session.id}: ${req.url}`)
       return {
         success: false,
         response: NextResponse.json({ 
@@ -60,6 +63,7 @@ export async function withRBAC(
     }
 
     if (!session.orgIds.includes(targetOrgId)) {
+      console.warn(`[RBAC] 403 Forbidden - User ${session.id} no access to org ${targetOrgId}: ${req.url}`)
       return {
         success: false,
         response: NextResponse.json({ 
@@ -97,14 +101,6 @@ export function protectedEndpoint(
   }
 }
 
-function isSuperAdmin(role: string): boolean {
-  return role === 'SUPER_ADMIN' || role === 'administrator'
-}
-
-function isOrgAdmin(role: string): boolean {
-  return role === 'ORG_ADMIN' || isSuperAdmin(role)
-}
-
 /**
  * Common RBAC configurations
  */
@@ -140,6 +136,7 @@ export const RBACConfigs = {
 
 /**
  * Endpoint security decorator for critical operations
+ * @deprecated Use protectedEndpoint() directly instead
  */
 export function secureEndpoint(config: keyof typeof RBACConfigs) {
   return function (

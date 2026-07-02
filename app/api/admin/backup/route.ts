@@ -55,7 +55,12 @@ export async function GET() {
       achievements,
       member_achievements
     ] = await Promise.all([
-      prisma.user.findMany(),
+      prisma.user.findMany({
+        select: {
+          id: true, nama: true, email: true, role: true,
+          created_at: true, updated_at: true, last_seen_update_id: true
+        }
+      }),
       prisma.organization.findMany(),
       prisma.organizationAdmin.findMany(),
       prisma.member.findMany(),

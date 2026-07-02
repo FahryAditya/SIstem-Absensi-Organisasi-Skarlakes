@@ -206,7 +206,7 @@ export default function LogClient() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-white/10 bg-white/5/50">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-white/10 bg-white/50">
             <span className="text-xs text-slate-400">{total} total log — Halaman {page} dari {totalPages}</span>
             <div className="flex items-center gap-1">
               <button onClick={() => setPage(p => Math.max(1, p-1))} disabled={page <= 1} className="btn-icon disabled:opacity-30">

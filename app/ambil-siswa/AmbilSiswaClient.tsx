@@ -470,7 +470,7 @@ export default function AmbilSiswaClient({ user }: Props) {
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all ${
             step === 1 
               ? 'bg-persian-blue/10 border-persian-blue/30 text-white' 
-              : 'bg-green-500/100/10 border-green-500/20 text-green-400'
+              : 'bg-green-500/10 border-green-500/20 text-green-400'
           }`}>
             <span className="w-4 h-4 rounded-full bg-current text-white flex items-center justify-center text-[10px]">1</span>
             Informasi
@@ -548,7 +548,7 @@ export default function AmbilSiswaClient({ user }: Props) {
                   onClick={() => setIsOpen(!isOpen)}
                   className={`w-full flex items-center justify-between input pl-10 pr-4 py-2.5 bg-deep-navy border border-white/10 rounded-xl text-sm font-semibold transition-all duration-200 text-left select-none cursor-pointer ${
                     isOpen 
-                      ? 'border-persian-blue/100 ring-2 ring-persian-blue/100/20' 
+                      ? 'border-persian-blue/100 ring-2 ring-persian-blue/20' 
                       : 'hover:border-slate-300'
                   }`}
                 >

@@ -13,7 +13,7 @@ export async function PATCH(req: NextRequest) {
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await req.json()
-    const { id, action, reason } = body // action: 'accept' | 'reject'
+    const { id, action } = body // action: 'accept' | 'reject'
 
     if (!id || !action) {
       return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 })

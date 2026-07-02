@@ -55,10 +55,22 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const body = await req.json()
     const { title, description, category, dateTaken, photoUrl, publicId } = body
 
-    // If photo changed, we might want to delete old photo from Cloudinary
-    // Logic for deleting old photo could go here using doc.publicId
-
-    // Actually, for now, let's just update the record.
+    // Delete old photos from Cloudinary if new photos are provided
+    if (photoUrl) {
+      const oldPhotos = doc.photos as { publicId?: string; public_id?: string; url?: string }[]
+      if (Array.isArray(oldPhotos)) {
+        for (const oldPhoto of oldPhotos) {
+          const oldPublicId = oldPhoto.publicId || oldPhoto.public_id
+          if (oldPublicId && typeof oldPublicId === 'string') {
+            try {
+              await cloudinary.uploader.destroy(oldPublicId)
+            } catch (cloudErr) {
+              console.warn(`[CLOUDINARY] Failed to delete old photo ${oldPublicId}:`, cloudErr)
+            }
+          }
+        }
+      }
+    }
     const updatedDoc = await prisma.documentation.update({
       where: { id },
       data: {

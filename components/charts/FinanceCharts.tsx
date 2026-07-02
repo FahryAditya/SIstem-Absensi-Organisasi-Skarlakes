@@ -55,13 +55,13 @@ export default function FinanceCharts({ data }: Props) {
           <h3 className="text-sm font-bold text-white mb-4">Keuangan 6 Bulan Terakhir</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={data.keuanganBulanan} barSize={28} barGap={6}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
               <XAxis dataKey="bulan" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false}
                 tickFormatter={(v: number) => v >= 1000000 ? `${(v/1000000).toFixed(1)}jt` : v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}
               />
               <Tooltip 
-                contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}
+                contentStyle={{ fontSize: 12, borderRadius: 8, background: '#1e293b', border: '1px solid #334155', color: '#f1f5f9' }}
                 formatter={(value: number) => [formatCurrency(value), '']}
               />
               <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
@@ -84,13 +84,13 @@ export default function FinanceCharts({ data }: Props) {
                   <stop offset="95%" stopColor="#1E90FF" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
               <XAxis dataKey="bulan" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false}
                 tickFormatter={(v: number) => v >= 1000000 ? `${(v/1000000).toFixed(1)}jt` : v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}
               />
               <Tooltip 
-                contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}
+                contentStyle={{ fontSize: 12, borderRadius: 8, background: '#1e293b', border: '1px solid #334155', color: '#f1f5f9' }}
                 formatter={(value: number) => [formatCurrency(value), 'Saldo']}
               />
               <Area 
@@ -114,13 +114,13 @@ export default function FinanceCharts({ data }: Props) {
           <h3 className="text-sm font-bold text-white mb-4">Keuangan Tahunan</h3>
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={data.keuanganTahunan}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
               <XAxis dataKey="bulan" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false}
                 tickFormatter={(v: number) => v >= 1000000 ? `${(v/1000000).toFixed(1)}jt` : v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}
               />
               <Tooltip 
-                contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}
+                contentStyle={{ fontSize: 12, borderRadius: 8, background: '#1e293b', border: '1px solid #334155', color: '#f1f5f9' }}
                 formatter={(value: number) => [formatCurrency(value), '']}
               />
               <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />

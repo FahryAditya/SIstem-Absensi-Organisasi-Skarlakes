@@ -275,7 +275,7 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
             {/* Center: App name (Desktop only to prevent mobile overlap) */}
             <div className="hidden md:block absolute left-1/2 -translate-x-1/2 text-center">
               <div className="text-white font-black text-lg tracking-tight">Sistem Ekskul</div>
-              <div className="text-white/40 text-xs font-medium">Skarlakes V18.5.5 Artemis Series  4 ( Stabel)</div>
+              <div className="text-white/40 text-xs font-medium">Skarlakes V18.5.5 Artemis Series 4 (Stable)</div>
             </div>
 
             {/* Right side: Clock & Actions */}
@@ -300,7 +300,7 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
               <button
                 onClick={handleClose}
                 className="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 rounded-xl bg-white/5 border border-white/10
-                  hover:bg-red-500/100/20 hover:border-red-500/30 text-white/60 hover:text-red-400 transition-all"
+                  hover:bg-red-500/20 hover:border-red-500/30 text-white/60 hover:text-red-400 transition-all"
                 title="Tutup (Esc)"
               >
                 <X className="w-3.5 h-3.5 md:w-4 md:h-4" />

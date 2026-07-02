@@ -18,15 +18,15 @@ export const ROLE_LABELS: Record<string, string> = {
 }
 
 export function isSuperAdmin(role: string) {
-  return role === 'SUPER_ADMIN'
+  return role === 'SUPER_ADMIN' || role === 'administrator'
 }
 
 export function isOrgAdmin(role: string) {
-  return role === 'ORG_ADMIN' || role === 'SUPER_ADMIN' || role === 'organization_admin'
+  return role === 'ORG_ADMIN' || role === 'organization_admin' || isSuperAdmin(role)
 }
 
 export function canManageSystem(role: string) {
-  return role === 'SUPER_ADMIN' || role === 'administrator'
+  return isSuperAdmin(role)
 }
 
 export function canManageMembers(role: string) {
@@ -36,7 +36,7 @@ export function canManageMembers(role: string) {
 // --- COMPATIBILITY SHIMS (For Legacy Code) ---
 
 export function isAdministrator(role: string) {
-  return role === 'SUPER_ADMIN' || role === 'administrator'
+  return isSuperAdmin(role)
 }
 
 export function getAccessibleOrgs(role: string): string[] {
@@ -45,12 +45,12 @@ export function getAccessibleOrgs(role: string): string[] {
   if (r === 'admin_programming') return ['programming']
   if (r === 'admin_english') return ['english']
   if (r === 'admin_osis_mpk') return ['osis', 'mpk']
+  if (r === 'ORG_ADMIN' || r === 'organization_admin') return ['programming', 'english', 'osis', 'mpk']
   return []
 }
 
 export function canAccessOsis(role: string) {
-  const r = (role || '').trim()
-  return r === 'SUPER_ADMIN' || r === 'administrator' || r === 'admin_osis_mpk' || r === 'ORG_ADMIN'
+  return isSuperAdmin(role) || role === 'admin_osis_mpk' || isOrgAdmin(role)
 }
 
 export function canAccessMpk(role: string) {
@@ -58,13 +58,11 @@ export function canAccessMpk(role: string) {
 }
 
 export function canAccessProgramming(role: string) {
-  const r = (role || '').trim()
-  return r === 'SUPER_ADMIN' || r === 'administrator' || r === 'admin_programming' || r === 'ORG_ADMIN'
+  return isSuperAdmin(role) || role === 'admin_programming' || isOrgAdmin(role)
 }
 
 export function canAccessEnglish(role: string) {
-  const r = (role || '').trim()
-  return r === 'SUPER_ADMIN' || r === 'administrator' || r === 'admin_english' || r === 'ORG_ADMIN'
+  return isSuperAdmin(role) || role === 'admin_english' || isOrgAdmin(role)
 }
 
 export function canAccessAmbilSiswa(role: string) {

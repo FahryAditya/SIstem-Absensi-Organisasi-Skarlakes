@@ -22,8 +22,8 @@ export default function DocumentationCard({ doc, canManage, onEdit, onDelete }: 
           unoptimized
         />
         <div className="absolute top-3 left-3">
-          <span className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-white shadow-sm flex items-center gap-1.5 border border-white/20">
-            <Tag className="w-3 h-3 text-persian-blue/100" />
+          <span className="bg-slate-900/80 backdrop-blur-md px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-white shadow-sm flex items-center gap-1.5 border border-white/20">
+            <Tag className="w-3 h-3 text-persian-blue" />
             {doc.category}
           </span>
         </div>
@@ -32,13 +32,13 @@ export default function DocumentationCard({ doc, canManage, onEdit, onDelete }: 
           <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={() => onEdit?.(doc)}
-              className="p-2 bg-white/90 backdrop-blur-md rounded-xl text-slate-300 hover:text-persian-blue shadow-sm border border-white/20"
+              className="p-2 bg-slate-900/80 backdrop-blur-md rounded-xl text-slate-300 hover:text-persian-blue shadow-sm border border-white/20"
             >
               <Edit className="w-4 h-4" />
             </button>
             <button
               onClick={() => onDelete?.(doc.id)}
-              className="p-2 bg-red-500/10/90 backdrop-blur-md rounded-xl text-red-600 hover:bg-red-500/100 hover:text-white shadow-sm border border-red-100/20"
+              className="p-2 bg-red-500/10 backdrop-blur-md rounded-xl text-red-600 hover:bg-red-500 hover:text-white shadow-sm border border-red-100/20"
             >
               <Trash2 className="w-4 h-4" />
             </button>

@@ -28,8 +28,9 @@ type SidebarItem =
 
 function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[] {
   const items: SidebarItem[] = []
+  const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || 'Pro Series'
   
-  items.push({ type: 'logo', label: 'Sistem Ekstrakurikuler', version: 'V 20.6.12 Pro Series' })
+  items.push({ type: 'logo', label: 'Sistem Ekstrakurikuler', version: `V ${appVersion}` })
   
   if (!isCollapsed) {
     items.push({ type: 'badge', role })

@@ -229,7 +229,7 @@ export default function ExportClient({ user }: Props) {
         </div>
 
         {isSuperAdmin && (
-          <div className="card p-5 border-white/10 bg-red-500/10/40">
+          <div className="card p-5 border-white/10 bg-red-500/40">
             <div className="flex items-center gap-2.5 mb-4">
               <ShieldAlert className="w-5 h-5 text-red-400" />
               <h3 className="text-sm font-bold text-red-400">Clear Database</h3>

@@ -319,7 +319,7 @@ export default function PencapaianClient({ user }: Props) {
 
   const columns = useMemo(() => [
     { key: 'icon', label: 'Badge', render: (p: Pencapaian) => (
-      <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10/50 flex items-center justify-center shadow-inner">
+      <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/50 flex items-center justify-center shadow-inner">
         {getLucideIcon(p.icon)}
       </div>
     )},

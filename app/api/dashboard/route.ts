@@ -157,16 +157,16 @@ export async function GET(req: NextRequest) {
           GROUP BY TO_CHAR(date, 'YYYY-MM-DD'), status
         `
       } else if (!superAdmin && accessibleOrgIds.length > 0) {
-        attendanceRaw = await prisma.$queryRawUnsafe(`
+        attendanceRaw = await prisma.$queryRaw`
           SELECT 
             TO_CHAR(date, 'YYYY-MM-DD') as date_str,
             status,
             COUNT(*)::int as count
           FROM attendance
-          WHERE date >= $1
-            AND organization_id = ANY($2::int[])
+          WHERE date >= ${start7}
+            AND organization_id = ANY(${accessibleOrgIds}::int[])
           GROUP BY TO_CHAR(date, 'YYYY-MM-DD'), status
-        `, start7, `{${accessibleOrgIds.join(',')}}`)
+        `
       } else {
         attendanceRaw = await prisma.$queryRaw`
           SELECT 

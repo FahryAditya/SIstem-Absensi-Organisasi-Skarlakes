@@ -56,13 +56,13 @@ export default function KasSiswaCharts({ data, activeOrg }: Props) {
           <h3 className="text-sm font-bold text-white mb-4">Top 20 Kas Siswa - {activeOrg?.toUpperCase() || 'Semua'}</h3>
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={orgData} barSize={24} barGap={4} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" horizontal={false} />
               <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false}
                 tickFormatter={(v: number) => v >= 1000000 ? `${(v/1000000).toFixed(1)}jt` : v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}
               />
               <YAxis dataKey="nama" type="category" width={120} tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <Tooltip 
-                contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}
+                contentStyle={{ fontSize: 12, borderRadius: 8, background: '#1e293b', border: '1px solid #334155', color: '#f1f5f9' }}
                 formatter={(value: number) => [formatCurrency(value), 'Total Kas']}
                 labelFormatter={(label: string) => {
                   const item = orgData.find((d: any) => d.nama === label)
@@ -116,13 +116,13 @@ export default function KasSiswaCharts({ data, activeOrg }: Props) {
               { name: 'OSIS', avg: data.kasSiswa.osis?.length ? Math.round(data.kasSiswa.osis.reduce((s, d) => s + d.total_kas, 0) / data.kasSiswa.osis.length) : 0 },
               { name: 'MPK', avg: data.kasSiswa.mpk?.length ? Math.round(data.kasSiswa.mpk.reduce((s, d) => s + d.total_kas, 0) / data.kasSiswa.mpk.length) : 0 },
             ].filter(d => d.avg > 0)} barSize={50} barGap={8}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
               <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false}
                 tickFormatter={(v: number) => v >= 1000000 ? `${(v/1000000).toFixed(1)}jt` : v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}
               />
               <Tooltip 
-                contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}
+                contentStyle={{ fontSize: 12, borderRadius: 8, background: '#1e293b', border: '1px solid #334155', color: '#f1f5f9' }}
                 formatter={(value: number) => [formatCurrency(value), 'Rata-rata']}
               />
               <Bar dataKey="avg" name="Rata-rata Kas" fill="#10B981" radius={[4,4,0,0]} animationDuration={1000} />

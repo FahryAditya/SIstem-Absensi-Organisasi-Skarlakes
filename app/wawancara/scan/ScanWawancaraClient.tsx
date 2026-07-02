@@ -147,7 +147,7 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
       <div
         className="w-full max-w-md bg-deep-navy border border-white/10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden slide-up"
       >
-        <div className="p-6 border-b border-white/10/50 bg-white/50 backdrop-blur-sm">
+        <div className="p-6 border-b border-white/50 bg-white/50 backdrop-blur-sm">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-persian-blue/100 to-purple-600 flex items-center justify-center text-white shadow-inner shadow-white/20">
               <MessageSquareText className="w-6 h-6" />
@@ -215,10 +215,10 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
           </div>
         ) : (
           <div className="p-6 space-y-4 fade-in">
-            <div className="rounded-2xl bg-gradient-to-br from-persian-blue/10 to-blue-50 border border-persian-blue/20/60 p-5 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-persian-blue/30/40 to-purple-200/40 blur-3xl -mr-10 -mt-10 rounded-full" />
+            <div className="rounded-2xl bg-gradient-to-br from-persian-blue/10 to-blue-50 border border-persian-blue/60 p-5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-persian-blue/40 to-purple-200/40 blur-3xl -mr-10 -mt-10 rounded-full" />
               <div className="relative">
-                <div className="text-[10px] font-extrabold text-persian-blue uppercase tracking-widest bg-persian-blue/20/50 inline-block px-2 py-0.5 rounded-md mb-2">Sesi Aktif</div>
+                <div className="text-[10px] font-extrabold text-persian-blue uppercase tracking-widest bg-persian-blue/50 inline-block px-2 py-0.5 rounded-md mb-2">Sesi Aktif</div>
                 <div className="text-xl font-black text-white mt-1">OSIS & MPK</div>
                 <div className="text-xs font-medium text-slate-400 mt-1 flex items-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500/100 animate-pulse" />

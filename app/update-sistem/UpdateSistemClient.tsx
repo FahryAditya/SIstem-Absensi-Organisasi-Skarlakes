@@ -51,7 +51,7 @@ const TYPE_CONFIG: Record<UpdateType, {
     badgeText: 'text-blue-300',
     ring: 'ring-blue-400',
     cardBorder: 'border-white/10',
-    cardBg: 'bg-white/5/60',
+    cardBg: 'bg-white/60',
     dot: 'bg-white/50',
   },
   perbaikan: {
@@ -62,7 +62,7 @@ const TYPE_CONFIG: Record<UpdateType, {
     badgeText: 'text-green-400',
     ring: 'ring-green-400',
     cardBorder: 'border-white/10',
-    cardBg: 'bg-green-500/10/60',
+    cardBg: 'bg-green-500/60',
     dot: 'bg-green-500/100',
   },
 }
