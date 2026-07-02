@@ -15,11 +15,11 @@ const schema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const ip = getIp(req)
-    const rl = rateLimit(`login:${ip}`, 5, 15 * 60 * 1000) // 5 attempts per 15 mins
+    const rl = rateLimit(`login:${ip}`, 5, 2 * 60 * 1000) // 5 attempts per 2 mins
     
     if (!rl.success) {
       return NextResponse.json({ 
-        error: 'Terlalu banyak percobaan login. Silakan coba lagi dalam 15 menit.' 
+        error: 'Terlalu banyak percobaan login. Silakan coba lagi dalam 2 menit.' 
       }, { 
         status: 429,
         headers: {
