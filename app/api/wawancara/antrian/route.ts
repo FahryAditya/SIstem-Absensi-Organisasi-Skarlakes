@@ -172,7 +172,7 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  let created: AntrianWawancara
+  let created: AntrianWawancara | null = null
   let retries = 0
   const maxRetries = 3
   while (retries < maxRetries) {
@@ -189,6 +189,10 @@ export async function POST(req: NextRequest) {
         throw e
       }
     }
+  }
+
+  if (!created) {
+    return NextResponse.json({ error: 'Gagal membuat antrian' }, { status: 500 })
   }
 
   if (!isManual) {

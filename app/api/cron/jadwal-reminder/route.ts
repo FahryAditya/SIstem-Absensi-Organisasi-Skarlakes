@@ -123,5 +123,5 @@ async function getAdminEmails(organisasi: string): Promise<string[]> {
   })
 
   const emails = admins.map(a => a.user.email)
-  return [...new Set(emails)]
+  return Array.from(new Set(emails))
 }
