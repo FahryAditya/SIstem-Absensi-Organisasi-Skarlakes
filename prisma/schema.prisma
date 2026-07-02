@@ -32,6 +32,15 @@ model User {
   progression_executed SchoolYearProgression[] @relation("ProgressionExecutedBy")
   progression_reverted SchoolYearProgression[] @relation("ProgressionRevertedBy")
   materi_hari_ini      MateriHariIni[]
+  sesi_wawancara       SesiWawancara[]
+  qr_wawancara         QrWawancara[]
+  siswa_creator        Siswa[]
+  jadwal_kegiatan      JadwalKegiatan[]
+  pengeluaran_kas      PengeluaranKas[]
+  absensi_org_creator  AbsensiOrganisasi[] @relation("AbsensiOrgCreatedBy")
+  absensi_org_updater  AbsensiOrganisasi[] @relation("AbsensiOrgUpdatedBy")
+  absensi_creator      Absensi[]           @relation("AbsensiCreatedBy")
+  absensi_updater      Absensi[]           @relation("AbsensiUpdatedBy")
 
   @@index([created_at])
   @@map("users")
@@ -66,6 +75,9 @@ model Organization {
   admins            OrganizationAdmin[]
   registrations     Registration[]
   schedules         Schedule[]
+  kegiatans         Kegiatan[]
+  registration_eskuls RegistrationEskul[]
+  registration_osis_mpks RegistrationOsisMpk[]
 
   @@map("organizations")
 }
@@ -605,8 +617,9 @@ model Siswa {
   creator         User?     @relation(fields: [created_by], references: [id])
   created_at      DateTime  @default(now())
   updated_at      DateTime  @updatedAt
-  pengelompokan   PengelompokanKegiatan[]
-  absensi         Absensi[]
+  pengelompokan     PengelompokanKegiatan[]
+  absensi           Absensi[]
+  siswa_pencapaian  SiswaPencapaian[]
 
   @@index([nis])
   @@index([nama])
@@ -723,8 +736,8 @@ model AbsensiOrganisasi {
   keterangan       String?
   created_by       Int
   updated_by       Int?
-  creator          User         @relation(fields: [created_by], references: [id])
-  updater          User?        @relation(fields: [updated_by], references: [id])
+  creator          User         @relation("AbsensiOrgCreatedBy", fields: [created_by], references: [id])
+  updater          User?        @relation("AbsensiOrgUpdatedBy", fields: [updated_by], references: [id])
   created_at       DateTime     @default(now())
   updated_at       DateTime     @updatedAt
   anggota_osis     AnggotaOsis? @relation("AbsensiOsis", fields: [anggota_osis_id], references: [id])
@@ -745,8 +758,8 @@ model Absensi {
   uang_kas    Int      @default(0)
   created_by  Int?
   updated_by  Int?
-  creator     User?    @relation(fields: [created_by], references: [id])
-  updater     User?    @relation(fields: [updated_by], references: [id])
+  creator     User?    @relation("AbsensiCreatedBy", fields: [created_by], references: [id])
+  updater     User?    @relation("AbsensiUpdatedBy", fields: [updated_by], references: [id])
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
   siswa       Siswa    @relation(fields: [siswa_id], references: [id], onDelete: Cascade)
