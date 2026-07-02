@@ -49,16 +49,6 @@ export async function GET(req: NextRequest) {
       const accessibleWhere = superAdmin ? {} : { organization_id: { in: accessibleOrgIds } }
       const effectiveWhere = filterOrgId ? { organization_id: filterOrgId } : accessibleWhere
 
-      // Per-organization member counts
-      const orgMemberCounts = await prisma.member.groupBy({
-        by: ['organization_id'],
-        where: effectiveWhere,
-        _count: { id: true }
-      })
-
-      const orgCountMap: Record<number, number> = {}
-      orgMemberCounts.forEach(c => { orgCountMap[c.organization_id] = c._count.id })
-
       // Find org IDs by slug
       const findBySlug = (slug: string) => accessibleOrgs.find(o => o.slug === slug)?.id
 
@@ -67,69 +57,140 @@ export async function GET(req: NextRequest) {
       const osisId = findBySlug('osis')
       const mpkId = findBySlug('mpk')
 
-      const totalProgramming = programmingId ? (orgCountMap[programmingId] || 0) : 0
-      const totalEnglish = englishId ? (orgCountMap[englishId] || 0) : 0
-      const totalOsis = osisId ? (orgCountMap[osisId] || 0) : 0
-      const totalMpk = mpkId ? (orgCountMap[mpkId] || 0) : 0
+      // For Administrator: show all eskul stats separately
+      // For Admin Eskul/Org: show only their org stats
+      if (superAdmin) {
+        // Administrator - Ringkasan Utama
+        const [
+          totalMembers,
+          hadirHariIni,
+          totalPemasukanData,
+          totalPengeluaranData,
+          programmingCount,
+          englishCount,
+          osisCount,
+          mpkCount,
+          leaderboardProgramming,
+          leaderboardEnglish,
+        ] = await Promise.all([
+          prisma.member.count(),
+          prisma.attendance.count({
+            where: {
+              date: new Date(todayStr),
+              status: 'hadir',
+            }
+          }),
+          prisma.cashTransaction.aggregate({
+            where: { type: 'INCOME' },
+            _sum: { amount: true }
+          }),
+          prisma.cashTransaction.aggregate({
+            where: { type: 'EXPENSE' },
+            _sum: { amount: true }
+          }),
+          programmingId ? prisma.member.count({ where: { organization_id: programmingId } }) : Promise.resolve(0),
+          englishId ? prisma.member.count({ where: { organization_id: englishId } }) : Promise.resolve(0),
+          osisId ? prisma.member.count({ where: { organization_id: osisId } }) : Promise.resolve(0),
+          mpkId ? prisma.member.count({ where: { organization_id: mpkId } }) : Promise.resolve(0),
+          // Leaderboard for programming
+          programmingId ? prisma.member.findMany({
+            where: { organization_id: programmingId },
+            orderBy: { exp: 'desc' },
+            take: 10,
+            select: { id: true, name: true, class: true, exp: true }
+          }) : Promise.resolve([]),
+          // Leaderboard for english
+          englishId ? prisma.member.findMany({
+            where: { organization_id: englishId },
+            orderBy: { exp: 'desc' },
+            take: 10,
+            select: { id: true, name: true, class: true, exp: true }
+          }) : Promise.resolve([]),
+        ])
 
-      const [
-        totalMembers,
-        hadirHariIni,
-        totalPemasukanData,
-        totalPengeluaranData,
-        leaderboardProgramming,
-        leaderboardEnglish,
-      ] = await Promise.all([
-        prisma.member.count({ where: effectiveWhere }),
-        prisma.attendance.count({
-          where: {
-            ...effectiveWhere,
-            date: new Date(todayStr),
-            status: 'hadir',
-          }
-        }),
-        prisma.cashTransaction.aggregate({
-          where: { ...effectiveWhere, type: 'INCOME' },
-          _sum: { amount: true }
-        }),
-        prisma.cashTransaction.aggregate({
-          where: { ...effectiveWhere, type: 'EXPENSE' },
-          _sum: { amount: true }
-        }),
-        // Leaderboard for programming
-        programmingId ? prisma.member.findMany({
-          where: { organization_id: programmingId },
-          orderBy: { exp: 'desc' },
-          take: 10,
-          select: { id: true, name: true, class: true, exp: true }
-        }) : Promise.resolve([]),
-        // Leaderboard for english
-        englishId ? prisma.member.findMany({
-          where: { organization_id: englishId },
-          orderBy: { exp: 'desc' },
-          take: 10,
-          select: { id: true, name: true, class: true, exp: true }
-        }) : Promise.resolve([]),
-      ])
+        const totalPemasukan = totalPemasukanData._sum?.amount || 0
+        const totalPengeluaran = totalPengeluaranData._sum?.amount || 0
 
-      const totalPemasukan = totalPemasukanData._sum?.amount || 0
-      const totalPengeluaran = totalPengeluaranData._sum?.amount || 0
+        // Map leaderboard fields: name->nama, class->kelas, exp->xp
+        const mapLeaderboard = (list: any[]) => list.map(m => ({ id: m.id, nama: m.name, kelas: m.class, xp: m.exp }))
 
-      // Map leaderboard fields: name->nama, class->kelas, exp->xp
-      const mapLeaderboard = (list: any[]) => list.map(m => ({ id: m.id, nama: m.name, kelas: m.class, xp: m.exp }))
+        return {
+          totalSiswa: totalMembers,
+          totalProgramming: programmingCount,
+          totalEnglish: englishCount,
+          totalOsis: osisCount,
+          totalMpk: mpkCount,
+          hadirHariIni,
+          totalPemasukan,
+          totalPengeluaran,
+          totalKas: totalPemasukan - totalPengeluaran,
+          leaderboardProgramming: mapLeaderboard(leaderboardProgramming),
+          leaderboardEnglish: mapLeaderboard(leaderboardEnglish),
+        }
+      } else {
+        // Admin Eskul/Org - Only show their org data
+        const orgName = accessibleOrgs.find(o => o.id === activeOrgId)?.nama || 'Organisasi'
+        
+        const [
+          totalMembers,
+          hadirHariIni,
+          totalPemasukanData,
+          totalPengeluaranData,
+          leaderboardProgramming,
+          leaderboardEnglish,
+        ] = await Promise.all([
+          prisma.member.count({ where: effectiveWhere }),
+          prisma.attendance.count({
+            where: {
+              ...effectiveWhere,
+              date: new Date(todayStr),
+              status: 'hadir',
+            }
+          }),
+          prisma.cashTransaction.aggregate({
+            where: { ...effectiveWhere, type: 'INCOME' },
+            _sum: { amount: true }
+          }),
+          prisma.cashTransaction.aggregate({
+            where: { ...effectiveWhere, type: 'EXPENSE' },
+            _sum: { amount: true }
+          }),
+          // Leaderboard for programming (only if accessible)
+          (activeOrgId === programmingId) ? prisma.member.findMany({
+            where: { organization_id: programmingId },
+            orderBy: { exp: 'desc' },
+            take: 10,
+            select: { id: true, name: true, class: true, exp: true }
+          }) : Promise.resolve([]),
+          // Leaderboard for english (only if accessible)
+          (activeOrgId === englishId) ? prisma.member.findMany({
+            where: { organization_id: englishId },
+            orderBy: { exp: 'desc' },
+            take: 10,
+            select: { id: true, name: true, class: true, exp: true }
+          }) : Promise.resolve([]),
+        ])
 
-      return {
-        totalSiswa: totalMembers,
-        totalProgramming,
-        totalEnglish,
-        totalOsis,
-        totalMpk,
-        hadirHariIni,
-        totalPemasukan,
-        totalPengeluaran,
-        totalKas: totalPemasukan - totalPengeluaran,
-        leaderboardProgramming: mapLeaderboard(leaderboardProgramming),
-        leaderboardEnglish: mapLeaderboard(leaderboardEnglish),
+        const totalPemasukan = totalPemasukanData._sum?.amount || 0
+        const totalPengeluaran = totalPengeluaranData._sum?.amount || 0
+
+        // Map leaderboard fields: name->nama, class->kelas, exp->xp
+        const mapLeaderboard = (list: any[]) => list.map(m => ({ id: m.id, nama: m.name, kelas: m.class, xp: m.exp }))
+
+        return {
+          orgName, // Nama organisasi untuk label dinamis
+          totalSiswa: totalMembers,
+          totalProgramming: 0, // Not shown for admin eskul
+          totalEnglish: 0,
+          totalOsis: 0,
+          totalMpk: 0,
+          hadirHariIni,
+          totalPemasukan,
+          totalPengeluaran,
+          totalKas: totalPemasukan - totalPengeluaran,
+          leaderboardProgramming: mapLeaderboard(leaderboardProgramming),
+          leaderboardEnglish: mapLeaderboard(leaderboardEnglish),
+        }
       }
     })
 

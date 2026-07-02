@@ -46,6 +46,7 @@ interface Props {
 }
 
 interface StatsData {
+  orgName?: string // Untuk admin eskul, nama organisasi mereka
   totalSiswa: number
   totalProgramming: number
   totalEnglish: number
@@ -362,39 +363,42 @@ export default function DashboardClient({ user }: Props) {
     </div>
   )
 
+  const isAdmin = isAdministrator(user.role)
+  
   const statCards = stats ? ([
+    // For Administrator: Show "Total Siswa Ekskul" (all eskul)
+    // For Admin Eskul: Show "Total {OrgName}" (their org only)
     {
-      label: 'Total Siswa Ekskul',
+      label: isAdmin ? 'Total Siswa Ekskul' : `Total ${stats.orgName || 'Siswa'}`,
       value: stats.totalSiswa,
-      suffix: 'siswa',
+      suffix: isAdmin ? 'siswa' : (stats.orgName?.toLowerCase().includes('osis') || stats.orgName?.toLowerCase().includes('mpk') ? 'anggota' : 'siswa'),
       icon: Users,
       color: 'bg-persian-blue/10 text-persian-blue',
     },
     
-    // Per-ekskul cards - shown based on accessible orgs (API filters by role)
-    // Administrator sees all, other admins only see their own orgs
-    orgs.some(o => o.slug === 'programming') && {
+    // Per-ekskul cards - ONLY for Administrator
+    isAdmin && orgs.some(o => o.slug === 'programming') && {
       label: 'Total Programming',
       value: stats.totalProgramming,
       suffix: 'siswa',
       icon: Users,
       color: 'bg-persian-blue/10 text-persian-blue',
     },
-    orgs.some(o => o.slug === 'english') && {
+    isAdmin && orgs.some(o => o.slug === 'english') && {
       label: 'Total English Club',
       value: stats.totalEnglish,
       suffix: 'siswa',
       icon: Users,
       color: 'bg-persian-blue/10 text-persian-blue',
     },
-    orgs.some(o => o.slug === 'osis') && {
+    isAdmin && orgs.some(o => o.slug === 'osis') && {
       label: 'Anggota OSIS',
       value: stats.totalOsis,
       suffix: 'anggota',
       icon: Users,
       color: 'bg-persian-blue/10 text-persian-blue',
     },
-    orgs.some(o => o.slug === 'mpk') && {
+    isAdmin && orgs.some(o => o.slug === 'mpk') && {
       label: 'Anggota MPK',
       value: stats.totalMpk,
       suffix: 'anggota',
@@ -410,21 +414,21 @@ export default function DashboardClient({ user }: Props) {
       color: 'bg-green-500/10 text-green-400',
     },
     {
-      label: 'Sisa Saldo Kas',
+      label: isAdmin ? 'Sisa Saldo Kas (Semua)' : `Saldo Kas ${stats.orgName || ''}`,
       value: formatCurrency(stats.totalKas),
       isCurrency: true,
       icon: Wallet,
       color: 'bg-persian-blue/10 text-persian-blue',
     },
     {
-      label: 'Total Pemasukan Kas',
+      label: isAdmin ? 'Total Pemasukan Kas (Semua)' : `Pemasukan Kas ${stats.orgName || ''}`,
       value: formatCurrency(stats.totalPemasukan),
       isCurrency: true,
       icon: PlusCircle,
       color: 'bg-persian-blue/10 text-persian-blue',
     },
     {
-      label: 'Total Pengeluaran Kas',
+      label: isAdmin ? 'Total Pengeluaran Kas (Semua)' : `Pengeluaran Kas ${stats.orgName || ''}`,
       value: formatCurrency(stats.totalPengeluaran),
       isCurrency: true,
       icon: HandCoins,
@@ -450,12 +454,17 @@ export default function DashboardClient({ user }: Props) {
               <span className="text-xs font-semibold bg-white/20 px-2.5 py-1 rounded-full">
                 {ROLE_LABELS[user.role] || user.role}
               </span>
+              {!isAdmin && stats?.orgName && (
+                <span className="text-xs font-bold bg-white/30 px-2.5 py-1 rounded-full border border-white/40">
+                  {stats.orgName}
+                </span>
+              )}
               <span className="text-xs text-persian-blue/30 flex items-center gap-1">
                 <Clock className="w-3 h-3" />
                 {formatDate(now, 'EEEE, dd MMMM yyyy')}
               </span>
             </div>
-            {orgs.length > 0 && (
+            {orgs.length > 0 && isAdmin && (
               <div className="flex gap-2 mt-3 flex-wrap">
                 {orgs.map(o => (
                   <Link 
@@ -608,7 +617,9 @@ export default function DashboardClient({ user }: Props) {
         <div className="card p-5 min-h-[280px]">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="w-4 h-4 text-persian-blue" />
-            <h3 className="text-sm font-bold text-white">Kehadiran 7 Hari Terakhir</h3>
+            <h3 className="text-sm font-bold text-white">
+              {isAdmin ? 'Kehadiran 7 Hari Terakhir (Semua Eskul)' : `Kehadiran 7 Hari Terakhir ${stats?.orgName || ''}`}
+            </h3>
           </div>
           {loadingCharts ? (
             <div className="h-48 flex items-center justify-center text-sm text-slate-400 gap-2">
@@ -637,7 +648,9 @@ export default function DashboardClient({ user }: Props) {
         <div className="card p-5 min-h-[280px]">
           <div className="flex items-center gap-2 mb-4">
             <Wallet className="w-4 h-4 text-persian-blue" />
-            <h3 className="text-sm font-bold text-white">Uang Kas 6 Bulan Terakhir</h3>
+            <h3 className="text-sm font-bold text-white">
+              {isAdmin ? 'Uang Kas 6 Bulan Terakhir (Semua Eskul)' : `Uang Kas 6 Bulan Terakhir ${stats?.orgName || ''}`}
+            </h3>
           </div>
           {loadingCharts ? (
             <div className="h-48 flex items-center justify-center text-sm text-slate-400 gap-2">
