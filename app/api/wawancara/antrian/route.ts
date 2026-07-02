@@ -5,6 +5,9 @@ import type { AntrianWawancara } from '@prisma/client'
 import { pusherServer } from '@/lib/pusher-server'
 import { z } from 'zod'
 
+
+export const dynamic = 'force-dynamic'
+
 async function updateIpInfo(antrianId: number, sesiId: number, ip: string) {
   try {
     if (ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {

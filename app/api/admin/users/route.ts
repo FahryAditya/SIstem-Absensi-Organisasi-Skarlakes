@@ -4,6 +4,9 @@ import { getSessionFromRequest } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 
+
+export const dynamic = 'force-dynamic'
+
 function isSuperAdmin(role: string) {
   return role === 'SUPER_ADMIN' || role === 'administrator'
 }

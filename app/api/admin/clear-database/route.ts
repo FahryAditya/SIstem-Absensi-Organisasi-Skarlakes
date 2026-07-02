@@ -7,6 +7,9 @@ import { format } from 'date-fns'
 import fs from 'fs'
 import path from 'path'
 
+
+export const dynamic = 'force-dynamic'
+
 function isSuperAdmin(role: string) {
   return role === 'SUPER_ADMIN' || role === 'administrator'
 }

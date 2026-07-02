@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/auth'
 
+
+export const dynamic = 'force-dynamic'
+
 function isSuperAdmin(role: string) {
   return role === 'SUPER_ADMIN' || role === 'administrator' || role === 'admin_osis_mpk'
 }

@@ -8,6 +8,7 @@ export async function middleware(request: NextRequest) {
   // Skip middleware for static files, API auth routes, and public assets
   if (
     pathname.startsWith('/_next') ||
+    pathname.startsWith('/api/health') ||
     pathname.startsWith('/api/auth/login') ||
     pathname.startsWith('/api/auth/register') ||
     /\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|avif|woff2?|ttf|eot|map|json)$/i.test(pathname) ||

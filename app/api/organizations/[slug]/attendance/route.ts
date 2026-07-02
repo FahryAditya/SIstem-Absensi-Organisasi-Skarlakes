@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/auth'
 
+
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: NextRequest, { params }: { params: { slug: string } }) {
   try {
     const org = await prisma.organization.findUnique({

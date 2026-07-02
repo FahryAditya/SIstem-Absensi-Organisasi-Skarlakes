@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest, isAdministrator } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
 
+
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: NextRequest) {
   const session = await getSessionFromRequest(req)
   if (!session || !isAdministrator(session.role)) {

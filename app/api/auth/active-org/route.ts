@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest, signToken } from '@/lib/auth'
 import { z } from 'zod'
 
+
+export const dynamic = 'force-dynamic'
+
 const schema = z.object({
   orgId: z.number().int().positive()
 })

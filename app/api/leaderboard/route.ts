@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/auth'
 import { calculateProgress, LEVEL_NAMES } from '@/lib/exp'
 
+
+export const dynamic = 'force-dynamic'
+
 function isSuperAdmin(role: string) {
   return role === 'SUPER_ADMIN' || role === 'administrator' || role === 'admin_osis_mpk'
 }

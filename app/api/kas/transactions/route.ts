@@ -4,6 +4,9 @@ import { getSessionFromRequest } from '@/lib/auth'
 import { createLog, getIp } from '@/lib/log'
 import { z } from 'zod'
 
+
+export const dynamic = 'force-dynamic'
+
 function getCtx(req: NextRequest) {
   return {
     userId: parseInt(req.headers.get('x-user-id') || '0'),
