@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
       id: user.id, 
       nama: user.nama, 
       email: user.email, 
-      role: user.role as 'SUPER_ADMIN' | 'ORG_ADMIN',
+      role: user.role,
       orgIds: orgIds,
       activeOrgId: orgIds.length > 0 ? orgIds[0] : undefined
     }

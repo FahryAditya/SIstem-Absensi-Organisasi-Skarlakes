@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Login</title>
+</head>
+<body>
+    <h1>Debug Login Test</h1>
+    <div id="result"></div>
+    
+    <script>
+    async function testLogin() {
+        const result = document.getElementById('result');
+        result.innerHTML = 'Testing login...';
+        
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    nama: 'Khansa Aurelia',
+                    email: 'Englishclubskarla1@gmail.com',
+                    password: 'wrongtest123'
+                })
+            });
+            
+            result.innerHTML += '<br>Response status: ' + response.status;
+            
+            const data = await response.text();
+            result.innerHTML += '<br>Response body: ' + data;
+            
+        } catch (error) {
+            result.innerHTML += '<br>Error: ' + error.message;
+            console.error('Full error:', error);
+        }
+    }
+    
+    // Auto test on load
+    testLogin();
+    </script>
+</body>
+</html>
