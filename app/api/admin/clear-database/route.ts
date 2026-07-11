@@ -4,8 +4,6 @@ import { createLog, getIp } from '@/lib/log'
 import { z } from 'zod'
 import { getSessionFromRequest } from '@/lib/auth'
 import { format } from 'date-fns'
-import fs from 'fs'
-import path from 'path'
 
 
 export const dynamic = 'force-dynamic'
@@ -49,8 +47,11 @@ function generateInsertQuery(tableName: string, rows: any[]): string {
   return sql
 }
 
-// Utility function to create backup before clearing
-async function createBackupBeforeDelete(orgId: number, orgName: string): Promise<{ success: boolean; backupPath?: string; error?: string }> {
+// Utility function to build a SQL backup dump in memory before clearing.
+// Returns the dump content so it can be streamed to the client for download —
+// the serverless filesystem (/var/task) is read-only and /tmp is ephemeral,
+// so nothing is written to disk here.
+async function createBackupBeforeDelete(orgId: number, orgName: string): Promise<{ success: boolean; filename?: string; content?: string; error?: string }> {
   try {
     const timestamp = format(new Date(), 'yyyy-MM-dd_HH-mm-ss')
     const sanitizedOrgName = orgName.replace(/[^a-zA-Z0-9]/g, '_')
@@ -103,14 +104,8 @@ async function createBackupBeforeDelete(orgId: number, orgName: string): Promise
     sqlDump += generateInsertQuery('achievements', achievements)
     sqlDump += generateInsertQuery('member_achievements', member_achievements)
 
-    const backupsDir = path.join(process.cwd(), 'backups')
-    if (!fs.existsSync(backupsDir)) {
-      fs.mkdirSync(backupsDir, { recursive: true })
-    }
-    const backupFilePath = path.join(backupsDir, backupFilename)
-    fs.writeFileSync(backupFilePath, sqlDump, 'utf-8')
-    
-    return { success: true, backupPath: backupFilename }
+    // No disk writes on serverless — hand the dump back to the caller for download.
+    return { success: true, filename: backupFilename, content: sqlDump }
   } catch (error: any) {
     console.error('Backup creation failed:', error)
     return { success: false, error: error.message || 'Backup creation failed' }
@@ -221,16 +216,19 @@ export async function POST(req: NextRequest) {
       aksi: 'DELETE',
       organizationId: resolvedOrgId,
       tabel: 'organizations',
-      deskripsi: `${session.nama} membersihkan data [${tipe}] untuk organisasi ${org.nama}. Backup: ${backupResult.backupPath}`,
-      dataBaru: { ...result, backupFile: backupResult.backupPath },
+      deskripsi: `${session.nama} membersihkan data [${tipe}] untuk organisasi ${org.nama}. Backup: ${backupResult.filename}`,
+      dataBaru: { ...result, backupFile: backupResult.filename },
       ipAddress: getIp(req),
     })
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       result,
-      backup: backupResult.backupPath,
-      message: `Data berhasil dihapus. Backup tersimpan sebagai: ${backupResult.backupPath}`
+      backup: {
+        filename: backupResult.filename,
+        content: backupResult.content,
+      },
+      message: `Data berhasil dihapus. Unduh backup: ${backupResult.filename}`
     })
   } catch (err) {
     console.error('Clear database error:', err)

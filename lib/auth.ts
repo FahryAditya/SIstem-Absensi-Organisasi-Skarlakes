@@ -41,6 +41,16 @@ const sessionUserSchema = z.object({
 
 const COOKIE_NAME = 'ekskul_session'
 
+function getBearerToken(req: NextRequest): string | null {
+  const authorization = req.headers.get('authorization')
+  if (!authorization) return null
+
+  const [scheme, token] = authorization.split(' ')
+  if (scheme?.toLowerCase() !== 'bearer' || !token) return null
+
+  return token
+}
+
 export async function signToken(payload: SessionUser): Promise<string> {
   const secret = getJwtSecret()
   return new SignJWT({ ...payload })
@@ -82,7 +92,7 @@ export async function getSession(): Promise<SessionUser | null> {
 }
 
 export async function getSessionFromRequest(req: NextRequest): Promise<SessionUser | null> {
-  const token = req.cookies.get(COOKIE_NAME)?.value
+  const token = getBearerToken(req) || req.cookies.get(COOKIE_NAME)?.value
   if (!token) return null
   
   const session = await verifyToken(token)

@@ -113,6 +113,19 @@ export default function ExportClient({ user }: Props) {
         toast.error(data?.error || 'Clear database gagal')
         return
       }
+      // Auto-download the SQL backup returned by the server before data was cleared.
+      if (data?.backup?.content) {
+        const blob = new Blob([data.backup.content], { type: 'application/sql' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = data.backup.filename || `backup_${format(new Date(), 'yyyyMMdd_HHmmss')}.sql`
+        a.click()
+        URL.revokeObjectURL(url)
+        toast.success('Data dihapus. Backup SQL berhasil diunduh.')
+      } else {
+        toast.success(data?.message || 'Data berhasil dihapus')
+      }
       setClearConfirm('')
     } catch {
       toast.error('Terjadi kesalahan saat clear database')
