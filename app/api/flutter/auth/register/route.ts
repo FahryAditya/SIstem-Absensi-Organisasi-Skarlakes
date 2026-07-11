@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
         nama,
         email,
         password: hashedPassword,
-        role: 'USER', // Default role
+        role: 'ORG_ADMIN', // Default role (enum Role tidak punya nilai non-admin)
       }
     })
 

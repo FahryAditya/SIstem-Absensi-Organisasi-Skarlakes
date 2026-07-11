@@ -54,14 +54,14 @@ export async function GET(
             deskripsi: true,
           }
         },
-        attendances: {
-          orderBy: { tanggal: 'desc' },
+        attendance: {
+          orderBy: { date: 'desc' },
           take: 10,
           select: {
             id: true,
-            tanggal: true,
+            date: true,
             status: true,
-            keterangan: true,
+            notes: true,
           }
         }
       }

@@ -56,7 +56,6 @@ export async function GET(req: NextRequest) {
           nama: true,
           slug: true,
           deskripsi: true,
-          logo: true,
           _count: {
             select: {
               members: true,
