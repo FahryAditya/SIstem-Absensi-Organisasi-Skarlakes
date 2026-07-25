@@ -20,9 +20,9 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96],
   },
 
+  serverExternalPackages: ['@prisma/client', 'bcryptjs', 'xlsx'],
+
   experimental: {
-    serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs', 'xlsx'],
-    // Kurangi import yang tidak perlu di bundle
     optimizePackageImports: [
       'lucide-react',
       '@radix-ui/react-dialog',
@@ -31,6 +31,8 @@ const nextConfig = {
       '@radix-ui/react-tabs',
     ],
   },
+
+  turbopack: {},
 
   webpack: (config) => {
     config.resolve.alias = {

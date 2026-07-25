@@ -10,10 +10,11 @@ function isSuperAdmin(role: string) {
   return role === 'SUPER_ADMIN' || role === 'administrator' || role === 'admin_osis_mpk'
 }
 
-export async function GET(req: NextRequest, { params }: { params: { slug: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
+    const { slug } = await params
     const org = await prisma.organization.findUnique({
-      where: { slug: params.slug },
+      where: { slug },
       include: {
         admins: {
           include: {
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { slug: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const session = await getSessionFromRequest(req)
     if (!session || !isSuperAdmin(session.role as string)) {
@@ -49,8 +50,9 @@ export async function POST(req: NextRequest, { params }: { params: { slug: strin
     const { userId } = await req.json()
     if (!userId) return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
 
+    const { slug } = await params
     const org = await prisma.organization.findUnique({
-      where: { slug: params.slug }
+      where: { slug }
     })
     if (!org) return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
 
@@ -93,7 +95,7 @@ export async function POST(req: NextRequest, { params }: { params: { slug: strin
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { slug: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const session = await getSessionFromRequest(req)
     if (!session || !isSuperAdmin(session.role as string)) {

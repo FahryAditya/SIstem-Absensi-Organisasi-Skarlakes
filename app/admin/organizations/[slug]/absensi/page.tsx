@@ -1,5 +1,6 @@
 import AbsensiClient from './AbsensiClient'
 
-export default function AbsensiPage({ params }: { params: { slug: string } }) {
-  return <AbsensiClient slug={params.slug} />
+export default async function AbsensiPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  return <AbsensiClient slug={slug} />
 }

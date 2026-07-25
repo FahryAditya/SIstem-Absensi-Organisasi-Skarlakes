@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-export async function GET(req: NextRequest, { params }: { params: { slug: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
+    const { slug } = await params
     const org = await prisma.organization.findUnique({
-      where: { slug: params.slug }
+      where: { slug }
     })
     if (!org) return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
 

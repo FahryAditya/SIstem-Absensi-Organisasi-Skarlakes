@@ -4,9 +4,10 @@ import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import OrganisasiClient from './OrganisasiClient'
 
-export default async function OrganisasiPage({ searchParams }: { searchParams: { org?: string } }) {
+export default async function OrganisasiPage({ searchParams }: { searchParams: Promise<{ org?: string }> }) {
   const user = await getServerUser()
-  const org = (searchParams.org || '') as 'osis' | 'mpk' | ''
+  const resolvedSearchParams = await searchParams
+  const org = (resolvedSearchParams.org || '') as 'osis' | 'mpk' | ''
 
   if (org === 'osis' && !canAccessOsis(user.role)) redirect('/dashboard')
   if (org === 'mpk' && !canAccessMpk(user.role)) redirect('/dashboard')

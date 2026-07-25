@@ -10,14 +10,15 @@ import {
 
 interface Props {
   children: React.ReactNode
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
 export default async function OrgWorkspaceLayout({ children, params }: Props) {
   const user = await getServerUser()
+  const { slug } = await params
   
   const org = await prisma.organization.findUnique({
-    where: { slug: params.slug }
+    where: { slug }
   })
 
   if (!org) notFound()

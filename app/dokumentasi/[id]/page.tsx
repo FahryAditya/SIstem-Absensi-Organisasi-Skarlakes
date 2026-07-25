@@ -8,10 +8,11 @@ import Link from 'next/link'
 import DocumentationGallery from '@/components/documentation/DocumentationGallery'
 import { getDocumentationPhotoFields } from '@/lib/documentation'
 
-export default async function DokumentasiDetailPage({ params }: { params: { id: string } }) {
+export default async function DokumentasiDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await getUserSession()
   const guestUser = { id: 0, nama: 'Tamu', email: '', role: 'guest', orgIds: [] as number[] }
-  const id = parseInt(params.id)
+  const { id: paramId } = await params
+  const id = parseInt(paramId)
 
   const doc = await prisma.documentation.findUnique({
     where: { id },

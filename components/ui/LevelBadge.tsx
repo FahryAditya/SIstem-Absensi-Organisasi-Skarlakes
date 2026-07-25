@@ -60,7 +60,7 @@ export function LevelBadge({ exp, size = 'md' }: LevelBadgeProps) {
           <div className={`absolute -top-2.5 -right-2 px-2 py-0.5 text-[9px] font-extrabold uppercase rounded-full text-white bg-gradient-to-r ${tierStyles.gradient} shadow-sm tracking-wider`}>
             Lvl {level}
           </div>
-          {React.cloneElement(tierStyles.icon as React.ReactElement, { className: 'w-8 h-8' })}
+          {React.cloneElement(tierStyles.icon as React.ReactElement<{ className?: string }>, { className: 'w-8 h-8' })}
         </div>
         <div className="flex flex-col items-center">
           <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-none">LEVEL {level}</span>

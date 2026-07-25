@@ -11,7 +11,7 @@ const COOKIE_NAME = 'ekskul_session'
  * use getUserSession() instead.
  */
 export async function getServerUser(requiredRole?: string): Promise<SessionUser> {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const token = cookieStore.get(COOKIE_NAME)?.value
   if (!token) redirect('/login')
 
@@ -29,7 +29,7 @@ export async function getServerUser(requiredRole?: string): Promise<SessionUser>
  * needs to decide how to respond to auth failure itself.
  */
 export async function getUserSession(): Promise<SessionUser | null> {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const token = cookieStore.get(COOKIE_NAME)?.value
   if (!token) return null
   return verifyToken(token)

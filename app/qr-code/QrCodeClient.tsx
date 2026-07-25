@@ -20,7 +20,7 @@ interface QrItem {
   valid_from: string
   valid_until: string
   created_at: string
-  creator: { nama: string }
+  creator?: { nama: string }
   sesi: { id: number; status: string }
   _count: { antrian: number }
 }
@@ -194,7 +194,7 @@ export default function QrCodeClient({ baseUrl, initialItems }: QrCodeClientProp
                   <div className="rounded-lg bg-white/5 border border-white/10 p-3"><div className="text-xs text-slate-400">Valid Dari</div><div className="text-sm font-bold">{formatDateTime(activeQr.valid_from)}</div></div>
                   <div className="rounded-lg bg-white/5 border border-white/10 p-3"><div className="text-xs text-slate-400">Valid Sampai</div><div className="text-sm font-bold">{formatDateTime(activeQr.valid_until)}</div></div>
                   <div className="rounded-lg bg-white/5 border border-white/10 p-3"><div className="text-xs text-slate-400">Scan Sah</div><div className="text-sm font-bold">{activeQr._count.antrian} data</div></div>
-                  <div className="rounded-lg bg-white/5 border border-white/10 p-3"><div className="text-xs text-slate-400">Dibuat Oleh</div><div className="text-sm font-bold">{activeQr.creator.nama}</div></div>
+                  <div className="rounded-lg bg-white/5 border border-white/10 p-3"><div className="text-xs text-slate-400">Dibuat Oleh</div><div className="text-sm font-bold">{activeQr.creator?.nama || '-'}</div></div>
                 </div>
                 {expiredSoon && (
                   <div className="rounded-xl bg-amber-500/10 border border-white/10 p-3 text-sm text-amber-400 flex gap-2">

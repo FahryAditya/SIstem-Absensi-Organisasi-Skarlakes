@@ -2,9 +2,10 @@ import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { Users, CheckCircle2, Wallet, TrendingUp } from 'lucide-react'
 
-export default async function OrgDashboardPage({ params }: { params: { slug: string } }) {
+export default async function OrgDashboardPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
   const org = await prisma.organization.findUnique({
-    where: { slug: params.slug },
+    where: { slug },
     include: {
       admins: {
         include: {

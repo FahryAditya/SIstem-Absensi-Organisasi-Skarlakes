@@ -23,7 +23,7 @@ async function verifyToken(req: NextRequest) {
 // GET - Get single member by ID
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const payload = await verifyToken(req)
@@ -34,7 +34,8 @@ export async function GET(
       )
     }
 
-    const id = parseInt(params.id)
+    const { id: paramId } = await params
+    const id = parseInt(paramId)
     
     if (isNaN(id)) {
       return NextResponse.json(

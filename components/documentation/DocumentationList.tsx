@@ -22,7 +22,7 @@ export default function DocumentationList({ organizationId, type, user, onAddCli
   const [search, setSearch] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
   const [deleting, setDeleting] = useState(false)
-  const searchTimer = useRef<NodeJS.Timeout>()
+  const searchTimer = useRef<NodeJS.Timeout>(undefined)
 
   const fetchDocs = async () => {
     setLoading(true)

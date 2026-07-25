@@ -35,7 +35,7 @@ function generateInsertQuery(tableName: string, rows: any[]): string {
 
 export async function GET() {
   try {
-    const reqHeaders = headers()
+    const reqHeaders = await headers()
     const userRole = reqHeaders.get('x-user-role')
 
     if (userRole !== 'SUPER_ADMIN') {
