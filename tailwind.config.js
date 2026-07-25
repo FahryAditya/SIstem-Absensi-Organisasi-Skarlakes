@@ -12,24 +12,22 @@ module.exports = {
         mono: ['var(--font-mono)', 'Consolas', 'monospace'],
       },
       colors: {
-        'deep-navy': '#001F3F',
-        'persian-blue': '#1E90FF',
         'unit-osis': '#3D3DB8',
         'unit-mpk': '#DC143C',
         'unit-english': '#0F52BA',
         'unit-programming': '#FFB81C',
-        indigo: {
-          50: '#E6F4FF',
-          100: '#BAE0FF',
-          200: '#91D5FF',
-          300: '#69C0FF',
-          400: '#40A9FF',
-          500: '#1E90FF', // Persian Blue
+        blue: {
+          50: '#EFF6FF',
+          100: '#DBEAFE',
+          200: '#BFDBFE',
+          300: '#93C5FD',
+          400: '#60A5FA',
+          500: '#1E90FF',
           600: '#1C86EE',
           700: '#1874CD',
           800: '#104E8B',
-          900: '#001F3F', // Deep Navy
-          950: '#001021',
+          900: '#0B3D70',
+          950: '#072046',
         },
         slate: {
           50: 'rgb(var(--color-bg-50) / <alpha-value>)',

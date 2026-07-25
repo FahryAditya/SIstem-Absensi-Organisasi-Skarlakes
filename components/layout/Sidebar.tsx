@@ -77,11 +77,11 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
 
 function RoleBadge({ role }: { role: string }) {
   const colors: Record<string, string> = {
-    SUPER_ADMIN: 'bg-persian-blue border-white/20 text-white font-extrabold',
-    ORG_ADMIN: 'bg-amber-500/20 border-amber-500/30 text-amber-500 font-extrabold',
+    SUPER_ADMIN: 'bg-blue-600 border-blue-300 text-white font-extrabold',
+    ORG_ADMIN: 'bg-amber-100 border-amber-300 text-amber-800 font-extrabold',
   }
   return (
-    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold ${colors[role] || 'bg-white/5 border-white/10 text-white'}`}>
+    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold ${colors[role] || 'bg-slate-100 border-slate-300 text-slate-700'}`}>
       <div className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
       {ROLE_LABELS[role] || role}
     </div>
@@ -105,21 +105,21 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
     switch (item.type) {
       case 'logo':
         return (
-          <div className="px-1 py-4 flex items-center justify-between border-b border-white/10 mb-2">
+          <div className="px-1 py-4 flex items-center justify-between border-b border-slate-200 mb-2">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-persian-blue rounded-xl flex items-center justify-center shadow-sm shadow-blue-600/30 flex-shrink-0">
+              <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-sm shadow-blue-600/30 flex-shrink-0">
                 <GraduationCap className="w-5 h-5 text-white" />
               </div>
               {!isCollapsed && (
                 <div className="fade-in whitespace-nowrap">
-                  <div className="text-sm font-black text-white tracking-tight">{item.label}</div>
-                  <div className="text-[10px] text-white font-medium">{item.version}</div>
+                  <div className="text-sm font-black text-slate-800 tracking-tight">{item.label}</div>
+                  <div className="text-[10px] text-slate-500 font-medium">{item.version}</div>
                 </div>
               )}
             </div>
             {onClose && (
               <button onClick={onClose} className="lg:hidden btn-icon" aria-label="Tutup menu navigasi">
-                <X className="w-4 h-4 text-white/50" />
+                <X className="w-4 h-4 text-slate-400" />
               </button>
             )}
           </div>
@@ -132,7 +132,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
         )
       case 'section':
         return !isCollapsed ? (
-          <div className="px-3 pt-4 pb-2 text-[10px] font-black text-white uppercase tracking-wider">
+          <div className="px-3 pt-4 pb-2 text-[10px] font-black text-slate-400 uppercase tracking-wider">
             {item.label}
           </div>
         ) : <div className="h-4" />
@@ -155,18 +155,18 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
             className={cn(
               'group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ease-out',
               active 
-                ? 'bg-gradient-to-r from-persian-blue/20 to-transparent text-white border-l-4 border-persian-blue font-bold shadow-[0_4px_20px_-5px_rgba(30,144,255,0.3)]' 
-                : 'text-slate-400 hover:text-white hover:bg-white/5 hover:translate-x-1',
+                ? 'bg-blue-50 text-blue-700 font-semibold border-l-4 border-blue-600' 
+                : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 hover:translate-x-1',
               isNonaktif && 'opacity-60 cursor-not-allowed'
             )}
           >
-            <Icon className={cn("w-5 h-5 transition-transform duration-300 group-hover:scale-110", active ? "text-blue-300" : "text-slate-400 group-hover:text-white")} />
+            <Icon className={cn("w-5 h-5 transition-transform duration-300 group-hover:scale-110", active ? "text-blue-600" : "text-slate-400 group-hover:text-slate-700")} />
             {!isCollapsed && (
-              <span className={cn("flex-1 truncate text-[13px]", active ? "font-semibold text-white" : "font-medium text-white")}>
+              <span className={cn("flex-1 truncate text-[13px]", active ? "font-semibold" : "font-medium text-slate-700")}>
                 {item.label}
               </span>
             )}
-            {!isCollapsed && active && <div className="w-1.5 h-1.5 rounded-full bg-persian-blue shadow-[0_0_8px_#1E90FF]" />}
+            {!isCollapsed && active && <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
           </Link>
         )
     }
@@ -186,10 +186,10 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
         />
       </div>
 
-       <div className="px-4 py-4 border-t border-white/10 flex-shrink-0 bg-deep-navy/80 backdrop-blur-sm">
+       <div className="px-4 py-4 border-t border-slate-200 flex-shrink-0 bg-white">
         <div className="flex items-center gap-2.5">
           {role === 'SUPER_ADMIN' || isAdministrator(role) ? (
-            <div className="relative w-8 h-8 rounded-full overflow-hidden shadow-sm border border-white/10 flex-shrink-0">
+            <div className="relative w-8 h-8 rounded-full overflow-hidden shadow-sm border border-slate-200 flex-shrink-0">
               <Image 
                 src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg" 
                 alt="Admin Profile" 
@@ -198,14 +198,14 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
               />
             </div>
           ) : (
-            <div className="w-8 h-8 rounded-full bg-persian-blue flex items-center justify-center text-white text-xs font-black flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-black flex-shrink-0">
               {user.nama.charAt(0).toUpperCase()}
             </div>
           )}
           {!isCollapsed && (
             <div className="min-w-0 flex-1 fade-in">
-              <div className="text-xs font-bold text-white truncate">{user.nama}</div>
-              <div className="text-[10px] text-white/50 truncate">{user.email}</div>
+              <div className="text-xs font-bold text-slate-800 truncate">{user.nama}</div>
+              <div className="text-[10px] text-slate-400 truncate">{user.email}</div>
             </div>
           )}
         </div>
@@ -216,15 +216,15 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
   return (
     <>
       <aside className={cn(
-        "hidden lg:flex flex-col bg-deep-navy border-r border-white/10 h-screen sticky top-0 shadow-sm transition-all duration-300 ease-in-out",
+        "hidden lg:flex flex-col bg-white border-r border-slate-200 h-screen sticky top-0 shadow-sm transition-all duration-300 ease-in-out",
         isCollapsed ? "w-16" : "w-60"
       )}>
         {content}
       </aside>
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-          <aside className="relative w-64 bg-deep-navy h-full shadow-2xl slide-up">
+          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={onClose} />
+          <aside className="relative w-64 bg-white h-full shadow-2xl slide-up">
             {content}
           </aside>
         </div>

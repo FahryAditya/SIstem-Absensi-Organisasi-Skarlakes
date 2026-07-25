@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 const Sidebar = dynamic(() => import('@/components/layout/Sidebar'), {
   ssr: false,
   loading: () => (
-    <aside className="hidden lg:flex flex-col bg-slate-900 border-r border-slate-800 h-screen sticky top-0 shadow-sm w-60" />
+    <aside className="hidden lg:flex flex-col bg-white border-r border-slate-200 h-screen sticky top-0 shadow-sm w-60" />
   )
 })
 
@@ -50,7 +50,7 @@ export default function DashboardLayout({ user, pageTitle, children }: Dashboard
   }, [])
 
   return (
-    <div className={`flex h-[100dvh] overflow-hidden bg-white/5 ${themeClass}`}>
+    <div className="flex h-[100dvh] overflow-hidden bg-slate-50">
       <Sidebar 
         user={user} 
         mobileOpen={mobileOpen} 
