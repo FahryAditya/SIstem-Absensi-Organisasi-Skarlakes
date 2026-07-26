@@ -106,12 +106,12 @@ export default function OrganizationsClient({ user }: Props) {
       label: 'Nama Organisasi / Eskul',
       render: (o: OrgData) => (
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${o.category === 'Organisasi' ? 'bg-indigo-500/10 text-indigo-500' : 'bg-persian-blue/10 text-persian-blue'}`}>
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${o.category === 'Organisasi' ? 'bg-royal-600/10 text-royal-600' : 'bg-royal-600/10 text-royal-600'}`}>
             <Building2 className="w-5 h-5" />
           </div>
           <div>
-            <div className="font-bold text-white text-sm">{o.nama}</div>
-            <div className="text-[10px] text-slate-400 font-mono uppercase tracking-wider">{o.slug}</div>
+            <div className="font-bold text-royal-900 text-sm">{o.nama}</div>
+            <div className="text-[10px] text-royal-400 font-mono uppercase tracking-wider">{o.slug}</div>
           </div>
         </div>
       )
@@ -120,7 +120,7 @@ export default function OrganizationsClient({ user }: Props) {
       key: 'category',
       label: 'Kategori',
       render: (o: OrgData) => (
-        <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase ${o.category === 'Organisasi' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-persian-blue/10 text-blue-400'}`}>
+        <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase ${o.category === 'Organisasi' ? 'bg-royal-600/10 text-royal-400' : 'bg-royal-600/10 text-royal-400'}`}>
           {o.category}
         </span>
       )
@@ -130,8 +130,8 @@ export default function OrganizationsClient({ user }: Props) {
       label: 'Anggota',
       render: (o: OrgData) => (
         <div className="flex flex-col">
-          <span className="text-sm font-bold text-white">{o._count?.members || 0}</span>
-          <span className="text-[10px] text-slate-400">Terdaftar</span>
+          <span className="text-sm font-bold text-royal-900">{o._count?.members || 0}</span>
+          <span className="text-[10px] text-royal-400">Terdaftar</span>
         </div>
       )
     },
@@ -139,8 +139,8 @@ export default function OrganizationsClient({ user }: Props) {
       key: 'school_origin',
       label: 'Asal Sekolah',
       render: (o: OrgData) => (
-        <div className="flex items-center gap-1.5 text-xs text-slate-300">
-          <School className="w-3 h-3 text-slate-400" />
+        <div className="flex items-center gap-1.5 text-xs text-royal-300">
+          <School className="w-3 h-3 text-royal-400" />
           {o.school_origin}
         </div>
       )
@@ -152,12 +152,12 @@ export default function OrganizationsClient({ user }: Props) {
         <div className="flex flex-col gap-0.5">
           {o.admins && o.admins.length > 0 ? (
             o.admins.map((a, idx) => (
-              <span key={idx} className="text-xs font-bold text-persian-blue truncate max-w-[120px]">
+              <span key={idx} className="text-xs font-bold text-royal-600 truncate max-w-[120px]">
                 {a.user.nama}
               </span>
             ))
           ) : (
-            <span className="text-xs text-slate-500 italic">Belum ada</span>
+            <span className="text-xs text-royal-500 italic">Belum ada</span>
           )}
         </div>
       )
@@ -188,7 +188,7 @@ export default function OrganizationsClient({ user }: Props) {
         <div className="flex gap-2">
           <button 
             onClick={() => router.push(`/admin/organizations/${o.slug}`)}
-            className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-bold text-white transition-all"
+            className="px-3 py-1.5 bg-cream-50/80 hover:bg-cream-200 rounded-lg text-xs font-bold text-royal-900 transition-all"
           >
             Buka Workspace
           </button>
@@ -203,7 +203,7 @@ export default function OrganizationsClient({ user }: Props) {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <Building2 className="w-5 h-5 text-persian-blue" />
+              <Building2 className="w-5 h-5 text-royal-600" />
               <h2 className="page-title">Organisasi & Ekstrakurikuler</h2>
             </div>
             <p className="page-sub mt-0.5">Kelola seluruh unit organisasi dan ekstrakurikuler sekolah</p>
@@ -216,21 +216,21 @@ export default function OrganizationsClient({ user }: Props) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card p-4 border-l-4 border-persian-blue">
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Unit</div>
-          <div className="text-2xl font-black text-white font-mono">{orgs.length}</div>
+        <div className="card p-4 border-l-4 border-royal-600">
+          <div className="text-[10px] font-black text-royal-400 uppercase tracking-widest mb-1">Total Unit</div>
+          <div className="text-2xl font-black text-royal-900 font-mono">{orgs.length}</div>
         </div>
-        <div className="card p-4 border-l-4 border-indigo-500">
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Organisasi</div>
-          <div className="text-2xl font-black text-white font-mono">{orgs.filter(o => o.category === 'Organisasi').length}</div>
+        <div className="card p-4 border-l-4 border-royal-600">
+          <div className="text-[10px] font-black text-royal-400 uppercase tracking-widest mb-1">Organisasi</div>
+          <div className="text-2xl font-black text-royal-900 font-mono">{orgs.filter(o => o.category === 'Organisasi').length}</div>
         </div>
-        <div className="card p-4 border-l-4 border-blue-400">
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Ekstrakurikuler</div>
-          <div className="text-2xl font-black text-white font-mono">{orgs.filter(o => o.category === 'Ekstrakurikuler').length}</div>
+        <div className="card p-4 border-l-4 border-royal-600">
+          <div className="text-[10px] font-black text-royal-400 uppercase tracking-widest mb-1">Ekstrakurikuler</div>
+          <div className="text-2xl font-black text-royal-900 font-mono">{orgs.filter(o => o.category === 'Ekstrakurikuler').length}</div>
         </div>
         <div className="card p-4 border-l-4 border-green-500">
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Unit Aktif</div>
-          <div className="text-2xl font-black text-white font-mono">{orgs.filter(o => o.status === 'Aktif').length}</div>
+          <div className="text-[10px] font-black text-royal-400 uppercase tracking-widest mb-1">Unit Aktif</div>
+          <div className="text-2xl font-black text-royal-900 font-mono">{orgs.filter(o => o.status === 'Aktif').length}</div>
         </div>
       </div>
 

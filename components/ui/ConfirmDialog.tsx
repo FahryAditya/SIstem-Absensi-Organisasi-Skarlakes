@@ -43,7 +43,7 @@ export default function ConfirmDialog({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="alertdialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative bg-[#051525] rounded-2xl shadow-2xl w-full max-w-md p-6 slide-up border border-white/10">
+      <div className="relative bg-royal-950 rounded-2xl shadow-2xl w-full max-w-md p-6 slide-up border border-royal-800/30">
         {/* Header Icon & Title */}
         <div className="flex gap-4 items-start">
           <div className="w-12 h-12 rounded-xl bg-red-500/15 flex items-center justify-center flex-shrink-0 border border-red-500/20">
@@ -51,20 +51,20 @@ export default function ConfirmDialog({
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-bold text-white">{title}</h3>
-            <p className="text-sm text-slate-300 mt-1.5 leading-relaxed">{message}</p>
+            <p className="text-sm text-royal-300 mt-1.5 leading-relaxed">{message}</p>
           </div>
         </div>
 
         {/* Detail Data Card */}
         {details && details.length > 0 && (
-          <div className="mt-4 bg-white/5 rounded-xl border border-white/10 p-4 space-y-2">
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">
+          <div className="mt-4 bg-cream-50/5 rounded-xl border border-royal-800/30 p-4 space-y-2">
+            <div className="flex items-center gap-2 text-xs font-bold text-royal-300 uppercase tracking-wider mb-3">
               <Info className="w-3.5 h-3.5" />
               Detail Data
             </div>
             {details.map((d, i) => (
               <div key={i} className="flex justify-between items-center text-sm">
-                <span className="text-slate-400">{d.label}</span>
+                <span className="text-royal-400">{d.label}</span>
                 <span className="text-white font-semibold">{d.value}</span>
               </div>
             ))}
@@ -74,7 +74,7 @@ export default function ConfirmDialog({
         {/* Confirmation Input */}
         {confirmInput && (
           <div className="mt-4 space-y-2">
-            <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-widest">
+            <label className="block text-[11px] font-bold text-royal-300 uppercase tracking-widest">
               Ketik <span className="text-red-400 font-black">{confirmInput.expectedValue}</span> untuk konfirmasi
             </label>
             <input
@@ -86,7 +86,7 @@ export default function ConfirmDialog({
               autoFocus
             />
             {confirmInput.hint && (
-              <p className="text-xs text-slate-400">{confirmInput.hint}</p>
+              <p className="text-xs text-royal-400">{confirmInput.hint}</p>
             )}
           </div>
         )}

@@ -179,11 +179,11 @@ export default function KegiatanClient({ user }: { user: any }) {
   const activeKegiatan = kegiatan.find(k => k.id === activeKegiatanId)
 
   const columns: Column<Pengelompokan>[] = [
-    { key: 'no', label: 'No', render: (_, index) => <span className="text-slate-400 font-mono">#{index + 1}</span> },
+    { key: 'no', label: 'No', render: (_, index) => <span className="text-royal-400 font-mono">#{index + 1}</span> },
     { key: 'nama', label: 'Nama', render: (p) => <span className="font-bold text-white">{p.siswa.nama}</span> },
-    { key: 'kelas', label: 'Kelas', render: (p) => <span className="text-slate-400">{p.siswa.kelas}</span> },
+    { key: 'kelas', label: 'Kelas', render: (p) => <span className="text-royal-400">{p.siswa.kelas}</span> },
     { key: 'organisasi', label: 'Organisasi', render: (p) => (
-      <span className={`font-bold ${p.organisasi === 'OSIS' ? 'text-[#3D3DB8]' : 'text-[#DC143C]'}`}>
+      <span className={`font-bold ${p.organisasi === 'OSIS' ? 'text-royal-700' : 'text-[#DC143C]'}`}>
         ● {p.organisasi}
       </span>
     )},
@@ -206,7 +206,7 @@ export default function KegiatanClient({ user }: { user: any }) {
       <div className="page-header">
         <div className="flex-1">
           <div className="flex items-center gap-2.5">
-            <LayoutGrid className="w-5 h-5 text-persian-blue" />
+            <LayoutGrid className="w-5 h-5 text-royal-400" />
             <h2 className="page-title">Pengelompokan Kegiatan OSIS</h2>
           </div>
           <p className="page-sub">Kelola pembagian tugas siswa untuk berbagai kegiatan sekolah.</p>
@@ -236,7 +236,7 @@ export default function KegiatanClient({ user }: { user: any }) {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-black text-white uppercase">{activeKegiatan.nama_kegiatan}</h3>
-              <div className="flex gap-3 text-xs text-slate-400 mt-1">
+              <div className="flex gap-3 text-xs text-royal-400 mt-1">
                 <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {activeKegiatan.tanggal ? formatDateTime(activeKegiatan.tanggal) : 'Tanpa Tanggal'}</span>
                 <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {pengelompokan.length} Siswa</span>
               </div>
@@ -254,13 +254,13 @@ export default function KegiatanClient({ user }: { user: any }) {
           {activeKegiatan.tipe === 'piket' ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-3">
-                <div className="bg-persian-blue/10 border border-persian-blue/20 p-3 rounded-xl text-center font-bold text-persian-blue uppercase tracking-widest text-sm">
+                <div className="bg-royal-600/10 border-royal-500/20 p-3 rounded-xl text-center font-bold text-royal-400 uppercase tracking-widest text-sm">
                   Penyambutan
                 </div>
                 <Table columns={columns} data={penyambutan} loading={loadingGroup} />
               </div>
               <div className="space-y-3">
-                <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl text-center font-bold text-amber-500 uppercase tracking-widest text-sm">
+                <div className="bg-yellow-bright-500/10 border-yellow-bright-500/20 p-3 rounded-xl text-center font-bold text-yellow-bright-500 uppercase tracking-widest text-sm">
                   Kebersihan
                 </div>
                 <Table columns={columns} data={kebersihan} loading={loadingGroup} />
@@ -337,8 +337,8 @@ export default function KegiatanClient({ user }: { user: any }) {
           <div className="form-group">
             <label className="label">Organisasi</label>
             <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => setFOrg('OSIS')} className={`py-2 rounded-xl border font-bold transition-all ${fOrg === 'OSIS' ? 'bg-[#3D3DB8] text-white border-transparent' : 'bg-deep-navy text-slate-400 border-white/10'}`}>OSIS</button>
-              <button onClick={() => setFOrg('MPK')} className={`py-2 rounded-xl border font-bold transition-all ${fOrg === 'MPK' ? 'bg-[#DC143C] text-white border-transparent' : 'bg-deep-navy text-slate-400 border-white/10'}`}>MPK</button>
+              <button onClick={() => setFOrg('OSIS')} className={`py-2 rounded-xl border font-bold transition-all ${fOrg === 'OSIS' ? 'bg-royal-700 text-white border-transparent' : 'bg-royal-950 text-royal-400 border-royal-800/30'}`}>OSIS</button>
+              <button onClick={() => setFOrg('MPK')} className={`py-2 rounded-xl border font-bold transition-all ${fOrg === 'MPK' ? 'bg-[#DC143C] text-white border-transparent' : 'bg-royal-950 text-royal-400 border-royal-800/30'}`}>MPK</button>
             </div>
           </div>
           {activeKegiatan?.tipe === 'piket' && (

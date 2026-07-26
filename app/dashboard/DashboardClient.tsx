@@ -78,19 +78,19 @@ interface RequestStatsData {
 
 const AKSI_COLORS: Record<string, string> = {
   CREATE: 'text-green-400 bg-green-500/10',
-  UPDATE: 'text-blue-300 bg-white/5',
+  UPDATE: 'text-royal-300 bg-cream-50/80',
   DELETE: 'text-red-400 bg-red-500/10',
-  LOGIN:  'text-persian-blue bg-persian-blue/10',
-  LOGOUT: 'text-slate-300 bg-white/10',
+  LOGIN:  'text-royal-600 bg-royal-600/10',
+  LOGOUT: 'text-royal-300 bg-cream-100',
 }
 
 // Request stats visual config per aksi
 const REQUEST_META: Record<string, { label: string; method: string; color: string; chartColor: string; icon: React.ElementType; bg: string }> = {
   CREATE: { label: 'Create',  method: 'POST',   color: 'text-emerald-400', chartColor: '#10b981', icon: PlusCircle,         bg: 'bg-emerald-500/10 border-emerald-500/20' },
-  UPDATE: { label: 'Update',  method: 'PUT',    color: 'text-blue-300',    chartColor: '#3b82f6', icon: RefreshCw,          bg: 'bg-white/5   border-white/10'    },
+  UPDATE: { label: 'Update',  method: 'PUT',    color: 'text-royal-300',    chartColor: '#3b82f6', icon: RefreshCw,          bg: 'bg-cream-50/80   border-royal-200'    },
   DELETE: { label: 'Delete',  method: 'DELETE', color: 'text-red-400',     chartColor: '#ef4444', icon: Trash2,             bg: 'bg-red-500/10    border-red-500/20'     },
-  LOGIN:  { label: 'Login',   method: 'GET',    color: 'text-blue-300',  chartColor: '#1E90FF', icon: MousePointerClick,  bg: 'bg-persian-blue/10 border-white/10'  },
-  LOGOUT: { label: 'Logout',  method: 'GET',    color: 'text-slate-300',   chartColor: '#94a3b8', icon: ArrowUpDown,        bg: 'bg-white/5  border-white/10'   },
+  LOGIN:  { label: 'Login',   method: 'GET',    color: 'text-royal-300',  chartColor: '#1E3A8A', icon: MousePointerClick,  bg: 'bg-royal-600/10 border-royal-200'  },
+  LOGOUT: { label: 'Logout',  method: 'GET',    color: 'text-royal-300',   chartColor: '#94a3b8', icon: ArrowUpDown,        bg: 'bg-cream-50/80  border-royal-200'   },
 }
 
 export default function DashboardClient({ user }: Props) {
@@ -357,7 +357,7 @@ export default function DashboardClient({ user }: Props) {
   const greeting = greetingHour < 11 ? 'Selamat pagi' : greetingHour < 15 ? 'Selamat siang' : greetingHour < 18 ? 'Selamat sore' : 'Selamat malam'
 
   if (loading && !stats) return (
-    <div className="flex items-center justify-center h-64 gap-3 text-slate-400">
+    <div className="flex items-center justify-center h-64 gap-3 text-royal-400">
       <Loader2 className="w-5 h-5 animate-spin" />
       <span className="text-sm">Memuat dashboard...</span>
     </div>
@@ -373,7 +373,7 @@ export default function DashboardClient({ user }: Props) {
       value: stats.totalSiswa,
       suffix: isAdmin ? 'siswa' : (stats.orgName?.toLowerCase().includes('osis') || stats.orgName?.toLowerCase().includes('mpk') ? 'anggota' : 'siswa'),
       icon: Users,
-      color: 'bg-persian-blue/10 text-persian-blue',
+      color: 'bg-royal-600/10 text-royal-600',
     },
     
     // Per-ekskul cards - ONLY for Administrator
@@ -382,28 +382,28 @@ export default function DashboardClient({ user }: Props) {
       value: stats.totalProgramming,
       suffix: 'siswa',
       icon: Users,
-      color: 'bg-persian-blue/10 text-persian-blue',
+      color: 'bg-royal-600/10 text-royal-600',
     },
     isAdmin && orgs.some(o => o.slug === 'english') && {
       label: 'Total English Club',
       value: stats.totalEnglish,
       suffix: 'siswa',
       icon: Users,
-      color: 'bg-persian-blue/10 text-persian-blue',
+      color: 'bg-royal-600/10 text-royal-600',
     },
     isAdmin && orgs.some(o => o.slug === 'osis') && {
       label: 'Anggota OSIS',
       value: stats.totalOsis,
       suffix: 'anggota',
       icon: Users,
-      color: 'bg-persian-blue/10 text-persian-blue',
+      color: 'bg-royal-600/10 text-royal-600',
     },
     isAdmin && orgs.some(o => o.slug === 'mpk') && {
       label: 'Anggota MPK',
       value: stats.totalMpk,
       suffix: 'anggota',
       icon: Users,
-      color: 'bg-persian-blue/10 text-persian-blue',
+      color: 'bg-royal-600/10 text-royal-600',
     },
 
     {
@@ -418,14 +418,14 @@ export default function DashboardClient({ user }: Props) {
       value: formatCurrency(stats.totalKas),
       isCurrency: true,
       icon: Wallet,
-      color: 'bg-persian-blue/10 text-persian-blue',
+      color: 'bg-royal-600/10 text-royal-600',
     },
     {
       label: isAdmin ? 'Total Pemasukan Kas (Semua)' : `Pemasukan Kas ${stats.orgName || ''}`,
       value: formatCurrency(stats.totalPemasukan),
       isCurrency: true,
       icon: PlusCircle,
-      color: 'bg-persian-blue/10 text-persian-blue',
+      color: 'bg-royal-600/10 text-royal-600',
     },
     {
       label: isAdmin ? 'Total Pengeluaran Kas (Semua)' : `Pengeluaran Kas ${stats.orgName || ''}`,
@@ -439,27 +439,27 @@ export default function DashboardClient({ user }: Props) {
   return (
     <div className="space-y-6 max-w-7xl">
       {/* Welcome banner */}
-      <div className="bg-gradient-to-r from-deep-navy to-persian-blue rounded-2xl p-6 text-white relative overflow-hidden">
+      <div className="bg-gradient-to-r from-royal-900 to-royal-600 rounded-2xl p-6 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-full opacity-10"
           style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
         <div className="relative flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <div className="block w-full">
-              <TextType as="p" text={`${greeting}, 👋`} className="text-white/70 text-sm font-medium" typingSpeed={40} loop={false} showCursor={false} />
+              <TextType as="p" text={`${greeting}, 👋`} className="text-royal-100/70 text-sm font-medium" typingSpeed={40} loop={false} showCursor={false} />
             </div>
             <div className="block w-full">
               <TextType as="h2" text={user.nama} className="text-2xl font-black mt-0.5" typingSpeed={60} initialDelay={600} loop={false} cursorClassName="text-white opacity-70" />
             </div>
             <div className="flex items-center gap-3 mt-2 flex-wrap">
-              <span className="text-xs font-semibold bg-white/20 px-2.5 py-1 rounded-full">
+              <span className="text-xs font-semibold bg-cream-100/80 px-2.5 py-1 rounded-full">
                 {ROLE_LABELS[user.role] || user.role}
               </span>
               {!isAdmin && stats?.orgName && (
-                <span className="text-xs font-bold bg-white/30 px-2.5 py-1 rounded-full border border-white/40">
+                <span className="text-xs font-bold bg-cream-100 px-2.5 py-1 rounded-full border border-white/40">
                   {stats.orgName}
                 </span>
               )}
-              <span className="text-xs text-persian-blue/30 flex items-center gap-1">
+              <span className="text-xs text-royal-600/30 flex items-center gap-1">
                 <Clock className="w-3 h-3" />
                 {formatDate(now, 'EEEE, dd MMMM yyyy')}
               </span>
@@ -470,7 +470,7 @@ export default function DashboardClient({ user }: Props) {
                   <Link 
                     key={o.slug} 
                     href={['programming', 'english', 'osis', 'mpk'].includes(o.slug) ? '#' : `/admin/organizations/${o.slug}`}
-                    className={`text-xs font-bold bg-white/15 border border-white/25 px-2.5 py-1 rounded-lg transition-all ${['programming', 'english', 'osis', 'mpk'].includes(o.slug) ? 'cursor-default' : 'hover:bg-white/25 hover:border-white/40 cursor-pointer'}`}
+                    className={`text-xs font-bold bg-cream-100 border border-white/25 px-2.5 py-1 rounded-lg transition-all ${['programming', 'english', 'osis', 'mpk'].includes(o.slug) ? 'cursor-default' : 'hover:bg-cream-200 hover:border-royal-300 cursor-pointer'}`}
                   >
                     {ORG_LABELS[o.slug as OrgType] || o.nama}
                   </Link>
@@ -481,8 +481,8 @@ export default function DashboardClient({ user }: Props) {
           {/* Tombol Mode Presentasi & Presentasi File */}
           <div className="flex-shrink-0 flex flex-col sm:flex-row gap-2">
             {/* {user.role === 'administrator' && (
-              <Link href="/admin" className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-xl text-xs font-bold transition-all">
-                <Trophy className="w-4 h-4 text-yellow-300" />
+              <Link href="/admin" className="flex items-center gap-2 bg-cream-100/80 hover:bg-cream-200 text-white px-3 py-2 rounded-xl text-xs font-bold transition-all">
+                <Trophy className="w-4 h-4 text-yellow-bright-300" />
                 Beri Penghargaan
               </Link>
             )} */}
@@ -500,11 +500,11 @@ export default function DashboardClient({ user }: Props) {
               <s.icon className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs text-slate-400 font-semibold leading-tight">{s.label}</div>
+              <div className="text-xs text-royal-400 font-semibold leading-tight">{s.label}</div>
               <div className="text-xl font-black text-white mt-1 font-mono leading-none">
                 {s.isCurrency ? s.value : `${s.value}`}
               </div>
-              {s.suffix && <div className="text-[10px] text-slate-400 mt-0.5">{s.suffix}</div>}
+              {s.suffix && <div className="text-[10px] text-royal-400 mt-0.5">{s.suffix}</div>}
             </div>
           </div>
         ))}
@@ -514,7 +514,7 @@ export default function DashboardClient({ user }: Props) {
       {orgs.length > 0 && (
         <div className="card p-5">
           <div className="flex items-center gap-2 mb-4">
-            <PlusCircleIcon className="w-5 h-5 text-persian-blue" />
+            <PlusCircleIcon className="w-5 h-5 text-royal-600" />
             <h3 className="text-base font-bold text-white">Quick Add / Import Anggota</h3>
           </div>
           
@@ -579,12 +579,12 @@ export default function DashboardClient({ user }: Props) {
             </form>
 
             {/* Bulk Import */}
-            <div className="flex flex-col justify-center space-y-4 border-t md:border-t-0 md:border-l border-white/10 pt-4 md:pt-0 md:pl-6">
+            <div className="flex flex-col justify-center space-y-4 border-t md:border-t-0 md:border-l border-royal-200 pt-4 md:pt-0 md:pl-6">
               <div>
                 <h4 className="text-sm font-bold text-white mb-1">Import Massal (CSV/Excel)</h4>
-                <p className="text-xs text-slate-400 leading-relaxed">
+                <p className="text-xs text-royal-400 leading-relaxed">
                   Upload file <b>.xlsx</b> atau <b>.csv</b>. Pastikan baris pertama memiliki header: <br/>
-                  <code className="text-white bg-[#93C5FD] px-1 py-0.5 rounded">Nama</code>, <code className="text-white bg-[#93C5FD] px-1 py-0.5 rounded">Kelas</code>, <code className="text-white bg-[#93C5FD] px-1 py-0.5 rounded">NIS</code>{(quickOrg === 'osis' || quickOrg === 'mpk') && <>, <code className="text-white bg-[#93C5FD] px-1 py-0.5 rounded">Jabatan</code></>}.
+                  <code className="text-white bg-royal-300 px-1 py-0.5 rounded">Nama</code>, <code className="text-white bg-royal-300 px-1 py-0.5 rounded">Kelas</code>, <code className="text-white bg-royal-300 px-1 py-0.5 rounded">NIS</code>{(quickOrg === 'osis' || quickOrg === 'mpk') && <>, <code className="text-white bg-royal-300 px-1 py-0.5 rounded">Jabatan</code></>}.
                 </p>
               </div>
               <input
@@ -598,12 +598,12 @@ export default function DashboardClient({ user }: Props) {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={quickLoading}
-                className="btn-secondary w-full justify-center py-3 border-dashed border-2 bg-white/5 hover:bg-white/10"
+                className="btn-secondary w-full justify-center py-3 border-dashed border-2 bg-cream-50/80 hover:bg-cream-100"
               >
                 {quickLoading ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Memproses...</>
                 ) : (
-                  <><UploadCloud className="w-5 h-5 text-persian-blue" /> Pilih File Excel/CSV</>
+                  <><UploadCloud className="w-5 h-5 text-royal-600" /> Pilih File Excel/CSV</>
                 )}
               </button>
             </div>
@@ -616,29 +616,29 @@ export default function DashboardClient({ user }: Props) {
         {/* Kehadiran mingguan */}
         <div className="card p-5 min-h-[280px]">
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-4 h-4 text-persian-blue" />
+            <TrendingUp className="w-4 h-4 text-royal-600" />
             <h3 className="text-sm font-bold text-white">
               {isAdmin ? 'Kehadiran 7 Hari Terakhir (Semua Eskul)' : `Kehadiran 7 Hari Terakhir ${stats?.orgName || ''}`}
             </h3>
           </div>
           {loadingCharts ? (
-            <div className="h-48 flex items-center justify-center text-sm text-slate-400 gap-2">
+            <div className="h-48 flex items-center justify-center text-sm text-royal-400 gap-2">
               <Loader2 className="w-4 h-4 animate-spin" /> Memuat grafik...
             </div>
           ) : charts?.kehadiranMingguan && charts.kehadiranMingguan.some(d => d.hadir + d.tidak_hadir > 0) ? (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={charts.kehadiranMingguan} barSize={14} barGap={3}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
                 <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,.08)' }} />
                 <Legend iconType="circle" iconSize={7} wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="hadir" name="Hadir" fill="#1E90FF" radius={[3,3,0,0]} />
+                <Bar dataKey="hadir" name="Hadir" fill="#1E3A8A" radius={[3,3,0,0]} />
                 <Bar dataKey="tidak_hadir" name="Tidak Hadir" fill="#fca5a5" radius={[3,3,0,0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-48 flex items-center justify-center text-sm text-slate-400">
+            <div className="h-48 flex items-center justify-center text-sm text-royal-400">
               Belum ada data kehadiran minggu ini
             </div>
           )}
@@ -647,13 +647,13 @@ export default function DashboardClient({ user }: Props) {
         {/* Kas per bulan */}
         <div className="card p-5 min-h-[280px]">
           <div className="flex items-center gap-2 mb-4">
-            <Wallet className="w-4 h-4 text-persian-blue" />
+            <Wallet className="w-4 h-4 text-royal-600" />
             <h3 className="text-sm font-bold text-white">
               {isAdmin ? 'Uang Kas 6 Bulan Terakhir (Semua Eskul)' : `Uang Kas 6 Bulan Terakhir ${stats?.orgName || ''}`}
             </h3>
           </div>
           {loadingCharts ? (
-            <div className="h-48 flex items-center justify-center text-sm text-slate-400 gap-2">
+            <div className="h-48 flex items-center justify-center text-sm text-royal-400 gap-2">
               <Loader2 className="w-4 h-4 animate-spin" /> Memuat grafik...
             </div>
           ) : charts?.kasPerBulan && charts.kasPerBulan.some(d => d.total > 0) ? (
@@ -661,22 +661,22 @@ export default function DashboardClient({ user }: Props) {
               <AreaChart data={charts.kasPerBulan}>
                 <defs>
                   <linearGradient id="kasGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#1E90FF" stopOpacity={0.18} />
-                    <stop offset="95%" stopColor="#1E90FF" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#1E3A8A" stopOpacity={0.18} />
+                    <stop offset="95%" stopColor="#1E3A8A" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
                 <XAxis dataKey="bulan" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false}
                   tickFormatter={(v: number) => v >= 1000 ? `${v/1000}k` : v} />
                 <Tooltip formatter={(v: number) => [formatCurrency(v), 'Total Kas']}
                   contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }} />
-                <Area type="monotone" dataKey="total" stroke="#1E90FF" strokeWidth={2.5}
-                  fill="url(#kasGrad)" dot={{ r: 4, fill: '#1E90FF', strokeWidth: 0 }} />
+                <Area type="monotone" dataKey="total" stroke="#1E3A8A" strokeWidth={2.5}
+                  fill="url(#kasGrad)" dot={{ r: 4, fill: '#1E3A8A', strokeWidth: 0 }} />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-48 flex items-center justify-center text-sm text-slate-400">
+            <div className="h-48 flex items-center justify-center text-sm text-royal-400">
               Belum ada data kas
             </div>
           )}
@@ -685,32 +685,32 @@ export default function DashboardClient({ user }: Props) {
 
       {/* ── Gamification Leaderboard ─────────────────────────── */}
       {(orgs.some(o => o.slug === 'programming') || orgs.some(o => o.slug === 'english')) && (
-        <div className="card p-5 relative overflow-hidden shadow-[0_0_20px_rgba(84,130,180,0.1)] border-t-2 border-t-[#1E90FF]">
+        <div className="card p-5 relative overflow-hidden shadow-[0_0_20px_rgba(30,58,138,0.1)] border-t-2 border-t-[#1E90FF]">
           {/* Glowing neon bg accents */}
-          <div className="absolute -top-12 -right-12 w-32 h-32 bg-persian-blue/10 rounded-full blur-2xl pointer-events-none" />
-          <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-[#93C5FD]/20 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute -top-12 -right-12 w-32 h-32 bg-royal-600/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-royal-300/20 rounded-full blur-2xl pointer-events-none" />
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 relative z-10">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-gradient-to-br from-deep-navy to-persian-blue text-white rounded-xl shadow-lg shadow-[#001F3F]/15">
-                <Trophy className="w-5 h-5 text-yellow-300 animate-pulse" />
+              <div className="p-2 bg-gradient-to-br from-royal-900 to-royal-600 text-white rounded-xl shadow-lg shadow-[#001F3F]/15">
+                <Trophy className="w-5 h-5 text-yellow-bright-300 animate-pulse" />
               </div>
               <div>
                 <h3 className="text-base font-extrabold text-white">Gamification Leaderboard</h3>
-                <p className="text-xs text-slate-400">Peringkat 10 besar siswa dengan XP & keaktifan tertinggi</p>
+                <p className="text-xs text-royal-400">Peringkat 10 besar siswa dengan XP & keaktifan tertinggi</p>
               </div>
             </div>
 
             {/* Interactive Tabs */}
-            <div className="flex bg-white/10 p-1 rounded-xl border border-white/10">
+            <div className="flex bg-cream-100 p-1 rounded-xl border border-royal-200">
               {orgs.some(o => o.slug === 'programming') && (
                 <button
                   type="button"
                   onClick={() => setActiveLeaderboardTab('programming')}
                   className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 ${
                     activeLeaderboardTab === 'programming'
-                      ? 'bg-deep-navy text-[#001F3F] shadow-sm'
-                      : 'text-slate-400 hover:text-white'
+                      ? 'bg-royal-900 text-royal-900 shadow-sm'
+                      : 'text-royal-400 hover:text-white'
                   }`}
                 >
                   Programming
@@ -722,8 +722,8 @@ export default function DashboardClient({ user }: Props) {
                   onClick={() => setActiveLeaderboardTab('english')}
                   className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 ${
                     activeLeaderboardTab === 'english'
-                      ? 'bg-deep-navy text-[#001F3F] shadow-sm'
-                      : 'text-slate-400 hover:text-white'
+                      ? 'bg-royal-900 text-royal-900 shadow-sm'
+                      : 'text-royal-400 hover:text-white'
                   }`}
                 >
                   English Club
@@ -740,7 +740,7 @@ export default function DashboardClient({ user }: Props) {
 
             if (loading) {
               return (
-                <div className="py-12 flex items-center justify-center text-sm text-slate-400 gap-2">
+                <div className="py-12 flex items-center justify-center text-sm text-royal-400 gap-2">
                   <Loader2 className="w-4 h-4 animate-spin" /> Memuat peringkat...
                 </div>
               )
@@ -748,10 +748,10 @@ export default function DashboardClient({ user }: Props) {
 
             if (currentList.length === 0) {
               return (
-                <div className="py-12 text-center border-2 border-dashed border-white/10 rounded-2xl">
-                  <Sparkles className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                  <p className="text-sm text-slate-400 font-medium">Belum ada data keaktifan siswa saat ini.</p>
-                  <p className="text-xs text-slate-300 mt-0.5">Siswa akan mendapatkan +10 XP otomatis dari absensi hadir!</p>
+                <div className="py-12 text-center border-2 border-dashed border-royal-200 rounded-2xl">
+                  <Sparkles className="w-8 h-8 text-royal-300 mx-auto mb-2" />
+                  <p className="text-sm text-royal-400 font-medium">Belum ada data keaktifan siswa saat ini.</p>
+                  <p className="text-xs text-royal-300 mt-0.5">Siswa akan mendapatkan +10 XP otomatis dari absensi hadir!</p>
                 </div>
               )
             }
@@ -761,37 +761,37 @@ export default function DashboardClient({ user }: Props) {
             return (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
                 {/* Podium Top 3 */}
-                <div className="flex flex-col justify-center space-y-3.5 bg-gradient-to-br from-slate-50 to-[#93C5FD]/10 border border-white/10 p-4.5 rounded-2xl">
-                  <div className="text-xs font-extrabold text-blue-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-yellow-500" /> Top 3 Champions
+                <div className="flex flex-col justify-center space-y-3.5 bg-gradient-to-br from-cream-50 to-royal-100/50 border border-royal-200 p-4.5 rounded-2xl">
+                  <div className="text-xs font-extrabold text-royal-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-yellow-bright-400" /> Top 3 Champions
                   </div>
                   {currentList.slice(0, 3).map((siswa, idx) => {
                     const rankStyles = [
                       {
-                        bg: 'from-amber-400 to-yellow-500 shadow-yellow-400/20 text-white',
-                        border: 'border-yellow-400/30',
+                        bg: 'from-yellow-bright-400 to-yellow-bright-500 shadow-yellow-bright-400/20 text-white',
+                        border: 'border-yellow-bright-400/30',
                         medal: '🥇',
-                        glow: 'shadow-[0_0_15px_rgba(234,179,8,0.25)] border-2 border-yellow-400',
-                        badgeText: 'text-yellow-600 bg-yellow-50'
+                        glow: 'shadow-[0_0_15px_rgba(251,191,36,0.25)] border-2 border-yellow-bright-400',
+                        badgeText: 'text-yellow-bright-600 bg-yellow-bright-50'
                       },
                       {
-                        bg: 'from-slate-300 to-slate-400 shadow-slate-400/20 text-white',
-                        border: 'border-slate-300/30',
+                        bg: 'from-royal-300 to-royal-400 shadow-royal-400/20 text-white',
+                        border: 'border-royal-300/30',
                         medal: '🥈',
-                        glow: 'border-2 border-slate-300',
-                        badgeText: 'text-slate-300 bg-white/10'
+                        glow: 'border-2 border-royal-300',
+                        badgeText: 'text-royal-300 bg-cream-100'
                       },
                       {
-                        bg: 'from-amber-600 to-amber-700 shadow-amber-600/20 text-white',
-                        border: 'border-amber-600/30',
+                        bg: 'from-yellow-bright-600 to-yellow-bright-700 shadow-yellow-bright-600/20 text-white',
+                        border: 'border-yellow-bright-600/30',
                         medal: '🥉',
-                        glow: 'border-2 border-amber-600',
-                        badgeText: 'text-amber-400 bg-amber-500/10'
+                        glow: 'border-2 border-yellow-bright-600',
+                        badgeText: 'text-yellow-bright-400 bg-yellow-bright-500/10'
                       }
-                    ][idx] || { bg: 'bg-slate-200 text-slate-200', border: 'border-white/10', medal: '🎗️', glow: '', badgeText: 'text-slate-400 bg-white/5' }
+                    ][idx] || { bg: 'bg-royal-200 text-royal-200', border: 'border-royal-200', medal: '🎗️', glow: '', badgeText: 'text-royal-400 bg-cream-50/80' }
 
                     return (
-                      <div key={siswa.id} className={`flex items-center justify-between p-3 bg-deep-navy rounded-xl shadow-sm ${rankStyles.glow} transition-transform hover:-translate-y-0.5 duration-300`}>
+                      <div key={siswa.id} className={`flex items-center justify-between p-3 bg-royal-900 rounded-xl shadow-sm ${rankStyles.glow} transition-transform hover:-translate-y-0.5 duration-300`}>
                         <div className="flex items-center gap-3 min-w-0">
                           <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-lg shadow ${rankStyles.bg}`}>
                             {rankStyles.medal}
@@ -799,16 +799,16 @@ export default function DashboardClient({ user }: Props) {
                           <div className="min-w-0">
                             <h4 className="text-sm font-black text-white leading-tight truncate">{siswa.nama}</h4>
                             <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className="text-[10px] text-slate-400 font-bold uppercase">{siswa.kelas}</span>
+                              <span className="text-[10px] text-royal-400 font-bold uppercase">{siswa.kelas}</span>
                               <LevelBadge exp={siswa.xp} size="sm" />
                             </div>
                           </div>
                         </div>
                         <div className="flex flex-col items-end shrink-0">
                           <span className="text-sm font-black font-mono text-white flex items-center gap-0.5">
-                            <Zap className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400 animate-bounce" /> {siswa.xp} <span className="text-[10px] text-slate-400 font-bold font-sans uppercase">XP</span>
+                            <Zap className="w-3.5 h-3.5 text-yellow-bright-400 fill-yellow-bright-400 animate-bounce" /> {siswa.xp} <span className="text-[10px] text-royal-400 font-bold font-sans uppercase">XP</span>
                           </span>
-                          <span className="text-[9px] text-slate-400 font-semibold">Peringkat {idx + 1}</span>
+                          <span className="text-[9px] text-royal-400 font-semibold">Peringkat {idx + 1}</span>
                         </div>
                       </div>
                     )
@@ -820,29 +820,29 @@ export default function DashboardClient({ user }: Props) {
                   {currentList.slice(3).map((siswa, idx) => {
                     const relativePct = Math.round((siswa.xp / maxXP) * 100)
                     return (
-                      <div key={siswa.id} className="flex flex-col p-2.5 bg-deep-navy border border-white/10 hover:border-white/10 rounded-xl transition-all duration-300">
+                      <div key={siswa.id} className="flex flex-col p-2.5 bg-royal-900 border border-royal-200 hover:border-royal-200 rounded-xl transition-all duration-300">
                         <div className="flex items-center justify-between gap-3 min-w-0 mb-1.5">
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <span className="text-xs font-bold text-slate-400 font-mono w-4 text-center shrink-0">
+                            <span className="text-xs font-bold text-royal-400 font-mono w-4 text-center shrink-0">
                               #{idx + 4}
                             </span>
                             <div className="min-w-0">
                               <h4 className="text-xs font-extrabold text-white leading-tight truncate">{siswa.nama}</h4>
                               <div className="flex items-center gap-1.5 mt-0.5">
-                                <span className="text-[9px] text-slate-400 font-medium uppercase">{siswa.kelas}</span>
+                                <span className="text-[9px] text-royal-400 font-medium uppercase">{siswa.kelas}</span>
                                 <LevelBadge exp={siswa.xp} size="sm" />
                               </div>
                             </div>
                           </div>
-                          <div className="shrink-0 flex items-center gap-0.5 font-mono text-xs font-bold text-slate-200">
-                            <Zap className="w-3 h-3 text-yellow-500 fill-yellow-400" /> {siswa.xp} XP
+                          <div className="shrink-0 flex items-center gap-0.5 font-mono text-xs font-bold text-royal-200">
+                            <Zap className="w-3 h-3 text-yellow-bright-400 fill-yellow-bright-400" /> {siswa.xp} XP
                           </div>
                         </div>
                         
                         {/* Elegant relative XP progress bar */}
-                        <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div className="w-full h-1.5 bg-cream-100 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-gradient-to-r from-[#1E90FF] to-[#93C5FD] rounded-full transition-all duration-1000"
+                            className="h-full bg-gradient-to-r from-royal-600 to-royal-300 rounded-full transition-all duration-1000"
                             style={{ width: `${relativePct}%` }}
                           />
                         </div>
@@ -861,31 +861,31 @@ export default function DashboardClient({ user }: Props) {
         <div className="card p-5 min-h-[150px]">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-persian-blue" />
+              <Activity className="w-4 h-4 text-royal-600" />
               <h3 className="text-sm font-bold text-white">Aktivitas Terbaru</h3>
             </div>
-            <a href="/log" className="text-xs font-semibold text-blue-300 hover:underline">Lihat semua →</a>
+            <a href="/log" className="text-xs font-semibold text-royal-600 hover:underline">Lihat semua →</a>
           </div>
           {loadingLogs ? (
-            <div className="py-8 flex items-center justify-center text-sm text-slate-400 gap-2">
+            <div className="py-8 flex items-center justify-center text-sm text-royal-400 gap-2">
               <Loader2 className="w-4 h-4 animate-spin" /> Memuat aktivitas...
             </div>
           ) : logs?.recentLog && logs.recentLog.length > 0 ? (
             <div className="space-y-2">
               {logs.recentLog.map(log => (
-                <div key={log.id} className="flex items-start gap-3 py-2.5 px-3 rounded-lg hover:bg-white/5 transition-colors">
-                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${AKSI_COLORS[log.aksi] || 'text-slate-300 bg-white/10'}`}>
+                <div key={log.id} className="flex items-start gap-3 py-2.5 px-3 rounded-lg hover:bg-cream-50/80 transition-colors">
+                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${AKSI_COLORS[log.aksi] || 'text-royal-300 bg-cream-100'}`}>
                     {log.aksi}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-slate-200 leading-snug truncate">{log.deskripsi}</p>
-                    <span className="text-xs text-slate-400">{formatDateTime(log.created_at)}</span>
+                    <p className="text-sm text-royal-200 leading-snug truncate">{log.deskripsi}</p>
+                    <span className="text-xs text-royal-400">{formatDateTime(log.created_at)}</span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="py-8 text-center text-sm text-slate-400">
+            <div className="py-8 text-center text-sm text-royal-400">
               Tidak ada aktivitas terbaru
             </div>
           )}
@@ -897,18 +897,18 @@ export default function DashboardClient({ user }: Props) {
         <div className="card p-5">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-persian-blue" />
+              <Zap className="w-4 h-4 text-royal-600" />
               <h3 className="text-sm font-bold text-white">Statistik Request API</h3>
             </div>
             {!loadingRequestStats && requestStats && (
-              <span className="text-xs font-semibold text-slate-400">
+              <span className="text-xs font-semibold text-royal-400">
                 Total: <span className="text-white font-black">{requestStats.grandTotal.toLocaleString('id-ID')}</span> request
               </span>
             )}
           </div>
 
           {loadingRequestStats ? (
-            <div className="py-10 flex items-center justify-center text-sm text-slate-400 gap-2">
+            <div className="py-10 flex items-center justify-center text-sm text-royal-400 gap-2">
               <Loader2 className="w-4 h-4 animate-spin" /> Memuat statistik request...
             </div>
           ) : requestStats ? (
@@ -938,8 +938,8 @@ export default function DashboardClient({ user }: Props) {
                         {count.toLocaleString('id-ID')}
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] text-slate-400 font-medium">{meta.label}</span>
-                        <span className="text-[10px] font-bold text-slate-400">{pct}%</span>
+                        <span className="text-[11px] text-royal-400 font-medium">{meta.label}</span>
+                        <span className="text-[10px] font-bold text-royal-400">{pct}%</span>
                       </div>
                     </div>
                   )
@@ -948,11 +948,11 @@ export default function DashboardClient({ user }: Props) {
 
               {/* 30-day trend line chart */}
               <div>
-                <p className="text-xs text-slate-400 font-semibold mb-3">Tren 30 Hari Terakhir</p>
+                <p className="text-xs text-royal-400 font-semibold mb-3">Tren 30 Hari Terakhir</p>
                 <div className="h-[180px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={requestStats.daily30} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
                       <XAxis
                         dataKey="label"
                         tick={{ fontSize: 9, fill: '#94a3b8' }}
@@ -984,7 +984,7 @@ export default function DashboardClient({ user }: Props) {
               </div>
             </div>
           ) : (
-            <div className="py-8 text-center text-sm text-slate-400">Tidak ada data request</div>
+            <div className="py-8 text-center text-sm text-royal-400">Tidak ada data request</div>
           )}
         </div>
       )}
@@ -998,18 +998,18 @@ export default function DashboardClient({ user }: Props) {
             const modalCfg = {
               update: {
                 gradientFrom: '#78350f', gradientVia: '#b45309', gradientTo: '#d97706',
-                badgeBg: 'bg-yellow-50', badgeText: 'text-yellow-700',
+                badgeBg: 'bg-yellow-bright-50', badgeText: 'text-yellow-bright-700',
                 badgeLabel: '⚡ Update Sistem',
-                iconBg: 'bg-yellow-50', iconColor: 'text-yellow-600',
-                btnBg: 'bg-yellow-500 hover:bg-yellow-600 shadow-yellow-400/30',
+                iconBg: 'bg-yellow-bright-50', iconColor: 'text-yellow-bright-600',
+                btnBg: 'bg-yellow-bright-500 hover:bg-yellow-bright-600 shadow-yellow-bright-400/30',
                 descLabel: 'Pembaruan & Peningkatan Fitur',
               },
               pengumuman: {
                 gradientFrom: '#001F3F', gradientVia: '#001F3F', gradientTo: '#1E90FF',
-                badgeBg: 'bg-white/5', badgeText: 'text-blue-300',
+                badgeBg: 'bg-cream-50/80', badgeText: 'text-royal-300',
                 badgeLabel: '📢 Pengumuman',
-                iconBg: 'bg-white/5', iconColor: 'text-[#001F3F]',
-                btnBg: 'bg-deep-navy hover:bg-[#0f172a] shadow-[#001F3F]/20',
+                iconBg: 'bg-cream-50/80', iconColor: 'text-royal-900',
+                btnBg: 'bg-royal-900 hover:bg-royal-950 shadow-royal-900/20',
                 descLabel: 'Informasi Penting untuk Seluruh Admin',
               },
               perbaikan: {
@@ -1024,10 +1024,10 @@ export default function DashboardClient({ user }: Props) {
             const cfg = modalCfg[ut as keyof typeof modalCfg] ?? modalCfg.pengumuman
 
             return (
-              <div className="bg-deep-navy rounded-[32px] shadow-2xl w-full max-w-sm overflow-hidden relative border border-white/10 slide-up">
+              <div className="bg-royal-900 rounded-[32px] shadow-2xl w-full max-w-sm overflow-hidden relative border border-royal-200 slide-up">
                 <button
                   onClick={() => setShowWelcomeModal(false)}
-                  className="absolute top-4 right-4 p-2 bg-black/5 hover:bg-black/10 text-slate-400 hover:text-slate-300 rounded-full z-20 transition-all"
+                  className="absolute top-4 right-4 p-2 bg-black/5 hover:bg-black/10 text-royal-400 hover:text-royal-300 rounded-full z-20 transition-all"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1039,7 +1039,7 @@ export default function DashboardClient({ user }: Props) {
                 >
                   <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, white 2px, transparent 2px)', backgroundSize: '24px 24px' }} />
                   <div className="absolute -bottom-10 left-0 right-0 flex justify-center">
-                    <div className="w-20 h-20 rounded-2xl bg-deep-navy shadow-xl flex items-center justify-center border-4 border-white rotate-3 group hover:rotate-0 transition-transform">
+                    <div className="w-20 h-20 rounded-2xl bg-royal-900 shadow-xl flex items-center justify-center border-4 border-white rotate-3 group hover:rotate-0 transition-transform">
                       {latestUpdate ? (
                         <div className={`w-full h-full ${cfg.iconBg} rounded-xl flex items-center justify-center`}>
                           <Megaphone className={`w-10 h-10 ${cfg.iconColor}`} />
@@ -1073,8 +1073,8 @@ export default function DashboardClient({ user }: Props) {
                           {cfg.descLabel}
                         </p>
                       </div>
-                      <div className="bg-white/5 rounded-2xl p-4 text-left border border-white/10 max-h-[160px] overflow-y-auto custom-scrollbar">
-                        <p className="text-[13px] text-slate-300 leading-relaxed whitespace-pre-line">
+                      <div className="bg-cream-50/80 rounded-2xl p-4 text-left border border-royal-200 max-h-[160px] overflow-y-auto custom-scrollbar">
+                        <p className="text-[13px] text-royal-300 leading-relaxed whitespace-pre-line">
                           {latestUpdate.content}
                         </p>
                       </div>
@@ -1089,14 +1089,14 @@ export default function DashboardClient({ user }: Props) {
                     <div className="space-y-4">
                       <div>
                         <TextType as="h2" text={`${greeting}, 👋`} className="text-2xl font-black text-white tracking-tight" typingSpeed={50} loop={false} showCursor={false} />
-                        <TextType as="p" text={user.nama} className="text-white font-bold mt-1 text-lg" typingSpeed={60} initialDelay={800} loop={false} cursorClassName="text-[#001F3F]" />
+                        <TextType as="p" text={user.nama} className="text-white font-bold mt-1 text-lg" typingSpeed={60} initialDelay={800} loop={false} cursorClassName="text-royal-900" />
                       </div>
-                      <p className="text-slate-400 text-sm leading-relaxed">
+                      <p className="text-royal-400 text-sm leading-relaxed">
                         Selamat datang kembali! Pantau terus perkembangan dan aktivitas terbaru hari ini.
                       </p>
                       <button
                         onClick={() => setShowWelcomeModal(false)}
-                        className="w-full py-4 px-6 bg-deep-navy hover:bg-[#0f172a] text-white font-bold rounded-2xl shadow-lg shadow-[#001F3F]/20 transition-all active:scale-[0.98]"
+                        className="w-full py-4 px-6 bg-royal-900 hover:bg-royal-950 text-white font-bold rounded-2xl shadow-lg shadow-royal-900/20 transition-all active:scale-[0.98]"
                       >
                         Mulai Bekerja 🚀
                       </button>

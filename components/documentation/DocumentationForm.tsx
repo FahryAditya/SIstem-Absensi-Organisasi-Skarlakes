@@ -131,13 +131,13 @@ export default function DocumentationForm({ organizationId, type, initialData, o
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Judul */}
       <div className="space-y-1.5">
-        <label className="text-xs font-bold text-slate-400 uppercase">Judul Kegiatan <span className="text-red-400">*</span></label>
+        <label className="text-xs font-bold text-royal-400 uppercase">Judul Kegiatan <span className="text-red-400">*</span></label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Contoh: Jumat Seni – Menggambar Bersama"
-          className="w-full px-4 py-2.5 text-sm border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-persian-blue/20"
+          className="w-full px-4 py-2.5 text-sm border border-royal-800/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-royal-600/20"
           maxLength={200}
         />
       </div>
@@ -145,20 +145,20 @@ export default function DocumentationForm({ organizationId, type, initialData, o
       {/* Foto Upload */}
       <div className="space-y-2">
         <div className="flex justify-between items-center">
-          <label className="text-xs font-bold text-slate-400 uppercase">
+          <label className="text-xs font-bold text-royal-400 uppercase">
             Foto Kegiatan <span className="text-red-400">*</span>
           </label>
           <span className={`text-xs font-bold ${
-            photos.length < 2 ? 'text-amber-500' : 'text-emerald-500'
+            photos.length < 2 ? 'text-yellow-bright-500' : 'text-emerald-500'
           }`}>
             {photos.length}/4 &nbsp;·&nbsp; {photos.length < 2 ? `Perlu ${2 - photos.length} lagi` : 'Siap ✓'}
           </span>
         </div>
-        <p className="text-[11px] text-slate-400">Upload minimal 2 foto, maksimal 4 foto (masing-masing maks. 5MB)</p>
+        <p className="text-[11px] text-royal-400">Upload minimal 2 foto, maksimal 4 foto (masing-masing maks. 5MB)</p>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {photos.map((p, index) => (
-            <div key={index} className="relative aspect-square rounded-2xl overflow-hidden border border-white/10 bg-white/5 group shadow-sm">
+            <div key={index} className="relative aspect-square rounded-2xl overflow-hidden border border-royal-800/30 bg-cream-50/5 group shadow-sm">
               <Image src={p.url} alt={`Preview ${index + 1}`} fill className="object-cover" unoptimized />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
               <button
@@ -181,16 +181,16 @@ export default function DocumentationForm({ organizationId, type, initialData, o
               onClick={() => !uploading && document.getElementById('photo-input')?.click()}
               className={`relative aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all ${
                 uploading
-                  ? 'border-white/10 bg-white/5 cursor-not-allowed'
-                  : 'border-slate-300 hover:border-blue-400 bg-white/5 hover:bg-persian-blue/20'
+                  ? 'border-royal-800/30 bg-cream-50/5 cursor-not-allowed'
+                  : 'border-royal-300 hover:border-royal-400 bg-cream-50/5 hover:bg-royal-600/20'
               }`}
             >
               {uploading ? (
-                <Loader2 className="w-6 h-6 text-persian-blue/100 animate-spin" />
+                <Loader2 className="w-6 h-6 text-royal-400 animate-spin" />
               ) : (
                 <>
-                  <UploadCloud className="w-6 h-6 text-slate-400" />
-                  <span className="text-[10px] font-bold text-slate-400 mt-1.5 text-center px-2">
+                  <UploadCloud className="w-6 h-6 text-royal-400" />
+                  <span className="text-[10px] font-bold text-royal-400 mt-1.5 text-center px-2">
                     + Tambah Foto
                   </span>
                 </>
@@ -213,38 +213,38 @@ export default function DocumentationForm({ organizationId, type, initialData, o
       {/* Kategori + Tanggal */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <label className="text-xs font-bold text-slate-400 uppercase">Jenis Kegiatan <span className="text-red-400">*</span></label>
+          <label className="text-xs font-bold text-royal-400 uppercase">Jenis Kegiatan <span className="text-red-400">*</span></label>
           <CategorySelector type={type} value={category} onChange={setCategory} />
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs font-bold text-slate-400 uppercase">Tanggal Foto Diambil <span className="text-red-400">*</span></label>
+          <label className="text-xs font-bold text-royal-400 uppercase">Tanggal Foto Diambil <span className="text-red-400">*</span></label>
           <input
             type="date"
             value={dateTaken}
             onChange={(e) => setDateTaken(e.target.value)}
-            className="w-full px-4 py-2.5 text-sm border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-persian-blue/20"
+            className="w-full px-4 py-2.5 text-sm border border-royal-800/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-royal-600/20"
           />
         </div>
       </div>
 
       {/* Deskripsi */}
       <div className="space-y-1.5">
-        <label className="text-xs font-bold text-slate-400 uppercase">Deskripsi Kegiatan <span className="text-red-400">*</span></label>
+        <label className="text-xs font-bold text-royal-400 uppercase">Deskripsi Kegiatan <span className="text-red-400">*</span></label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Tuliskan detail kegiatan, peserta, atau hal-hal penting lainnya..."
           rows={4}
-          className="w-full px-4 py-2.5 text-sm border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-persian-blue/20 resize-none"
+          className="w-full px-4 py-2.5 text-sm border border-royal-800/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-royal-600/20 resize-none"
         />
       </div>
 
       {/* Actions */}
-      <div className="flex justify-end gap-3 pt-2 border-t border-white/10">
+      <div className="flex justify-end gap-3 pt-2 border-t border-royal-800/30">
         <button
           type="submit"
           disabled={uploading || submitting || photos.length < 2}
-          className="bg-persian-blue text-white px-6 py-2.5 rounded-xl text-sm font-black shadow-lg shadow-persian-blue/20 hover:bg-blue-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all"
+          className="bg-royal-600 text-white px-6 py-2.5 rounded-xl text-sm font-black shadow-lg shadow-royal-600/20 hover:bg-royal-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all"
         >
           {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
           {initialData ? 'Perbarui Dokumentasi' : 'Publikasikan Dokumentasi'}

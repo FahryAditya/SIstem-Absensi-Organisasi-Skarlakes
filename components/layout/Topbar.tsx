@@ -92,36 +92,36 @@ export default function Topbar({
   const currentOrg = myOrgs.find(o => o.id === user.activeOrgId);
 
   return (
-    <header className="sticky top-0 z-30 shrink-0 bg-white border-b border-slate-200 h-14 flex items-center px-4 lg:px-6 gap-4">
+    <header className="sticky top-0 z-30 shrink-0 bg-white border-b border-royal-200 h-14 flex items-center px-4 lg:px-6 gap-4">
       <button onClick={onMenuClick} className="lg:hidden btn-icon">
-        <Menu className="w-5 h-5 text-slate-600" />
+        <Menu className="w-5 h-5 text-royal-700" />
       </button>
 
-      <button onClick={onToggleCollapse} className="hidden lg:flex btn-icon hover:bg-slate-100 transition-colors">
-        <Menu className="w-5 h-5 text-slate-600" />
+      <button onClick={onToggleCollapse} className="hidden lg:flex btn-icon hover:bg-cream-100 transition-colors">
+        <Menu className="w-5 h-5 text-royal-700" />
       </button>
 
       <div className="flex-1 flex items-center gap-3 min-w-0">
-        <h1 className="text-sm font-bold text-slate-800 truncate hidden md:block">{pageTitle}</h1>
+        <h1 className="text-sm font-bold text-royal-900 truncate hidden md:block">{pageTitle}</h1>
         
         {/* Organization Switcher */}
         {myOrgs.length > 0 && (
           <div className="relative">
             <button
               onClick={() => setOrgOpen(!orgOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-all text-xs font-bold text-slate-700"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cream-50 border border-royal-200 hover:bg-cream-100 transition-all text-xs font-bold text-royal-800"
             >
-              <Building2 className="w-3.5 h-3.5 text-blue-600" />
+              <Building2 className="w-3.5 h-3.5 text-royal-600" />
               <span className="truncate max-w-[120px]">{currentOrg?.nama || 'Pilih Organisasi'}</span>
-              <ChevronDown className="w-3 h-3 text-slate-400" />
+              <ChevronDown className="w-3 h-3 text-royal-400" />
             </button>
 
             {orgOpen && (
               <>
                 <div className="fixed inset-0" onClick={() => setOrgOpen(false)} />
-                <div className="absolute left-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 animate-in fade-in zoom-in duration-150">
-                  <div className="px-3 py-2 border-b border-slate-100 mb-1">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Akses Organisasi</span>
+                <div className="absolute left-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-royal-200 py-1.5 z-50 animate-in fade-in zoom-in duration-150">
+                    <div className="px-3 py-2 border-b border-royal-100 mb-1">
+                    <span className="text-[10px] font-black text-royal-400 uppercase tracking-wider">Akses Organisasi</span>
                   </div>
                   <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
                     {myOrgs.map(org => (
@@ -129,7 +129,7 @@ export default function Topbar({
                         key={org.id}
                         onClick={() => handleSwitchOrg(org.id)}
                         disabled={switching !== null}
-                        className={`w-full flex items-center justify-between px-3 py-2 text-xs font-bold transition-colors ${org.id === user.activeOrgId ? 'text-blue-600 bg-blue-50' : 'text-slate-700 hover:bg-slate-50'}`}
+                        className={`w-full flex items-center justify-between px-3 py-2 text-xs font-bold transition-colors ${org.id === user.activeOrgId ? 'text-royal-600 bg-royal-50' : 'text-royal-800 hover:bg-cream-50'}`}
                       >
                         <span className="truncate">{org.nama}</span>
                         {org.id === user.activeOrgId && <Check className="w-3.5 h-3.5" />}
@@ -147,10 +147,10 @@ export default function Topbar({
       <div className="relative">
         <button
           onClick={() => setOpen(!open)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-cream-100 transition-colors"
         >
           {(user.role === 'SUPER_ADMIN' || (user.role as string) === 'administrator') ? (
-            <div className="relative w-7 h-7 rounded-full overflow-hidden shadow-sm border border-slate-200">
+            <div className="relative w-7 h-7 rounded-full overflow-hidden shadow-sm border border-royal-200">
               <Image
                 src="https://uploads.onecompiler.io/43k3cj6jv/44n5t3sn5/WhatsApp%20Image%202026-05-03%20at%2011.12.38.jpeg"
                 alt="Profile"
@@ -159,30 +159,30 @@ export default function Topbar({
               />
             </div>
           ) : (
-            <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-black">
+            <div className="w-7 h-7 rounded-full bg-royal-600 flex items-center justify-center text-white text-xs font-black">
               {user.nama.charAt(0).toUpperCase()}
             </div>
           )}
           <div className="hidden sm:block text-left">
-            <div className="text-xs font-bold text-slate-800 leading-tight">{user.nama}</div>
-            <div className="text-[10px] text-slate-500">{ROLE_LABELS[user.role] || user.role}</div>
+            <div className="text-xs font-bold text-royal-900 leading-tight">{user.nama}</div>
+            <div className="text-[10px] text-royal-500">{ROLE_LABELS[user.role] || user.role}</div>
           </div>
-          <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+          <ChevronDown className="w-3.5 h-3.5 text-royal-400" />
         </button>
 
         {open && (
           <>
             <div className="fixed inset-0" onClick={() => setOpen(false)} />
-            <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 select-dropdown-enter">
-              <div className="px-4 py-3 border-b border-slate-100 mb-1">
+            <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-royal-200 py-2 z-50 select-dropdown-enter">
+              <div className="px-4 py-3 border-b border-royal-100 mb-1">
                 <div className="flex items-center gap-2.5 mb-1.5">
-                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-                    <Contact className="w-4 h-4 text-slate-600" />
+                  <div className="w-8 h-8 rounded-full bg-cream-100 flex items-center justify-center">
+                    <Contact className="w-4 h-4 text-royal-700" />
                   </div>
-                  <div className="text-sm font-black text-slate-800">{user.nama}</div>
+                  <div className="text-sm font-black text-royal-900">{user.nama}</div>
                 </div>
-                <div className="text-xs text-slate-500">{user.email}</div>
-                <div className="text-[11px] font-semibold text-blue-600 mt-1">{ROLE_LABELS[user.role]}</div>
+                <div className="text-xs text-royal-500">{user.email}</div>
+                <div className="text-[11px] font-semibold text-royal-600 mt-1">{ROLE_LABELS[user.role]}</div>
               </div>
               <div className="p-2">
                 <button

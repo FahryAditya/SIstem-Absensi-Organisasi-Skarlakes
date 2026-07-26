@@ -61,11 +61,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-[#000B18] flex items-center justify-center p-6 font-sans overflow-hidden">
+    <div className="relative min-h-screen bg-royal-950 flex items-center justify-center p-6 font-sans overflow-hidden">
       {/* Decorative Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px]" />
-        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-blue-900/20 rounded-full blur-[120px]" />
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-royal-600/20 rounded-full blur-[120px]" />
+        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-royal-900/20 rounded-full blur-[120px]" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]" />
       </div>
 
@@ -81,9 +81,9 @@ export default function LoginPage() {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-            className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500/20 to-blue-600/5 rounded-3xl mb-6 border border-blue-500/30 shadow-2xl shadow-blue-500/10"
+            className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500/20 to-blue-600/5 rounded-3xl mb-6 border border-royal-600/30 shadow-2xl shadow-royal-600/10"
           >
-            <GraduationCap className="w-10 h-10 text-blue-400" />
+            <GraduationCap className="w-10 h-10 text-yellow-bright-400" />
           </motion.div>
           <motion.h1 
             initial={{ opacity: 0 }}
@@ -97,7 +97,7 @@ export default function LoginPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-blue-400/80 text-[11px] font-bold uppercase tracking-[0.3em]"
+            className="text-yellow-bright-400/80 text-[11px] font-bold uppercase tracking-[0.3em]"
           >
             Admin & Administrator Gateway
           </motion.p>
@@ -111,44 +111,44 @@ export default function LoginPage() {
           className="relative group"
         >
           {/* Card Border Glow Effect */}
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/30 to-purple-500/30 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-royal-600/30 to-royal-800/30 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
           
-          <div className="relative bg-[#000B18]/60 backdrop-blur-2xl p-8 sm:p-10 rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+          <div className="relative bg-royal-950/60 backdrop-blur-2xl p-8 sm:p-10 rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
             {/* Subtle Inner Glow */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-royal-600/20 to-transparent" />
             
             <div className="mb-10 relative">
               <h2 className="text-2xl font-bold text-white mb-2">Selamat Datang</h2>
-              <p className="text-slate-400 text-sm">Masuk untuk mengelola data organisasi.</p>
+              <p className="text-royal-400 text-sm">Masuk untuk mengelola data organisasi.</p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-6" autoComplete="off">
               <div className="space-y-4">
                 <div className="form-group">
-                  <label className="text-[11px] font-bold text-slate-300 uppercase tracking-widest ml-1 mb-2 block">Nama Lengkap</label>
+                  <label className="text-[11px] font-bold text-royal-300 uppercase tracking-widest ml-1 mb-2 block">Nama Lengkap</label>
                   <div className="relative group/input">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within/input:text-blue-400 transition-colors" />
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-400 group-focus-within/input:text-yellow-bright-400 transition-colors" />
                     <input
                       type="text"
                       value={nama}
                       onChange={e => setNama(e.target.value)}
                       placeholder="Nama lengkap"
-                      className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/50 focus:bg-white/[0.08] transition-all duration-300"
+                      className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-royal-400 focus:outline-none focus:ring-2 focus:ring-royal-600/40 focus:border-royal-600/50 focus:bg-white/[0.08] transition-all duration-300"
                       autoComplete="off"
                     />
                   </div>
                 </div>
                 
                 <div className="form-group">
-                  <label className="text-[11px] font-bold text-slate-300 uppercase tracking-widest ml-1 mb-2 block">Alamat Email</label>
+                  <label className="text-[11px] font-bold text-royal-300 uppercase tracking-widest ml-1 mb-2 block">Alamat Email</label>
                   <div className="relative group/input">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within/input:text-blue-400 transition-colors" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-400 group-focus-within/input:text-yellow-bright-400 transition-colors" />
                     <input
                       type="email"
                       value={email}
                       onChange={e => setEmail(e.target.value)}
                       placeholder="email@sekolah.sch.id"
-                      className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/50 focus:bg-white/[0.08] transition-all duration-300"
+                      className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-royal-400 focus:outline-none focus:ring-2 focus:ring-royal-600/40 focus:border-royal-600/50 focus:bg-white/[0.08] transition-all duration-300"
                       autoComplete="off"
                     />
                   </div>
@@ -156,19 +156,19 @@ export default function LoginPage() {
               </div>
 
               <div className="form-group">
-                <label className="text-[11px] font-bold text-slate-300 uppercase tracking-widest ml-1 mb-2 block">Kata Sandi</label>
+                <label className="text-[11px] font-bold text-royal-300 uppercase tracking-widest ml-1 mb-2 block">Kata Sandi</label>
                 <div className="relative group/input">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within/input:text-blue-400 transition-colors" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-400 group-focus-within/input:text-yellow-bright-400 transition-colors" />
                   <input
                     type={showPass ? 'text' : 'password'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-12 pr-12 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/50 focus:bg-white/[0.08] transition-all duration-300"
+                    className="w-full pl-12 pr-12 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-royal-400 focus:outline-none focus:ring-2 focus:ring-royal-600/40 focus:border-royal-600/50 focus:bg-white/[0.08] transition-all duration-300"
                     autoComplete="new-password"
                   />
                   <button type="button" onClick={() => setShowPass(!showPass)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors">
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-royal-400 hover:text-white transition-colors">
                     {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
@@ -181,7 +181,7 @@ export default function LoginPage() {
                 disabled={loading} 
                 className="relative w-full group/btn overflow-hidden rounded-xl"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500 transition-all duration-300 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-r from-royal-600 to-royal-700 transition-all duration-300 group-hover:scale-105" />
                 <div className="relative flex items-center justify-center gap-2 py-4 text-[11px] uppercase tracking-[0.2em] font-black text-white">
                   {loading ? (
                     <><Loader2 className="w-4 h-4 animate-spin" /> Memproses...</>
@@ -196,14 +196,14 @@ export default function LoginPage() {
             </form>
 
             <div className="mt-10 pt-8 border-t border-white/5 text-center">
-              <p className="text-slate-400 text-sm">
+              <p className="text-royal-400 text-sm">
                 Belum terdaftar?{' '}
                 <button 
                   onClick={() => router.push('/registration')}
-                  className="text-blue-400 font-bold hover:text-blue-300 transition-colors relative group/reg"
+                  className="text-yellow-bright-400 font-bold hover:text-yellow-bright-300 transition-colors relative group/reg"
                 >
                   Mulai Pendaftaran
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full" />
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-yellow-bright-400 transition-all duration-300 group-hover:w-full" />
                 </button>
               </p>
             </div>
@@ -217,10 +217,10 @@ export default function LoginPage() {
           className="mt-10 flex flex-col items-center gap-3"
         >
           <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/5">
-            <Shield className="w-3 h-3 text-blue-500" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Artemis Secured Gateway</span>
+            <Shield className="w-3 h-3 text-yellow-bright-400" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-royal-400">Artemis Secured Gateway</span>
           </div>
-          <p className="text-[10px] font-bold text-slate-400 tracking-wider">© 2026 SMK AIRLANGGA BALIKPAPAN</p>
+          <p className="text-[10px] font-bold text-royal-400 tracking-wider">© 2026 SMK AIRLANGGA BALIKPAPAN</p>
         </motion.div>
       </motion.div>
     </div>

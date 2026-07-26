@@ -36,23 +36,23 @@ const TYPE_CONFIG: Record<UpdateType, {
     label: 'Update',
     description: 'Pembaruan fitur atau versi baru sistem',
     icon: <Zap className="w-4 h-4" />,
-    badgeBg: 'bg-yellow-100',
-    badgeText: 'text-yellow-700',
-    ring: 'ring-yellow-400',
-    cardBorder: 'border-yellow-200',
-    cardBg: 'bg-yellow-50/60',
-    dot: 'bg-yellow-400',
+    badgeBg: 'bg-yellow-bright-100',
+    badgeText: 'text-yellow-bright-700',
+    ring: 'ring-yellow-bright-400',
+    cardBorder: 'border-yellow-bright-200',
+    cardBg: 'bg-yellow-bright-50/60',
+    dot: 'bg-yellow-bright-400',
   },
   pengumuman: {
     label: 'Pengumuman',
     description: 'Informasi penting untuk seluruh admin',
     icon: <Bell className="w-4 h-4" />,
-    badgeBg: 'bg-blue-100',
-    badgeText: 'text-blue-300',
-    ring: 'ring-blue-400',
-    cardBorder: 'border-white/10',
-    cardBg: 'bg-white/60',
-    dot: 'bg-white/50',
+    badgeBg: 'bg-royal-100',
+    badgeText: 'text-royal-300',
+    ring: 'ring-royal-400',
+    cardBorder: 'border-royal-800/30',
+    cardBg: 'bg-cream-50/60',
+    dot: 'bg-cream-50/50',
   },
   perbaikan: {
     label: 'Perbaikan',
@@ -61,7 +61,7 @@ const TYPE_CONFIG: Record<UpdateType, {
     badgeBg: 'bg-green-100',
     badgeText: 'text-green-400',
     ring: 'ring-green-400',
-    cardBorder: 'border-white/10',
+    cardBorder: 'border-royal-800/30',
     cardBg: 'bg-green-500/60',
     dot: 'bg-green-500/100',
   },
@@ -157,7 +157,7 @@ export default function UpdateSistemClient({ user }: Props) {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="bg-gradient-to-br from-[#001F3F] to-[#1E90FF] rounded-2xl p-6 text-white shadow-lg overflow-hidden relative">
+      <div className="bg-gradient-to-br from-[#001F3F] to-royal-400 rounded-2xl p-6 text-white shadow-lg overflow-hidden relative">
         <div className="absolute top-0 right-0 w-64 h-full opacity-10 pointer-events-none"
           style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
         <div className="relative flex items-center gap-4">
@@ -166,7 +166,7 @@ export default function UpdateSistemClient({ user }: Props) {
           </div>
           <div>
             <h2 className="text-xl font-black">Manajemen Pembaruan Sistem</h2>
-            <p className="text-blue-100 text-sm mt-0.5">Kirim notifikasi update patch dan versi ke seluruh Admin Organisasi.</p>
+            <p className="text-royal-100 text-sm mt-0.5">Kirim notifikasi update patch dan versi ke seluruh Admin Organisasi.</p>
           </div>
         </div>
       </div>
@@ -176,9 +176,9 @@ export default function UpdateSistemClient({ user }: Props) {
         <div className="lg:col-span-2 space-y-5">
 
           {/* ── Tipe Notifikasi Selector ── */}
-          <div className="card p-5 shadow-sm border border-white/10">
+          <div className="card p-5 shadow-sm border border-royal-800/30">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-1.5 h-5 rounded-full bg-[#1E90FF]" />
+              <div className="w-1.5 h-5 rounded-full bg-royal-400" />
               <h3 className="text-sm font-bold text-white">Tipe Notifikasi</h3>
             </div>
             <div className="grid grid-cols-3 gap-3">
@@ -191,7 +191,7 @@ export default function UpdateSistemClient({ user }: Props) {
                     relative flex flex-col items-center gap-2 p-3.5 rounded-xl border-2 transition-all duration-200 text-center
                     ${updateType === key
                       ? `${cfg.cardBorder} ${cfg.cardBg} ring-2 ${cfg.ring} ring-offset-1 shadow-sm`
-                      : 'border-white/10 bg-deep-navy hover:border-slate-300 hover:bg-white/5'
+                      : 'border-royal-800/30 bg-royal-950 hover:border-royal-300 hover:bg-cream-50/5'
                     }
                   `}
                 >
@@ -199,12 +199,12 @@ export default function UpdateSistemClient({ user }: Props) {
                   <span className={`w-2.5 h-2.5 rounded-full ${cfg.dot} ${updateType === key ? 'scale-125' : ''} transition-transform`} />
 
                   {/* Icon */}
-                  <span className={`${updateType === key ? cfg.badgeText : 'text-slate-400'} transition-colors`}>
+                  <span className={`${updateType === key ? cfg.badgeText : 'text-royal-400'} transition-colors`}>
                     {cfg.icon}
                   </span>
 
                   {/* Label */}
-                  <span className={`text-xs font-bold leading-none ${updateType === key ? cfg.badgeText : 'text-slate-400'} transition-colors`}>
+                  <span className={`text-xs font-bold leading-none ${updateType === key ? cfg.badgeText : 'text-royal-400'} transition-colors`}>
                     {cfg.label}
                   </span>
 
@@ -247,9 +247,9 @@ export default function UpdateSistemClient({ user }: Props) {
                     placeholder="Contoh: V 17.6.0 atau Patch 1.2"
                     required
                   />
-                  <Info className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
+                  <Info className="w-4 h-4 text-royal-400 absolute left-3 top-3.5" />
                 </div>
-                <p className="text-[10px] text-slate-400 mt-1">Gunakan format yang konsisten agar mudah dikenali.</p>
+                <p className="text-[10px] text-royal-400 mt-1">Gunakan format yang konsisten agar mudah dikenali.</p>
               </div>
 
               <div className="form-group">
@@ -279,24 +279,24 @@ export default function UpdateSistemClient({ user }: Props) {
         {/* ── Sidebar: History + Tips ── */}
         <div className="space-y-5">
           {/* Legenda Warna */}
-          <div className="card p-4 border border-white/10 shadow-sm">
+          <div className="card p-4 border border-royal-800/30 shadow-sm">
             <h4 className="text-xs font-bold text-white mb-3">Legenda Tipe Notifikasi</h4>
             <div className="space-y-2">
               {(Object.entries(TYPE_CONFIG) as [UpdateType, typeof TYPE_CONFIG[UpdateType]][]).map(([key, cfg]) => (
                 <div key={key} className={`flex items-center gap-2.5 px-3 py-2 rounded-lg ${cfg.cardBg} border ${cfg.cardBorder}`}>
                   <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
                   <span className={`text-xs font-bold ${cfg.badgeText}`}>{cfg.label}</span>
-                  <span className="text-[10px] text-slate-400 leading-tight">{cfg.description}</span>
+                  <span className="text-[10px] text-royal-400 leading-tight">{cfg.description}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* History */}
-          <div className="card p-5 border border-white/10">
+          <div className="card p-5 border border-royal-800/30">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <History className="w-4 h-4 text-[#1E90FF]" />
+                <History className="w-4 h-4 text-royal-400" />
                 <h3 className="text-sm font-bold text-white">Riwayat Terbaru</h3>
               </div>
               {history.length > 0 && user.role === 'administrator' && (
@@ -310,7 +310,7 @@ export default function UpdateSistemClient({ user }: Props) {
             </div>
 
             {loadingHistory ? (
-              <div className="py-8 flex flex-col items-center justify-center text-slate-400 gap-2">
+              <div className="py-8 flex flex-col items-center justify-center text-royal-400 gap-2">
                 <Loader2 className="w-5 h-5 animate-spin" />
                 <span className="text-xs">Memuat riwayat...</span>
               </div>
@@ -332,11 +332,11 @@ export default function UpdateSistemClient({ user }: Props) {
                           {upd.version}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-300 line-clamp-3 mb-2 leading-relaxed">
+                      <p className="text-xs text-royal-300 line-clamp-3 mb-2 leading-relaxed">
                         {upd.content}
                       </p>
-                      <div className="pt-2 border-t border-white/10 flex justify-between items-center">
-                        <span className="text-[10px] text-slate-400 font-medium">
+                      <div className="pt-2 border-t border-royal-800/30 flex justify-between items-center">
+                        <span className="text-[10px] text-royal-400 font-medium">
                           {formatDateTime(upd.created_at)}
                         </span>
                         <span className={`text-[10px] font-bold ${cfg.badgeText}`}>
@@ -347,27 +347,27 @@ export default function UpdateSistemClient({ user }: Props) {
                   )
                 })}
                 {history.length === 1 && (
-                  <p className="text-[10px] text-center text-slate-400 italic mt-2">
+                  <p className="text-[10px] text-center text-royal-400 italic mt-2">
                     Menampilkan update terakhir.
                   </p>
                 )}
               </div>
             ) : (
               <div className="py-10 text-center">
-                <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <History className="w-6 h-6 text-slate-300" />
+                <div className="w-12 h-12 bg-cream-50/5 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <History className="w-6 h-6 text-royal-300" />
                 </div>
-                <p className="text-xs text-slate-400">Belum ada riwayat update.</p>
+                <p className="text-xs text-royal-400">Belum ada riwayat update.</p>
               </div>
             )}
           </div>
 
           {/* Tips */}
-          <div className="bg-white/5 border border-blue-100 rounded-2xl p-4">
-            <h4 className="text-xs font-bold text-blue-200 mb-2 flex items-center gap-1">
+          <div className="bg-cream-50/5 border border-royal-100 rounded-2xl p-4">
+            <h4 className="text-xs font-bold text-royal-200 mb-2 flex items-center gap-1">
               <Info className="w-3.5 h-3.5" /> Tips Administrator
             </h4>
-            <p className="text-[11px] text-blue-300 leading-relaxed">
+            <p className="text-[11px] text-royal-300 leading-relaxed">
               Setiap kali Anda memposting update, seluruh admin organisasi (OSIS, MPK, Programming, English Club) akan melihat popup notifikasi saat mereka masuk ke Dashboard. Gunakan tipe yang sesuai agar mudah dibedakan.
             </p>
           </div>

@@ -25,19 +25,19 @@ export default function AdminEmailHistoryClient({ user }: AdminEmailHistoryClien
     <div className="space-y-6">
       {/* Back button */}
       <div className="flex items-center justify-between">
-        <Link href="/admin/email" className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors w-fit">
+        <Link href="/admin/email" className="flex items-center gap-2 text-royal-400 hover:text-white text-sm transition-colors w-fit">
           <ArrowLeft className="w-4 h-4" /> Kembali ke Form Kirim
         </Link>
       </div>
 
       {/* Title */}
       <div className="flex items-center gap-3">
-        <div className="p-3 bg-white/10 rounded-2xl text-blue-400">
+        <div className="p-3 bg-white/10 rounded-2xl text-royal-400">
           <History className="w-6 h-6" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white">Riwayat Pengiriman Email</h1>
-          <p className="text-slate-400 text-sm">Lihat log pengiriman notifikasi email yang berhasil atau gagal</p>
+          <p className="text-royal-400 text-sm">Lihat log pengiriman notifikasi email yang berhasil atau gagal</p>
         </div>
       </div>
 
@@ -50,8 +50,8 @@ export default function AdminEmailHistoryClient({ user }: AdminEmailHistoryClien
               onClick={() => setActiveOrg(org.id)}
               className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all ${
                 activeOrg === org.id
-                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-transparent'
-                  : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
+                  ? 'bg-gradient-to-r from-royal-500 to-royal-600 text-white border-transparent'
+                  : 'bg-white/5 border-white/10 text-royal-400 hover:bg-white/10'
               }`}
             >
               {org.label}

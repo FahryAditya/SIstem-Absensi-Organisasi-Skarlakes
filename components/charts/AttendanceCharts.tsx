@@ -135,7 +135,7 @@ export default function AttendanceCharts({ data }: Props) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {data.kehadiranOrganisasi.osis && (
               <div>
-                <h4 className="text-xs font-semibold text-[#1E90FF] mb-3">OSIS</h4>
+                <h4 className="text-xs font-semibold text-royal-400 mb-3">OSIS</h4>
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
                     <Pie
@@ -158,13 +158,13 @@ export default function AttendanceCharts({ data }: Props) {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="text-center mt-2">
-                  <span className="text-xs text-slate-400">Total: {data.kehadiranOrganisasi.osis.total}</span>
+                  <span className="text-xs text-royal-400">Total: {data.kehadiranOrganisasi.osis.total}</span>
                 </div>
               </div>
             )}
             {data.kehadiranOrganisasi.mpk && (
               <div>
-                <h4 className="text-xs font-semibold text-[#1E90FF] mb-3">MPK</h4>
+                <h4 className="text-xs font-semibold text-royal-400 mb-3">MPK</h4>
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
                     <Pie
@@ -187,7 +187,7 @@ export default function AttendanceCharts({ data }: Props) {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="text-center mt-2">
-                  <span className="text-xs text-slate-400">Total: {data.kehadiranOrganisasi.mpk.total}</span>
+                  <span className="text-xs text-royal-400">Total: {data.kehadiranOrganisasi.mpk.total}</span>
                 </div>
               </div>
             )}

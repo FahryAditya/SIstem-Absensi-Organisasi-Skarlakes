@@ -97,32 +97,32 @@ function RegistrationFormContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#000B18]">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
+      <div className="min-h-screen flex items-center justify-center bg-royal-950">
+        <Loader2 className="w-8 h-8 animate-spin text-yellow-bright-400" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#000B18] py-20 px-4 relative overflow-hidden flex flex-col items-center font-sans">
+    <div className="min-h-screen bg-royal-950 py-20 px-4 relative overflow-hidden flex flex-col items-center font-sans">
       <div className="absolute inset-0 z-0">
-        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/10 rounded-full blur-[120px] animate-pulse delay-700" />
+        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-royal-600/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-royal-600/10 rounded-full blur-[120px] animate-pulse delay-700" />
       </div>
 
       <div className="max-w-2xl w-full relative z-10">
         <button 
           onClick={() => router.push('/registration')}
-          className="flex items-center gap-3 text-slate-400 hover:text-white mb-10 transition-all group"
+          className="flex items-center gap-3 text-royal-400 hover:text-white mb-10 transition-all group"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           <span className="text-sm font-semibold tracking-wide">Kembali</span>
         </button>
 
         <div className="bg-white/[0.03] backdrop-blur-3xl rounded-[2rem] shadow-2xl overflow-hidden border border-white/10">
-          <div className="bg-gradient-to-br from-blue-600/20 to-indigo-700/20 p-8 text-center border-b border-white/5">
+          <div className="bg-gradient-to-br from-royal-600/20 to-royal-900/20 p-8 text-center border-b border-white/5">
             <h1 className="text-3xl font-black text-white mb-2">Pendaftaran Anggota</h1>
-            <p className="text-blue-400 font-bold uppercase tracking-widest text-[10px]">{org?.nama}</p>
+            <p className="text-yellow-bright-400 font-bold uppercase tracking-widest text-[10px]">{org?.nama}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="p-8 space-y-6">
@@ -135,11 +135,11 @@ function RegistrationFormContent() {
 
             <div className="space-y-4">
               <div className="form-group">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 block">Nama Lengkap</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-royal-500 mb-2 block">Nama Lengkap</label>
                 <input
                   required
                   type="text"
-                  className="w-full px-5 py-3.5 rounded-xl bg-white/[0.03] border border-white/10 text-white outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-5 py-3.5 rounded-xl bg-white/[0.03] border border-white/10 text-white outline-none focus:ring-2 focus:ring-royal-600"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
@@ -147,7 +147,7 @@ function RegistrationFormContent() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="form-group">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 block">Kelas</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-royal-500 mb-2 block">Kelas</label>
                   <select
                     required
                     className="w-full px-5 py-3.5 rounded-xl bg-white/[0.03] border border-white/10 text-white outline-none appearance-none"
@@ -156,13 +156,13 @@ function RegistrationFormContent() {
                   >
                     <option value="">Pilih Kelas</option>
                     {master?.kelas.map((k) => (
-                      <option key={k.id} value={k.kelas_nama} className="bg-[#000B18]">{k.kelas_nama}</option>
+                      <option key={k.id} value={k.kelas_nama} className="bg-royal-950">{k.kelas_nama}</option>
                     ))}
                   </select>
                 </div>
 
                 <div className="form-group">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 block">Kejuruan</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-royal-500 mb-2 block">Kejuruan</label>
                   <select
                     required
                     className="w-full px-5 py-3.5 rounded-xl bg-white/[0.03] border border-white/10 text-white outline-none appearance-none"
@@ -171,28 +171,28 @@ function RegistrationFormContent() {
                   >
                     <option value="">Pilih Kejuruan</option>
                     {master?.kejuruan.map((k) => (
-                      <option key={k.id} value={k.kejuruan_kode} className="bg-[#000B18]">{k.kejuruan_kode}</option>
+                      <option key={k.id} value={k.kejuruan_kode} className="bg-royal-950">{k.kejuruan_kode}</option>
                     ))}
                   </select>
                 </div>
               </div>
 
               <div className="form-group">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 block">Email Gmail</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-royal-500 mb-2 block">Email Gmail</label>
                 <input
                   required
                   type="email"
-                  className="w-full px-5 py-3.5 rounded-xl bg-white/[0.03] border border-white/10 text-white outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-5 py-3.5 rounded-xl bg-white/[0.03] border border-white/10 text-white outline-none focus:ring-2 focus:ring-royal-600"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
 
               <div className="form-group">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 block">NISN (Opsional)</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-royal-500 mb-2 block">NISN (Opsional)</label>
                 <input
                   type="text"
-                  className="w-full px-5 py-3.5 rounded-xl bg-white/[0.03] border border-white/10 text-white outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-5 py-3.5 rounded-xl bg-white/[0.03] border border-white/10 text-white outline-none focus:ring-2 focus:ring-royal-600"
                   value={formData.nisn}
                   onChange={(e) => setFormData({ ...formData, nisn: e.target.value })}
                 />
@@ -202,7 +202,7 @@ function RegistrationFormContent() {
             <button
               disabled={submitting}
               type="submit"
-              className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-bold uppercase tracking-widest text-xs shadow-lg transition-all flex items-center justify-center gap-2"
+              className="w-full py-4 bg-gradient-to-r from-royal-600 to-royal-800 hover:from-royal-700 hover:to-royal-900 text-white rounded-xl font-bold uppercase tracking-widest text-xs shadow-lg transition-all flex items-center justify-center gap-2"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Kirim Pendaftaran'}
             </button>
@@ -215,7 +215,7 @@ function RegistrationFormContent() {
 
 export default function RegistrationFormPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#000B18]"><Loader2 className="w-8 h-8 animate-spin text-blue-400" /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-royal-950"><Loader2 className="w-8 h-8 animate-spin text-yellow-bright-400" /></div>}>
       <RegistrationFormContent />
     </Suspense>
   )

@@ -73,8 +73,8 @@ export default function JadwalPage() {
   useEffect(() => { if (activeTab) fetch_(activeTab) }, [activeTab, fetch_])
 
   if (authLoading) return (
-    <div className="min-h-screen bg-[#0f1117] flex items-center justify-center">
-      <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+    <div className="min-h-screen bg-royal-950 flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-royal-500" />
     </div>
   )
 
@@ -82,11 +82,11 @@ export default function JadwalPage() {
   const isEkskul = !['osis', 'mpk'].includes(activeTab)
 
   const getGradColor = (slug: string) => {
-    if (slug === 'programming') return 'from-blue-500 to-cyan-500'
-    if (slug === 'english') return 'from-emerald-500 to-teal-500'
-    if (slug === 'osis') return 'from-purple-500 to-persian-blue/100'
-    if (slug === 'mpk') return 'from-orange-500 to-amber-500'
-    return 'from-slate-600 to-slate-400'
+    if (slug === 'programming') return 'from-royal-600 to-royal-800'
+    if (slug === 'english') return 'from-royal-600 to-royal-800'
+    if (slug === 'osis') return 'from-royal-600 to-royal-800'
+    if (slug === 'mpk') return 'from-yellow-bright-500 to-yellow-bright-600'
+    return 'from-royal-700 to-royal-500'
   }
 
   const gradColor = getGradColor(activeTab)
@@ -145,20 +145,20 @@ export default function JadwalPage() {
   const past = data.filter(d => !isUpcoming(d.tanggal))
 
   return (
-    <div className="min-h-screen bg-[#0f1117] text-white p-4 md:p-8">
+    <div className="min-h-screen bg-royal-950 text-white p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-4">
-          <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-royal-300 hover:text-white text-sm transition-colors">
             <ArrowLeft className="w-4 h-4" /> Kembali
           </button>
         </div>
         <div className="flex items-center justify-between mb-8">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <CalendarDays className="w-5 h-5 text-blue-400" />
+              <CalendarDays className="w-5 h-5 text-yellow-bright-400" />
               <h1 className="text-2xl font-bold">{isEkskul ? 'Jadwal Pengajar' : 'Pembawa Materi'}</h1>
             </div>
-            <p className="text-slate-400 text-sm">{isEkskul ? 'Jadwal pengajar ekstrakurikuler' : 'Jadwal pembawa materi rapat organisasi'}</p>
+            <p className="text-royal-300 text-sm">{isEkskul ? 'Jadwal pengajar ekstrakurikuler' : 'Jadwal pembawa materi rapat organisasi'}</p>
           </div>
           {myOrgs.length > 0 && (
             <button onClick={openCreate}
@@ -172,16 +172,16 @@ export default function JadwalPage() {
         <div className="flex gap-2 flex-wrap mb-6">
           {myOrgs.map(tab => (
             <button key={tab.slug} onClick={() => setActiveTab(tab.slug)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${activeTab === tab.slug ? `bg-gradient-to-r ${getGradColor(tab.slug)} text-white border-transparent` : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}>
+              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${activeTab === tab.slug ? `bg-gradient-to-r ${getGradColor(tab.slug)} text-white border-transparent` : 'bg-royal-800/50 border-royal-700 text-royal-300 hover:bg-royal-800/80'}`}>
               {tab.nama}
             </button>
           ))}
         </div>
 
         {loading ? (
-          <div className="space-y-4">{[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-white/5 rounded-2xl animate-pulse" />)}</div>
+          <div className="space-y-4">{[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-royal-800/50 rounded-2xl animate-pulse" />)}</div>
         ) : data.length === 0 ? (
-          <div className="text-center py-20 text-slate-400">
+          <div className="text-center py-20 text-royal-300">
             <CalendarDays className="w-12 h-12 mx-auto mb-4 opacity-30" />
             <p>Belum ada jadwal</p>
           </div>
@@ -189,7 +189,7 @@ export default function JadwalPage() {
           <div className="space-y-6">
             {upcoming.length > 0 && (
               <div>
-                <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Mendatang</h2>
+                <h2 className="text-xs font-semibold text-royal-300 uppercase tracking-wider mb-3">Mendatang</h2>
                 <div className="space-y-3">
                   {upcoming.map(item => <JadwalCard key={item.id} item={item} onEdit={openEdit} onDelete={handleDelete} color={gradColor} />)}
                 </div>
@@ -197,7 +197,7 @@ export default function JadwalPage() {
             )}
             {past.length > 0 && (
               <div>
-                <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Sudah Lewat</h2>
+                <h2 className="text-xs font-semibold text-royal-300 uppercase tracking-wider mb-3">Sudah Lewat</h2>
                 <div className="space-y-3 opacity-60">
                   {past.map(item => <JadwalCard key={item.id} item={item} onEdit={openEdit} onDelete={handleDelete} color={gradColor} />)}
                 </div>
@@ -210,43 +210,43 @@ export default function JadwalPage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[#1a1d27] border border-white/10 rounded-2xl w-full max-w-lg p-6">
+          <div className="bg-royal-900 border border-royal-700 rounded-2xl w-full max-w-lg p-6">
             <h2 className="text-lg font-bold mb-5">{editItem ? 'Edit' : 'Tambah'} Jadwal</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Judul / Agenda</label>
+                <label className="block text-xs text-royal-300 mb-1">Judul / Agenda</label>
                 <input value={form.judul} onChange={e => setForm(f => ({ ...f, judul: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="Judul jadwal..." />
+                  className="w-full bg-royal-800/50 border border-royal-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-royal-500" placeholder="Judul jadwal..." />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Tanggal</label>
+                  <label className="block text-xs text-royal-300 mb-1">Tanggal</label>
                   <input type="date" value={form.tanggal} onChange={e => setForm(f => ({ ...f, tanggal: e.target.value }))}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+                    className="w-full bg-royal-800/50 border border-royal-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-royal-500" />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Jam Mulai</label>
+                  <label className="block text-xs text-royal-300 mb-1">Jam Mulai</label>
                   <input type="time" value={form.waktu} onChange={e => setForm(f => ({ ...f, waktu: e.target.value }))}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+                    className="w-full bg-royal-800/50 border border-royal-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-royal-500" />
                 </div>
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Lokasi</label>
+                <label className="block text-xs text-royal-300 mb-1">Lokasi</label>
                 <input value={form.lokasi} onChange={e => setForm(f => ({ ...f, lokasi: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="Ruang / lokasi..." />
+                  className="w-full bg-royal-800/50 border border-royal-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-royal-500" placeholder="Ruang / lokasi..." />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Keterangan</label>
+                <label className="block text-xs text-royal-300 mb-1">Keterangan</label>
                 <textarea rows={2} value={form.keterangan} onChange={e => setForm(f => ({ ...f, keterangan: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 resize-none" placeholder="Keterangan tambahan..." />
+                  className="w-full bg-royal-800/50 border border-royal-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-royal-500 resize-none" placeholder="Keterangan tambahan..." />
               </div>
               <label className="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" checked={form.wajib_hadir} onChange={e => setForm(f => ({ ...f, wajib_hadir: e.target.checked }))} className="w-4 h-4 accent-red-500" />
-                <span className="text-sm text-slate-300">Wajib Hadir</span>
+                <span className="text-sm text-royal-200">Wajib Hadir</span>
               </label>
             </div>
             <div className="flex gap-3 mt-6">
-              <button onClick={() => setShowModal(false)} className="flex-1 py-2 rounded-xl border border-white/10 text-slate-400 hover:bg-white/5 text-sm transition">Batal</button>
+              <button onClick={() => setShowModal(false)} className="flex-1 py-2 rounded-xl border border-royal-700 text-royal-300 hover:bg-royal-800/50 text-sm transition">Batal</button>
               <button onClick={handleSave} disabled={saving}
                 className={`flex-1 py-2 rounded-xl bg-gradient-to-r ${gradColor} text-white font-medium text-sm hover:opacity-90 transition disabled:opacity-50`}>
                 {saving ? 'Menyimpan...' : 'Simpan'}
@@ -262,7 +262,7 @@ export default function JadwalPage() {
 function JadwalCard({ item, onEdit, onDelete, color }: { item: JadwalItem; onEdit: (i: JadwalItem) => void; onDelete: (id: number) => void; color: string }) {
   const tgl = new Date(item.tanggal)
   return (
-    <div className="flex gap-4 bg-white/5 border border-white/10 rounded-2xl p-4 hover:border-white/20 transition-all group">
+    <div className="flex gap-4 bg-royal-800/50 border border-royal-700 rounded-2xl p-4 hover:border-royal-600 transition-all group">
       <div className={`shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br ${color} flex flex-col items-center justify-center text-white`}>
         <span className="text-xs font-medium">{tgl.toLocaleString('id-ID', { month: 'short' })}</span>
         <span className="text-lg font-bold leading-none">{tgl.getDate()}</span>
@@ -276,15 +276,15 @@ function JadwalCard({ item, onEdit, onDelete, color }: { item: JadwalItem; onEdi
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3 text-xs text-slate-400 flex-wrap">
+        <div className="flex items-center gap-3 text-xs text-royal-300 flex-wrap">
           {item.waktu && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{item.waktu}</span>}
           {item.lokasi && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{item.lokasi}</span>}
         </div>
-        {item.keterangan && <p className="text-xs text-slate-400 mt-1.5">{item.keterangan}</p>}
+        {item.keterangan && <p className="text-xs text-royal-300 mt-1.5">{item.keterangan}</p>}
       </div>
       <div className="flex items-start gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-        <button onClick={() => onEdit(item)} className="p-1.5 text-slate-400 hover:text-blue-400 transition"><Pencil className="w-4 h-4" /></button>
-        <button onClick={() => onDelete(item.id)} className="p-1.5 text-slate-400 hover:text-red-400 transition"><Trash2 className="w-4 h-4" /></button>
+        <button onClick={() => onEdit(item)} className="p-1.5 text-royal-300 hover:text-yellow-bright-400 transition"><Pencil className="w-4 h-4" /></button>
+        <button onClick={() => onDelete(item.id)} className="p-1.5 text-royal-300 hover:text-red-400 transition"><Trash2 className="w-4 h-4" /></button>
       </div>
     </div>
   )

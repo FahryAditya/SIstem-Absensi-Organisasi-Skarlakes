@@ -234,41 +234,41 @@ export default function SiswaClient({ user }: Props) {
 
   const columns = useMemo(() => [
     { key: 'checkbox', label: (
-      <button onClick={toggleSelectAll} className="p-1 hover:bg-white/10 rounded transition-colors" title={selectedIds.length === data.length ? 'Batal pilih semua' : 'Pilih semua'}>
+      <button onClick={toggleSelectAll} className="p-1 hover:bg-cream-200 rounded transition-colors" title={selectedIds.length === data.length ? 'Batal pilih semua' : 'Pilih semua'}>
         {selectedIds.length === data.length && data.length > 0 
-          ? <CheckSquare className="w-4 h-4 text-persian-blue" /> 
-          : <Square className="w-4 h-4 text-slate-400" />}
+          ? <CheckSquare className="w-4 h-4 text-royal-600" /> 
+          : <Square className="w-4 h-4 text-royal-400" />}
       </button>
     ), render: (m: Member) => (
-      <button onClick={() => toggleSelect(m.id)} className="p-1 hover:bg-white/10 rounded transition-colors">
+      <button onClick={() => toggleSelect(m.id)} className="p-1 hover:bg-cream-200 rounded transition-colors">
         {selectedIds.includes(m.id) 
-          ? <CheckSquare className="w-4 h-4 text-persian-blue" /> 
-          : <Square className="w-4 h-4 text-slate-500" />}
+          ? <CheckSquare className="w-4 h-4 text-royal-600" /> 
+          : <Square className="w-4 h-4 text-royal-500" />}
       </button>
     )},
     { key: 'no', label: 'No', render: (m: Member) => {
       const idx = data.indexOf(m)
-      return <span className="text-slate-400 font-mono text-xs">{(page - 1) * PAGE_SIZE + idx + 1}</span>
+      return <span className="text-royal-400 font-mono text-xs">{(page - 1) * PAGE_SIZE + idx + 1}</span>
     }},
-    { key: 'nis', label: 'NIS', render: (m: Member) => <span className="font-mono text-xs text-slate-400">{m.nis || '-'}</span> },
+    { key: 'nis', label: 'NIS', render: (m: Member) => <span className="font-mono text-xs text-royal-400">{m.nis || '-'}</span> },
     { key: 'name', label: 'Nama Anggota', render: (m: Member) => (
       <div className="flex items-center gap-2">
-        <span className="w-8 h-8 rounded-full bg-persian-blue/10 text-blue-300 border border-persian-blue/20 flex items-center justify-center text-xs font-bold">
+        <span className="w-8 h-8 rounded-full bg-royal-600/10 text-royal-600 border border-royal-600/20 flex items-center justify-center text-xs font-bold">
           {m.name.charAt(0).toUpperCase()}
         </span>
         <span>
-          <span className="block font-semibold text-white">{m.name}</span>
-          {m.email && <span className="block text-[10px] text-slate-400">{m.email}</span>}
+          <span className="block font-semibold text-royal-900">{m.name}</span>
+          {m.email && <span className="block text-[10px] text-royal-400">{m.email}</span>}
         </span>
       </div>
     ) },
-    { key: 'class', label: 'Kelas', render: (m: Member) => <span className="text-slate-400 text-xs">{m.class || '-'}</span> },
-    { key: 'jabatan', label: 'Jabatan', render: (m: Member) => <span className="badge bg-white/5 text-white border-white/10">{m.jabatan || 'Anggota'}</span> },
+    { key: 'class', label: 'Kelas', render: (m: Member) => <span className="text-royal-400 text-xs">{m.class || '-'}</span> },
+    { key: 'jabatan', label: 'Jabatan', render: (m: Member) => <span className="badge bg-cream-50/80 text-royal-900 border-royal-200">{m.jabatan || 'Anggota'}</span> },
     { key: 'xp', label: 'Level & Progress', render: (m: Member) => (
       <div className="flex flex-col gap-1.5 max-w-[170px] min-w-[140px]">
         <div className="flex justify-between items-center">
           <LevelBadge exp={m.exp || 0} size="sm" />
-          <span className="font-mono text-[10px] font-bold text-blue-300">{m.exp || 0} XP</span>
+          <span className="font-mono text-[10px] font-bold text-royal-300">{m.exp || 0} XP</span>
         </div>
         <ExpProgressBar exp={m.exp || 0} showLabels={false} />
       </div>
@@ -277,8 +277,8 @@ export default function SiswaClient({ user }: Props) {
       key: 'actions', label: '',
       render: (m: Member) => (
         <div className="flex items-center gap-1">
-          <button onClick={() => setXpModalTarget(m)} className="btn-icon text-amber-500 hover:bg-amber-500/10" title="Beri Poin XP"><Zap className="w-3.5 h-3.5" /></button>
-          <button onClick={() => openEdit(m)} className="btn-icon text-persian-blue hover:bg-persian-blue/10"><Pencil className="w-3.5 h-3.5" /></button>
+          <button onClick={() => setXpModalTarget(m)} className="btn-icon text-yellow-bright-400 hover:bg-yellow-bright-500/10" title="Beri Poin XP"><Zap className="w-3.5 h-3.5" /></button>
+          <button onClick={() => openEdit(m)} className="btn-icon text-royal-600 hover:bg-royal-600/10"><Pencil className="w-3.5 h-3.5" /></button>
           <button onClick={() => setDeleteTarget(m)} className="btn-icon text-red-400 hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" /></button>
         </div>
       )
@@ -290,9 +290,9 @@ export default function SiswaClient({ user }: Props) {
       <div className="page-header">
         <div className="flex-1">
           <div className="flex items-center gap-2.5">
-            <Users className="w-5 h-5 text-persian-blue" />
+            <Users className="w-5 h-5 text-royal-600" />
             <h2 className="page-title">Data Anggota</h2>
-            <span className="badge bg-persian-blue/10 text-blue-300 border border-persian-blue/20">{total} anggota</span>
+            <span className="badge bg-royal-600/10 text-royal-600 border border-royal-600/20">{total} anggota</span>
           </div>
           <p className="page-sub mt-0.5">Kelola daftar anggota organisasi aktif</p>
         </div>
@@ -315,7 +315,7 @@ export default function SiswaClient({ user }: Props) {
 
       <div className="card p-4">
         <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-400" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Cari nama atau NIS anggota..." className="input pl-10" />
         </div>
@@ -323,7 +323,7 @@ export default function SiswaClient({ user }: Props) {
 
       {!user.activeOrgId ? (
         <div className="card p-16 text-center">
-          <p className="text-slate-400">Silakan pilih organisasi terlebih dahulu</p>
+          <p className="text-royal-400">Silakan pilih organisasi terlebih dahulu</p>
         </div>
       ) : (
         <Table

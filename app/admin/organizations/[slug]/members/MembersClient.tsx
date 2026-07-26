@@ -133,17 +133,17 @@ export default function MembersClient({ slug }: Props) {
       label: 'Nama', 
       render: (m: MemberData) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-persian-blue/10 flex items-center justify-center text-persian-blue font-bold text-xs">
+          <div className="w-8 h-8 rounded-full bg-royal-600/10 flex items-center justify-center text-royal-600 font-bold text-xs">
             {m.name.charAt(0).toUpperCase()}
           </div>
-          <div className="font-bold text-white text-sm">{m.name}</div>
+          <div className="font-bold text-royal-900 text-sm">{m.name}</div>
         </div>
       )
     },
     { 
       key: 'nis', 
       label: 'NIS', 
-      render: (m: MemberData) => <span className="text-xs text-slate-400 font-mono">{m.nis || '-'}</span> 
+      render: (m: MemberData) => <span className="text-xs text-royal-400 font-mono">{m.nis || '-'}</span> 
     },
     { 
       key: 'class', 

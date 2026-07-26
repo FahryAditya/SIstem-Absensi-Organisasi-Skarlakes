@@ -387,7 +387,7 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
                   style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(10px)' }}
                 >
                   <div className="flex items-center gap-2 mb-4 flex-shrink-0">
-                    <TrendingUp className="w-5 h-5 text-[#1E90FF]" />
+                    <TrendingUp className="w-5 h-5 text-royal-400" />
                     <h3 className="text-base font-black text-white tracking-tight">Kehadiran 7 Hari Terakhir</h3>
                   </div>
                   <div className="w-full h-[220px] md:h-[260px] min-h-0 relative">
@@ -419,7 +419,7 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
                   style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(10px)' }}
                 >
                   <div className="flex items-center gap-2 mb-4 flex-shrink-0">
-                    <Wallet className="w-5 h-5 text-amber-400" />
+                    <Wallet className="w-5 h-5 text-yellow-bright-400" />
                     <h3 className="text-base font-black text-white tracking-tight">Kas Bersih 6 Bulan Terakhir</h3>
                   </div>
                   <div className="w-full h-[220px] md:h-[260px] min-h-0 relative">

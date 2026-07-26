@@ -143,16 +143,16 @@ function CoolSelect({ value, onChange, options, labelPrefix = '' }: CoolSelectPr
     <div className="relative inline-block text-left" onClick={(e) => e.stopPropagation()}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center justify-between gap-2 px-3 py-2.5 bg-slate-800/90 border border-slate-700/50 hover:bg-slate-700 text-white text-xs font-black rounded-xl transition-all shadow-sm focus:outline-none"
+        className="flex items-center justify-between gap-2 px-3 py-2.5 bg-royal-900/90 border border-royal-700/50 hover:bg-royal-700 text-white text-xs font-black rounded-xl transition-all shadow-sm focus:outline-none"
       >
         <span>{labelPrefix}{activeOption?.label}</span>
-        <svg className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className={`w-3.5 h-3.5 text-royal-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
       {open && (
-        <div className="absolute left-0 mt-2 w-48 rounded-2xl bg-slate-900/95 border border-white/10 shadow-2xl backdrop-blur-xl z-50 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar animate-fade-in-down">
+        <div className="absolute left-0 mt-2 w-48 rounded-2xl bg-royal-950/95 border border-royal-200 shadow-2xl backdrop-blur-xl z-50 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar animate-fade-in-down">
           <div className="py-1">
             {options.map((opt) => (
               <button
@@ -163,8 +163,8 @@ function CoolSelect({ value, onChange, options, labelPrefix = '' }: CoolSelectPr
                 }}
                 className={`w-full text-left px-4 py-2 text-xs font-bold transition-all duration-150 flex items-center justify-between ${
                   opt.value === value
-                    ? 'bg-[#1E90FF] text-white font-extrabold'
-                    : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                    ? 'bg-royal-600 text-white font-extrabold'
+                    : 'text-royal-300 hover:bg-cream-200 hover:text-white'
                 }`}
               >
                 <span>{opt.label}</span>
@@ -593,10 +593,10 @@ export default function ReportsClient({ user }: Props) {
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <BarChart3 className="w-6 h-6 text-[#1E90FF]" />
+            <BarChart3 className="w-6 h-6 text-royal-600" />
             <h1 className="text-2xl font-black text-white tracking-tight">Laporan Statistik</h1>
           </div>
-          <p className="text-sm text-slate-400 mt-1">Kompilasi dan visualisasi data kehadiran, keuangan, dan kas siswa terintegrasi.</p>
+          <p className="text-sm text-royal-400 mt-1">Kompilasi dan visualisasi data kehadiran, keuangan, dan kas siswa terintegrasi.</p>
         </div>
 
         {/* Action Export & Futuristic Cool Filters Panel */}
@@ -604,8 +604,8 @@ export default function ReportsClient({ user }: Props) {
           
           {/* Custom Cool Select Dropdown period pickers (Administrator Only) */}
           {user.role === 'administrator' && data?.keuanganBulanan && data.keuanganBulanan.length > 0 && (
-            <div className="flex items-center gap-2 bg-white/10 hover:bg-slate-200/50 border border-white/80 px-3 py-2 rounded-2xl transition-all">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider hidden sm:inline">Periode:</span>
+            <div className="flex items-center gap-2 bg-cream-100 hover:bg-cream-200/50 border border-royal-200/80 px-3 py-2 rounded-2xl transition-all">
+              <span className="text-[10px] font-black text-royal-400 uppercase tracking-wider hidden sm:inline">Periode:</span>
               
               {/* Cool Select Year */}
               <CoolSelect 
@@ -614,7 +614,7 @@ export default function ReportsClient({ user }: Props) {
                 options={availableYears} 
               />
               
-              <span className="text-slate-400 text-xs font-black">·</span>
+              <span className="text-royal-400 text-xs font-black">·</span>
 
               {/* Cool Select Start Month */}
               <CoolSelect 
@@ -624,7 +624,7 @@ export default function ReportsClient({ user }: Props) {
                 labelPrefix="Mulai: "
               />
               
-              <span className="text-slate-400 text-xs font-bold">s/d</span>
+              <span className="text-royal-400 text-xs font-bold">s/d</span>
 
               {/* Cool Select End Month */}
               <CoolSelect 
@@ -645,7 +645,7 @@ export default function ReportsClient({ user }: Props) {
               <button
                 onClick={() => setPrintMenuOpen(!printMenuOpen)}
                 disabled={loading || exportingPdf || exportingExcel}
-                className="flex items-center gap-2 px-4 py-2.5 bg-[#001F3F] hover:bg-[#073377] border border-[#1E90FF]/30 text-white text-sm font-black rounded-xl transition-all shadow-md shadow-[#001F3F]/10 hover:shadow-[#001F3F]/20 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
+                className="flex items-center gap-2 px-4 py-2.5 bg-royal-900 hover:bg-royal-700 border border-royal-600/30 text-white text-sm font-black rounded-xl transition-all shadow-md shadow-royal-900/10 hover:shadow-royal-900/20 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
               >
                 <span className="material-symbols-outlined text-lg leading-none" style={{ fontVariationSettings: "'FILL' 0, 'wght' 700, 'GRAD' 0, 'opsz' 24" }}>print</span>
                 <span>Cetak Laporan</span>
@@ -655,7 +655,7 @@ export default function ReportsClient({ user }: Props) {
               </button>
 
               {printMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-slate-900/95 border border-white/10 shadow-2xl backdrop-blur-xl z-50 overflow-hidden animate-fade-in-down">
+                <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-royal-950/95 border border-royal-200 shadow-2xl backdrop-blur-xl z-50 overflow-hidden animate-fade-in-down">
                   <div className="py-1">
                     {/* Option 1: PDF */}
                     <button
@@ -664,7 +664,7 @@ export default function ReportsClient({ user }: Props) {
                         handleExportPDF()
                       }}
                       disabled={exportingPdf}
-                      className="w-full text-left px-4 py-3 text-xs font-bold text-slate-200 hover:bg-white/10 hover:text-white transition-all flex items-center gap-3 border-b border-white/5 disabled:opacity-50"
+                      className="w-full text-left px-4 py-3 text-xs font-bold text-royal-200 hover:bg-cream-200 hover:text-white transition-all flex items-center gap-3 border-b border-royal-100 disabled:opacity-50"
                     >
                       <div className="w-7 h-7 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 flex-shrink-0">
                         {exportingPdf ? (
@@ -675,7 +675,7 @@ export default function ReportsClient({ user }: Props) {
                       </div>
                       <div>
                         <div className="font-black">Cetak PDF Resmi</div>
-                        <div className="text-[9px] text-slate-400 font-normal mt-0.5">Format Kop Surat Resmi</div>
+                        <div className="text-[9px] text-royal-400 font-normal mt-0.5">Format Kop Surat Resmi</div>
                       </div>
                     </button>
 
@@ -686,7 +686,7 @@ export default function ReportsClient({ user }: Props) {
                         handleExportExcel()
                       }}
                       disabled={exportingExcel}
-                      className="w-full text-left px-4 py-3 text-xs font-bold text-slate-200 hover:bg-white/10 hover:text-white transition-all flex items-center gap-3 disabled:opacity-50"
+                      className="w-full text-left px-4 py-3 text-xs font-bold text-royal-200 hover:bg-cream-200 hover:text-white transition-all flex items-center gap-3 disabled:opacity-50"
                     >
                       <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 flex-shrink-0">
                         {exportingExcel ? (
@@ -697,7 +697,7 @@ export default function ReportsClient({ user }: Props) {
                       </div>
                       <div>
                         <div className="font-black">Ekspor Excel</div>
-                        <div className="text-[9px] text-slate-400 font-normal mt-0.5">3 Sheet Data Absensi & Kas</div>
+                        <div className="text-[9px] text-royal-400 font-normal mt-0.5">3 Sheet Data Absensi & Kas</div>
                       </div>
                     </button>
                   </div>
@@ -709,7 +709,7 @@ export default function ReportsClient({ user }: Props) {
           <button
             onClick={fetchReportsData}
             disabled={loading}
-            className="flex items-center justify-center w-10 h-10 bg-white/10 hover:bg-slate-200 text-slate-200 rounded-xl transition-colors disabled:opacity-50"
+            className="flex items-center justify-center w-10 h-10 bg-cream-100 hover:bg-cream-200 text-royal-200 rounded-xl transition-colors disabled:opacity-50"
             title="Refresh Data"
           >
             {loading ? (
@@ -728,8 +728,8 @@ export default function ReportsClient({ user }: Props) {
             onClick={() => setActiveTab('attendance')}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
               activeTab === 'attendance'
-                ? 'bg-[#1E90FF] text-white font-black'
-                : 'text-slate-300 hover:bg-white/10'
+                ? 'bg-royal-600 text-white font-black'
+                : 'text-royal-300 hover:bg-cream-200'
             }`}
           >
             <TrendingUp className="w-4 h-4" />
@@ -742,8 +742,8 @@ export default function ReportsClient({ user }: Props) {
             }}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
               activeTab === 'finance'
-                ? 'bg-[#1E90FF] text-white font-black'
-                : 'text-slate-300 hover:bg-white/10'
+                ? 'bg-royal-600 text-white font-black'
+                : 'text-royal-300 hover:bg-cream-200'
             }`}
           >
             <Wallet className="w-4 h-4" />
@@ -756,8 +756,8 @@ export default function ReportsClient({ user }: Props) {
             }}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
               activeTab === 'kas'
-                ? 'bg-[#1E90FF] text-white font-black'
-                : 'text-slate-300 hover:bg-white/10'
+                ? 'bg-royal-600 text-white font-black'
+                : 'text-royal-300 hover:bg-cream-200'
             }`}
           >
             <BarChart3 className="w-4 h-4" />
@@ -770,15 +770,15 @@ export default function ReportsClient({ user }: Props) {
       {loading ? (
         <div className="card p-12 flex items-center justify-center">
           <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-[#1E90FF] mx-auto mb-3" />
-            <p className="text-sm text-slate-400">Memuat laporan...</p>
+            <Loader2 className="w-8 h-8 animate-spin text-royal-600 mx-auto mb-3" />
+            <p className="text-sm text-royal-400">Memuat laporan...</p>
           </div>
         </div>
       ) : authError ? (
         <div className="card p-12 text-center">
-          <ShieldAlert className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-          <p className="text-sm font-bold text-slate-200 mb-1">Sesi habis atau akses ditolak</p>
-          <p className="text-sm text-slate-400 mb-4">Silakan login ulang untuk melanjutkan.</p>
+          <ShieldAlert className="w-12 h-12 text-yellow-bright-400 mx-auto mb-4" />
+          <p className="text-sm font-bold text-royal-200 mb-1">Sesi habis atau akses ditolak</p>
+          <p className="text-sm text-royal-400 mb-4">Silakan login ulang untuk melanjutkan.</p>
           <button
             onClick={() => { window.location.href = '/login' }}
             className="btn-primary inline-flex items-center gap-2"
@@ -790,11 +790,11 @@ export default function ReportsClient({ user }: Props) {
       ) : serverError ? (
         <div className="card p-12 text-center">
           <ShieldAlert className="w-12 h-12 text-rose-500 mx-auto mb-4" />
-          <p className="text-sm font-bold text-slate-200 mb-1">Gagal Memuat Data</p>
-          <p className="text-sm text-slate-400 mb-4">{serverError}</p>
+          <p className="text-sm font-bold text-royal-200 mb-1">Gagal Memuat Data</p>
+          <p className="text-sm text-royal-400 mb-4">{serverError}</p>
           <button
             onClick={fetchReportsData}
-            className="btn-primary inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900"
+            className="btn-primary inline-flex items-center gap-2 bg-royal-800 hover:bg-royal-950"
           >
             <RefreshCw className="w-4 h-4" />
             Coba Lagi
@@ -808,7 +808,7 @@ export default function ReportsClient({ user }: Props) {
         </>
       ) : (
         <div className="card p-12 text-center">
-          <p className="text-sm text-slate-400">Tidak ada data untuk ditampilkan</p>
+          <p className="text-sm text-royal-400">Tidak ada data untuk ditampilkan</p>
         </div>
       )}
     </div>

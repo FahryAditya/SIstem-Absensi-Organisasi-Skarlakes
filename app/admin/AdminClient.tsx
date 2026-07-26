@@ -288,35 +288,35 @@ export default function AdminClient({ user }: Props) {
   const columns = [
     { key: 'nama', label: 'Nama', render: (u: UserData) => (
       <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-full bg-persian-blue/10 flex items-center justify-center text-persian-blue text-xs font-black flex-shrink-0">
+        <div className="w-8 h-8 rounded-full bg-royal-600/10 flex items-center justify-center text-royal-600 text-xs font-black flex-shrink-0">
           {u.nama.charAt(0).toUpperCase()}
         </div>
         <div>
-          <div className="font-semibold text-white text-sm">{u.nama}</div>
-          {u.id === user.id && <span className="text-[10px] text-persian-blue font-bold">● Anda</span>}
+          <div className="font-semibold text-royal-900 text-sm">{u.nama}</div>
+          {u.id === user.id && <span className="text-[10px] text-royal-600 font-bold">● Anda</span>}
         </div>
       </div>
     )},
-    { key: 'email', label: 'Email', render: (u: UserData) => <span className="text-xs text-slate-400 font-mono">{u.email}</span> },
+    { key: 'email', label: 'Email', render: (u: UserData) => <span className="text-xs text-royal-400 font-mono">{u.email}</span> },
     { key: 'password', label: 'Password', render: (u: UserData & { password?: string }) => (
-      <span className="text-xs text-slate-400 font-mono">
+      <span className="text-xs text-royal-400 font-mono">
         {u.password?.startsWith('$2') ? '(Teracak)' : (u.password || '-')}
       </span>
     )},
     { key: 'role', label: 'Role', render: (u: UserData) => {
       if (u.role === 'organization_admin' && u.organization_admins?.[0]) {
         return (
-          <span className="px-2 py-1 rounded-lg text-[10px] font-black uppercase bg-indigo-500/10 text-indigo-400">
+          <span className="px-2 py-1 rounded-lg text-[10px] font-black uppercase bg-royal-600/10 text-royal-400">
             Admin {u.organization_admins[0].organization.nama}
           </span>
         )
       }
       return <RoleBadge role={u.role} />
     }},
-    { key: 'created_at', label: 'Dibuat', render: (u: UserData) => <span className="text-xs text-slate-400">{formatDateTime(u.created_at)}</span> },
+    { key: 'created_at', label: 'Dibuat', render: (u: UserData) => <span className="text-xs text-royal-400">{formatDateTime(u.created_at)}</span> },
     { key: 'actions', label: '', render: (u: UserData) => (
       <div className="flex gap-1">
-        <button onClick={() => openEdit(u)} className="btn-icon text-blue-400 hover:bg-persian-blue/10"><Pencil className="w-3.5 h-3.5" /></button>
+        <button onClick={() => openEdit(u)} className="btn-icon text-royal-400 hover:bg-royal-600/10"><Pencil className="w-3.5 h-3.5" /></button>
         {u.id !== user.id && (
           <button onClick={() => setDeleteTarget(u)} className="btn-icon text-red-400 hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" /></button>
         )}
@@ -325,9 +325,9 @@ export default function AdminClient({ user }: Props) {
   ]
 
   const roleGroups = [
-    { role: 'administrator', label: 'Administrator', color: 'bg-persian-blue/10 border-persian-blue/20 text-persian-blue', dot: 'bg-persian-blue' },
-    { role: 'admin_programming', label: 'Admin Programming', color: 'bg-unit-programming/10 border-unit-programming/20 text-unit-programming', dot: 'bg-unit-programming' },
-    { role: 'admin_english', label: 'Admin English', color: 'bg-unit-english/10 border-unit-english/20 text-blue-400', dot: 'bg-unit-english' },
+    { role: 'administrator', label: 'Administrator', color: 'bg-royal-600/10 border-royal-600/20 text-royal-600', dot: 'bg-royal-600' },
+    { role: 'admin_programming', label: 'Admin Programming', color: 'bg-unit-programming/10 border-unit-programming/20 text-yellow-bright-400', dot: 'bg-unit-programming' },
+    { role: 'admin_english', label: 'Admin English', color: 'bg-unit-english/10 border-unit-english/20 text-royal-400', dot: 'bg-unit-english' },
     { role: 'admin_osis_mpk', label: 'Admin OSIS & MPK', color: 'bg-unit-osis/10 border-unit-osis/20 text-unit-osis', dot: 'bg-unit-osis' },
   ]
 
@@ -339,10 +339,10 @@ export default function AdminClient({ user }: Props) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <UserCog className="w-6 h-6 text-persian-blue" />
-            <h2 className="text-xl font-black text-white">Kelola User &amp; Admin</h2>
+            <UserCog className="w-6 h-6 text-royal-600" />
+            <h2 className="text-xl font-black text-royal-900">Kelola User &amp; Admin</h2>
           </div>
-          <p className="text-xs text-slate-400">Buat, edit, dan hapus akun pengguna sistem</p>
+          <p className="text-xs text-royal-400">Buat, edit, dan hapus akun pengguna sistem</p>
         </div>
         <AdminDropdownMenu
           onOpenEmailSetting={openEmailSetting}
@@ -357,21 +357,21 @@ export default function AdminClient({ user }: Props) {
       <div className="grid grid-cols-1 gap-3">
         <div 
           onClick={() => router.push('/admin/organizations')}
-          className="card p-5 border border-persian-blue/20 bg-gradient-to-br from-persian-blue/5 to-transparent cursor-pointer hover:border-persian-blue/40 transition-all group"
+          className="card p-5 border border-royal-600/20 bg-gradient-to-br from-royal-600/5 to-transparent cursor-pointer hover:border-royal-600/40 transition-all group"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-persian-blue/10 flex items-center justify-center text-persian-blue group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 rounded-2xl bg-royal-600/10 flex items-center justify-center text-royal-600 group-hover:scale-110 transition-transform">
                 <Building2 className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-black text-white">Organisasi & Ekstrakurikuler</h3>
-                <p className="text-xs text-slate-400">Kelola seluruh unit sekolah secara terpusat</p>
+                <h3 className="text-base font-black text-royal-900">Organisasi & Ekstrakurikuler</h3>
+                <p className="text-xs text-royal-400">Kelola seluruh unit sekolah secara terpusat</p>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Unit</div>
-              <div className="text-2xl font-black text-persian-blue font-mono">{orgCount}</div>
+              <div className="text-[10px] font-black text-royal-500 uppercase tracking-widest">Total Unit</div>
+              <div className="text-2xl font-black text-royal-600 font-mono">{orgCount}</div>
             </div>
           </div>
         </div>
@@ -381,8 +381,8 @@ export default function AdminClient({ user }: Props) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {roleGroups.map(rg => (
           <div key={rg.role} className={`card p-4 border ${rg.color}`}>
-            <div className="flex items-center gap-2 mb-1"><div className={`w-2 h-2 rounded-full ${rg.dot}`}/><span className="text-xs font-bold text-slate-300">{rg.label}</span></div>
-            <div className="text-2xl font-black text-white font-mono">{roleCount(rg.role)}</div>
+            <div className="flex items-center gap-2 mb-1"><div className={`w-2 h-2 rounded-full ${rg.dot}`}/><span className="text-xs font-bold text-royal-300">{rg.label}</span></div>
+            <div className="text-2xl font-black text-royal-900 font-mono">{roleCount(rg.role)}</div>
           </div>
         ))}
       </div>
@@ -403,20 +403,20 @@ export default function AdminClient({ user }: Props) {
         <div className="space-y-4">
           <div className="form-group">
             <label className="label">Nama Lengkap *</label>
-            <div className="relative"><User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/>
+            <div className="relative"><User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-400"/>
               <input value={fNama} onChange={e => setFNama(e.target.value)} placeholder="Nama lengkap" className="input pl-10" autoFocus /></div>
           </div>
           <div className="form-group">
             <label className="label">Email *</label>
-            <div className="relative"><Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/>
+            <div className="relative"><Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-400"/>
               <input type="email" value={fEmail} onChange={e => setFEmail(e.target.value)} placeholder="email@domain.com" className="input pl-10" /></div>
           </div>
           <div className="form-group">
             <label className="label">{editTarget ? 'Password Baru (kosongkan jika tidak diubah)' : 'Password *'}</label>
-            <div className="relative"><Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/>
+            <div className="relative"><Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-400"/>
               <input type={showPass ? 'text' : 'password'} value={fPassword} onChange={e => setFPassword(e.target.value)}
                 placeholder={editTarget ? '(biarkan kosong)' : 'Min. 6 karakter'} className="input pl-10 pr-10" />
-              <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+              <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-royal-400">
                 {showPass ? <EyeOff className="w-4 h-4"/> : <Eye className="w-4 h-4"/>}
               </button>
             </div>
@@ -434,13 +434,13 @@ export default function AdminClient({ user }: Props) {
               ]}
             />
           </div>
-          <div className="p-3 rounded-xl bg-amber-500/10 border border-white/10 flex gap-2.5 text-xs text-amber-400">
+          <div className="p-3 rounded-xl bg-yellow-bright-500/10 border border-royal-200 flex gap-2.5 text-xs text-yellow-bright-400">
             <Shield className="w-4 h-4 flex-shrink-0 mt-0.5"/>
             <div><strong>Hak Akses:</strong><br/>
-              <span className="text-unit-programming font-bold">Programming</span> → hanya data Programming<br/>
-              <span className="text-blue-300">English</span> → hanya data English Club<br/>
-              <span className="text-blue-300">OSIS & MPK</span> → hanya data OSIS & MPK<br/>
-              <span className="text-amber-400">Administrator</span> → semua data + log aktivitas
+              <span className="text-yellow-bright-400 font-bold">Programming</span> → hanya data Programming<br/>
+              <span className="text-royal-300">English</span> → hanya data English Club<br/>
+              <span className="text-royal-300">OSIS & MPK</span> → hanya data OSIS & MPK<br/>
+              <span className="text-yellow-bright-400">Administrator</span> → semua data + log aktivitas
             </div>
           </div>
         </div>
@@ -511,45 +511,45 @@ export default function AdminClient({ user }: Props) {
         }
       >
         <div className="space-y-4">
-          <div className="p-4 bg-[#1E90FF]/20 border border-[#1E90FF]/40 rounded-2xl">
+          <div className="p-4 bg-royal-600/20 border border-royal-500/40 rounded-2xl">
             <div className="flex items-center gap-2 text-white font-black mb-2.5">
-              <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse" />
+              <Sparkles className="w-4 h-4 text-yellow-bright-500 animate-pulse" />
               Database Dioptimalkan Sempurna!
             </div>
             <p className="text-xs text-[#7EA0C5] leading-relaxed">
               Query planner PostgreSQL telah disegarkan dengan menjalankan fungsi <code className="bg-white/60 px-1 rounded font-mono">ANALYZE</code>. Indeks relasi kini berjalan dengan efisiensi puncak.
             </p>
             <div className="grid grid-cols-3 gap-2 mt-4">
-              <div className="bg-deep-navy p-3 rounded-xl border border-white/10 shadow-sm text-center">
-                <span className="block text-[10px] text-slate-400 font-bold uppercase">Log Pruned</span>
-                <span className="text-sm font-black font-mono text-slate-200">+{optimizeResult?.summary?.prunedLogs || 0}</span>
+              <div className="bg-royal-900 p-3 rounded-xl border border-royal-200 shadow-sm text-center">
+                <span className="block text-[10px] text-royal-400 font-bold uppercase">Log Pruned</span>
+                <span className="text-sm font-black font-mono text-royal-200">+{optimizeResult?.summary?.prunedLogs || 0}</span>
               </div>
-              <div className="bg-deep-navy p-3 rounded-xl border border-white/10 shadow-sm text-center">
-                <span className="block text-[10px] text-slate-400 font-bold uppercase">QR Pruned</span>
-                <span className="text-sm font-black font-mono text-slate-200">+{optimizeResult?.summary?.prunedQrs || 0}</span>
+              <div className="bg-royal-900 p-3 rounded-xl border border-royal-200 shadow-sm text-center">
+                <span className="block text-[10px] text-royal-400 font-bold uppercase">QR Pruned</span>
+                <span className="text-sm font-black font-mono text-royal-200">+{optimizeResult?.summary?.prunedQrs || 0}</span>
               </div>
-              <div className="bg-deep-navy p-3 rounded-xl border border-white/10 shadow-sm text-center">
-                <span className="block text-[10px] text-slate-400 font-bold uppercase">Chats Pruned</span>
-                <span className="text-sm font-black font-mono text-slate-200">+{optimizeResult?.summary?.prunedChats || 0}</span>
+              <div className="bg-royal-900 p-3 rounded-xl border border-royal-200 shadow-sm text-center">
+                <span className="block text-[10px] text-royal-400 font-bold uppercase">Chats Pruned</span>
+                <span className="text-sm font-black font-mono text-royal-200">+{optimizeResult?.summary?.prunedChats || 0}</span>
               </div>
             </div>
           </div>
 
           <div>
-            <h4 className="text-xs font-bold text-white mb-2">Footprint Ukuran Tabel Live (PostgreSQL)</h4>
-            <div className="border border-white/10 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
+            <h4 className="text-xs font-bold text-royal-900 mb-2">Footprint Ukuran Tabel Live (PostgreSQL)</h4>
+            <div className="border border-royal-200 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="bg-white/5 border-b border-white/10 text-slate-400">
+                  <tr className="bg-cream-50/80 border-b border-royal-200 text-royal-400">
                     <th className="p-2.5 font-bold">Nama Tabel</th>
                     <th className="p-2.5 font-bold text-right">Ukuran Data + Index</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-royal-50">
                   {optimizeResult?.tableSizes?.map((tbl: any) => (
-                    <tr key={tbl.table_name} className="hover:bg-white/5 transition-colors">
-                      <td className="p-2.5 font-mono text-slate-300 font-semibold">{tbl.table_name}</td>
-                      <td className="p-2.5 text-right font-mono font-bold text-slate-200">{tbl.total_size}</td>
+                    <tr key={tbl.table_name} className="hover:bg-cream-100 transition-colors">
+                      <td className="p-2.5 font-mono text-royal-300 font-semibold">{tbl.table_name}</td>
+                      <td className="p-2.5 text-right font-mono font-bold text-royal-200">{tbl.total_size}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -571,24 +571,24 @@ export default function AdminClient({ user }: Props) {
         }>
         <div className="space-y-4">
           {emailLoading ? (
-            <div className="flex flex-col items-center justify-center py-8 text-slate-400">
+            <div className="flex flex-col items-center justify-center py-8 text-royal-400">
               <Loader2 className="w-8 h-8 animate-spin mb-2" />
               <p className="text-sm">Memuat pengaturan...</p>
             </div>
           ) : (
             <>
-              <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-[11px] text-blue-300 leading-relaxed">
+              <div className="p-3 rounded-xl bg-cream-50/80 border border-royal-200 text-[11px] text-royal-300 leading-relaxed">
                 <div className="flex gap-2 font-bold mb-1"><Shield className="w-3.5 h-3.5" /> INFORMASI PENTING</div>
                 Gunakan <strong>Sandi Aplikasi (App Password)</strong> Gmail 16-karakter. Jangan gunakan sandi utama akun Google Anda. Email ini akan digunakan oleh seluruh admin untuk mengirimkan pengumuman.
               </div>
               <div className="form-group">
                 <label className="label">Alamat Email Gmail *</label>
-                <div className="relative"><Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/>
+                <div className="relative"><Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-400"/>
                   <input type="email" value={fEmailSender} onChange={e => setFEmailSender(e.target.value)} placeholder="contoh@gmail.com" className="input pl-10" /></div>
               </div>
               <div className="form-group">
                 <label className="label">Sandi Aplikasi (16 Karakter) *</label>
-                <div className="relative"><Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/>
+                <div className="relative"><Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-400"/>
                   <input type="password" value={fAppPassword} onChange={e => setFAppPassword(e.target.value)}
                     placeholder="xxxx xxxx xxxx xxxx" className="input pl-10" /></div>
               </div>
@@ -619,24 +619,24 @@ export default function AdminClient({ user }: Props) {
             <div className="grid grid-cols-2 gap-3">
               <button 
                 onClick={() => setCleanupType('sesi')}
-                className={`p-3 rounded-xl border text-left transition-all ${cleanupType === 'sesi' ? 'bg-red-50 border-red-500 ring-1 ring-red-500' : 'bg-white border-slate-200 hover:bg-slate-50'}`}
+                className={`p-3 rounded-xl border text-left transition-all ${cleanupType === 'sesi' ? 'bg-red-50 border-red-500 ring-1 ring-red-500' : 'bg-white border-royal-200 hover:bg-cream-50'}`}
               >
-                <div className="font-bold text-sm mb-1 text-slate-900">Hapus Sesi</div>
-                <div className="text-[10px] text-slate-500">Menghapus semua sesi, antrian, hasil, dan chat.</div>
+                <div className="font-bold text-sm mb-1 text-royal-900">Hapus Sesi</div>
+                <div className="text-[10px] text-royal-500">Menghapus semua sesi, antrian, hasil, dan chat.</div>
               </button>
               <button 
                 onClick={() => setCleanupType('chat')}
-                className={`p-3 rounded-xl border text-left transition-all ${cleanupType === 'chat' ? 'bg-red-50 border-red-500 ring-1 ring-red-500' : 'bg-white border-slate-200 hover:bg-slate-50'}`}
+                className={`p-3 rounded-xl border text-left transition-all ${cleanupType === 'chat' ? 'bg-red-50 border-red-500 ring-1 ring-red-500' : 'bg-white border-royal-200 hover:bg-cream-50'}`}
               >
-                <div className="font-bold text-sm mb-1 text-slate-900">Hapus Live Chat</div>
-                <div className="text-[10px] text-slate-500">Hanya menghapus riwayat pesan live chat internal.</div>
+                <div className="font-bold text-sm mb-1 text-royal-900">Hapus Live Chat</div>
+                <div className="text-[10px] text-royal-500">Hanya menghapus riwayat pesan live chat internal.</div>
               </button>
             </div>
           </div>
 
           <div className="form-group">
             <label className="label">Konfirmasi Penghapusan</label>
-            <p className="text-[11px] text-slate-500 mb-2">Ketik <span className="font-mono font-bold text-red-600">HAPUS PERMANEN</span> untuk melanjutkan:</p>
+            <p className="text-[11px] text-royal-500 mb-2">Ketik <span className="font-mono font-bold text-red-600">HAPUS PERMANEN</span> untuk melanjutkan:</p>
             <input 
               value={cleanupConfirmText} 
               onChange={e => setCleanupConfirmText(e.target.value)} 

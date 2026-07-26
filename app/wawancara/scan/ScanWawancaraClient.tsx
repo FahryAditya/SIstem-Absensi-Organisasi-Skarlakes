@@ -143,31 +143,31 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
   }
 
   return (
-    <main className="min-h-screen bg-white/5 flex items-center justify-center p-4">
+    <main className="min-h-screen bg-cream-50/5 flex items-center justify-center p-4">
       <div
-        className="w-full max-w-md bg-deep-navy border border-white/10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden slide-up"
+        className="w-full max-w-md bg-royal-950 border-royal-800/30 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden slide-up"
       >
         <div className="p-6 border-b border-white/50 bg-white/50 backdrop-blur-sm">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-persian-blue/100 to-purple-600 flex items-center justify-center text-white shadow-inner shadow-white/20">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-royal-600 to-royal-700 flex items-center justify-center text-white shadow-inner shadow-white/20">
               <MessageSquareText className="w-6 h-6" />
             </div>
             <div>
               <h1 className="text-lg font-black text-white">Antrian Wawancara</h1>
-              <p className="text-sm text-slate-400">OSIS & MPK</p>
+              <p className="text-sm text-royal-400">OSIS & MPK</p>
             </div>
           </div>
         </div>
 
         {loading ? (
-          <div className="p-12 flex flex-col items-center gap-3 text-slate-400">
+          <div className="p-12 flex flex-col items-center gap-3 text-royal-400">
             <Loader2 className="w-8 h-8 animate-spin" />
             <span className="text-sm font-medium">Memeriksa sesi...</span>
           </div>
         ) : !session ? (
           <div className="p-8 text-center">
             <div className="text-base font-bold text-white">Sesi tidak aktif</div>
-            <p className="text-sm text-slate-400 mt-2">Silakan hubungi panitia untuk QR terbaru.</p>
+            <p className="text-sm text-royal-400 mt-2">Silakan hubungi panitia untuk QR terbaru.</p>
           </div>
         ) : queueNumber ? (
           <div className="p-8 text-center">
@@ -181,7 +181,7 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
                   {myQueue?.kelas?.includes('[MPK]') ? 'MP' : myQueue?.kelas?.includes('[OSIS]') ? 'OS' : (session?.organisasi_type === 'osis' ? 'OS' : 'MP')}
                   {queueNumber}
                 </div>
-                <p className="text-sm text-slate-200 font-semibold mt-4 bg-red-500/10 border border-red-100 p-3 rounded-2xl">
+                <p className="text-sm text-royal-200 font-semibold mt-4 bg-red-500/10 border border-red-100 p-3 rounded-2xl">
                   Silakan segera menuju ke meja/ruang wawancara sekarang.
                 </p>
               </div>
@@ -191,23 +191,23 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
                   <span className="text-2xl">🏆</span>
                 </div>
                 <div className="text-base font-extrabold text-green-400 tracking-wider">WAWANCARA SELESAI!</div>
-                <div className="text-6xl font-black font-mono text-slate-950">
+                <div className="text-6xl font-black font-mono text-royal-950">
                   {myQueue?.kelas?.includes('[MPK]') ? 'MP' : myQueue?.kelas?.includes('[OSIS]') ? 'OS' : (session?.organisasi_type === 'osis' ? 'OS' : 'MP')}
                   {queueNumber}
                 </div>
-                <p className="text-sm text-slate-400 mt-4 bg-green-500/10 border border-green-100 p-3 rounded-2xl">
+                <p className="text-sm text-royal-400 mt-4 bg-green-500/10 border border-green-100 p-3 rounded-2xl">
                   Terima kasih telah mengikuti sesi wawancara OSIS & MPK. Anda boleh meninggalkan ruangan.
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
-                <UserRoundCheck className="w-14 h-14 text-persian-blue mx-auto mb-4 animate-pulse" />
-                <div className="text-sm font-bold text-slate-400">Nomor Antrian Anda</div>
+                <UserRoundCheck className="w-14 h-14 text-royal-400 mx-auto mb-4 animate-pulse" />
+                <div className="text-sm font-bold text-royal-400">Nomor Antrian Anda</div>
                 <div className="text-6xl font-black font-mono text-white mt-1">
                   {myQueue?.kelas?.includes('[MPK]') ? 'MP' : myQueue?.kelas?.includes('[OSIS]') ? 'OS' : (session?.organisasi_type === 'osis' ? 'OS' : 'MP')}
                   {queueNumber}
                 </div>
-                <p className="text-sm text-slate-400 mt-4 bg-white/5 p-3 rounded-2xl border border-white/10">
+                <p className="text-sm text-royal-400 mt-4 bg-cream-50/5 p-3 rounded-2xl border-royal-800/30">
                   Tunggu sampai nama Anda dipanggil oleh admin OSIS & MPK. Layar ini akan terupdate otomatis secara real-time!
                 </p>
               </div>
@@ -215,14 +215,14 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
           </div>
         ) : (
           <div className="p-6 space-y-4 fade-in">
-            <div className="rounded-2xl bg-gradient-to-br from-persian-blue/10 to-blue-50 border border-persian-blue/60 p-5 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-persian-blue/40 to-purple-200/40 blur-3xl -mr-10 -mt-10 rounded-full" />
+            <div className="rounded-2xl bg-gradient-to-br from-royal-500/10 to-royal-50 border-royal-500/60 p-5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-royal-500/40 to-royal-200/40 blur-3xl -mr-10 -mt-10 rounded-full" />
               <div className="relative">
-                <div className="text-[10px] font-extrabold text-persian-blue uppercase tracking-widest bg-persian-blue/50 inline-block px-2 py-0.5 rounded-md mb-2">Sesi Aktif</div>
+                <div className="text-[10px] font-extrabold text-royal-400 uppercase tracking-widest bg-royal-600/50 inline-block px-2 py-0.5 rounded-md mb-2">Sesi Aktif</div>
                 <div className="text-xl font-black text-white mt-1">OSIS & MPK</div>
-                <div className="text-xs font-medium text-slate-400 mt-1 flex items-center gap-1.5">
+                <div className="text-xs font-medium text-royal-400 mt-1 flex items-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500/100 animate-pulse" />
-                  Antrian saat ini: <span className="font-bold text-slate-200">{session._count.antrian}</span> peserta
+                  Antrian saat ini: <span className="font-bold text-royal-200">{session._count.antrian}</span> peserta
                 </div>
               </div>
             </div>
@@ -231,7 +231,7 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
               <div className="flex justify-between items-center">
                 <label className="label">Nama Lengkap *</label>
                 {nama.length > 0 && (
-                  <span className={`text-[10px] font-bold ${nama.length >= 50 ? 'text-red-500' : 'text-slate-400'}`}>
+                  <span className={`text-[10px] font-bold ${nama.length >= 50 ? 'text-red-500' : 'text-royal-400'}`}>
                     {nama.length}/50
                   </span>
                 )}
@@ -285,19 +285,19 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
               <div className="grid grid-cols-2 gap-3">
                 <button 
                   onClick={() => setOrganisasi('osis')} 
-                  className={`py-3 px-4 rounded-xl border-2 font-bold transition-all text-center ${organisasi === 'osis' ? 'border-transparent bg-gradient-to-r from-persian-blue/100 to-blue-500 text-white shadow-md transform scale-[1.02]' : 'border-white/10 bg-deep-navy text-slate-400 hover:border-persian-blue/30 hover:bg-white/5'}`}
+                  className={`py-3 px-4 rounded-xl border-2 font-bold transition-all text-center ${organisasi === 'osis' ? 'border-transparent bg-gradient-to-r from-royal-600 to-royal-500 text-white shadow-md transform scale-[1.02]' : 'border-royal-800/30 bg-royal-950 text-royal-400 hover:border-royal-500/30 hover:bg-cream-50/5'}`}
                 >
                   OSIS
                 </button>
                 <button 
                   onClick={() => setOrganisasi('mpk')} 
-                  className={`py-3 px-4 rounded-xl border-2 font-bold transition-all text-center ${organisasi === 'mpk' ? 'border-transparent bg-gradient-to-r from-persian-blue/100 to-blue-500 text-white shadow-md transform scale-[1.02]' : 'border-white/10 bg-deep-navy text-slate-400 hover:border-persian-blue/30 hover:bg-white/5'}`}
+                  className={`py-3 px-4 rounded-xl border-2 font-bold transition-all text-center ${organisasi === 'mpk' ? 'border-transparent bg-gradient-to-r from-royal-600 to-royal-500 text-white shadow-md transform scale-[1.02]' : 'border-royal-800/30 bg-royal-950 text-royal-400 hover:border-royal-500/30 hover:bg-cream-50/5'}`}
                 >
                   MPK
                 </button>
               </div>
             </div>
-            <button onClick={submit} disabled={saving} className="btn-primary w-full justify-center py-3.5 bg-gradient-to-r from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700 shadow-lg mt-2">
+            <button onClick={submit} disabled={saving} className="btn-primary w-full justify-center py-3.5 bg-gradient-to-r from-royal-950 to-royal-800 hover:from-royal-800 hover:to-royal-700 shadow-lg mt-2">
               {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
               Masuk Antrian
             </button>

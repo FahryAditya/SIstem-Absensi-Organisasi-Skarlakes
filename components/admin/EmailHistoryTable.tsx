@@ -80,7 +80,7 @@ export default function EmailHistoryTable({ organizationType }: EmailHistoryTabl
         {logs.length > 0 && (
           <button
             onClick={handleExport}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-semibold text-slate-300 hover:bg-white/10 hover:text-white transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cream-50/5 border border-royal-800/30 text-xs font-semibold text-royal-300 hover:bg-royal-800/50 hover:text-royal-100 transition-all"
           >
             <Download className="w-3.5 h-3.5" />
             Ekspor CSV
@@ -89,23 +89,23 @@ export default function EmailHistoryTable({ organizationType }: EmailHistoryTabl
       </div>
 
       {/* Table content */}
-      <div className="border border-white/10 rounded-2xl overflow-hidden bg-white/[0.01]">
+      <div className="border border-royal-800/30 rounded-2xl overflow-hidden bg-white/[0.01]">
         {loading ? (
-          <div className="py-20 text-center text-slate-400">
-            <div className="w-6 h-6 border-2 border-slate-500 border-t-white rounded-full animate-spin mx-auto mb-3" />
+          <div className="py-20 text-center text-royal-400">
+            <div className="w-6 h-6 border-2 border-royal-500 border-t-white rounded-full animate-spin mx-auto mb-3" />
             Memuat riwayat email...
           </div>
         ) : logs.length === 0 ? (
-          <div className="py-16 text-center text-slate-400 space-y-2">
+          <div className="py-16 text-center text-royal-400 space-y-2">
             <Mail className="w-12 h-12 mx-auto mb-2 opacity-20" />
             <p className="text-sm font-medium">Belum ada email yang dikirim.</p>
-            <p className="text-xs text-slate-300">Histori pengiriman email manual akan tercatat di sini.</p>
+            <p className="text-xs text-royal-300">Histori pengiriman email manual akan tercatat di sini.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm border-collapse">
               <thead>
-                <tr className="border-b border-white/10 bg-white/5 text-slate-400 text-xs font-semibold uppercase">
+                <tr className="border-b border-royal-800/30 bg-cream-50/5 text-royal-400 text-xs font-semibold uppercase">
                   <th className="p-4">Tanggal</th>
                   <th className="p-4">Penerima</th>
                   <th className="p-4">Subjek</th>
@@ -114,10 +114,10 @@ export default function EmailHistoryTable({ organizationType }: EmailHistoryTabl
                   <th className="p-4 text-center">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5 text-slate-300">
+              <tbody className="divide-y divide-white/5 text-royal-300">
                 {logs.map((log) => (
                   <tr key={log.id} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="p-4 text-xs font-medium text-slate-400 shrink-0 whitespace-nowrap">
+                    <td className="p-4 text-xs font-medium text-royal-400 shrink-0 whitespace-nowrap">
                       {new Date(log.created_at).toLocaleString('id-ID', {
                         day: 'numeric',
                         month: 'short',
@@ -127,17 +127,17 @@ export default function EmailHistoryTable({ organizationType }: EmailHistoryTabl
                     </td>
                     <td className="p-4">
                       <p className="font-semibold text-white">{log.recipientName}</p>
-                      <p className="text-xs text-slate-400">{log.recipientEmail}</p>
+                      <p className="text-xs text-royal-400">{log.recipientEmail}</p>
                     </td>
-                    <td className="p-4 max-w-xs truncate font-medium text-slate-200" title={log.subject}>
+                    <td className="p-4 max-w-xs truncate font-medium text-royal-200" title={log.subject}>
                       {log.subject}
                     </td>
                     <td className="p-4">
-                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-white/10 text-blue-400">
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-cream-50/10 text-royal-400">
                         {log.emailType}
                       </span>
                     </td>
-                    <td className="p-4 text-xs font-medium text-slate-400">
+                    <td className="p-4 text-xs font-medium text-royal-400">
                       {log.admin?.nama || 'System'}
                     </td>
                     <td className="p-4 text-center shrink-0">
@@ -169,21 +169,21 @@ export default function EmailHistoryTable({ organizationType }: EmailHistoryTabl
       {/* Pagination */}
       {!loading && totalPages > 1 && (
         <div className="flex items-center justify-between p-2">
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-royal-400">
             Halaman {page} dari {totalPages}
           </span>
           <div className="flex items-center gap-2">
             <button
               onClick={() => handlePageChange(page - 1)}
               disabled={page === 1}
-              className="p-1.5 rounded-lg border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed"
+              className="p-1.5 rounded-lg border border-royal-800/30 bg-cream-50/5 text-royal-400 hover:bg-royal-800/50 hover:text-royal-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={() => handlePageChange(page + 1)}
               disabled={page === totalPages}
-              className="p-1.5 rounded-lg border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white transition disabled:opacity-40 disabled:cursor-not-allowed"
+              className="p-1.5 rounded-lg border border-royal-800/30 bg-cream-50/5 text-royal-400 hover:bg-royal-800/50 hover:text-royal-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

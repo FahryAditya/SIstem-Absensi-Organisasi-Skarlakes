@@ -166,7 +166,7 @@ export default function FinanceCharts({ data }: Props) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {data.keuanganOrganisasi.osis && (
               <div>
-                <h4 className="text-xs font-semibold text-[#1E90FF] mb-3">OSIS</h4>
+                <h4 className="text-xs font-semibold text-royal-400 mb-3">OSIS</h4>
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
                     <Pie
@@ -189,14 +189,14 @@ export default function FinanceCharts({ data }: Props) {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="text-center mt-2 space-y-1">
-                  <div className="text-xs text-slate-400">Pemasukan: {formatCurrency(data.keuanganOrganisasi.osis.pemasukan)}</div>
-                  <div className="text-xs text-slate-400">Saldo: {formatCurrency(data.keuanganOrganisasi.osis.saldo)}</div>
+                  <div className="text-xs text-royal-400">Pemasukan: {formatCurrency(data.keuanganOrganisasi.osis.pemasukan)}</div>
+                  <div className="text-xs text-royal-400">Saldo: {formatCurrency(data.keuanganOrganisasi.osis.saldo)}</div>
                 </div>
               </div>
             )}
             {data.keuanganOrganisasi.mpk && (
               <div>
-                <h4 className="text-xs font-semibold text-[#1E90FF] mb-3">MPK</h4>
+                <h4 className="text-xs font-semibold text-royal-400 mb-3">MPK</h4>
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
                     <Pie
@@ -219,8 +219,8 @@ export default function FinanceCharts({ data }: Props) {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="text-center mt-2 space-y-1">
-                  <div className="text-xs text-slate-400">Pemasukan: {formatCurrency(data.keuanganOrganisasi.mpk.pemasukan)}</div>
-                  <div className="text-xs text-slate-400">Saldo: {formatCurrency(data.keuanganOrganisasi.mpk.saldo)}</div>
+                  <div className="text-xs text-royal-400">Pemasukan: {formatCurrency(data.keuanganOrganisasi.mpk.pemasukan)}</div>
+                  <div className="text-xs text-royal-400">Saldo: {formatCurrency(data.keuanganOrganisasi.mpk.saldo)}</div>
                 </div>
               </div>
             )}

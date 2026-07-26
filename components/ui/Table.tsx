@@ -11,11 +11,11 @@ function SkeletonRows({ selectable, columns }: { selectable?: boolean; columns: 
   return (
     <>
       {Array.from({ length: 6 }).map((_, i) => (
-        <tr key={i} className="border-b border-white/10">
+        <tr key={i} className="border-b border-royal-800/30">
           {selectable && <td className="td w-10"></td>}
           {columns.map(col => (
             <td key={col.key} className="td">
-              <div className="h-4 bg-white/10 rounded animate-pulse" style={{ width: widths[i] }} />
+              <div className="h-4 bg-cream-50/10 rounded animate-pulse" style={{ width: widths[i] }} />
             </td>
           ))}
         </tr>
@@ -60,11 +60,11 @@ const TableRow = memo(function TableRow<T>({
   itemKey: string | number
 }) {
   return (
-    <tr className={cn('tr', isSelected && 'bg-persian-blue/10')}>
+    <tr className={cn('tr', isSelected && 'bg-royal-600/10')}>
       {selectable && (
         <td className="td w-10 text-center px-4" onClick={(e) => e.stopPropagation()}>
           <input type="checkbox"
-            className="w-4 h-4 rounded border-white/20 text-persian-blue focus:ring-persian-blue/100 cursor-pointer"
+            className="w-4 h-4 rounded border-royal-800/30 text-royal-600 focus:ring-royal-500/50 cursor-pointer"
             checked={isSelected || false}
             onChange={(e) => onSelect?.(e.target.checked, itemKey)}
           />
@@ -95,15 +95,15 @@ export default function Table<T>({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-white/10 bg-deep-navy/40 backdrop-blur-xl">
+    <div className="overflow-hidden rounded-xl border border-royal-800/30 bg-royal-950/40 backdrop-blur-xl">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="bg-white/5 border-b border-white/10">
+            <tr className="bg-cream-50/5 border-b border-royal-800/30">
               {selectable && (
                 <th className="th w-10 text-center px-4">
                   <input type="checkbox" 
-                    className="w-4 h-4 rounded border-white/20 text-persian-blue focus:ring-persian-blue/100 cursor-pointer"
+                    className="w-4 h-4 rounded border-royal-800/30 text-royal-600 focus:ring-royal-500/50 cursor-pointer"
                     checked={data.length > 0 && selectedKeys?.length === data.length}
                     onChange={(e) => {
                       if (onSelectionChange) {
@@ -153,8 +153,8 @@ export default function Table<T>({
 
       {/* Pagination */}
       {(totalPages > 1 || total !== undefined) && onPageChange && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-white/10 bg-white/5">
-          <span className="text-xs text-slate-400">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-royal-800/30 bg-cream-50/5">
+          <span className="text-xs text-royal-400">
             {total !== undefined ? `${total} data` : ''} — Halaman {page} dari {totalPages}
           </span>
           <div className="flex items-center gap-1">
@@ -172,7 +172,7 @@ export default function Table<T>({
                 <button key={p} onClick={() => onPageChange(p)}
                   className={cn(
                     'w-7 h-7 text-xs rounded-lg font-medium transition-colors',
-                    p === page ? 'bg-persian-blue text-white' : 'text-slate-400 hover:bg-white/10 hover:text-white'
+                    p === page ? 'bg-royal-600 text-white' : 'text-royal-400 hover:bg-royal-800/50 hover:text-royal-100'
                   )}>
                   {p}
                 </button>

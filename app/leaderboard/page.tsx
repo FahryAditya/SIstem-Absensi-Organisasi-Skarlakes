@@ -32,17 +32,17 @@ interface Organization {
 }
 
 const RANK_STYLES = [
-  { border: 'border-yellow-400/60', bg: 'bg-yellow-400/10', text: 'text-yellow-400', medal: '🥇' },
+  { border: 'border-yellow-bright-400/60', bg: 'bg-yellow-bright-400/10', text: 'text-yellow-bright-400', medal: '🥇' },
   { border: 'border-gray-300/60', bg: 'bg-gray-300/10', text: 'text-gray-300', medal: '🥈' },
-  { border: 'border-amber-600/60', bg: 'bg-amber-600/10', text: 'text-amber-600', medal: '🥉' },
+  { border: 'border-yellow-bright-600/60', bg: 'bg-yellow-bright-600/10', text: 'text-yellow-bright-600', medal: '🥉' },
 ]
 
 const LEVEL_COLORS: Record<string, string> = {
-  'Beginner': 'bg-white/10 text-slate-200 border-slate-500/30',
-  'Intermediate': 'bg-blue-500/20 text-blue-200 border-blue-500/30',
+  'Beginner': 'bg-royal-800/80 text-royal-100 border-royal-500/30',
+  'Intermediate': 'bg-royal-600/20 text-royal-200 border-royal-600/30',
   'Advanced': 'bg-emerald-500/20 text-emerald-200 border-emerald-500/30',
-  'Expert': 'bg-purple-500/20 text-purple-200 border-purple-500/30',
-  'Master': 'bg-yellow-500/20 text-yellow-200 border-yellow-500/30',
+  'Expert': 'bg-royal-600/20 text-royal-200 border-royal-600/30',
+  'Master': 'bg-yellow-bright-500/20 text-yellow-bright-200 border-yellow-bright-500/30',
 }
 
 export default function LeaderboardPage() {
@@ -104,28 +104,28 @@ export default function LeaderboardPage() {
   const activeOrg = orgs.find(o => o.id === activeOrgId)
 
   return (
-    <div className="min-h-screen bg-[#0f1117] text-white">
+    <div className="min-h-screen bg-royal-950 text-white">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-4">
-          <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-royal-300 hover:text-white text-sm transition-colors">
             <ArrowLeft className="w-4 h-4" /> Kembali
           </button>
         </div>
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/30 rounded-full px-4 py-1.5 mb-4">
-            <Trophy className="w-4 h-4 text-yellow-400" />
-            <span className="text-yellow-300 text-sm font-medium">Leaderboard</span>
+          <div className="inline-flex items-center gap-2 bg-yellow-bright-500/10 border border-yellow-bright-500/30 rounded-full px-4 py-1.5 mb-4">
+            <Trophy className="w-4 h-4 text-yellow-bright-400" />
+            <span className="text-yellow-bright-300 text-sm font-medium">Leaderboard</span>
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-bright-400 via-yellow-bright-500 to-yellow-bright-600 bg-clip-text text-transparent">
             Hall of Fame
           </h1>
-          <p className="text-slate-400 mt-2">Ranking EXP anggota terbaik per organisasi</p>
+          <p className="text-royal-300 mt-2">Ranking EXP anggota terbaik per organisasi</p>
         </div>
 
         {/* Dynamic Tabs */}
         <div className="flex flex-wrap gap-2 justify-center mb-8">
           {orgsLoading ? (
-            <Loader2 className="w-6 h-6 animate-spin text-slate-500" />
+            <Loader2 className="w-6 h-6 animate-spin text-royal-400" />
           ) : (
             orgs.map(org => (
               <button
@@ -133,8 +133,8 @@ export default function LeaderboardPage() {
                 onClick={() => setActiveOrgId(org.id)}
                 className={`px-5 py-2 rounded-full text-sm font-bold border transition-all duration-200 ${
                   activeOrgId === org.id
-                    ? `bg-persian-blue text-white border-transparent shadow-lg scale-105`
-                    : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
+                    ? `bg-royal-600 text-white border-transparent shadow-lg scale-105`
+                    : 'bg-royal-800/50 border-royal-700 text-royal-300 hover:bg-royal-800/80'
                 }`}
               >
                 {org.nama}
@@ -146,11 +146,11 @@ export default function LeaderboardPage() {
         {loading ? (
           <div className="space-y-4">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-20 bg-white/5 rounded-2xl animate-pulse" />
+              <div key={i} className="h-20 bg-royal-800/50 rounded-2xl animate-pulse" />
             ))}
           </div>
         ) : data.length === 0 ? (
-          <div className="text-center py-20 text-slate-400 bg-white/5 rounded-[2rem] border border-white/10">
+          <div className="text-center py-20 text-royal-300 bg-royal-800/50 rounded-[2rem] border border-royal-700">
             <Users className="w-12 h-12 mx-auto mb-4 opacity-30" />
             <p className="font-bold">Belum ada data anggota</p>
             <p className="text-xs mt-1">Organisasi ini mungkin belum memiliki anggota aktif.</p>
@@ -173,24 +173,24 @@ export default function LeaderboardPage() {
                     >
                       <div className="text-3xl mb-3">{style.medal}</div>
                       <div className="mb-4">
-                        <div className={`w-16 h-16 rounded-full flex items-center justify-center font-black bg-persian-blue text-white shadow-inner mx-auto text-2xl`}>
+                        <div className={`w-16 h-16 rounded-full flex items-center justify-center font-black bg-royal-600 text-white shadow-inner mx-auto text-2xl`}>
                           {entry.nama.charAt(0).toUpperCase()}
                         </div>
                       </div>
                       <div className="font-bold text-white truncate text-base mb-1">{entry.nama}</div>
-                      <div className="text-xs text-slate-400 mb-3">{entry.kelas} {entry.jabatan ? `• ${entry.jabatan}` : ''}</div>
+                      <div className="text-xs text-royal-300 mb-3">{entry.kelas} {entry.jabatan ? `• ${entry.jabatan}` : ''}</div>
                       <span className={`inline-block text-[10px] px-2 py-0.5 rounded-full border mb-4 font-bold ${LEVEL_COLORS[entry.levelName] ?? LEVEL_COLORS['Beginner']}`}>
                         Lv{entry.level} {entry.levelName}
                       </span>
                       <div className={`text-2xl font-black ${style.text} mb-1`}>{entry.xp.toLocaleString()} <span className="text-xs font-medium opacity-70">EXP</span></div>
                       <div className="mt-4">
-                        <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-royal-800/80 rounded-full overflow-hidden">
                           <div
-                            className={`h-full bg-persian-blue rounded-full transition-all duration-700`}
+                            className={`h-full bg-royal-600 rounded-full transition-all duration-700`}
                             style={{ width: `${entry.progress.persen}%` }}
                           />
                         </div>
-                        <p className="text-[10px] text-slate-400 mt-2 font-medium">{entry.progress.persen}% ke {entry.progress.nextLevelName ?? 'Max'}</p>
+                        <p className="text-[10px] text-royal-300 mt-2 font-medium">{entry.progress.persen}% ke {entry.progress.nextLevelName ?? 'Max'}</p>
                       </div>
                     </div>
                   )
@@ -202,13 +202,13 @@ export default function LeaderboardPage() {
               {rest.map((entry) => (
                 <div
                   key={entry.id}
-                  className={`flex items-center gap-4 rounded-2xl border p-4 transition-all hover:bg-white/5 bg-white/[0.02] border-white/5`}
+                  className={`flex items-center gap-4 rounded-2xl border p-4 transition-all hover:bg-royal-800/80 bg-royal-800/30 border-royal-800`}
                 >
                   <div className="w-8 text-center">
-                    <span className="text-lg font-bold text-slate-400">#{entry.rank}</span>
+                    <span className="text-lg font-bold text-royal-300">#{entry.rank}</span>
                   </div>
                   <div className="shrink-0">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold bg-white/5 text-white border border-white/10 text-sm">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold bg-royal-800/50 text-white border border-royal-700 text-sm">
                       {entry.nama.charAt(0).toUpperCase()}
                     </div>
                   </div>
@@ -219,15 +219,15 @@ export default function LeaderboardPage() {
                         Lv{entry.level}
                       </span>
                     </div>
-                    <div className="text-xs text-slate-400">{entry.kelas}</div>
+                    <div className="text-xs text-royal-300">{entry.kelas}</div>
                     <div className="mt-1.5 flex items-center gap-2">
-                      <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                      <div className="flex-1 h-1.5 bg-royal-800/80 rounded-full overflow-hidden">
                         <div
-                          className={`h-full bg-persian-blue rounded-full transition-all duration-500`}
+                          className={`h-full bg-royal-600 rounded-full transition-all duration-500`}
                           style={{ width: `${entry.progress.persen}%` }}
                         />
                       </div>
-                      <span className="text-xs text-slate-400 shrink-0">{entry.progress.persen}%</span>
+                      <span className="text-xs text-royal-300 shrink-0">{entry.progress.persen}%</span>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
@@ -235,7 +235,7 @@ export default function LeaderboardPage() {
                       <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
                       <span className="font-bold text-emerald-400">{entry.xp.toLocaleString()}</span>
                     </div>
-                    <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">EXP</div>
+                    <div className="text-[10px] font-black text-royal-400 uppercase tracking-widest">EXP</div>
                   </div>
                 </div>
               ))}

@@ -79,10 +79,10 @@ function PdfSlideRenderer({ page, zoom }: { page: any; zoom: number }) {
   }, [page, zoom])
 
   return (
-    <div className="relative flex items-center justify-center max-h-full max-w-full overflow-auto rounded-xl bg-slate-900/50 p-2 border border-white/5 shadow-2xl">
+    <div className="relative flex items-center justify-center max-h-full max-w-full overflow-auto rounded-xl bg-royal-950/50 p-2 border border-white/5 shadow-2xl">
       {rendering && (
         <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white gap-2 rounded-xl backdrop-blur-xs z-10">
-          <Loader2 className="w-6 h-6 animate-spin text-[#1E90FF]" />
+          <Loader2 className="w-6 h-6 animate-spin text-royal-400" />
           <span className="text-sm font-semibold tracking-wide">Rendering Page...</span>
         </div>
       )}
@@ -370,8 +370,8 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
         id="btn-file-presentation-mode"
         onClick={handleOpen}
         className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl
-          bg-[#1E90FF] text-white shadow-lg shadow-[#1E90FF]/20
-          hover:bg-[#001F3F] hover:shadow-xl hover:shadow-[#1E90FF]/30
+          bg-royal-400 text-white shadow-lg shadow-royal-400/20
+          hover:bg-[#001F3F] hover:shadow-xl hover:shadow-royal-400/30
           hover:-translate-y-0.5 active:scale-95
           transition-all duration-200 border border-white/10"
         title="Presentasikan File PDF / Excel / Teks langsung di layar proyektor"
@@ -407,14 +407,14 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
           {/* HEADER */}
           <div className="relative flex items-center justify-between px-4 md:px-8 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] pb-3 md:py-4 border-b border-white/10 flex-shrink-0 z-20">
             <div className="flex items-center gap-1.5 md:gap-3">
-              <div className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-[#1E90FF] animate-pulse shadow-lg shadow-blue-500/50" />
+              <div className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-royal-400 animate-pulse shadow-lg shadow-royal-500/50" />
               <span className="text-white/60 text-xs md:text-sm font-semibold tracking-wide uppercase">
                 <span className="hidden xs:inline">Presentasi</span> File
               </span>
               {fileName && (
                 <>
                   <span className="text-white/30 text-sm">·</span>
-                  <span className="text-[#1E90FF] text-[10px] md:text-xs font-bold bg-[#1E90FF]/20 border border-[#1E90FF]/30 px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg max-w-[80px] sm:max-w-[200px] truncate" title={fileName}>
+                  <span className="text-royal-400 text-[10px] md:text-xs font-bold bg-royal-400/20 border border-royal-400/30 px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg max-w-[80px] sm:max-w-[200px] truncate" title={fileName}>
                     📄 {fileName}
                   </span>
                 </>
@@ -501,15 +501,15 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
                   className={`border-3 border-dashed rounded-3xl p-12 flex flex-col items-center justify-center gap-4 cursor-pointer
                     transition-all duration-300 backdrop-blur-md relative overflow-hidden group
                     ${dragging 
-                      ? 'border-[#1E90FF] bg-[#1E90FF]/10 shadow-[0_0_50px_rgba(84,130,180,0.2)] scale-[1.01]' 
+                      ? 'border-royal-400 bg-royal-400/10 shadow-[0_0_50px_rgba(84,130,180,0.2)] scale-[1.01]' 
                       : 'border-white/15 bg-white/5 hover:border-white/30 hover:bg-white/8 hover:shadow-[0_4px_30px_rgba(255,255,255,0.02)]'
                     }`}
                 >
                   <div className="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
                     {loading ? (
-                      <Loader2 className="w-10 h-10 animate-spin text-[#1E90FF]" />
+                      <Loader2 className="w-10 h-10 animate-spin text-royal-400" />
                     ) : (
-                      <UploadCloud className="w-10 h-10 text-[#1E90FF] group-hover:text-white transition-colors" />
+                      <UploadCloud className="w-10 h-10 text-royal-400 group-hover:text-white transition-colors" />
                     )}
                   </div>
 
@@ -530,7 +530,7 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
                     <span className="flex items-center gap-1 px-3 py-1 bg-green-500/10 border border-green-500/25 text-green-400 text-xs font-bold rounded-lg">
                       <FileSpreadsheet className="w-3.5 h-3.5" /> Excel / CSV
                     </span>
-                    <span className="flex items-center gap-1 px-3 py-1 bg-white/10 border border-blue-500/25 text-blue-400 text-xs font-bold rounded-lg">
+                    <span className="flex items-center gap-1 px-3 py-1 bg-white/10 border border-royal-500/25 text-blue-400 text-xs font-bold rounded-lg">
                       <FileText className="w-3.5 h-3.5" /> Teks / Markdown
                     </span>
                   </div>
@@ -546,7 +546,7 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
 
                 {/* Important Help Tip banner */}
                 <div className="flex gap-3 bg-white/5 border border-white/10 rounded-2xl p-4 text-left backdrop-blur-md">
-                  <AlertCircle className="w-5 h-5 text-[#1E90FF] flex-shrink-0 mt-0.5 animate-bounce" />
+                  <AlertCircle className="w-5 h-5 text-royal-400 flex-shrink-0 mt-0.5 animate-bounce" />
                   <div className="space-y-1">
                     <h4 className="text-xs font-black text-white tracking-wider uppercase">
                       💡 TIPS UTK DOKUMEN PRESENTASI (PPTX / KEYNOTE)
@@ -574,9 +574,9 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
 
                     {/* EXCEL TABLE PRESENTATION PLAYER */}
                     {fileType === 'excel' && (
-                      <div className="w-full max-w-5xl max-h-[70vh] bg-slate-950/80 border border-white/10 rounded-3xl p-6 overflow-hidden flex flex-col gap-4 shadow-2xl backdrop-blur-xl">
+                      <div className="w-full max-w-5xl max-h-[70vh] bg-royal-950/80 border border-white/10 rounded-3xl p-6 overflow-hidden flex flex-col gap-4 shadow-2xl backdrop-blur-xl">
                         <div className="flex items-center justify-between border-b border-white/10 pb-3 flex-shrink-0">
-                          <span className="text-[#1E90FF] font-bold text-sm bg-[#1E90FF]/20 border border-[#1E90FF]/30 px-3 py-1 rounded-lg">
+                          <span className="text-royal-400 font-bold text-sm bg-royal-400/20 border border-royal-400/30 px-3 py-1 rounded-lg">
                             📊 Sheet: {slides[currentSlide].sheetName}
                           </span>
                           <span className="text-white/40 text-xs font-mono">
@@ -588,7 +588,7 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
                         <div className="flex-1 overflow-auto custom-scrollbar">
                           <table className="w-full border-collapse text-left">
                             <thead>
-                              <tr className="border-b border-white/15 sticky top-0 bg-slate-900 z-10">
+                              <tr className="border-b border-white/15 sticky top-0 bg-royal-950 z-10">
                                 {slides[currentSlide].data[0]?.map((cell: any, idx: number) => (
                                   <th key={idx} className="px-4 py-3 text-xs font-black text-[#7EA0C5] uppercase tracking-wider">
                                     {cell !== null && cell !== undefined ? String(cell) : ''}
@@ -615,7 +615,7 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
                     {/* TEXT/MARKDOWN PRESENTATION PLAYER */}
                     {fileType === 'text' && (
                       <div className="w-full max-w-4xl min-h-[50vh] flex flex-col justify-center items-center text-center p-8 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-md shadow-2xl relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-48 h-48 bg-[#1E90FF]/10 rounded-full blur-3xl pointer-events-none" />
+                        <div className="absolute top-0 right-0 w-48 h-48 bg-royal-400/10 rounded-full blur-3xl pointer-events-none" />
                         
                         <div className="space-y-8 max-w-2xl">
                           <h2 className="text-4xl xl:text-5xl font-black text-white tracking-tight leading-snug drop-shadow-md">
@@ -626,7 +626,7 @@ export default function FilePresentationMode({ user }: FilePresentationModeProps
                             <div className="flex flex-col items-center justify-center gap-3.5 mt-6">
                               {slides[currentSlide].content.map((bullet: string, idx: number) => (
                                 <div key={idx} className="flex items-center gap-3 text-lg text-white/80 font-semibold text-left w-full max-w-lg leading-relaxed">
-                                  <div className="w-2 h-2 rounded-full bg-[#1E90FF] flex-shrink-0 shadow-[0_0_10px_rgba(84,130,180,0.8)]" />
+                                  <div className="w-2 h-2 rounded-full bg-royal-400 flex-shrink-0 shadow-[0_0_10px_rgba(84,130,180,0.8)]" />
                                   <span>{bullet}</span>
                                 </div>
                               ))}

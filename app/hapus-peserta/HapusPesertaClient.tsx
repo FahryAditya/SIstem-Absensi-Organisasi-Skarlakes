@@ -47,16 +47,16 @@ const statusLabelMap: Record<string, string> = {
 }
 
 const statusStyleMap: Record<string, string> = {
-  MENUNGGU: 'bg-green-500/10 text-green-400 border-white/10',
-  WAWANCARA: 'bg-red-500/10 text-red-400 border-white/10',
-  SELESAI_WAWANCARA: 'bg-white/10 text-slate-300 border-white/10',
+  MENUNGGU: 'bg-green-500/10 text-green-400 border-royal-800/30',
+  WAWANCARA: 'bg-red-500/10 text-red-400 border-royal-800/30',
+  SELESAI_WAWANCARA: 'bg-cream-50/10 text-royal-300 border-royal-800/30',
 }
 
 const sessionStyleMap: Record<string, string> = {
-  SCHEDULED: 'bg-white/5 text-blue-300 border-white/10',
+  SCHEDULED: 'bg-cream-50/5 text-royal-300 border-royal-800/30',
   ACTIVE: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  SELESAI: 'bg-white/10 text-slate-300 border-white/10',
-  DIBATALKAN: 'bg-red-500/10 text-red-400 border-white/10',
+  SELESAI: 'bg-cream-50/10 text-royal-300 border-royal-800/30',
+  DIBATALKAN: 'bg-red-500/10 text-red-400 border-royal-800/30',
 }
 
 export default function HapusPesertaClient({ user }: Props) {
@@ -201,7 +201,7 @@ export default function HapusPesertaClient({ user }: Props) {
             <ArrowLeft className="w-4 h-4" /> Kembali
           </button>
           {selectedIds.length > 0 && (
-            <button onClick={() => setBulkDeleteConfirmOpen(true)} className="btn-secondary text-red-400 border-white/10 hover:bg-red-500/10">
+            <button onClick={() => setBulkDeleteConfirmOpen(true)} className="btn-secondary text-red-400 border-royal-800/30 hover:bg-red-500/10">
               <Trash2 className="w-4 h-4" /> Hapus Terpilih ({selectedIds.length})
             </button>
           )}
@@ -212,7 +212,7 @@ export default function HapusPesertaClient({ user }: Props) {
       <div className="card p-4">
         <div className="flex flex-wrap gap-3 items-end">
           <div className="flex-1 min-w-48">
-            <label className="label text-xs font-bold text-slate-300 mb-1.5 block">
+            <label className="label text-xs font-bold text-royal-300 mb-1.5 block">
               <Search className="w-3.5 h-3.5 inline mr-1" />
               Cari Nama atau Kelas
             </label>
@@ -225,7 +225,7 @@ export default function HapusPesertaClient({ user }: Props) {
             />
           </div>
           <div className="w-40">
-            <label className="label text-xs font-bold text-slate-300 mb-1.5 block">
+            <label className="label text-xs font-bold text-royal-300 mb-1.5 block">
               <Filter className="w-3.5 h-3.5 inline mr-1" />
               Ekskul
             </label>
@@ -240,7 +240,7 @@ export default function HapusPesertaClient({ user }: Props) {
             />
           </div>
           <div className="w-44">
-            <label className="label text-xs font-bold text-slate-300 mb-1.5 block">
+            <label className="label text-xs font-bold text-royal-300 mb-1.5 block">
               <Clock className="w-3.5 h-3.5 inline mr-1" />
               Status Sesi
             </label>
@@ -260,15 +260,15 @@ export default function HapusPesertaClient({ user }: Props) {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="card p-4 border-l-4 border-l-red-500">
-          <div className="text-xs font-bold text-slate-400">Total Peserta</div>
+          <div className="text-xs font-bold text-royal-400">Total Peserta</div>
           <div className="text-2xl font-black text-white font-mono">{items.length}</div>
         </div>
         <div className="card p-4 border-l-4 border-l-amber-500">
-          <div className="text-xs font-bold text-slate-400">Dapat Dihapus</div>
+          <div className="text-xs font-bold text-royal-400">Dapat Dihapus</div>
           <div className="text-2xl font-black text-white font-mono">{items.filter(canDelete).length}</div>
         </div>
         <div className="card p-4 border-l-4 border-l-slate-400">
-          <div className="text-xs font-bold text-slate-400">Tersaring</div>
+          <div className="text-xs font-bold text-royal-400">Tersaring</div>
           <div className="text-2xl font-black text-white font-mono">{filtered.length}</div>
         </div>
       </div>
@@ -283,11 +283,11 @@ export default function HapusPesertaClient({ user }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-white/5 border-b border-white/10">
+                <tr className="bg-cream-50/5 border-b border-royal-800/30">
                   <th className="th text-xs w-10">
                     <input 
                       type="checkbox" 
-                      className="rounded border-slate-300" 
+                      className="rounded border-royal-300" 
                       checked={selectedIds.length > 0 && selectedIds.length === filtered.filter(canDelete).length}
                       onChange={toggleSelectAll}
                       disabled={filtered.filter(canDelete).length === 0}
@@ -308,28 +308,28 @@ export default function HapusPesertaClient({ user }: Props) {
                 {filtered.map((item) => {
                   const deletable = canDelete(item)
                   return (
-                    <tr key={item.id} className="hover:bg-white/5">
+                    <tr key={item.id} className="hover:bg-cream-50/5">
                       <td className="td">
                         {deletable ? (
                           <input 
                             type="checkbox" 
-                            className="rounded border-slate-300"
+                            className="rounded border-royal-300"
                             checked={selectedIds.includes(item.id)}
                             onChange={() => toggleSelect(item.id)}
                           />
                         ) : (
-                          <input type="checkbox" disabled className="rounded border-white/10 opacity-50" />
+                          <input type="checkbox" disabled className="rounded border-royal-800/30 opacity-50" />
                         )}
                       </td>
-                      <td className="td font-mono text-slate-400 text-xs">#{item.nomor_antrian}</td>
+                      <td className="td font-mono text-royal-400 text-xs">#{item.nomor_antrian}</td>
                       <td className="td">
                         <div>
                           <div className="font-semibold text-white text-sm">{item.nama}</div>
                         </div>
                       </td>
-                      <td className="td text-xs text-slate-300">{item.kelas}</td>
+                      <td className="td text-xs text-royal-300">{item.kelas}</td>
                       <td className="td">
-                        <span className="badge bg-deep-navy border border-white/10 text-slate-300 text-xs">
+                        <span className="badge bg-royal-950 border-royal-800/30 text-royal-300 text-xs">
                           {orgLabelMap[item.sesi_org] || item.sesi_org}
                         </span>
                       </td>
@@ -338,7 +338,7 @@ export default function HapusPesertaClient({ user }: Props) {
                           <span className={`badge border text-[10px] ${sessionStyleMap[item.sesi_status]}`}>
                             {item.sesi_status}
                           </span>
-                          <div className="text-[10px] text-slate-400">
+                          <div className="text-[10px] text-royal-400">
                             {item.sesi_mulai ? formatDateTime(item.sesi_mulai) : '-'}
                           </div>
                         </div>
@@ -350,18 +350,18 @@ export default function HapusPesertaClient({ user }: Props) {
                       </td>
                       <td className="td">
                         <div className="text-xs">
-                          <span className={`badge border text-[10px] ${item.status_validasi?.includes('SAH') ? 'bg-green-500/10 text-green-400 border-white/10' : item.status_validasi === 'DITOLAK_VPN' ? 'bg-red-500/10 text-red-400 border-white/10' : 'bg-white/5 text-slate-200 border-white/10'}`}>
+                          <span className={`badge border text-[10px] ${item.status_validasi?.includes('SAH') ? 'bg-green-500/10 text-green-400 border-royal-800/30' : item.status_validasi === 'DITOLAK_VPN' ? 'bg-red-500/10 text-red-400 border-royal-800/30' : 'bg-cream-50/5 text-royal-200 border-royal-800/30'}`}>
                             {item.status_validasi?.replace('_', ' ') || '-'}
                           </span>
                         </div>
                       </td>
                       <td className="td">
                         {item.hasil_wawancara ? (
-                          <span className={`badge border text-[10px] ${item.hasil_wawancara.hasil === 'LOLOS' ? 'bg-green-500/10 text-green-400 border-white/10' : 'bg-red-500/10 text-red-400 border-white/10'}`}>
+                          <span className={`badge border text-[10px] ${item.hasil_wawancara.hasil === 'LOLOS' ? 'bg-green-500/10 text-green-400 border-royal-800/30' : 'bg-red-500/10 text-red-400 border-royal-800/30'}`}>
                             {item.hasil_wawancara.hasil}
                           </span>
                         ) : (
-                          <span className="text-xs text-slate-400">-</span>
+                          <span className="text-xs text-royal-400">-</span>
                         )}
                       </td>
                       <td className="td text-right">
@@ -374,7 +374,7 @@ export default function HapusPesertaClient({ user }: Props) {
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         ) : (
-                          <span className="text-xs text-slate-400 italic">
+                          <span className="text-xs text-royal-400 italic">
                             {item.status === 'WAWANCARA'
                               ? 'Sedang diwawancarai'
                               : 'Tidak dapat dihapus'}

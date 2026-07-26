@@ -99,8 +99,8 @@ export default function AbsensiClient({ slug }: Props) {
   const columns = [
     { key: 'name', label: 'Nama Anggota', render: (m: MemberData) => (
       <div className="flex flex-col">
-        <span className="text-sm font-bold text-white">{m.name}</span>
-        <span className="text-[10px] text-slate-400 font-mono">{m.nis || '-'}</span>
+        <span className="text-sm font-bold text-royal-900">{m.name}</span>
+        <span className="text-[10px] text-royal-400 font-mono">{m.nis || '-'}</span>
       </div>
     )},
     { key: 'status', label: 'Status Kehadiran', render: (m: MemberData) => (
@@ -111,8 +111,8 @@ export default function AbsensiClient({ slug }: Props) {
             onClick={() => updateStatus(m.id, s)}
             className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase transition-all ${
               attendance[m.id]?.attendance_status === s 
-                ? 'bg-persian-blue text-white ring-2 ring-persian-blue/20' 
-                : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                ? 'bg-royal-600 text-white ring-2 ring-royal-600/20' 
+                : 'bg-cream-50/80 text-royal-400 hover:bg-cream-200'
             }`}
           >
             {s}
@@ -123,7 +123,7 @@ export default function AbsensiClient({ slug }: Props) {
     { key: 'cash', label: 'Iuran Kas (Rp)', render: (m: MemberData) => (
       <div className="flex items-center gap-2">
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-500">Rp</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-royal-500">Rp</span>
           <input 
             type="number"
             value={attendance[m.id]?.cash_amount || ''}
@@ -141,7 +141,7 @@ export default function AbsensiClient({ slug }: Props) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-400" />
             <input 
               type="date"
               value={date}
@@ -149,7 +149,7 @@ export default function AbsensiClient({ slug }: Props) {
               className="input pl-10 h-10 w-44" 
             />
           </div>
-          <div className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-400">
+          <div className="px-3 py-2 rounded-xl bg-cream-50/80 border border-royal-200 text-xs text-royal-400">
             {members.length} Anggota
           </div>
         </div>

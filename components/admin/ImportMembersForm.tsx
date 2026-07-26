@@ -107,13 +107,13 @@ export default function ImportMembersForm({ user }: ImportMembersFormProps) {
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
+          <label className="block text-sm font-medium text-royal-300 mb-2">
             Pilih Organisasi Tujuan Impor
           </label>
           <select
             value={targetOrg}
             onChange={(e) => setTargetOrg(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+            className="w-full bg-cream-50/5 border border-royal-800/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-royal-500"
             disabled={loading}
           >
             <option value="" className="bg-[#1e293b]">-- Pilih Organisasi --</option>
@@ -126,11 +126,11 @@ export default function ImportMembersForm({ user }: ImportMembersFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
+          <label className="block text-sm font-medium text-royal-300 mb-2">
             File Excel (.xlsx)
           </label>
           
-          <div className="border-2 border-dashed border-white/10 rounded-2xl p-8 hover:border-blue-500/50 hover:bg-white/[0.02] transition duration-200 relative group flex flex-col items-center justify-center text-center cursor-pointer">
+          <div className="border-2 border-dashed border-royal-800/30 rounded-2xl p-8 hover:border-royal-500/50 hover:bg-cream-50/[0.02] transition duration-200 relative group flex flex-col items-center justify-center text-center cursor-pointer">
             <input
               type="file"
               accept=".xlsx"
@@ -139,19 +139,19 @@ export default function ImportMembersForm({ user }: ImportMembersFormProps) {
               disabled={loading}
             />
             
-            <div className="p-4 rounded-full bg-white/10 text-blue-400 group-hover:scale-110 transition duration-200 mb-3">
+            <div className="p-4 rounded-full bg-cream-50/10 text-royal-400 group-hover:scale-110 transition duration-200 mb-3">
               {file ? <FileSpreadsheet className="w-8 h-8" /> : <Upload className="w-8 h-8" />}
             </div>
 
             {file ? (
               <div>
                 <p className="text-white font-medium text-sm max-w-xs truncate">{file.name}</p>
-                <p className="text-xs text-slate-400 mt-1">{(file.size / 1024).toFixed(1)} KB</p>
+                <p className="text-xs text-royal-400 mt-1">{(file.size / 1024).toFixed(1)} KB</p>
               </div>
             ) : (
               <div>
-                <p className="text-slate-300 text-sm font-medium">Klik atau seret file Excel ke sini</p>
-                <p className="text-xs text-slate-400 mt-1">Hanya mendukung format .xlsx</p>
+                <p className="text-royal-300 text-sm font-medium">Klik atau seret file Excel ke sini</p>
+                <p className="text-xs text-royal-400 mt-1">Hanya mendukung format .xlsx</p>
               </div>
             )}
           </div>
@@ -160,7 +160,7 @@ export default function ImportMembersForm({ user }: ImportMembersFormProps) {
         <button
           type="submit"
           disabled={loading || !file || !targetOrg}
-          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold hover:opacity-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-royal-500 to-cyan-500 text-white font-bold hover:opacity-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {loading ? (
             <span className="flex items-center gap-2">
@@ -191,17 +191,17 @@ export default function ImportMembersForm({ user }: ImportMembersFormProps) {
 
       {/* Detailed Report */}
       {importSummary && (importSummary.imported > 0 || importSummary.failed > 0) && (
-        <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-5 space-y-4">
+        <div className="bg-white/[0.02] border border-royal-800/30 rounded-2xl p-5 space-y-4">
           <h3 className="text-sm font-bold text-white uppercase tracking-wider">Laporan Hasil Impor</h3>
           
           <div className="grid grid-cols-2 gap-4">
             <div className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl text-center">
               <p className="text-2xl font-bold text-emerald-400">{importSummary.imported}</p>
-              <p className="text-xs text-slate-400 font-medium mt-1">Berhasil Ditambahkan</p>
+              <p className="text-xs text-royal-400 font-medium mt-1">Berhasil Ditambahkan</p>
             </div>
             <div className="p-3 bg-red-500/5 border border-red-500/10 rounded-xl text-center">
               <p className="text-2xl font-bold text-red-400">{importSummary.failed}</p>
-              <p className="text-xs text-slate-400 font-medium mt-1">Gagal / Dilewati</p>
+              <p className="text-xs text-royal-400 font-medium mt-1">Gagal / Dilewati</p>
             </div>
           </div>
 
@@ -210,10 +210,10 @@ export default function ImportMembersForm({ user }: ImportMembersFormProps) {
               <p className="text-xs font-bold text-red-400 flex items-center gap-1.5">
                 <AlertCircle className="w-3.5 h-3.5" /> Detail Kesalahan Impor:
               </p>
-              <div className="max-h-48 overflow-y-auto border border-white/5 rounded-xl bg-white/[0.01] divide-y divide-white/[0.03]">
+              <div className="max-h-48 overflow-y-auto border border-cream-50/5 rounded-xl bg-white/[0.01] divide-y divide-white/[0.03]">
                 {importSummary.errors.map((err, idx) => (
                   <div key={idx} className="p-3 text-xs flex items-start justify-between gap-3 text-left">
-                    <span className="font-semibold text-slate-300 shrink-0">{err.row}</span>
+                    <span className="font-semibold text-royal-300 shrink-0">{err.row}</span>
                     <span className="text-red-400 text-right">{err.error}</span>
                   </div>
                 ))}
