@@ -77,7 +77,7 @@ function getFlattenedNavItems(role: string, isCollapsed: boolean): SidebarItem[]
 
 function RoleBadge({ role }: { role: string }) {
   const colors: Record<string, string> = {
-    SUPER_ADMIN: 'bg-royal-600 border-royal-600 text-white font-extrabold',
+    SUPER_ADMIN: 'bg-yellow-bright-400 border-yellow-bright-400 text-royal-900 font-extrabold',
     ORG_ADMIN: 'bg-yellow-bright-100 border-yellow-bright-300 text-yellow-bright-800 font-extrabold',
   }
   return (
@@ -107,8 +107,8 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
         return (
           <div className="px-1 py-4 flex items-center justify-between border-b border-royal-200 mb-2">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-royal-600 rounded-xl flex items-center justify-center shadow-sm shadow-royal-600/30 flex-shrink-0">
-                <GraduationCap className="w-5 h-5 text-white" />
+              <div className="w-9 h-9 bg-yellow-bright-400 rounded-xl flex items-center justify-center shadow-sm shadow-yellow-bright-400/30 flex-shrink-0">
+                <GraduationCap className="w-5 h-5 text-royal-900" />
               </div>
               {!isCollapsed && (
                 <div className="fade-in whitespace-nowrap">
@@ -155,18 +155,18 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
             className={cn(
               'group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ease-out',
               active 
-                ? 'bg-royal-50 text-royal-600 font-semibold border-l-4 border-royal-600' 
+                ? 'bg-cream-100 text-royal-900 font-semibold border-l-4 border-yellow-bright-400' 
                 : 'text-royal-500 hover:text-royal-900 hover:bg-cream-100 hover:translate-x-1',
               isNonaktif && 'opacity-60 cursor-not-allowed'
             )}
           >
-            <Icon className={cn("w-5 h-5 transition-transform duration-300 group-hover:scale-110", active ? "text-royal-600" : "text-royal-400 group-hover:text-royal-800")} />
+            <Icon className={cn("w-5 h-5 transition-transform duration-300 group-hover:scale-110", active ? "text-yellow-bright-400" : "text-royal-400 group-hover:text-royal-800")} />
             {!isCollapsed && (
               <span className={cn("flex-1 truncate text-[13px]", active ? "font-semibold" : "font-medium text-royal-800")}>
                 {item.label}
               </span>
             )}
-            {!isCollapsed && active && <div className="w-1.5 h-1.5 rounded-full bg-royal-600" />}
+            {!isCollapsed && active && <div className="w-1.5 h-1.5 rounded-full bg-yellow-bright-400" />}
           </Link>
         )
     }
@@ -198,7 +198,7 @@ export default function Sidebar({ user, mobileOpen, onClose, isCollapsed }: Side
               />
             </div>
           ) : (
-            <div className="w-8 h-8 rounded-full bg-royal-600 flex items-center justify-center text-white text-xs font-black flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-yellow-bright-400 flex items-center justify-center text-royal-900 text-xs font-black flex-shrink-0">
               {user.nama.charAt(0).toUpperCase()}
             </div>
           )}

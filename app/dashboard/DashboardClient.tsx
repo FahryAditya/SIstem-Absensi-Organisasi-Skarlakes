@@ -451,15 +451,15 @@ export default function DashboardClient({ user }: Props) {
               <TextType as="h2" text={user.nama} className="text-2xl font-black mt-0.5" typingSpeed={60} initialDelay={600} loop={false} cursorClassName="text-white opacity-70" />
             </div>
             <div className="flex items-center gap-3 mt-2 flex-wrap">
-              <span className="text-xs font-semibold bg-cream-100/80 px-2.5 py-1 rounded-full">
+              <span className="text-xs font-semibold bg-cream-100 px-2.5 py-1 rounded-full text-royal-900">
                 {ROLE_LABELS[user.role] || user.role}
               </span>
               {!isAdmin && stats?.orgName && (
-                <span className="text-xs font-bold bg-cream-100 px-2.5 py-1 rounded-full border border-white/40">
+                <span className="text-xs font-bold bg-cream-100 px-2.5 py-1 rounded-full border border-white/40 text-royal-900">
                   {stats.orgName}
                 </span>
               )}
-              <span className="text-xs text-royal-600/30 flex items-center gap-1">
+              <span className="text-xs text-white/60 flex items-center gap-1">
                 <Clock className="w-3 h-3" />
                 {formatDate(now, 'EEEE, dd MMMM yyyy')}
               </span>
@@ -470,7 +470,7 @@ export default function DashboardClient({ user }: Props) {
                   <Link 
                     key={o.slug} 
                     href={['programming', 'english', 'osis', 'mpk'].includes(o.slug) ? '#' : `/admin/organizations/${o.slug}`}
-                    className={`text-xs font-bold bg-cream-100 border border-white/25 px-2.5 py-1 rounded-lg transition-all ${['programming', 'english', 'osis', 'mpk'].includes(o.slug) ? 'cursor-default' : 'hover:bg-cream-200 hover:border-royal-300 cursor-pointer'}`}
+                    className={`text-xs font-bold bg-cream-100 text-royal-900 border border-white/25 px-2.5 py-1 rounded-lg transition-all ${['programming', 'english', 'osis', 'mpk'].includes(o.slug) ? 'cursor-default' : 'hover:bg-cream-200 hover:border-royal-300 cursor-pointer'}`}
                   >
                     {ORG_LABELS[o.slug as OrgType] || o.nama}
                   </Link>
@@ -501,7 +501,7 @@ export default function DashboardClient({ user }: Props) {
             </div>
             <div>
               <div className="text-xs text-royal-400 font-semibold leading-tight">{s.label}</div>
-              <div className="text-xl font-black text-white mt-1 font-mono leading-none">
+              <div className="text-xl font-black text-royal-900 mt-1 font-mono leading-none">
                 {s.isCurrency ? s.value : `${s.value}`}
               </div>
               {s.suffix && <div className="text-[10px] text-royal-400 mt-0.5">{s.suffix}</div>}
@@ -515,7 +515,7 @@ export default function DashboardClient({ user }: Props) {
         <div className="card p-5">
           <div className="flex items-center gap-2 mb-4">
             <PlusCircleIcon className="w-5 h-5 text-royal-600" />
-            <h3 className="text-base font-bold text-white">Quick Add / Import Anggota</h3>
+            <h3 className="text-base font-bold text-royal-900">Quick Add / Import Anggota</h3>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -581,10 +581,10 @@ export default function DashboardClient({ user }: Props) {
             {/* Bulk Import */}
             <div className="flex flex-col justify-center space-y-4 border-t md:border-t-0 md:border-l border-royal-200 pt-4 md:pt-0 md:pl-6">
               <div>
-                <h4 className="text-sm font-bold text-white mb-1">Import Massal (CSV/Excel)</h4>
+                <h4 className="text-sm font-bold text-royal-900 mb-1">Import Massal (CSV/Excel)</h4>
                 <p className="text-xs text-royal-400 leading-relaxed">
                   Upload file <b>.xlsx</b> atau <b>.csv</b>. Pastikan baris pertama memiliki header: <br/>
-                  <code className="text-white bg-royal-300 px-1 py-0.5 rounded">Nama</code>, <code className="text-white bg-royal-300 px-1 py-0.5 rounded">Kelas</code>, <code className="text-white bg-royal-300 px-1 py-0.5 rounded">NIS</code>{(quickOrg === 'osis' || quickOrg === 'mpk') && <>, <code className="text-white bg-royal-300 px-1 py-0.5 rounded">Jabatan</code></>}.
+                  <code className="text-royal-900 bg-royal-100 px-1 py-0.5 rounded">Nama</code>, <code className="text-royal-900 bg-royal-100 px-1 py-0.5 rounded">Kelas</code>, <code className="text-royal-900 bg-royal-100 px-1 py-0.5 rounded">NIS</code>{(quickOrg === 'osis' || quickOrg === 'mpk') && <>, <code className="text-royal-900 bg-royal-100 px-1 py-0.5 rounded">Jabatan</code></>}.
                 </p>
               </div>
               <input
@@ -617,7 +617,7 @@ export default function DashboardClient({ user }: Props) {
         <div className="card p-5 min-h-[280px]">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="w-4 h-4 text-royal-600" />
-            <h3 className="text-sm font-bold text-white">
+            <h3 className="text-sm font-bold text-royal-900">
               {isAdmin ? 'Kehadiran 7 Hari Terakhir (Semua Eskul)' : `Kehadiran 7 Hari Terakhir ${stats?.orgName || ''}`}
             </h3>
           </div>
@@ -648,7 +648,7 @@ export default function DashboardClient({ user }: Props) {
         <div className="card p-5 min-h-[280px]">
           <div className="flex items-center gap-2 mb-4">
             <Wallet className="w-4 h-4 text-royal-600" />
-            <h3 className="text-sm font-bold text-white">
+            <h3 className="text-sm font-bold text-royal-900">
               {isAdmin ? 'Uang Kas 6 Bulan Terakhir (Semua Eskul)' : `Uang Kas 6 Bulan Terakhir ${stats?.orgName || ''}`}
             </h3>
           </div>
@@ -685,7 +685,7 @@ export default function DashboardClient({ user }: Props) {
 
       {/* ── Gamification Leaderboard ─────────────────────────── */}
       {(orgs.some(o => o.slug === 'programming') || orgs.some(o => o.slug === 'english')) && (
-        <div className="card p-5 relative overflow-hidden shadow-[0_0_20px_rgba(30,58,138,0.1)] border-t-2 border-t-[#1E90FF]">
+        <div className="card p-5 relative overflow-hidden shadow-[0_0_20px_rgba(30,58,138,0.1)] border-t-2 border-t-royal-600">
           {/* Glowing neon bg accents */}
           <div className="absolute -top-12 -right-12 w-32 h-32 bg-royal-600/10 rounded-full blur-2xl pointer-events-none" />
           <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-royal-300/20 rounded-full blur-2xl pointer-events-none" />
@@ -696,7 +696,7 @@ export default function DashboardClient({ user }: Props) {
                 <Trophy className="w-5 h-5 text-yellow-bright-300 animate-pulse" />
               </div>
               <div>
-                <h3 className="text-base font-extrabold text-white">Gamification Leaderboard</h3>
+                <h3 className="text-base font-extrabold text-royal-900">Gamification Leaderboard</h3>
                 <p className="text-xs text-royal-400">Peringkat 10 besar siswa dengan XP & keaktifan tertinggi</p>
               </div>
             </div>
@@ -709,8 +709,8 @@ export default function DashboardClient({ user }: Props) {
                   onClick={() => setActiveLeaderboardTab('programming')}
                   className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 ${
                     activeLeaderboardTab === 'programming'
-                      ? 'bg-royal-900 text-royal-900 shadow-sm'
-                      : 'text-royal-400 hover:text-white'
+                      ? 'bg-royal-900 text-white shadow-sm'
+                      : 'text-royal-400 hover:text-royal-900'
                   }`}
                 >
                   Programming
@@ -722,8 +722,8 @@ export default function DashboardClient({ user }: Props) {
                   onClick={() => setActiveLeaderboardTab('english')}
                   className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 ${
                     activeLeaderboardTab === 'english'
-                      ? 'bg-royal-900 text-royal-900 shadow-sm'
-                      : 'text-royal-400 hover:text-white'
+                      ? 'bg-royal-900 text-white shadow-sm'
+                      : 'text-royal-400 hover:text-royal-900'
                   }`}
                 >
                   English Club
@@ -862,7 +862,7 @@ export default function DashboardClient({ user }: Props) {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Activity className="w-4 h-4 text-royal-600" />
-              <h3 className="text-sm font-bold text-white">Aktivitas Terbaru</h3>
+              <h3 className="text-sm font-bold text-royal-900">Aktivitas Terbaru</h3>
             </div>
             <a href="/log" className="text-xs font-semibold text-royal-600 hover:underline">Lihat semua →</a>
           </div>
@@ -898,11 +898,11 @@ export default function DashboardClient({ user }: Props) {
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
               <Zap className="w-4 h-4 text-royal-600" />
-              <h3 className="text-sm font-bold text-white">Statistik Request API</h3>
+              <h3 className="text-sm font-bold text-royal-900">Statistik Request API</h3>
             </div>
             {!loadingRequestStats && requestStats && (
               <span className="text-xs font-semibold text-royal-400">
-                Total: <span className="text-white font-black">{requestStats.grandTotal.toLocaleString('id-ID')}</span> request
+                Total: <span className="text-royal-900 font-black">{requestStats.grandTotal.toLocaleString('id-ID')}</span> request
               </span>
             )}
           </div>
@@ -1005,7 +1005,7 @@ export default function DashboardClient({ user }: Props) {
                 descLabel: 'Pembaruan & Peningkatan Fitur',
               },
               pengumuman: {
-                gradientFrom: '#001F3F', gradientVia: '#001F3F', gradientTo: '#1E90FF',
+                gradientFrom: '#0F2668', gradientVia: '#1E3A8A', gradientTo: '#3B82F6',
                 badgeBg: 'bg-cream-50/80', badgeText: 'text-royal-300',
                 badgeLabel: '📢 Pengumuman',
                 iconBg: 'bg-cream-50/80', iconColor: 'text-royal-900',

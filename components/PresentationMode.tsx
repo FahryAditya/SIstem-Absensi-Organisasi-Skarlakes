@@ -181,7 +181,7 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
       value: stats.totalSiswa,
       suffix: 'siswa',
       icon: Users,
-      accent: '#1E90FF',
+      accent: '#3B82F6',
       glow: 'rgba(84,130,180,0.35)',
     },
     {
@@ -401,7 +401,7 @@ export default function PresentationMode({ stats, charts, user }: PresentationMo
                             contentStyle={{ fontSize: 13, borderRadius: 12, background: '#021840', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                             labelStyle={{ fontWeight: 700, color: 'white' }}
                           />
-                          <Bar dataKey="hadir" name="Hadir" fill="#1E90FF" radius={[6, 6, 0, 0]} />
+                          <Bar dataKey="hadir" name="Hadir" fill="#3B82F6" radius={[6, 6, 0, 0]} />
                           <Bar dataKey="tidak_hadir" name="Tidak Hadir" fill="rgba(248,113,113,0.7)" radius={[6, 6, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>

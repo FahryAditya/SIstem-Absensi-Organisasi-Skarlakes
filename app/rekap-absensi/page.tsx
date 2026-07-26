@@ -151,7 +151,7 @@ export default function RekapAbsensiPage() {
   )
 
   return (
-    <div className="min-h-screen bg-[#0f1117] text-white p-4 md:p-8">
+    <div className="min-h-screen bg-royal-950 text-white p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-4">

@@ -265,7 +265,7 @@ export default function KasClient({ user }: Props) {
         <div>
           <div className="flex items-center gap-2.5">
             <Wallet className="w-6 h-6 text-yellow-bright-400" />
-            <h1 className="text-2xl font-black text-white tracking-tight">Buku Kas</h1>
+            <h1 className="text-2xl font-black text-royal-900 tracking-tight">Buku Kas</h1>
           </div>
           <p className="text-sm text-royal-400 mt-1">Laporan rekapitulasi pembayaran uang kas anggota secara keseluruhan.</p>
         </div>
@@ -328,7 +328,7 @@ export default function KasClient({ user }: Props) {
       <div className="card p-5">
         <div className="flex items-center gap-2 mb-4">
           <Wallet className="w-5 h-5 text-yellow-bright-400" />
-          <h3 className="text-sm font-bold text-white">Transaksi Manual Cepat</h3>
+          <h3 className="text-sm font-bold text-royal-900">Transaksi Manual Cepat</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-4 bg-green-500/10 rounded-lg border border-green-200">

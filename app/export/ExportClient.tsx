@@ -160,7 +160,7 @@ export default function ExportClient({ user }: Props) {
                   className={`p-4 rounded-lg border text-left transition-all ${exportType === opt.value ? 'border-royal-400 bg-royal-600/10 ring-2 ring-royal-500/20' : 'border-royal-800/30 hover:border-royal-300 bg-royal-950 hover:bg-cream-50/5'}`}
                 >
                   <Icon className={exportType === opt.value ? 'w-5 h-5 text-royal-400 mb-2' : 'w-5 h-5 text-royal-400 mb-2'} />
-                  <div className="text-sm font-bold text-white">{opt.label}</div>
+                  <div className="text-sm font-bold text-royal-900">{opt.label}</div>
                   <div className="text-xs text-royal-400 mt-0.5 leading-relaxed">{opt.desc}</div>
                 </button>
               )
@@ -232,9 +232,9 @@ export default function ExportClient({ user }: Props) {
         <div className="card p-5">
           <div className="flex items-center gap-2.5 mb-3">
             <FileSpreadsheet className="w-5 h-5 text-royal-400" />
-            <h3 className="text-sm font-bold text-white">Kontrol Akses</h3>
+            <h3 className="text-sm font-bold text-royal-900">Kontrol Akses</h3>
           </div>
-          <div className="space-y-3 text-sm text-royal-300">
+          <div className="space-y-3 text-sm text-royal-600">
             <div><strong>Super Admin:</strong> dapat export semua ekskul atau memilih ekskul tertentu.</div>
             <div><strong>Admin Ekskul:</strong> export dibatasi sesuai role pengguna.</div>
             <div><strong>Tanggal:</strong> wajib diisi untuk semua export.</div>

@@ -41,7 +41,7 @@ interface Props {
   }
 }
 
-const COLORS = ['#1E90FF', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6']
+const COLORS = ['#3B82F6', '#10B981', '#FBBF24', '#EF4444', '#8B5CF6']
 
 export default function AttendanceCharts({ data }: Props) {
   return (
@@ -59,7 +59,7 @@ export default function AttendanceCharts({ data }: Props) {
                 contentStyle={{ fontSize: 12, borderRadius: 8, background: '#1e293b', border: '1px solid #334155', color: '#f1f5f9' }}
               />
               <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="hadir" name="Hadir" fill="#1E90FF" radius={[4,4,0,0]} animationDuration={1000} />
+              <Bar dataKey="hadir" name="Hadir" fill="#3B82F6" radius={[4,4,0,0]} animationDuration={1000} />
               <Bar dataKey="tidak_hadir" name="Tidak Hadir" fill="#FCA5A5" radius={[4,4,0,0]} animationDuration={1000} />
             </BarChart>
           </ResponsiveContainer>
@@ -151,7 +151,7 @@ export default function AttendanceCharts({ data }: Props) {
                       dataKey="value"
                       animationDuration={1000}
                     >
-                      <Cell fill="#1E90FF" />
+                      <Cell fill="#3B82F6" />
                       <Cell fill="#FCA5A5" />
                     </Pie>
                     <Tooltip />

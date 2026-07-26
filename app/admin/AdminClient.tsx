@@ -381,7 +381,7 @@ export default function AdminClient({ user }: Props) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {roleGroups.map(rg => (
           <div key={rg.role} className={`card p-4 border ${rg.color}`}>
-            <div className="flex items-center gap-2 mb-1"><div className={`w-2 h-2 rounded-full ${rg.dot}`}/><span className="text-xs font-bold text-royal-300">{rg.label}</span></div>
+            <div className="flex items-center gap-2 mb-1"><div className={`w-2 h-2 rounded-full ${rg.dot}`}/><span className="text-xs font-bold text-royal-600">{rg.label}</span></div>
             <div className="text-2xl font-black text-royal-900 font-mono">{roleCount(rg.role)}</div>
           </div>
         ))}
@@ -438,8 +438,8 @@ export default function AdminClient({ user }: Props) {
             <Shield className="w-4 h-4 flex-shrink-0 mt-0.5"/>
             <div><strong>Hak Akses:</strong><br/>
               <span className="text-yellow-bright-400 font-bold">Programming</span> → hanya data Programming<br/>
-              <span className="text-royal-300">English</span> → hanya data English Club<br/>
-              <span className="text-royal-300">OSIS & MPK</span> → hanya data OSIS & MPK<br/>
+              <span className="text-royal-600">English</span> → hanya data English Club<br/>
+              <span className="text-royal-600">OSIS & MPK</span> → hanya data OSIS & MPK<br/>
               <span className="text-yellow-bright-400">Administrator</span> → semua data + log aktivitas
             </div>
           </div>
@@ -512,7 +512,7 @@ export default function AdminClient({ user }: Props) {
       >
         <div className="space-y-4">
           <div className="p-4 bg-royal-600/20 border border-royal-500/40 rounded-2xl">
-            <div className="flex items-center gap-2 text-white font-black mb-2.5">
+            <div className="flex items-center gap-2 text-royal-900 font-black mb-2.5">
               <Sparkles className="w-4 h-4 text-yellow-bright-500 animate-pulse" />
               Database Dioptimalkan Sempurna!
             </div>
@@ -548,7 +548,7 @@ export default function AdminClient({ user }: Props) {
                 <tbody className="divide-y divide-royal-50">
                   {optimizeResult?.tableSizes?.map((tbl: any) => (
                     <tr key={tbl.table_name} className="hover:bg-cream-100 transition-colors">
-                      <td className="p-2.5 font-mono text-royal-300 font-semibold">{tbl.table_name}</td>
+                      <td className="p-2.5 font-mono text-royal-600 font-semibold">{tbl.table_name}</td>
                       <td className="p-2.5 text-right font-mono font-bold text-royal-200">{tbl.total_size}</td>
                     </tr>
                   ))}
@@ -577,7 +577,7 @@ export default function AdminClient({ user }: Props) {
             </div>
           ) : (
             <>
-              <div className="p-3 rounded-xl bg-cream-50/80 border border-royal-200 text-[11px] text-royal-300 leading-relaxed">
+              <div className="p-3 rounded-xl bg-cream-50/80 border border-royal-200 text-[11px] text-royal-600 leading-relaxed">
                 <div className="flex gap-2 font-bold mb-1"><Shield className="w-3.5 h-3.5" /> INFORMASI PENTING</div>
                 Gunakan <strong>Sandi Aplikasi (App Password)</strong> Gmail 16-karakter. Jangan gunakan sandi utama akun Google Anda. Email ini akan digunakan oleh seluruh admin untuk mengirimkan pengumuman.
               </div>

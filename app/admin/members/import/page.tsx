@@ -13,29 +13,29 @@ export default async function ImportMembersPage() {
     <DashboardLayout user={user} pageTitle="Impor Anggota">
       <div className="space-y-6 max-w-3xl mx-auto">
         <div className="mb-4">
-          <Link href="/dashboard" className="flex items-center gap-2 text-royal-400 hover:text-white text-sm transition-colors w-fit">
+          <Link href="/dashboard" className="flex items-center gap-2 text-royal-400 hover:text-royal-900 text-sm transition-colors w-fit">
             <ArrowLeft className="w-4 h-4" /> Kembali ke Dashboard
           </Link>
         </div>
 
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-white/10 rounded-2xl text-royal-400">
+          <div className="p-3 bg-cream-100 rounded-2xl text-royal-500">
             <FileSpreadsheet className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">Impor Anggota Organisasi</h1>
+            <h1 className="text-2xl font-bold text-royal-900">Impor Anggota Organisasi</h1>
             <p className="text-royal-400 text-sm">Tambahkan data anggota massal via file spreadsheet Excel (.xlsx)</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-6">
           {/* Form wrapper */}
-          <div className="bg-[#0f1117] border border-white/10 rounded-2xl p-6 shadow-xl">
+          <div className="bg-royal-950 border border-white/10 rounded-2xl p-6 shadow-xl">
             <ImportMembersForm user={user} />
           </div>
 
           {/* Instructions */}
-          <div className="bg-[#0f1117]/50 border border-white/10 rounded-2xl p-6 space-y-4">
+          <div className="bg-royal-950/50 border border-white/10 rounded-2xl p-6 space-y-4">
             <h3 className="font-bold text-white text-sm uppercase tracking-wider">Format Pengisian Template Excel</h3>
             <p className="text-royal-400 text-xs leading-relaxed">
               Pastikan struktur kolom pada file Excel Anda mengikuti format berikut agar data dapat terbaca dengan sukses oleh sistem:

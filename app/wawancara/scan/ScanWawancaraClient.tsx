@@ -191,7 +191,7 @@ export default function ScanWawancaraClient({ sesiId, token }: Props) {
                   <span className="text-2xl">🏆</span>
                 </div>
                 <div className="text-base font-extrabold text-green-400 tracking-wider">WAWANCARA SELESAI!</div>
-                <div className="text-6xl font-black font-mono text-royal-950">
+                <div className="text-6xl font-black font-mono text-white">
                   {myQueue?.kelas?.includes('[MPK]') ? 'MP' : myQueue?.kelas?.includes('[OSIS]') ? 'OS' : (session?.organisasi_type === 'osis' ? 'OS' : 'MP')}
                   {queueNumber}
                 </div>

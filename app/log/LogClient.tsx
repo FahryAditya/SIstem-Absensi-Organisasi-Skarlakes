@@ -27,10 +27,10 @@ interface LogEntry {
 
 const AKSI_STYLE: Record<string, string> = {
   CREATE: 'bg-green-100 text-green-400 border-royal-800/30',
-  UPDATE: 'bg-royal-100 text-royal-300 border-royal-800/30',
+  UPDATE: 'bg-royal-100 text-royal-600 border-royal-800/30',
   DELETE: 'bg-red-100 text-red-400 border-royal-800/30',
-  LOGIN:  'bg-royal-600/20 text-royal-300 border-royal-800/30',
-  LOGOUT: 'bg-cream-50/10 text-royal-300 border-royal-800/30',
+  LOGIN:  'bg-royal-600/20 text-royal-600 border-royal-800/30',
+  LOGOUT: 'bg-cream-50/10 text-royal-600 border-royal-800/30',
 }
 
 const PAGE_SIZE = 25
@@ -103,7 +103,7 @@ export default function LogClient() {
           <div className="flex items-center gap-2.5">
             <ScrollText className="w-5 h-5 text-royal-400" />
             <h2 className="page-title">Log Aktivitas</h2>
-            <span className="badge bg-cream-50/10 text-royal-300 border border-royal-800/30">{total} log</span>
+            <span className="badge bg-cream-50/10 text-royal-600 border border-royal-800/30">{total} log</span>
           </div>
           <p className="page-sub mt-0.5">Rekam jejak semua perubahan data dalam sistem</p>
         </div>
@@ -174,10 +174,10 @@ export default function LogClient() {
                       <span className="text-xs text-royal-400 font-mono whitespace-nowrap">{formatDateTime(log.created_at)}</span>
                     </td>
                     <td className="td">
-                      <div className="text-sm font-semibold text-white whitespace-nowrap">{log.user_nama}</div>
+                      <div className="text-sm font-semibold text-royal-900 whitespace-nowrap">{log.user_nama}</div>
                     </td>
                     <td className="td">
-                      <span className={`badge border text-[10px] font-black ${AKSI_STYLE[log.aksi] || 'bg-cream-50/10 text-royal-300'}`}>
+                      <span className={`badge border text-[10px] font-black ${AKSI_STYLE[log.aksi] || 'bg-cream-50/10 text-royal-600'}`}>
                         {log.aksi}
                       </span>
                     </td>
@@ -212,7 +212,7 @@ export default function LogClient() {
               <button onClick={() => setPage(p => Math.max(1, p-1))} disabled={page <= 1} className="btn-icon disabled:opacity-30">
                 <ChevronRight className="w-4 h-4 rotate-180" />
               </button>
-              <span className="text-xs font-medium text-royal-300 px-2">{page}</span>
+              <span className="text-xs font-medium text-royal-600 px-2">{page}</span>
               <button onClick={() => setPage(p => Math.min(totalPages, p+1))} disabled={page >= totalPages} className="btn-icon disabled:opacity-30">
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -228,11 +228,11 @@ export default function LogClient() {
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="form-group">
                 <label className="label">User</label>
-                <div className="text-white font-semibold">{detailLog.user_nama}</div>
+                <div className="text-royal-900 font-semibold">{detailLog.user_nama}</div>
               </div>
               <div className="form-group">
                 <label className="label">Waktu</label>
-                <div className="text-royal-300 font-mono text-xs">{formatDateTime(detailLog.created_at)}</div>
+                <div className="text-royal-600 font-mono text-xs">{formatDateTime(detailLog.created_at)}</div>
               </div>
               <div className="form-group">
                 <label className="label">Aksi</label>
@@ -240,7 +240,7 @@ export default function LogClient() {
               </div>
               <div className="form-group">
                 <label className="label">Tabel</label>
-                <span className="font-mono text-xs bg-cream-50/10 px-2 py-1 rounded text-royal-300">{detailLog.tabel}</span>
+                <span className="font-mono text-xs bg-cream-50/10 px-2 py-1 rounded text-royal-600">{detailLog.tabel}</span>
               </div>
             </div>
 

@@ -594,7 +594,7 @@ export default function ReportsClient({ user }: Props) {
         <div>
           <div className="flex items-center gap-2.5">
             <BarChart3 className="w-6 h-6 text-royal-600" />
-            <h1 className="text-2xl font-black text-white tracking-tight">Laporan Statistik</h1>
+            <h1 className="text-2xl font-black text-royal-900 tracking-tight">Laporan Statistik</h1>
           </div>
           <p className="text-sm text-royal-400 mt-1">Kompilasi dan visualisasi data kehadiran, keuangan, dan kas siswa terintegrasi.</p>
         </div>

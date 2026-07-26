@@ -49,12 +49,12 @@ export default function AdminEmailClient({ user }: AdminEmailClientProps) {
     <div className="space-y-6">
       {/* Back button and history link */}
       <div className="flex items-center justify-between">
-        <Link href="/dashboard" className="flex items-center gap-2 text-royal-400 hover:text-white text-sm transition-colors w-fit">
+        <Link href="/dashboard" className="flex items-center gap-2 text-royal-400 hover:text-royal-900 text-sm transition-colors w-fit">
           <ArrowLeft className="w-4 h-4" /> Kembali ke Dashboard
         </Link>
         <Link
           href="/admin/email/history"
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-sm font-semibold text-royal-300 hover:bg-white/10 hover:text-white transition-all"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cream-100 border border-royal-200 text-sm font-semibold text-royal-600 hover:bg-cream-200 hover:text-royal-900 transition-all"
         >
           <History className="w-4 h-4" />
           Lihat Riwayat Kirim
@@ -63,11 +63,11 @@ export default function AdminEmailClient({ user }: AdminEmailClientProps) {
 
       {/* Title */}
       <div className="flex items-center gap-3">
-        <div className="p-3 bg-white/10 rounded-2xl text-royal-400">
+        <div className="p-3 bg-cream-100 rounded-2xl text-royal-500">
           <Mail className="w-6 h-6" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-white">Kirim Notifikasi Email</h1>
+          <h1 className="text-2xl font-bold text-royal-900">Kirim Notifikasi Email</h1>
           <p className="text-royal-400 text-sm">Kirim email undangan pertemuan/rapat otomatis ke anggota organisasi</p>
         </div>
       </div>
@@ -82,7 +82,7 @@ export default function AdminEmailClient({ user }: AdminEmailClientProps) {
               className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all ${
                 activeOrg === org.id
                   ? 'bg-gradient-to-r from-royal-500 to-royal-600 text-white border-transparent'
-                  : 'bg-white/5 border-white/10 text-royal-400 hover:bg-white/10'
+                  : 'bg-cream-100 border-royal-200 text-royal-500 hover:bg-cream-200'
               }`}
             >
               {org.label}
@@ -92,7 +92,7 @@ export default function AdminEmailClient({ user }: AdminEmailClientProps) {
       )}
 
       {/* Send Email Form Container */}
-      <div className="bg-[#0f1117] border border-white/10 rounded-2xl p-6 shadow-xl max-w-3xl">
+      <div className="bg-royal-950 border border-white/10 rounded-2xl p-6 shadow-xl max-w-3xl">
         {loadingMembers ? (
           <div className="py-20 text-center text-royal-400">
             <div className="w-6 h-6 border-2 border-royal-500 border-t-white rounded-full animate-spin mx-auto mb-3" />

@@ -41,7 +41,7 @@ interface Props {
   activeOrg?: string
 }
 
-const COLORS = ['#1E90FF', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899']
+const COLORS = ['#3B82F6', '#10B981', '#FBBF24', '#EF4444', '#8B5CF6', '#EC4899']
 
 export default function KasSiswaCharts({ data, activeOrg }: Props) {
   const orgData = activeOrg && data.kasSiswa[activeOrg as keyof typeof data.kasSiswa] 
@@ -69,7 +69,7 @@ export default function KasSiswaCharts({ data, activeOrg }: Props) {
                   return item ? `${label} (${item.kelas})` : label
                 }}
               />
-              <Bar dataKey="total_kas" name="Total Kas" fill="#1E90FF" radius={[0,4,4,0]} animationDuration={1200} />
+              <Bar dataKey="total_kas" name="Total Kas" fill="#3B82F6" radius={[0,4,4,0]} animationDuration={1200} />
             </BarChart>
           </ResponsiveContainer>
         </div>

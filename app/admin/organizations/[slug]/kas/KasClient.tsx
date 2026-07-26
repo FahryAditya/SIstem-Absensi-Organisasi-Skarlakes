@@ -42,10 +42,10 @@ export default function KasClient({ slug }: Props) {
       <span className="text-xs text-royal-400">{formatDateTime(t.created_at)}</span>
     )},
     { key: 'member', label: 'Anggota', render: (t: TransactionData) => (
-      <span className="text-sm font-bold text-white">{t.member?.name || 'Sistem'}</span>
+      <span className="text-sm font-bold text-royal-900">{t.member?.name || 'Sistem'}</span>
     )},
     { key: 'description', label: 'Keterangan', render: (t: TransactionData) => (
-      <span className="text-xs text-royal-300">{t.description}</span>
+      <span className="text-xs text-royal-600">{t.description}</span>
     )},
     { key: 'amount', label: 'Jumlah', render: (t: TransactionData) => (
       <span className={`text-sm font-black font-mono ${t.amount >= 0 ? 'text-green-500' : 'text-red-500'}`}>
@@ -61,7 +61,7 @@ export default function KasClient({ slug }: Props) {
           <div className="flex items-center gap-2 text-[10px] font-black text-royal-400 uppercase tracking-widest mb-1">
             <Wallet className="w-3.5 h-3.5" /> Total Saldo Kas
           </div>
-          <div className="text-3xl font-black text-white font-mono">Rp {data.totalBalance.toLocaleString('id-ID')}</div>
+          <div className="text-3xl font-black text-royal-900 font-mono">Rp {data.totalBalance.toLocaleString('id-ID')}</div>
         </div>
         <div className="card p-5 border-l-4 border-green-500 bg-green-500/5">
           <div className="flex items-center gap-2 text-[10px] font-black text-royal-400 uppercase tracking-widest mb-1">

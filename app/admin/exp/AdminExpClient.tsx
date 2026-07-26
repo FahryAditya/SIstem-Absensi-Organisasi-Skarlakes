@@ -163,7 +163,7 @@ export default function AdminExpClient({ user }: AdminExpClientProps) {
               className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all ${
                 activeOrg === org.id
                   ? 'bg-gradient-to-r from-royal-500 to-royal-600 text-white border-transparent'
-                  : 'bg-white/5 border-white/10 text-royal-400 hover:bg-white/10'
+                  : 'bg-cream-100 border-royal-200 text-royal-500 hover:bg-cream-200'
               }`}
             >
               {org.label}
@@ -174,7 +174,7 @@ export default function AdminExpClient({ user }: AdminExpClientProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-[#0f1117] border border-white/10 rounded-2xl p-6">
+          <div className="bg-royal-950 border border-white/10 rounded-2xl p-6">
             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <Zap className="w-5 h-5 text-yellow-bright-400" /> Form Pemberian EXP
             </h2>
@@ -221,7 +221,7 @@ export default function AdminExpClient({ user }: AdminExpClientProps) {
                       <input
                         type="text"
                         placeholder="Cari anggota berdasarkan nama atau kelas..."
-                        className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:outline-none focus:border-royal-500 placeholder-slate-500"
+                        className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:outline-none focus:border-royal-500 placeholder-royal-500"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         autoFocus
@@ -339,7 +339,7 @@ export default function AdminExpClient({ user }: AdminExpClientProps) {
         </div>
 
         <div className="lg:col-span-1">
-          <div className="bg-[#0f1117] border border-white/10 rounded-2xl p-6 h-full">
+          <div className="bg-royal-950 border border-white/10 rounded-2xl p-6 h-full">
             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <History className="w-5 h-5 text-royal-400" /> Riwayat {ORG_OPTIONS.find(o => o.id === activeOrg)?.label}
             </h2>

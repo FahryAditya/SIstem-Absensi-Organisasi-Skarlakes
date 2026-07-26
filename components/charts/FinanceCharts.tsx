@@ -44,7 +44,7 @@ interface Props {
   }
 }
 
-const COLORS = ['#10B981', '#EF4444', '#1E90FF']
+const COLORS = ['#10B981', '#EF4444', '#3B82F6']
 
 export default function FinanceCharts({ data }: Props) {
   return (
@@ -80,8 +80,8 @@ export default function FinanceCharts({ data }: Props) {
             <AreaChart data={data.keuanganBulanan}>
               <defs>
                 <linearGradient id="saldoGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#1E90FF" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#1E90FF" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
@@ -182,7 +182,7 @@ export default function FinanceCharts({ data }: Props) {
                       dataKey="value"
                       animationDuration={1000}
                     >
-                      <Cell fill="#1E90FF" />
+                      <Cell fill="#3B82F6" />
                       <Cell fill="#EF4444" />
                     </Pie>
                     <Tooltip formatter={(value: number) => formatCurrency(value)} />

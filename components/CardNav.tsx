@@ -196,7 +196,7 @@ const CardNav: React.FC<CardNavProps> = ({
             ) : (
               <>
                 <div
-                  style={{ backgroundColor: buttonBgColor || '#1E90FF' }}
+                  style={{ backgroundColor: buttonBgColor || '#1E3A8A' }}
                   className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0"
                 >
                   <GraduationCap className="w-4 h-4 text-white" />

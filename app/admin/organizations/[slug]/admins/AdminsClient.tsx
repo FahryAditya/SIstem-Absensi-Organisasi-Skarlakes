@@ -121,7 +121,7 @@ export default function AdminsClient({ slug, orgName }: Props) {
         <div className="w-8 h-8 rounded-full bg-royal-500/10 flex items-center justify-center text-royal-500 font-bold text-xs">
           {a.user.nama.charAt(0).toUpperCase()}
         </div>
-        <div className="font-bold text-white text-sm">{a.user.nama}</div>
+        <div className="font-bold text-royal-900 text-sm">{a.user.nama}</div>
       </div>
     )},
     { key: 'email', label: 'Email', render: (a: OrgAdmin) => (
@@ -145,7 +145,7 @@ export default function AdminsClient({ slug, orgName }: Props) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-white flex items-center gap-2.5">
+          <h2 className="text-xl font-black text-royal-900 flex items-center gap-2.5">
             <ShieldCheck className="w-5 h-5 text-royal-500" />
             Administrator Unit
           </h2>
@@ -176,7 +176,7 @@ export default function AdminsClient({ slug, orgName }: Props) {
             <p className="text-xs text-royal-400 leading-relaxed">
               Administrator Unit memiliki izin untuk:
             </p>
-            <ul className="mt-3 space-y-2 text-[11px] text-royal-300">
+            <ul className="mt-3 space-y-2 text-[11px] text-royal-600">
               <li className="flex items-center gap-2">• Mengelola database anggota</li>
               <li className="flex items-center gap-2">• Mencatat absensi & kas harian</li>
               <li className="flex items-center gap-2">• Mengatur profil & jadwal unit</li>
@@ -201,7 +201,7 @@ export default function AdminsClient({ slug, orgName }: Props) {
         }
       >
         <div className="space-y-4">
-          <div className="p-3 rounded-xl bg-royal-500/10 border border-royal-500/20 text-[11px] text-royal-300">
+          <div className="p-3 rounded-xl bg-royal-500/10 border border-royal-500/20 text-[11px] text-royal-600">
             Pilih user yang ingin diberikan akses sebagai administrator untuk unit <strong>{orgName}</strong>.
           </div>
           <div className="form-group">

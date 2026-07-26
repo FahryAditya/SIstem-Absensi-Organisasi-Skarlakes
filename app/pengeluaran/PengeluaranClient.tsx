@@ -129,7 +129,7 @@ export default function PengeluaranClient({ user }: Props) {
         <div>
           <div className="flex items-center gap-2.5">
             <HandCoins className="w-6 h-6 text-red-500" />
-            <h1 className="text-2xl font-black text-white tracking-tight">Pengeluaran Kas</h1>
+            <h1 className="text-2xl font-black text-royal-900 tracking-tight">Pengeluaran Kas</h1>
           </div>
           <p className="text-sm text-royal-400 mt-1">Catat dan pantau penarikan dana kas organisasi.</p>
         </div>
@@ -214,7 +214,7 @@ export default function PengeluaranClient({ user }: Props) {
                         {ORG_LABELS[item.organisasi_type as OrgType] || item.organisasi_type}
                       </span>
                     </td>
-                    <td className="font-medium text-white">{item.keterangan}</td>
+                    <td className="font-medium text-royal-900">{item.keterangan}</td>
                     <td className="text-royal-300 text-sm">{item.creator_nama}</td>
                     <td className="text-right font-mono font-bold text-red-400 bg-red-500/30">
                       - {formatCurrency(item.nominal)}
