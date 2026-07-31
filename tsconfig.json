@@ -24,6 +24,21 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@/components/*": [
+        "./frontend/components/*"
+      ],
+      "@/lib/client-cache": [
+        "./frontend/client-cache.ts"
+      ],
+      "@/lib/pusher-client": [
+        "./frontend/pusher-client.ts"
+      ],
+      "@/lib/hooks": [
+        "./frontend/hooks.ts"
+      ],
+      "@/lib/*": [
+        "./backend/lib/*"
       ]
     },
     "target": "ES2017"

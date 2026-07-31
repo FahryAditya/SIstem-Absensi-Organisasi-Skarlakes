@@ -13,10 +13,10 @@ const VERIFICATION_CHECKLIST = {
     description: 'Auto token refresh mechanism',
     files: [
       'middleware.ts',
-      'lib/auth.ts'
+      'backend/lib/auth.ts'
     ],
     checks: [
-      { file: 'lib/auth.ts', contains: 'refreshToken' },
+      { file: 'backend/lib/auth.ts', contains: 'refreshToken' },
       { file: 'middleware.ts', contains: 'x-refresh-token' }
     ]
   },
@@ -25,11 +25,11 @@ const VERIFICATION_CHECKLIST = {
     description: 'Data isolation between organizations',
     files: [
       'app/api/auth/active-org/route.ts',
-      'lib/org-context.ts'
+      'backend/lib/org-context.ts'
     ],
     checks: [
       { file: 'app/api/auth/active-org/route.ts', contains: 'clearState: true' },
-      { file: 'lib/org-context.ts', contains: 'validateOrganizationAccess' }
+      { file: 'backend/lib/org-context.ts', contains: 'validateOrganizationAccess' }
     ]
   },
   
@@ -60,11 +60,11 @@ const VERIFICATION_CHECKLIST = {
     description: 'Role-based access control for critical endpoints',
     files: [
       'app/api/exp/route.ts',
-      'lib/rbac-middleware.ts'
+      'backend/lib/rbac-middleware.ts'
     ],
     checks: [
       { file: 'app/api/exp/route.ts', contains: 'Dilarang - Hanya admin' },
-      { file: 'lib/rbac-middleware.ts', contains: 'protectedEndpoint' }
+      { file: 'backend/lib/rbac-middleware.ts', contains: 'protectedEndpoint' }
     ]
   }
 }
