@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/auth'
 import { calculateProgress, LEVEL_NAMES } from '@/lib/exp'
+import { cacheGet } from '@/lib/mem-cache'
 
 
 export const dynamic = 'force-dynamic'

@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { signToken, setSessionCookie } from '@/lib/auth'
 import { createLog, getIp } from '@/lib/log'
 import { rateLimit } from '@/lib/rate-limit'
-import bcrypt from 'bcryptjs'
+import { supabase } from '@/lib/supabase'
 import { z } from 'zod'
 
 const schema = z.object({
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     const { nama, email, password } = parsed.data
 
-    // Fetch user with organizations (handle if organizations don't exist)
+    // Fetch user profile dari database data (Neon) — handle jika organizations belum ada
     const user = await prisma.user.findUnique({ 
       where: { email },
       include: { organizations: true }
@@ -48,22 +48,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email tidak ditemukan' }, { status: 401 })
     }
 
+    // Autentikasi kredensial lewat Supabase Auth
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+    if (signInError) {
+      return NextResponse.json({ error: 'Password salah' }, { status: 401 })
+    }
+
     // Verifikasi nama (case-insensitive)
     const namaMatch = user.nama.toLowerCase().trim() === nama.toLowerCase().trim()
     if (!namaMatch) {
       return NextResponse.json({ error: 'Nama tidak sesuai dengan akun ini' }, { status: 401 })
     }
 
-    // Verifikasi password (wajib bcrypt)
-    const passwordMatch = await bcrypt.compare(password, user.password)
-
-    if (!passwordMatch) {
-      return NextResponse.json({ error: 'Password salah' }, { status: 401 })
-    }
-
     const orgIds = user.organizations?.map(o => o.organization_id) || []
     
-    // Create JWT
+    // Create JWT sesi aplikasi
     const sessionUser = { 
       id: user.id, 
       nama: user.nama, 
