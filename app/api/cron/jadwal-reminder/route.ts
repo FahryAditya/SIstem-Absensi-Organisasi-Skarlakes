@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     // Kelompokkan per organisasi
     const byOrg: Record<string, typeof jadwalEsok> = {}
     for (const j of jadwalEsok) {
-      const org = j.organisasi
+      const org = j.organisasi || 'unknown'
       if (!byOrg[org]) byOrg[org] = []
       byOrg[org].push(j)
     }
@@ -109,7 +109,19 @@ async function getAdminEmails(organisasi: string): Promise<string[]> {
 
   const users = await prisma.user.findMany({
     where: { role: { in: roleFilter as any } },
-    select: { email: true },
+    select: { id: true, email: true },
   })
-  return users.map(u => u.email)
+
+  if (users.length === 0) return []
+
+  const admins = await prisma.organizationAdmin.findMany({
+    where: {
+      user_id: { in: users.map(u => u.id) },
+      organization: { slug: organisasi }
+    },
+    include: { user: { select: { email: true } } }
+  })
+
+  const emails = admins.map(a => a.user.email)
+  return Array.from(new Set(emails))
 }

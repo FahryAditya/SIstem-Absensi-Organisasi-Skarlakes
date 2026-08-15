@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getSessionFromRequest } from '@/lib/auth'
+import { getSessionFromRequest, isAdministrator } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
+
+
+export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   const session = await getSessionFromRequest(req)
-  if (!session || session.role !== 'administrator') {
+  if (!session || !isAdministrator(session.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

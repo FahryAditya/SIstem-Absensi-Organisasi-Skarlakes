@@ -1,67 +1,99 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { getSessionFromRequest } from '@/lib/auth'
-
-const PUBLIC_PATHS = [
-  '/login', 
-  '/api/auth/login', 
-  '/wawancara/scan', 
-  '/api/wawancara/antrian', 
-  '/api/wawancara/public',
-  '/registration',
-  '/api/registration',
-  '/api/organizations'
-]
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-
-  // Allow public paths
-  if (PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
+  
+  // Skip middleware for static files, API auth routes, and public assets
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api/health') ||
+    pathname.startsWith('/api/auth/login') ||
+    pathname.startsWith('/api/auth/register') ||
+    /\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|avif|woff2?|ttf|eot|map|json)$/i.test(pathname) ||
+    pathname === '/login'
+  ) {
     return NextResponse.next()
   }
 
-  // Allow static assets
-  if (pathname.startsWith('/_next') || pathname.startsWith('/favicon')) {
-    return NextResponse.next()
-  }
-
-  const session = await getSessionFromRequest(request)
-
-  // Not authenticated — return 401 for API, redirect pages to login
-  if (!session) {
-    if (pathname.startsWith('/api/')) {
+  // Check if it's an API route that needs authentication
+  if (pathname.startsWith('/api/')) {
+    const session = await getSessionFromRequest(request)
+    
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    return NextResponse.redirect(new URL('/login', request.url))
+
+    const requestHeaders = new Headers(request.headers)
+    requestHeaders.set('x-user-id', session.id.toString())
+    requestHeaders.set('x-user-role', session.role)
+    requestHeaders.set('x-user-nama', session.nama || '')
+    requestHeaders.set('x-user-org-ids', JSON.stringify(session.orgIds || []))
+    if (session.activeOrgId) {
+      requestHeaders.set('x-active-org-id', session.activeOrgId.toString())
+    }
+
+    // Create response and check for token refresh
+    const response = NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    })
+    
+    const refreshToken = request.headers.get('x-refresh-token')
+    
+    if (refreshToken) {
+      // Set refreshed token in cookie
+      response.cookies.set('ekskul_session', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 8 * 60 * 60, // 8 hours
+        path: '/',
+      })
+    }
+    
+    return response
   }
 
-  // Redirect root to login
-  if (pathname === '/') {
-    return NextResponse.redirect(new URL('/login', request.url))
+  // For page routes, check authentication
+  if (pathname !== '/' && pathname !== '/login') {
+    const session = await getSessionFromRequest(request)
+    
+    if (!session) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+
+    // Create response and check for token refresh
+    const response = NextResponse.next()
+    const refreshToken = request.headers.get('x-refresh-token')
+    
+    if (refreshToken) {
+      // Set refreshed token in cookie
+      response.cookies.set('ekskul_session', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 8 * 60 * 60, // 8 hours
+        path: '/',
+      })
+    }
+    
+    return response
   }
 
-  // Protect log aktivitas - administrator only
-  if (pathname.startsWith('/log') && session.role.trim() !== 'administrator') {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-  if (pathname.startsWith('/api/log') && session.role.trim() !== 'administrator') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
-
-  // Protect admin management - administrator only
-  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/email') && !pathname.startsWith('/admin/exp') && session.role.trim() !== 'administrator') {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-
-  // Inject user info to headers for API routes
-  const requestHeaders = new Headers(request.headers)
-  requestHeaders.set('x-user-id', session.id.toString())
-  requestHeaders.set('x-user-nama', session.nama)
-  requestHeaders.set('x-user-role', session.role)
-
-  return NextResponse.next({ request: { headers: requestHeaders } })
+  return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.png$).*)'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
 }

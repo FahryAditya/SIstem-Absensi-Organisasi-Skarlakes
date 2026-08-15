@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/auth'
 
-export async function GET(req: NextRequest, { params }: { params: { slug: string } }) {
+
+export const dynamic = 'force-dynamic'
+
+export async function GET(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
+    const { slug } = await params
     const org = await prisma.organization.findUnique({
-      where: { slug: params.slug }
+      where: { slug }
     })
     if (!org) return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
 
@@ -19,15 +23,29 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { slug: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const session = await getSessionFromRequest(req)
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    const { slug } = await params
     const org = await prisma.organization.findUnique({
-      where: { slug: params.slug }
+      where: { slug }
     })
     if (!org) return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
+
+    // RBAC Check
+    if ((session.role as string) !== 'administrator' && session.role !== 'SUPER_ADMIN') {
+      const isOrgAdmin = await prisma.organizationAdmin.findUnique({
+        where: {
+          user_id_organization_id: {
+            user_id: session.id,
+            organization_id: org.id
+          }
+        }
+      })
+      if (!isOrgAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
     const { nis, name, email, class: className } = await req.json()
     if (!name) return NextResponse.json({ error: 'Nama wajib diisi' }, { status: 400 })
@@ -44,6 +62,7 @@ export async function POST(req: NextRequest, { params }: { params: { slug: strin
 
     return NextResponse.json({ success: true, data: member })
   } catch (error) {
+    console.error('Create member error:', error)
     return NextResponse.json({ error: 'Failed to create member' }, { status: 500 })
   }
 }

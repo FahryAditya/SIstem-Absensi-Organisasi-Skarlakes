@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { signToken, setSessionCookie } from '@/lib/auth'
 import { createLog, getIp } from '@/lib/log'
 import { rateLimit } from '@/lib/rate-limit'
-import bcrypt from 'bcryptjs'
+import { supabase } from '@/lib/supabase'
 import { z } from 'zod'
 
 const schema = z.object({
@@ -15,11 +15,11 @@ const schema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const ip = getIp(req)
-    const rl = rateLimit(`login:${ip}`, 5, 15 * 60 * 1000) // 5 attempts per 15 mins
+    const rl = rateLimit(`login:${ip}`, 5, 2 * 60 * 1000) // 5 attempts per 2 mins
     
     if (!rl.success) {
       return NextResponse.json({ 
-        error: 'Terlalu banyak percobaan login. Silakan coba lagi dalam 15 menit.' 
+        error: 'Terlalu banyak percobaan login. Silakan coba lagi dalam 2 menit.' 
       }, { 
         status: 429,
         headers: {
@@ -38,9 +38,20 @@ export async function POST(req: NextRequest) {
 
     const { nama, email, password } = parsed.data
 
-    const user = await prisma.user.findUnique({ where: { email } })
+    // Fetch user profile dari database data (Neon) — handle jika organizations belum ada
+    const user = await prisma.user.findUnique({ 
+      where: { email },
+      include: { organizations: true }
+    }).catch(() => null)
+    
     if (!user) {
       return NextResponse.json({ error: 'Email tidak ditemukan' }, { status: 401 })
+    }
+
+    // Autentikasi kredensial lewat Supabase Auth
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+    if (signInError) {
+      return NextResponse.json({ error: 'Password salah' }, { status: 401 })
     }
 
     // Verifikasi nama (case-insensitive)
@@ -49,15 +60,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Nama tidak sesuai dengan akun ini' }, { status: 401 })
     }
 
-    // Verifikasi password (wajib bcrypt)
-    const passwordMatch = await bcrypt.compare(password, user.password)
-
-    if (!passwordMatch) {
-      return NextResponse.json({ error: 'Password salah' }, { status: 401 })
+    const orgIds = user.organizations?.map(o => o.organization_id) || []
+    
+    // Create JWT sesi aplikasi
+    const sessionUser = { 
+      id: user.id, 
+      nama: user.nama, 
+      email: user.email, 
+      role: user.role,
+      orgIds: orgIds,
+      activeOrgId: orgIds.length > 0 ? orgIds[0] : undefined
     }
-
-    // Create JWT
-    const sessionUser = { id: user.id, nama: user.nama, email: user.email, role: user.role }
     const token = await signToken(sessionUser)
 
     // Create log

@@ -90,10 +90,7 @@ export async function POST(req: NextRequest) {
               nama: namaTrimmed,
               kelas: row.kelas.trim(),
               nis: nisTrimmed,
-              jabatan: row.jabatan.trim(),
-              email: row.email,
               ekskul: orgTypeLower,
-              created_by: ctx.userId,
             },
           })
         } else if (orgTypeLower === 'osis') {
@@ -123,8 +120,7 @@ export async function POST(req: NextRequest) {
               nama: namaTrimmed,
               kelas: row.kelas.trim(),
               nis: nisTrimmed,
-              jabatan: row.jabatan.trim(),
-              email: row.email,
+              ekskul: 'osis',
             },
           })
         } else if (orgTypeLower === 'mpk') {
@@ -154,8 +150,7 @@ export async function POST(req: NextRequest) {
               nama: namaTrimmed,
               kelas: row.kelas.trim(),
               nis: nisTrimmed,
-              jabatan: row.jabatan.trim(),
-              email: row.email,
+              ekskul: 'mpk',
             },
           })
         }
@@ -175,10 +170,9 @@ export async function POST(req: NextRequest) {
     await prisma.emailImportLog.create({
       data: {
         filename: file.name,
-        totalRows: data.length,
-        successRows,
-        failureRows,
-        organizationType: orgTypeLower as any,
+        total_rows: data.length,
+        success_rows: successRows,
+        failure_rows: failureRows,
         admin_id: ctx.userId,
         errors: JSON.stringify(importErrors),
         status: failureRows === 0 ? 'completed' : failureRows === data.length ? 'failed' : 'partial',

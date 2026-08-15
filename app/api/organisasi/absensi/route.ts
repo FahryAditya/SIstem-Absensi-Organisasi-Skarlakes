@@ -48,14 +48,14 @@ export async function GET(req: NextRequest) {
         : [{ anggota_osis: { nama: 'asc' } }, { anggota_mpk: { nama: 'asc' } }]
 
   const [data, total] = await Promise.all([
-    prisma.absensiOrganisasi.findMany({
+    (prisma as any).absensiOrganisasi.findMany({
       where,
       include: { anggota_osis: true, anggota_mpk: true },
       orderBy,
       skip: (page - 1) * limit,
       take: limit,
     }),
-    prisma.absensiOrganisasi.count({ where }),
+    (prisma as any).absensiOrganisasi.count({ where }),
   ])
 
   return jsonWithPrivateCache({ data, total, totalPages: Math.ceil(total / limit) })
@@ -108,12 +108,12 @@ export async function POST(req: NextRequest) {
       }
 
       // Cari record yang sudah ada dalam snapshot transaksi yang sama
-      const existing = await tx.absensiOrganisasi.findFirst({ where: whereData })
+      const existing = await (tx as any).absensiOrganisasi.findFirst({ where: whereData })
       const xpDiff = hitungSelisihExpAbsensi(existing?.status, row.status)
 
       if (existing) {
         // Record sudah ada — update langsung
-        await tx.absensiOrganisasi.update({
+        await (tx as any).absensiOrganisasi.update({
           where: { id: existing.id },
           data: { ...baseData, updated_by: ctx.userId },
         })
@@ -121,15 +121,15 @@ export async function POST(req: NextRequest) {
         // Record belum ada — coba create; jika admin lain create duluan
         // (P2002 dari DB unique constraint), fallback ke update.
         try {
-          await tx.absensiOrganisasi.create({
+          await (tx as any).absensiOrganisasi.create({
             data: { ...baseData, [anggotaKey]: row.anggota_id, created_by: ctx.userId },
           })
         } catch (e: any) {
           if (e?.code === 'P2002') {
             // Tabrakan terdeteksi: ambil record yang baru saja dibuat oleh admin lain
-            const concurrent = await tx.absensiOrganisasi.findFirst({ where: whereData })
+            const concurrent = await (tx as any).absensiOrganisasi.findFirst({ where: whereData })
             if (concurrent) {
-              await tx.absensiOrganisasi.update({
+              await (tx as any).absensiOrganisasi.update({
                 where: { id: concurrent.id },
                 data: { ...baseData, updated_by: ctx.userId },
               })
@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
           selisih: xpDiff,
           alasan: xpDiff > 0 ? 'Hadir rapat organisasi' : 'Tidak hadir rapat tanpa izin',
           adminId: ctx.userId,
-          organisasi,
+          organizationId: 0,
           tx,
         })
       }

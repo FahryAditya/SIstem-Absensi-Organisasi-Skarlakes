@@ -12,10 +12,10 @@ function RegistrationSuccessContent() {
   const type = searchParams.get('type')
 
   return (
-    <div className="min-h-screen bg-[#000B18] flex items-center justify-center p-4 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-royal-950 flex items-center justify-center p-4 relative overflow-hidden font-sans">
       {/* Immersive Background */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-royal-600/10 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-green-600/10 rounded-full blur-[120px] animate-pulse delay-700" />
       </div>
 
@@ -25,25 +25,25 @@ function RegistrationSuccessContent() {
         </div>
         
         <h1 className="text-4xl font-black text-white mb-3 tracking-tight">Pendaftaran Berhasil!</h1>
-        <p className="text-slate-400 mb-10 font-medium text-sm tracking-wide">Selamat bergabung di keluarga besar SKARLAKES.</p>
+        <p className="text-royal-400 mb-10 font-medium text-sm tracking-wide">Selamat bergabung di keluarga besar SKARLAKES.</p>
 
         <div className="bg-white/[0.02] backdrop-blur-md p-8 rounded-[2rem] text-left space-y-6 mb-10 border border-white/5 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-2xl rounded-full" />
+          <div className="absolute top-0 right-0 w-24 h-24 bg-royal-500/5 blur-2xl rounded-full" />
           
           <div className="relative z-10">
-            <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.25em] block mb-2">Nama Lengkap</span>
+            <span className="text-[10px] font-black text-yellow-bright-400 uppercase tracking-[0.25em] block mb-2">Nama Lengkap</span>
             <p className="font-bold text-white text-xl leading-tight">{name}</p>
           </div>
           
           <div className="h-px w-full bg-white/5" />
           
           <div className="relative z-10">
-            <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.25em] block mb-2">Program / Organisasi</span>
-            <p className="font-bold text-blue-100 text-xl leading-tight">{org}</p>
+            <span className="text-[10px] font-black text-royal-500 uppercase tracking-[0.25em] block mb-2">Program / Organisasi</span>
+            <p className="font-bold text-royal-100 text-xl leading-tight">{org}</p>
           </div>
         </div>
 
-        <p className="text-xs text-slate-500 mb-12 leading-relaxed px-4 font-medium italic">
+        <p className="text-xs text-royal-500 mb-12 leading-relaxed px-4 font-medium italic">
           {type === 'eskul' 
             ? 'Pendaftaran Anda sedang ditinjau. Pengumuman penerimaan akan dikirimkan melalui email Gmail resmi Anda.'
             : 'Data Anda telah tersimpan. Silakan tunggu informasi jadwal seleksi lanjutan yang akan dikirimkan via email.'}
@@ -53,7 +53,7 @@ function RegistrationSuccessContent() {
           onClick={() => router.push('/')}
           className="group w-full py-5 bg-white/[0.05] hover:bg-white/[0.1] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 transition-all active:scale-[0.98] border border-white/10"
         >
-          <Home className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
+          <Home className="w-4 h-4 text-yellow-bright-400 group-hover:scale-110 transition-transform" />
           Kembali ke Beranda
         </button>
       </div>
@@ -79,7 +79,7 @@ function RegistrationSuccessContent() {
 
 export default function RegistrationSuccessPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#001F3F] flex items-center justify-center"><CheckCircle2 className="w-12 h-12 text-green-400 animate-pulse" /></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-royal-900 flex items-center justify-center"><CheckCircle2 className="w-12 h-12 text-green-400 animate-pulse" /></div>}>
       <RegistrationSuccessContent />
     </Suspense>
   )

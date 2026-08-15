@@ -5,6 +5,9 @@ import type { AntrianWawancara } from '@prisma/client'
 import { pusherServer } from '@/lib/pusher-server'
 import { z } from 'zod'
 
+
+export const dynamic = 'force-dynamic'
+
 async function updateIpInfo(antrianId: number, sesiId: number, ip: string) {
   try {
     if (ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
@@ -28,10 +31,6 @@ async function updateIpInfo(antrianId: number, sesiId: number, ip: string) {
 }
 
 async function getCtx(req: NextRequest) {
-  const role = req.headers.get('x-user-role')
-  if (role) {
-    return { userRole: role }
-  }
   const session = await getSessionFromRequest(req)
   return {
     userRole: session?.role || '',
@@ -176,15 +175,27 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  let created: AntrianWawancara
-  try {
-    created = await alloc()
-  } catch (e: any) {
-    if (e?.code === 'P2002') {
+  let created: AntrianWawancara | null = null
+  let retries = 0
+  const maxRetries = 3
+  while (retries < maxRetries) {
+    try {
       created = await alloc()
-    } else {
-      throw e
+      break
+    } catch (e: any) {
+      if (e?.code === 'P2002') {
+        retries++
+        if (retries >= maxRetries) {
+          return NextResponse.json({ error: 'Terjadi benturan nomor antrian. Silakan coba lagi.' }, { status: 409 })
+        }
+      } else {
+        throw e
+      }
     }
+  }
+
+  if (!created) {
+    return NextResponse.json({ error: 'Gagal membuat antrian' }, { status: 500 })
   }
 
   if (!isManual) {
@@ -251,7 +262,7 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   const ctx = await getCtx(req)
-  if (ctx.userRole !== 'administrator') {
+  if (ctx.userRole !== 'administrator' && ctx.userRole !== 'SUPER_ADMIN') {
     return NextResponse.json({ error: 'Akses ditolak. Hanya administrator.' }, { status: 403 })
   }
 

@@ -1,5 +1,6 @@
 import ScanWawancaraClient from './ScanWawancaraClient'
 
-export default function ScanWawancaraPage({ searchParams }: { searchParams: { sesi?: string; token?: string } }) {
-  return <ScanWawancaraClient sesiId={searchParams.sesi || ''} token={searchParams.token || ''} />
+export default async function ScanWawancaraPage({ searchParams }: { searchParams: Promise<{ sesi?: string; token?: string }> }) {
+  const { sesi, token } = await searchParams
+  return <ScanWawancaraClient sesiId={sesi || ''} token={token || ''} />
 }

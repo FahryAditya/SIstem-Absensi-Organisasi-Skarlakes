@@ -142,33 +142,33 @@ export default function PencapaianPage() {
   }
 
   const ORG_COLORS: Record<string, string> = {
-    programming: 'from-blue-500 to-cyan-500',
-    english: 'from-emerald-500 to-teal-500',
-    osis: 'from-purple-500 to-persian-blue/100',
-    mpk: 'from-orange-500 to-amber-500',
-    semua: 'from-pink-500 to-rose-500',
+    programming: 'from-royal-500 to-royal-600',
+    english: 'from-royal-500 to-royal-600',
+    osis: 'from-royal-600 to-royal-700',
+    mpk: 'from-yellow-bright-500 to-yellow-bright-600',
+    semua: 'from-royal-400 to-royal-500',
   }
 
   return (
-    <div className="min-h-screen bg-[#0f1117] text-white p-4 md:p-8">
+    <div className="min-h-screen bg-royal-950 text-white p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-4">
-          <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-royal-400 hover:text-white text-sm transition-colors">
             <ArrowLeft className="w-4 h-4" /> Kembali
           </button>
         </div>
         <div className="flex items-center justify-between mb-8">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Trophy className="w-5 h-5 text-yellow-400" />
+              <Trophy className="w-5 h-5 text-yellow-bright-400" />
               <h1 className="text-2xl font-bold">Kelola Pencapaian</h1>
             </div>
-            <p className="text-slate-400 text-sm">Buat, edit, dan berikan pencapaian ke anggota</p>
+            <p className="text-royal-400 text-sm">Buat, edit, dan berikan pencapaian ke anggota</p>
           </div>
           {isAdministrator && (
             <button onClick={openCreate}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-medium text-sm hover:opacity-90 transition">
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-yellow-bright-500 to-yellow-bright-600 text-white font-medium text-sm hover:opacity-90 transition">
               <Plus className="w-4 h-4" /> Buat Pencapaian
             </button>
           )}
@@ -177,12 +177,12 @@ export default function PencapaianPage() {
         {/* Filter */}
         <div className="flex gap-2 flex-wrap mb-6">
           <button onClick={() => setFilterOrg('')}
-            className={`px-4 py-1.5 rounded-full text-sm border transition-all ${!filterOrg ? 'bg-white/20 border-white/30 text-white' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}>
+            className={`px-4 py-1.5 rounded-full text-sm border transition-all ${!filterOrg ? 'bg-white/20 border-white/30 text-white' : 'bg-white/5 border-white/10 text-royal-400 hover:bg-white/10'}`}>
             Semua
           </button>
           {ORG_OPTIONS.map(org => (
             <button key={org} onClick={() => setFilterOrg(org)}
-              className={`px-4 py-1.5 rounded-full text-sm border transition-all capitalize ${filterOrg === org ? `bg-gradient-to-r ${ORG_COLORS[org]} text-white border-transparent` : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}>
+              className={`px-4 py-1.5 rounded-full text-sm border transition-all capitalize ${filterOrg === org ? `bg-gradient-to-r ${ORG_COLORS[org]} text-white border-transparent` : 'bg-white/5 border-white/10 text-royal-400 hover:bg-white/10'}`}>
               {org}
             </button>
           ))}
@@ -193,7 +193,7 @@ export default function PencapaianPage() {
             {[...Array(6)].map((_, i) => <div key={i} className="h-36 bg-white/5 rounded-2xl animate-pulse" />)}
           </div>
         ) : data.length === 0 ? (
-          <div className="text-center py-20 text-slate-400">
+          <div className="text-center py-20 text-royal-400">
             <Trophy className="w-12 h-12 mx-auto mb-4 opacity-30" />
             <p>Belum ada pencapaian</p>
           </div>
@@ -201,32 +201,32 @@ export default function PencapaianPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {data.map(item => (
               <div key={item.id} className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-white/20 transition-all group relative overflow-hidden">
-                <div className={`absolute inset-0 opacity-5 bg-gradient-to-br ${ORG_COLORS[item.organisasi] ?? 'from-slate-500 to-gray-500'}`} />
+                <div className={`absolute inset-0 opacity-5 bg-gradient-to-br ${ORG_COLORS[item.organisasi] ?? 'from-royal-500 to-royal-600'}`} />
                 <div className="relative">
                   <div className="flex items-start justify-between mb-3">
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${ORG_COLORS[item.organisasi] ?? 'from-slate-500 to-gray-500'} flex items-center justify-center`}>
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${ORG_COLORS[item.organisasi] ?? 'from-royal-500 to-royal-600'} flex items-center justify-center`}>
                       <Sparkles className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       {isAdministrator && (
                         <>
-                          <button onClick={() => openEdit(item)} className="p-1.5 text-slate-400 hover:text-blue-400 transition"><Pencil className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => handleDelete(item.id)} className="p-1.5 text-slate-400 hover:text-red-400 transition"><Trash2 className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => openEdit(item)} className="p-1.5 text-royal-400 hover:text-royal-400 transition"><Pencil className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => handleDelete(item.id)} className="p-1.5 text-royal-400 hover:text-red-400 transition"><Trash2 className="w-3.5 h-3.5" /></button>
                         </>
                       )}
                     </div>
                   </div>
                   <h3 className="font-semibold text-white mb-1">{item.nama}</h3>
-                  <p className="text-xs text-slate-400 mb-3 line-clamp-2">{item.deskripsi}</p>
+                  <p className="text-xs text-royal-400 mb-3 line-clamp-2">{item.deskripsi}</p>
                   <div className="flex items-center justify-between">
-                    <span className={`text-xs px-2 py-0.5 rounded-full bg-gradient-to-r ${ORG_COLORS[item.organisasi] ?? 'from-slate-500 to-gray-500'} text-white capitalize`}>{item.organisasi}</span>
-                    <span className="flex items-center gap-1 text-yellow-400 font-semibold text-sm">
+                    <span className={`text-xs px-2 py-0.5 rounded-full bg-gradient-to-r ${ORG_COLORS[item.organisasi] ?? 'from-royal-500 to-royal-600'} text-white capitalize`}>{item.organisasi}</span>
+                    <span className="flex items-center gap-1 text-yellow-bright-400 font-semibold text-sm">
                       <Sparkles className="w-3.5 h-3.5" />+{item.exp_reward} EXP
                     </span>
                   </div>
                   <button
                     onClick={() => openGive(item)}
-                    className="mt-3 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-300 hover:bg-white/10 transition">
+                    className="mt-3 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-royal-300 hover:bg-white/10 transition">
                     <Gift className="w-3.5 h-3.5" /> Berikan ke Anggota
                   </button>
                 </div>
@@ -243,39 +243,39 @@ export default function PencapaianPage() {
             <h2 className="text-lg font-bold mb-5">{editItem ? 'Edit' : 'Buat'} Pencapaian</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Nama Pencapaian</label>
+                <label className="block text-xs text-royal-400 mb-1">Nama Pencapaian</label>
                 <input value={form.nama} onChange={e => setForm(f => ({ ...f, nama: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500" placeholder="Nama pencapaian..." />
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-bright-500" placeholder="Nama pencapaian..." />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Icon (nama Material Icon)</label>
+                <label className="block text-xs text-royal-400 mb-1">Icon (nama Material Icon)</label>
                 <input value={form.icon} onChange={e => setForm(f => ({ ...f, icon: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500" placeholder="star, emoji_events, ..." />
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-bright-500" placeholder="star, emoji_events, ..." />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Deskripsi</label>
+                <label className="block text-xs text-royal-400 mb-1">Deskripsi</label>
                 <textarea rows={2} value={form.deskripsi} onChange={e => setForm(f => ({ ...f, deskripsi: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500 resize-none" placeholder="Penjelasan pencapaian..." />
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-bright-500 resize-none" placeholder="Penjelasan pencapaian..." />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">EXP Reward</label>
+                  <label className="block text-xs text-royal-400 mb-1">EXP Reward</label>
                   <input type="number" min="1" value={form.exp_reward} onChange={e => setForm(f => ({ ...f, exp_reward: parseInt(e.target.value) || 0 }))}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500" />
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-bright-500" />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Organisasi</label>
+                  <label className="block text-xs text-royal-400 mb-1">Organisasi</label>
                   <select value={form.organisasi} onChange={e => setForm(f => ({ ...f, organisasi: e.target.value }))}
-                    className="w-full bg-[#0f1117] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500">
+                    className="w-full bg-[#0f1117] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-bright-500">
                     {ORG_OPTIONS.map(o => <option key={o} value={o} className="capitalize">{o}</option>)}
                   </select>
                 </div>
               </div>
             </div>
             <div className="flex gap-3 mt-6">
-              <button onClick={() => setShowModal(false)} className="flex-1 py-2 rounded-xl border border-white/10 text-slate-400 hover:bg-white/5 text-sm transition">Batal</button>
+              <button onClick={() => setShowModal(false)} className="flex-1 py-2 rounded-xl border border-white/10 text-royal-400 hover:bg-white/5 text-sm transition">Batal</button>
               <button onClick={handleSave} disabled={saving}
-                className="flex-1 py-2 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-medium text-sm hover:opacity-90 transition disabled:opacity-50">
+                className="flex-1 py-2 rounded-xl bg-gradient-to-r from-yellow-bright-500 to-yellow-bright-600 text-white font-medium text-sm hover:opacity-90 transition disabled:opacity-50">
                 {saving ? 'Menyimpan...' : 'Simpan'}
               </button>
             </div>
@@ -289,9 +289,9 @@ export default function PencapaianPage() {
             <div className="flex items-start justify-between gap-3 mb-5">
               <div>
                 <h2 className="text-lg font-bold">Berikan Pencapaian</h2>
-                <p className="text-sm text-slate-400">{giveTarget.nama} · +{giveTarget.exp_reward} EXP</p>
+                <p className="text-sm text-royal-400">{giveTarget.nama} · +{giveTarget.exp_reward} EXP</p>
               </div>
-              <button onClick={() => setGiveTarget(null)} className="text-slate-400 hover:text-white">Tutup</button>
+              <button onClick={() => setGiveTarget(null)} className="text-royal-400 hover:text-white">Tutup</button>
             </div>
 
             {giveTarget.organisasi === 'semua' && (
@@ -304,7 +304,7 @@ export default function PencapaianPage() {
                       setRecipientOrg(nextOrg)
                       loadRecipients(nextOrg)
                     }}
-                    className={`px-3 py-1.5 rounded-full text-xs border transition capitalize ${recipientOrg === org ? `bg-gradient-to-r ${ORG_COLORS[org]} text-white border-transparent` : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
+                    className={`px-3 py-1.5 rounded-full text-xs border transition capitalize ${recipientOrg === org ? `bg-gradient-to-r ${ORG_COLORS[org]} text-white border-transparent` : 'bg-white/5 border-white/10 text-royal-400 hover:bg-white/10'}`}
                   >
                     {org}
                   </button>
@@ -314,11 +314,11 @@ export default function PencapaianPage() {
 
             <div className="max-h-80 overflow-y-auto rounded-xl border border-white/10 divide-y divide-white/10">
               {loadingRecipients ? (
-                <div className="p-10 flex items-center justify-center gap-2 text-slate-400">
+                <div className="p-10 flex items-center justify-center gap-2 text-royal-400">
                   <Loader2 className="w-4 h-4 animate-spin" /> Memuat anggota...
                 </div>
               ) : recipients.length === 0 ? (
-                <div className="p-10 text-center text-slate-400">Belum ada anggota</div>
+                <div className="p-10 text-center text-royal-400">Belum ada anggota</div>
               ) : recipients.map((recipient) => {
                 const checked = selectedRecipients.includes(recipient.id)
                 return (
@@ -327,10 +327,10 @@ export default function PencapaianPage() {
                     onClick={() => setSelectedRecipients(prev => checked ? prev.filter(id => id !== recipient.id) : [...prev, recipient.id])}
                     className="w-full flex items-center gap-3 p-3 text-left hover:bg-white/5 transition"
                   >
-                    {checked ? <CheckSquare className="w-4 h-4 text-emerald-400" /> : <Square className="w-4 h-4 text-slate-400" />}
+                    {checked ? <CheckSquare className="w-4 h-4 text-emerald-400" /> : <Square className="w-4 h-4 text-royal-400" />}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-white truncate">{recipient.nama}</p>
-                      <p className="text-xs text-slate-400">{recipient.kelas || '-'}{recipient.jabatan ? ` · ${recipient.jabatan}` : ''}</p>
+                      <p className="text-xs text-royal-400">{recipient.kelas || '-'}{recipient.jabatan ? ` · ${recipient.jabatan}` : ''}</p>
                     </div>
                   </button>
                 )
@@ -338,11 +338,11 @@ export default function PencapaianPage() {
             </div>
 
             <div className="flex gap-3 mt-6">
-              <button onClick={() => setGiveTarget(null)} className="flex-1 py-2 rounded-xl border border-white/10 text-slate-400 hover:bg-white/5 text-sm transition">Batal</button>
+              <button onClick={() => setGiveTarget(null)} className="flex-1 py-2 rounded-xl border border-white/10 text-royal-400 hover:bg-white/5 text-sm transition">Batal</button>
               <button
                 onClick={handleGiveAchievement}
                 disabled={giving || selectedRecipients.length === 0}
-                className="flex-1 py-2 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-medium text-sm hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 py-2 rounded-xl bg-gradient-to-r from-yellow-bright-500 to-yellow-bright-600 text-white font-medium text-sm hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {giving ? <><Loader2 className="w-4 h-4 animate-spin" />Mengirim...</> : `Berikan (${selectedRecipients.length})`}
               </button>

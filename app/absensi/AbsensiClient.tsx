@@ -1,106 +1,95 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import toast from 'react-hot-toast'
 import Table from '@/components/ui/Table'
-import { StatusBadge, OrgBadge } from '@/components/ui/Badges'
-import { cn, formatDate, formatCurrency, STATUS_LABELS } from '@/lib/utils'
-import { canAccessProgramming, canAccessEnglish } from '@/lib/auth-shared'
+import { StatusBadge } from '@/components/ui/Badges'
+import { cn, formatDate, formatCurrency } from '@/lib/utils'
 import { clearJsonCache, fetchJsonCachedUrl } from '@/lib/client-cache'
-import { ClipboardList, Save, Calendar, Filter, Loader2, CheckCircle2, XCircle, Clock, Heart, Banknote, Users, Sparkles, UserCheck } from 'lucide-react'
-import { AWARDS_DATA } from '@/lib/awards'
-import Modal from '@/components/ui/Modal'
-import Select from '@/components/ui/Select'
+import { ClipboardList, Save, Calendar, Loader2, CheckCircle2, XCircle, Clock, Heart, Banknote, Users } from 'lucide-react'
 import { format } from 'date-fns'
 
-
-interface Siswa { id: number; nama: string; kelas: string | null; ekskul: string }
-interface AbsensiRow { siswa_id: number; nama: string; kelas: string | null; ekskul: string; status: string; uang_kas: number; keterangan: string }
-interface AbsensiRecord { id: number; siswa: Siswa; tanggal: string; status: string; uang_kas: number; keterangan: string | null; creator: { nama: string } }
+interface Member { id: number; name: string; class: string | null }
+interface AbsensiRow { member_id: number; nama: string; kelas: string | null; status: string; uang_kas: number; keterangan: string }
+interface AbsensiRecord { id: number; member: Member; date: string; status: string; cash_amount: number; notes: string | null }
 
 interface Props {
-  user: { id: number; nama: string; email: string; role: string }
-  defaultOrg: 'programming' | 'english' | ''
+  user: { id: number; nama: string; email: string; role: string; activeOrgId?: number; orgIds: number[] }
 }
 
 const STATUS_OPTIONS = [
   { value: 'hadir', label: 'Hadir', icon: CheckCircle2, color: 'bg-green-500/10 text-green-400 border-white/20 hover:bg-green-100' },
   { value: 'tidak_hadir', label: 'Tidak', icon: XCircle, color: 'bg-red-500/10 text-red-400 border-red-300 hover:bg-red-100' },
-  { value: 'izin', label: 'Izin', icon: Clock, color: 'bg-yellow-500/10 text-yellow-400 border-white/20 hover:bg-yellow-100' },
-  { value: 'sakit', label: 'Sakit', icon: Heart, color: 'bg-sky-500/10 text-sky-400 border-white/20 hover:bg-sky-100' },
+  { value: 'izin', label: 'Izin', icon: Clock, color: 'bg-yellow-bright-500/10 text-yellow-bright-400 border-white/20 hover:bg-yellow-bright-100' },
+  { value: 'sakit', label: 'Sakit', icon: Heart, color: 'bg-royal-500/10 text-royal-400 border-white/20 hover:bg-cream-100' },
 ]
 
 const PAGE_SIZE = 100
 
-export default function AbsensiClient({ user, defaultOrg }: Props) {
+export default function AbsensiClient({ user }: Props) {
   const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
-
   const [mode, setMode] = useState<'input' | 'riwayat'>('input')
 
   // Input state
-  const [bulkOrg, setBulkOrg] = useState<'programming' | 'english'>(defaultOrg || (canAccessProgramming(user.role) ? 'programming' : 'english'))
   const [bulkDate, setBulkDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [bulkRows, setBulkRows] = useState<AbsensiRow[]>([])
   const [loadingBulk, setLoadingBulk] = useState(false)
   const [saving, setSaving] = useState(false)
 
-  // Award state
-  const [awardModalOpen, setAwardModalOpen] = useState(false)
-  const [selectedStudent, setSelectedStudent] = useState<{ id: number; nama: string; org: string } | null>(null)
-  const [awardId, setAwardId] = useState<number | null>(null)
-  const [givingAward, setGivingAward] = useState(false)
-
   // Riwayat state
   const [riwayat, setRiwayat] = useState<AbsensiRecord[]>([])
   const [loadingRiwayat, setLoadingRiwayat] = useState(false)
   const [filterTanggal, setFilterTanggal] = useState(format(new Date(), 'yyyy-MM-dd'))
-  const [filterOrg, setFilterOrg] = useState<string>(defaultOrg)
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
 
-  const canProg = canAccessProgramming(user.role)
-  const canEng = canAccessEnglish(user.role)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
-  // Load riwayat
-  const loadRiwayat = useCallback(async (force = false, customParams?: any) => {
-    setLoadingRiwayat(true)
-    const activePage = customParams?.page || page
-    const activeTanggal = customParams?.tanggal !== undefined ? customParams.tanggal : filterTanggal
-    const activeOrg = customParams?.ekskul !== undefined ? customParams.ekskul : filterOrg
-
-    const params = new URLSearchParams({
-      page: String(activePage), limit: String(PAGE_SIZE),
-      ...(activeTanggal && { tanggal: activeTanggal }),
-      ...(activeOrg && { ekskul: activeOrg }),
-    })
-    const json = await fetchJsonCachedUrl<{ data?: AbsensiRecord[]; total?: number; totalPages?: number }>(`/api/absensi?${params}`, { force })
-    setRiwayat(json.data || [])
-    setTotal(json.total || 0)
-    setTotalPages(json.totalPages || 1)
-    setLoadingRiwayat(false)
-  }, [page, filterTanggal, filterOrg])
-
-  // Load siswa & absensi for bulk input (Optimized combined call)
   const loadBulkData = useCallback(async () => {
+    if (!user.activeOrgId) return
     setLoadingBulk(true)
     try {
       const json = await fetchJsonCachedUrl<{ data?: AbsensiRow[] }>(
-        `/api/absensi?mode=input&tanggal=${bulkDate}&ekskul=${bulkOrg}`,
-        { force: true } // Always force fresh data for input mode
+        `/api/absensi?mode=input&tanggal=${bulkDate}&orgId=${user.activeOrgId}`,
+        { force: true }
       )
       setBulkRows(json.data || [])
     } catch (e) {
       toast.error('Gagal memuat data absensi')
     }
     setLoadingBulk(false)
-  }, [bulkOrg, bulkDate])
+  }, [user.activeOrgId, bulkDate])
 
-  useEffect(() => { if (mode === 'input') loadBulkData() }, [mode, loadBulkData])
+  const loadRiwayat = useCallback(async (force = false, customParams?: any) => {
+    if (!user.activeOrgId && user.role !== 'SUPER_ADMIN' && (user.role as string) !== 'administrator') return
+    setLoadingRiwayat(true)
+    const activePage = customParams?.page || page
+    const activeTanggal = customParams?.tanggal !== undefined ? customParams.tanggal : filterTanggal
 
-  useEffect(() => { if (mode === 'riwayat') loadRiwayat() }, [mode, loadRiwayat])
-  useEffect(() => { setPage(1) }, [filterTanggal, filterOrg])
+    const params = new URLSearchParams({
+      page: String(activePage), 
+      limit: String(PAGE_SIZE),
+      orgId: String(user.activeOrgId || ''),
+      ...(activeTanggal && { tanggal: activeTanggal }),
+    })
+    const json = await fetchJsonCachedUrl<{ data?: AbsensiRecord[]; total?: number; totalPages?: number }>(`/api/absensi?${params}`, { force })
+    setRiwayat(json.data || [])
+    setTotal(json.total || 0)
+    setTotalPages(json.totalPages || 1)
+    setLoadingRiwayat(false)
+  }, [page, filterTanggal, user.activeOrgId, user.role])
+
+  useEffect(() => {
+    setBulkRows([])
+    setRiwayat([])
+    setPage(1)
+  }, [user.activeOrgId])
+
+  useEffect(() => { if (mode === 'input') loadBulkData() }, [mode, loadBulkData, user.activeOrgId])
+  useEffect(() => { if (mode === 'riwayat') loadRiwayat() }, [mode, loadRiwayat, user.activeOrgId])
 
   function updateRow(idx: number, field: keyof AbsensiRow, value: string | number) {
     setBulkRows(prev => prev.map((r, i) => i === idx ? { ...r, [field]: value } : r))
@@ -111,101 +100,63 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
   }
 
   async function handleSave() {
-    if (!bulkRows.length) { toast.error('Tidak ada siswa'); return }
+    if (!bulkRows.length) { toast.error('Tidak ada anggota'); return }
     setSaving(true)
     try {
-      const res = await fetch('/api/absensi', {
+      const res = await fetch(`/api/absensi`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tanggal: bulkDate,
-          rows: bulkRows.map(r => ({ siswa_id: r.siswa_id, status: r.status, uang_kas: r.uang_kas, keterangan: r.keterangan || undefined }))
+          rows: bulkRows.map(r => ({ member_id: r.member_id, status: r.status, uang_kas: r.uang_kas, keterangan: r.keterangan || undefined }))
         })
       })
       const json = await res.json()
       if (!res.ok) { toast.error(json.error || 'Gagal menyimpan'); setSaving(false); return }
-      toast.success(`✅ Absensi ${bulkRows.length} siswa tersimpan!`, { duration: 4000 })
+      toast.success(`✅ Absensi ${bulkRows.length} anggota tersimpan!`)
       
-      // Clear cache to ensure next loads are fresh
       clearJsonCache()
-      
       setSaving(false)
-      
-      // Update filters FIRST so the useEffect will see new values if it triggers
       setFilterTanggal(bulkDate)
-      setFilterOrg(bulkOrg)
       setPage(1)
       setMode('riwayat')
-      
-      // Explicitly trigger a fresh load with the KNOWN new values to avoid closure/state issues
-      loadRiwayat(true, { page: 1, tanggal: bulkDate, ekskul: bulkOrg })
     } catch (e) {
       toast.error('Terjadi kesalahan saat menyimpan')
       setSaving(false)
     }
   }
 
-  async function handleGiveAward() {
-    if (!selectedStudent || !awardId) {
-      toast.error('Pilih penghargaan terlebih dahulu')
-      return
-    }
-    setGivingAward(true)
-    const tipe = selectedStudent.org === 'osis' ? 'anggota_osis' : selectedStudent.org === 'mpk' ? 'anggota_mpk' : 'siswa'
-    const res = await fetch('/api/pencapaian/berikan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        pencapaian_id: awardId,
-        penerima: [{ tipe_anggota: tipe, target_id: selectedStudent.id }]
-      })
-    })
-    const json = await res.json()
-    if (!res.ok) toast.error(json.error || 'Gagal')
-    else {
-      toast.success('Penghargaan berhasil diberikan')
-      setAwardModalOpen(false)
-    }
-    setGivingAward(false)
-  }
-
   const hadirCount = bulkRows.filter(r => r.status === 'hadir').length
-  const tidakCount = bulkRows.filter(r => r.status === 'tidak_hadir').length
-  const izinCount = bulkRows.filter(r => r.status === 'izin').length
-  const sakitCount = bulkRows.filter(r => r.status === 'sakit').length
   const totalKas = bulkRows.reduce((s, r) => s + (r.uang_kas || 0), 0)
 
   const riwayatCols = [
-    { key: 'siswa', label: 'Nama Siswa', render: (a: AbsensiRecord) => (
+    { key: 'member', label: 'Nama Anggota', render: (a: AbsensiRecord) => (
       <div>
-        <div className="font-semibold text-white text-sm">{a.siswa?.nama}</div>
-        <span className="text-xs text-slate-400">{a.siswa?.kelas || ''}</span>
+        <div className="font-semibold text-royal-900 text-sm">{a.member?.name}</div>
+        <span className="text-xs text-royal-400">{a.member?.class || ''}</span>
       </div>
     )},
-    { key: 'ekskul', label: 'Ekskul', render: (a: AbsensiRecord) => a.siswa ? <OrgBadge org={a.siswa.ekskul} /> : null },
-    { key: 'tanggal', label: 'Tanggal', render: (a: AbsensiRecord) => <span className="text-slate-400 text-xs font-mono">{formatDate(a.tanggal)}</span> },
+    { key: 'tanggal', label: 'Tanggal', render: (a: AbsensiRecord) => <span className="text-royal-400 text-xs font-mono">{formatDate(a.date)}</span> },
     { key: 'status', label: 'Status', render: (a: AbsensiRecord) => <StatusBadge status={a.status} /> },
     { key: 'uang_kas', label: 'Uang Kas', render: (a: AbsensiRecord) => (
-      <span className={`font-mono text-sm font-semibold ${a.uang_kas > 0 ? 'text-green-600' : 'text-slate-300'}`}>
-        {a.uang_kas > 0 ? formatCurrency(a.uang_kas) : '-'}
+      <span className={`font-mono text-sm font-semibold ${a.cash_amount > 0 ? 'text-green-600' : 'text-royal-300'}`}>
+        {a.cash_amount > 0 ? formatCurrency(a.cash_amount) : '-'}
       </span>
     )},
-    { key: 'keterangan', label: 'Keterangan', render: (a: AbsensiRecord) => <span className="text-slate-400 text-xs">{a.keterangan || '-'}</span> },
-    { key: 'creator', label: 'Di-input oleh', render: (a: AbsensiRecord) => <span className="text-slate-400 text-xs">{a.creator?.nama || '-'}</span> },
+    { key: 'keterangan', label: 'Keterangan', render: (a: AbsensiRecord) => <span className="text-royal-400 text-xs">{a.notes || '-'}</span> },
   ]
 
   if (!mounted) return null;
 
   return (
     <div className="space-y-5">
-      {/* Header */}
       <div className="page-header">
         <div className="flex-1">
           <div className="flex items-center gap-2.5">
-            <ClipboardList className="w-5 h-5 text-persian-blue" />
+            <ClipboardList className="w-5 h-5 text-royal-600" />
             <h2 className="page-title">Absensi & Kas</h2>
           </div>
-          <p className="page-sub mt-0.5">Input dan lihat riwayat absensi siswa ekskul</p>
+          <p className="page-sub mt-0.5">Manajemen kehadiran dan kas harian</p>
         </div>
         <div className="flex flex-wrap gap-2 items-center">
           <button onClick={() => setMode('input')} className={mode === 'input' ? 'btn-primary' : 'btn-secondary'}>
@@ -214,67 +165,40 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
           <button onClick={() => setMode('riwayat')} className={mode === 'riwayat' ? 'btn-primary' : 'btn-secondary'}>
             <ClipboardList className="w-4 h-4" /> Riwayat
           </button>
-          {/* <button 
-            onClick={() => window.location.href = `/admin/registration/acceptance?type=eskul&org=${bulkOrg}`}
-            className="btn-secondary border-blue-200 bg-blue-50/50 hover:bg-blue-100 text-blue-600 font-bold"
-          >
-            <UserCheck className="w-4 h-4" />
-            Lihat Calon Pendaftaran
-          </button> */}
         </div>
       </div>
 
       {mode === 'input' ? (
         <div className="space-y-4">
-          {/* Input controls */}
           <div className="card p-4 flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-400" />
               <input type="date" value={bulkDate} onChange={e => setBulkDate(e.target.value)} className="input pl-10" />
             </div>
-            {canProg && canEng && (
-              <Select
-                value={bulkOrg}
-                onChange={v => setBulkOrg(v as 'programming' | 'english')}
-                className="sm:w-48"
-                options={[
-                  ...(canProg ? [{ value: 'programming', label: 'Programming' }] : []),
-                  ...(canEng  ? [{ value: 'english',     label: 'English Club' }] : []),
-                ]}
-              />
-            )}
           </div>
 
-          {loadingBulk ? (
-            <div className="card p-16 flex items-center justify-center gap-3 text-slate-400">
+          {!user.activeOrgId ? (
+            <div className="card p-16 text-center">
+              <p className="text-royal-400">Silakan pilih organisasi terlebih dahulu</p>
+            </div>
+          ) : loadingBulk ? (
+            <div className="card p-16 flex items-center justify-center gap-3 text-royal-400">
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span className="text-sm">Memuat daftar siswa...</span>
+              <span className="text-sm">Memuat daftar anggota...</span>
             </div>
           ) : bulkRows.length === 0 ? (
             <div className="card p-16 text-center">
-              <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-400 text-sm font-medium">Belum ada siswa di ekskul ini</p>
-              <p className="text-slate-400 text-xs mt-1">Tambahkan siswa terlebih dahulu di menu Data Siswa</p>
+              <Users className="w-10 h-10 text-royal-300 mx-auto mb-3" />
+              <p className="text-royal-400 text-sm font-medium">Belum ada anggota di organisasi ini</p>
             </div>
           ) : (
             <div className="card overflow-hidden">
-              {/* Bulk header */}
-              <div className={cn(
-                "px-5 py-3 border-b flex items-center justify-between flex-wrap gap-3",
-                bulkOrg === 'programming' ? "bg-unit-programming/10 border-unit-programming/20" : "bg-unit-english/10 border-unit-english/20"
-              )}>
+              <div className="px-5 py-3 border-b flex items-center justify-between flex-wrap gap-3 bg-cream-50/80 border-royal-200">
                 <div>
-                  <span className={cn(
-                    "text-sm font-bold",
-                    bulkOrg === 'programming' ? "text-unit-programming" : "text-blue-400"
-                  )}>
-                    {bulkOrg === 'programming' ? 'Programming' : 'English Club'} — {formatDate(bulkDate)}
-                  </span>
-                  <span className="text-xs text-white/50 ml-2">{bulkRows.length} siswa</span>
+                  <span className="text-sm font-bold text-royal-900">Input Absensi — {formatDate(bulkDate)}</span>
+                  <span className="text-xs text-royal-900/50 ml-2">{bulkRows.length} orang</span>
                 </div>
-                {/* Quick actions */}
                 <div className="flex gap-1.5 flex-wrap">
-                  <span className="text-xs text-slate-400 self-center mr-1">Tandai semua:</span>
                   {STATUS_OPTIONS.map(s => (
                     <button key={s.value} onClick={() => setAllStatus(s.value)}
                       className={`text-xs font-semibold px-2.5 py-1 rounded-lg border transition-all ${s.color}`}>
@@ -284,84 +208,65 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
                 </div>
               </div>
 
-              {/* Table */}
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="bg-white/5 border-b border-white/10">
+                    <tr className="bg-cream-50/80 border-b border-royal-200">
                       <th className="th w-8">#</th>
-                      <th className="th">Nama Siswa</th>
+                      <th className="th">Nama Anggota</th>
                       <th className="th w-48">Status Kehadiran</th>
                       <th className="th w-36">Uang Kas (Rp)</th>
                       <th className="th w-40">Keterangan</th>
                     </tr>
                   </thead>
-                      <tbody className="divide-y divide-slate-100">
-                    {bulkRows.map((row, i) => {
-                      const statusOpt = STATUS_OPTIONS.find(s => s.value === row.status)
-                      return (
-                        <tr key={row.siswa_id} className="hover:bg-white/10">
-                          <td className="td text-slate-400 font-mono text-xs">{i + 1}</td>
-                          <td className="td">
-                            <div className="font-semibold text-white text-sm">{row.nama}</div>
-                            {row.kelas && <div className="text-xs text-slate-400">{row.kelas}</div>}
-                          </td>
-                          <td className="td">
-                            <div className="flex gap-1">
-                              {STATUS_OPTIONS.map(s => {
-                                const Icon = s.icon
-                                return (
-                                  <button key={s.value} onClick={() => updateRow(i, 'status', s.value)}
-                                    title={s.label}
-                                    className={`flex items-center gap-1 px-2 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
-                                      row.status === s.value ? s.color + ' ring-1 ring-current' : 'border-white/10 text-slate-400 hover:border-slate-300'
-                                    }`}>
-                                    <Icon className="w-3 h-3" />
-                                    <span className="hidden sm:inline">{s.label}</span>
-                                  </button>
-                                )
-                              })}
-                            </div>
-                          </td>
-                          <td className="td">
-                            <div className="relative">
-                              <Banknote className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                              <input type="number" min={0} step={500}
-                                value={row.uang_kas}
-                                onChange={e => updateRow(i, 'uang_kas', parseInt(e.target.value) || 0)}
-                                className="input pl-8 py-1.5 font-mono text-sm"
-                                placeholder="0" />
-                            </div>
-                          </td>
-                          <td className="td flex gap-2">
-                            <input type="text"
-                              value={row.keterangan}
-                              onChange={e => updateRow(i, 'keterangan', e.target.value)}
-                              className="input py-1.5 text-xs flex-1"
-                              placeholder="Opsional..." />
-                            {/* <button onClick={() => { 
-                              setSelectedStudent({ id: row.siswa_id, nama: row.nama, org: bulkOrg })
-                              setAwardModalOpen(true) 
-                            }} className="btn-icon text-yellow-500 hover:bg-yellow-50" title="Beri Penghargaan">
-                              <Sparkles className="w-4 h-4" />
-                            </button> */}
-                          </td>
-                        </tr>
-                      )
-                    })}
+                  <tbody className="divide-y divide-white/5">
+                    {bulkRows.map((row, i) => (
+                      <tr key={row.member_id} className="hover:bg-cream-100">
+                        <td className="td text-royal-400 font-mono text-xs">{i + 1}</td>
+                        <td className="td">
+                          <div className="font-semibold text-royal-900 text-sm">{row.nama}</div>
+                          {row.kelas && <div className="text-xs text-royal-400">{row.kelas}</div>}
+                        </td>
+                        <td className="td">
+                          <div className="flex gap-1">
+                            {STATUS_OPTIONS.map(s => {
+                              const Icon = s.icon
+                              return (
+                                <button key={s.value} onClick={() => updateRow(i, 'status', s.value)}
+                                  className={`flex items-center gap-1 px-2 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                                    row.status === s.value ? s.color + ' ring-1 ring-current' : 'border-royal-200 text-royal-400 hover:border-royal-300'
+                                  }`}>
+                                  <Icon className="w-3 h-3" />
+                                  <span className="hidden sm:inline">{s.label}</span>
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </td>
+                        <td className="td">
+                          <div className="relative">
+                            <Banknote className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-royal-400" />
+                            <input type="number" min={0} step={500}
+                              value={row.uang_kas}
+                              onChange={e => updateRow(i, 'uang_kas', parseInt(e.target.value) || 0)}
+                              className="input pl-8 py-1.5 font-mono text-sm" />
+                          </div>
+                        </td>
+                        <td className="td">
+                          <input type="text"
+                            value={row.keterangan}
+                            onChange={e => updateRow(i, 'keterangan', e.target.value)}
+                            className="input py-1.5 text-xs w-full"
+                            placeholder="Opsional..." />
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
 
-              {/* Summary footer */}
-              <div className="px-5 py-3 bg-white/5 border-t border-white/10 flex items-center justify-between flex-wrap gap-3">
-                <div className="flex gap-4 text-xs font-semibold flex-wrap">
-                  <span className="text-green-400">✓ Hadir: {hadirCount}</span>
-                  <span className="text-red-400">✗ Tidak: {tidakCount}</span>
-                  <span className="text-yellow-400">⏱ Izin: {izinCount}</span>
-                  <span className="text-sky-400">♥ Sakit: {sakitCount}</span>
-                  <span className="text-amber-400">Kas: {formatCurrency(totalKas)}</span>
-                </div>
+              <div className="px-5 py-3 bg-cream-50/80 border-t border-royal-200 flex items-center justify-between flex-wrap gap-3">
+                <div className="text-xs font-semibold text-yellow-bright-400">Total Kas: {formatCurrency(totalKas)}</div>
                 <button onClick={handleSave} disabled={saving} className="btn-primary">
                   {saving ? <><Loader2 className="w-4 h-4 animate-spin" />Menyimpan...</> : <><Save className="w-4 h-4" />Simpan Absensi</>}
                 </button>
@@ -370,31 +275,18 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
           )}
         </div>
       ) : (
-        /* Riwayat */
         <div className="space-y-4">
           <div className="card p-4 flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-400" />
               <input type="date" value={filterTanggal} onChange={e => setFilterTanggal(e.target.value)} className="input pl-10" />
             </div>
-            {canProg && canEng && (
-              <Select
-                value={filterOrg}
-                onChange={setFilterOrg}
-                placeholder="Semua Ekskul"
-                className="sm:w-44"
-                options={[
-                  ...(canProg ? [{ value: 'programming', label: 'Programming' }] : []),
-                  ...(canEng  ? [{ value: 'english',     label: 'English Club' }] : []),
-                ]}
-              />
-            )}
           </div>
           <Table
             columns={riwayatCols}
             data={riwayat}
             loading={loadingRiwayat}
-            emptyMessage="Tidak ada data absensi untuk filter ini"
+            emptyMessage="Tidak ada data absensi"
             page={page}
             totalPages={totalPages}
             total={total}
@@ -403,29 +295,6 @@ export default function AbsensiClient({ user, defaultOrg }: Props) {
           />
         </div>
       )}
-
-      <Modal open={awardModalOpen} title="Beri Penghargaan" onClose={() => setAwardModalOpen(false)} size="md"
-        footer={
-          <div className="flex gap-2 justify-end">
-            <button onClick={() => setAwardModalOpen(false)} className="btn-secondary">Batal</button>
-            <button onClick={handleGiveAward} disabled={givingAward} className="btn-primary">
-              {givingAward ? 'Mengirim...' : 'Berikan Penghargaan'}
-            </button>
-          </div>
-        }>
-        <div className="space-y-4">
-          <p className="text-xs text-slate-400">Memberikan penghargaan kepada <b>{selectedStudent?.nama}</b></p>
-          <div className="form-group">
-            <label className="label">Jenis Penghargaan *</label>
-            <Select
-              value={awardId ? awardId.toString() : ''}
-              onChange={(val) => setAwardId(parseInt(val))}
-              options={AWARDS_DATA[bulkOrg]?.map(a => ({ value: a.id.toString(), label: a.nama })) || []}
-              placeholder="Pilih Penghargaan"
-            />
-          </div>
-        </div>
-      </Modal>
     </div>
   )
 }

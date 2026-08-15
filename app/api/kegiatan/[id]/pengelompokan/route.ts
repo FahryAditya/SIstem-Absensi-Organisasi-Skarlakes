@@ -11,12 +11,13 @@ function getCtx(req: NextRequest) {
   }
 }
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = parseInt(params.id)
+    const { id: paramId } = await params
+    const id = parseInt(paramId)
     if (!id) return NextResponse.json({ error: 'ID tidak valid' }, { status: 400 })
 
-    const pengelompokan = await prisma.pengelompokanKegiatan.findMany({
+    const pengelompokan = await (prisma as any).pengelompokanKegiatan.findMany({
       where: { kegiatan_id: id },
       include: {
         siswa: {
@@ -39,14 +40,15 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const ctx = getCtx(req)
     if (!isAdministrator(ctx.userRole) && ctx.userRole !== 'admin_osis_mpk') {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 
-    const kegiatan_id = parseInt(params.id)
+    const { id: paramId } = await params
+    const kegiatan_id = parseInt(paramId)
     const body = await req.json()
     const { siswa_id, organisasi, sub_kategori } = body
 
@@ -54,7 +56,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Siswa dan organisasi wajib diisi' }, { status: 400 })
     }
 
-    const entry = await prisma.pengelompokanKegiatan.create({
+    const entry = await (prisma as any).pengelompokanKegiatan.create({
       data: {
         kegiatan_id,
         siswa_id,
@@ -97,7 +99,7 @@ export async function DELETE(req: NextRequest) {
 
     if (!id) return NextResponse.json({ error: 'ID tidak valid' }, { status: 400 })
 
-    const deleted = await prisma.pengelompokanKegiatan.delete({
+    const deleted = await (prisma as any).pengelompokanKegiatan.delete({
       where: { id },
       include: {
         siswa: { select: { nama: true } },

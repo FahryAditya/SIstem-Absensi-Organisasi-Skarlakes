@@ -6,12 +6,20 @@ import cloudinary, { cloudinaryConfigError, isCloudinaryConfigured } from '@/lib
 
 export const dynamic = 'force-dynamic'
 
-let isTableChecked = false
+let ensuringTable = false
 
 async function ensureDokumentasiFotoTable() {
-  if (isTableChecked) return
+  if (ensuringTable) return
+  ensuringTable = true
   try {
-    // ── Step 1: Create the ENUM type if absent ─────────────────────────────────────
+    // Try a simple query to check if table exists
+    try {
+      await prisma.dokumentasiFoto.findFirst({ take: 1 })
+      return
+    } catch {
+      // Table doesn't exist, create it
+    }
+
     await prisma.$executeRawUnsafe(`
       DO $$
       BEGIN
@@ -22,11 +30,10 @@ async function ensureDokumentasiFotoTable() {
         END IF;
       END $$;
     `)
-    // ── Step 2: CREATE TABLE with ENUM column ─────────────────────────────────────
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS "dokumentasi_foto" (
         "id"              SERIAL PRIMARY KEY,
-        "organisasi_type" "OrganisasiType" NOT NULL,
+        "organisasi_type" "OrganisasiType" NOT NULL DEFAULT 'programming',
         "judul"           VARCHAR(150) NOT NULL,
         "deskripsi"       TEXT,
         "image_url"       VARCHAR(255) NOT NULL,
@@ -37,40 +44,14 @@ async function ensureDokumentasiFotoTable() {
         "updated_at"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
     `)
-    // ── Step 3: Upgrade existing column if it was previously VARCHAR/TEXT ───────────
-    await prisma.$executeRawUnsafe(`
-      DO $$
-      BEGIN
-        IF EXISTS (
-          SELECT 1 FROM pg_attribute
-          WHERE attrelid = 'dokumentasi_foto'::regclass
-            AND attname    = 'organisasi_type'
-            AND NOT attisdropped
-        ) THEN
-          -- Clean up invalid/null values to 'programming' before altering type to avoid cast errors
-          UPDATE "dokumentasi_foto"
-          SET "organisasi_type" = 'programming'
-          WHERE "organisasi_type" IS NULL 
-             OR "organisasi_type"::text NOT IN ('programming','english','osis','mpk');
-
-          ALTER TABLE "dokumentasi_foto"
-            ALTER COLUMN "organisasi_type" TYPE "OrganisasiType"
-            USING "organisasi_type"::text::"OrganisasiType";
-        ELSE
-          ALTER TABLE "dokumentasi_foto"
-            ADD COLUMN "organisasi_type" "OrganisasiType" NOT NULL DEFAULT 'programming';
-        END IF;
-      END $$;
-    `)
-
     await prisma.$executeRawUnsafe('CREATE INDEX IF NOT EXISTS "dokumentasi_foto_organisasi_type_idx" ON "dokumentasi_foto"("organisasi_type");')
     await prisma.$executeRawUnsafe('CREATE INDEX IF NOT EXISTS "dokumentasi_foto_tanggal_idx" ON "dokumentasi_foto"("tanggal");')
     await prisma.$executeRawUnsafe('CREATE INDEX IF NOT EXISTS "dokumentasi_foto_created_at_idx" ON "dokumentasi_foto"("created_at");')
-    isTableChecked = true
   } catch (err) {
     console.error('Failed to ensure table dokumentasi_foto:', err)
-    // Don't set isTableChecked = true, so we can retry next time, but throw the error to fail fast
     throw err
+  } finally {
+    ensuringTable = false
   }
 }
 
@@ -232,13 +213,12 @@ export async function POST(req: NextRequest) {
       data: {
         organisasi_type: organisasiType as any,
         judul,
-        deskripsi,
         image_url: imageUrl,
         public_id: publicId,
         media_type: resourceType,
         tanggal: tanggalVal,
         created_by: userId,
-      },
+      } as any,
       include: {
         creator: {
           select: { nama: true },
@@ -295,7 +275,7 @@ export async function DELETE(req: NextRequest) {
 
     // Pastikan user memiliki hak akses terhadap organisasi ini
     const accessible = getAccessibleOrgs(userRole)
-    if (!accessible.includes(photo.organisasi_type)) {
+    if (!accessible.includes(photo.organisasi_type ?? '')) {
       return NextResponse.json({ error: 'Anda tidak memiliki hak akses untuk menghapus foto ini' }, { status: 403 })
     }
 
@@ -321,7 +301,7 @@ export async function DELETE(req: NextRequest) {
       aksi: 'DELETE',
       tabel: 'dokumentasi_foto',
       recordId: id.toString(),
-      deskripsi: `Menghapus foto dokumentasi kegiatan "${photo.judul}" organisasi ${photo.organisasi_type.toUpperCase()}`,
+      deskripsi: `Menghapus foto dokumentasi kegiatan "${photo.judul}" organisasi ${(photo.organisasi_type ?? 'unknown').toUpperCase()}`,
       ipAddress: getIp(req),
     })
 

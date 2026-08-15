@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromRequest } from '@/lib/auth'
 import { createLog, getIp } from '@/lib/log'
 
+
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: NextRequest) {
   const session = await getSessionFromRequest(req)
   if (session) {
@@ -17,6 +20,12 @@ export async function POST(req: NextRequest) {
   }
 
   const response = NextResponse.json({ success: true })
-  response.cookies.delete('ekskul_session')
+  response.cookies.set('ekskul_session', '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 0,
+    path: '/',
+  })
   return response
 }

@@ -1,106 +1,74 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-import { getAccessibleOrgs } from '@/lib/auth-shared'
+import { prisma } from '@/lib/prisma'
+import { getSessionFromRequest } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
 
-const prisma = new PrismaClient()
-
-function getCtx(req: NextRequest) {
-  return { userRole: req.headers.get('x-user-role') || '' }
+function isSuperAdmin(role: string) {
+  return role === 'SUPER_ADMIN' || role === 'administrator' || role === 'admin_osis_mpk'
 }
 
 export async function GET(req: NextRequest) {
-  const { userRole } = getCtx(req)
-  const { searchParams } = new URL(req.url)
-  const tipe = searchParams.get('tipe') || 'siswa'   // 'siswa' | 'osis' | 'mpk'
-  const targetId = parseInt(searchParams.get('id') || '0')
-  const ekskul = searchParams.get('ekskul') as 'programming' | 'english' | null
+  try {
+    const session = await getSessionFromRequest(req)
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  if (!targetId) return NextResponse.json({ error: 'ID required' }, { status: 400 })
+    const { searchParams } = new URL(req.url)
+    const targetId = parseInt(searchParams.get('id') || '0')
 
-  if (tipe === 'siswa') {
-    const accessible = getAccessibleOrgs(userRole)
-    if (ekskul && !accessible.includes(ekskul))
+    if (!targetId) return NextResponse.json({ error: 'ID required' }, { status: 400 })
+
+    const member = await prisma.member.findUnique({
+      where: { id: targetId },
+      include: { organization: { select: { nama: true, slug: true } } }
+    })
+
+    if (!member) return NextResponse.json({ error: 'Anggota tidak ditemukan' }, { status: 404 })
+
+    // RBAC Check: Ensure admin has access to this member's organization
+    if (!isSuperAdmin(session.role as string) && !session.orgIds.includes(member.organization_id)) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+    }
 
-    const [absensiList, siswa] = await Promise.all([
-      prisma.absensi.findMany({
-        where: { siswa_id: targetId },
-        select: { tanggal: true, status: true },
-        orderBy: { tanggal: 'asc' },
-      }),
-      prisma.siswa.findUnique({
-        where: { id: targetId },
-        select: { id: true, nama: true, kelas: true, ekskul: true, xp: true, level: true },
-      }),
-    ])
-
-    if (!siswa) return NextResponse.json({ error: 'Siswa tidak ditemukan' }, { status: 404 })
-
-    // Double check accessibility based on student's actual organization
-    if (!accessible.includes(siswa.ekskul))
-      return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+    const absensiList = await prisma.attendance.findMany({
+      where: { member_id: targetId },
+      select: { date: true, status: true },
+      orderBy: { date: 'asc' },
+    })
 
     const stats = hitungStatistik(absensiList)
-    return NextResponse.json({ data: { ...siswa, ...stats } })
+    
+    return NextResponse.json({ 
+      data: { 
+        id: member.id,
+        nama: member.name,
+        kelas: member.class,
+        jabatan: member.jabatan,
+        xp: member.exp,
+        level: member.level,
+        organisasi: member.organization.nama,
+        ...stats 
+      } 
+    })
+  } catch (error) {
+    console.error('[REKAP ERROR]', error)
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
-
-  if (tipe === 'osis') {
-    const accessible = getAccessibleOrgs(userRole)
-    if (!accessible.includes('osis')) return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
-    const [absensiList, anggota] = await Promise.all([
-      prisma.absensiOrganisasi.findMany({
-        where: { anggota_osis_id: targetId },
-        select: { tanggal: true, status: true },
-        orderBy: { tanggal: 'asc' },
-      }),
-      prisma.anggotaOsis.findUnique({
-        where: { id: targetId },
-        select: { id: true, nama: true, kelas: true, jabatan: true, xp: true, level: true },
-      }),
-    ])
-    if (!anggota) return NextResponse.json({ error: 'Anggota tidak ditemukan' }, { status: 404 })
-    const stats = hitungStatistik(absensiList)
-    return NextResponse.json({ data: { ...anggota, ...stats } })
-  }
-
-  if (tipe === 'mpk') {
-    const accessible = getAccessibleOrgs(userRole)
-    if (!accessible.includes('mpk')) return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
-    const [absensiList, anggota] = await Promise.all([
-      prisma.absensiOrganisasi.findMany({
-        where: { anggota_mpk_id: targetId },
-        select: { tanggal: true, status: true },
-        orderBy: { tanggal: 'asc' },
-      }),
-      prisma.anggotaMpk.findUnique({
-        where: { id: targetId },
-        select: { id: true, nama: true, kelas: true, jabatan: true, xp: true, level: true },
-      }),
-    ])
-    if (!anggota) return NextResponse.json({ error: 'Anggota tidak ditemukan' }, { status: 404 })
-    const stats = hitungStatistik(absensiList)
-    return NextResponse.json({ data: { ...anggota, ...stats } })
-  }
-
-  return NextResponse.json({ error: 'Tipe tidak valid' }, { status: 400 })
 }
 
-function hitungStatistik(absensiList: { tanggal: Date; status: string }[]) {
+function hitungStatistik(absensiList: { date: Date; status: string }[]) {
   const bulanIni = new Date()
   bulanIni.setDate(1)
   bulanIni.setHours(0, 0, 0, 0)
 
   const hadirBulanIni = absensiList.filter(
-    (a) => a.status === 'hadir' && new Date(a.tanggal) >= bulanIni
+    (a) => a.status === 'hadir' && new Date(a.date) >= bulanIni
   ).length
-  const totalBulanIni = absensiList.filter((a) => new Date(a.tanggal) >= bulanIni).length
+  const totalBulanIni = absensiList.filter((a) => new Date(a.date) >= bulanIni).length
   const persentaseKehadiran = totalBulanIni > 0 ? Math.round((hadirBulanIni / totalBulanIni) * 100) : 0
 
   // Hitung streak berturut-turut (dari tanggal terbaru ke belakang)
-  const sorted = [...absensiList].sort((a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime())
+  const sorted = [...absensiList].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   let streak = 0
   for (const a of sorted) {
     if (a.status === 'hadir') streak++
@@ -116,7 +84,7 @@ function hitungStatistik(absensiList: { tanggal: Date; status: string }[]) {
     grafikMap[key] = { hadir: 0, total: 0 }
   }
   for (const a of absensiList) {
-    const d = new Date(a.tanggal)
+    const d = new Date(a.date)
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
     if (grafikMap[key]) {
       grafikMap[key].total++
@@ -137,6 +105,6 @@ function hitungStatistik(absensiList: { tanggal: Date; status: string }[]) {
     persentaseKehadiran,
     streak,
     grafik,
-    riwayat: absensiList.map((a) => ({ tanggal: a.tanggal, status: a.status })),
+    riwayat: absensiList.map((a) => ({ tanggal: a.date, status: a.status })),
   }
 }

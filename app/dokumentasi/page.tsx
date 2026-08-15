@@ -8,7 +8,7 @@ export const metadata = {
 
 export default async function DokumentasiPage() {
   const user = await getUserSession()
-  const guestUser = { id: 0, nama: 'Tamu', email: '', role: 'guest' }
+  const guestUser = { id: 0, nama: 'Tamu', email: '', role: 'guest', orgIds: [] as number[] }
 
   return (
     <DashboardLayout user={user || guestUser} pageTitle="Dokumentasi Foto Kegiatan">

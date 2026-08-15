@@ -1,138 +1,73 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAccessibleOrgs } from '@/lib/auth-shared'
+import { getSessionFromRequest } from '@/lib/auth'
 import { createLog, getIp } from '@/lib/log'
 
-function getCtx(req: NextRequest) {
-  return {
-    userId: parseInt(req.headers.get('x-user-id') || '0'),
-    userNama: req.headers.get('x-user-nama') || '',
-    userRole: req.headers.get('x-user-role') || '',
-  }
+
+export const dynamic = 'force-dynamic'
+
+function isSuperAdmin(role: string) {
+  return role === 'SUPER_ADMIN' || role === 'administrator' || role === 'admin_osis_mpk'
 }
 
 export async function PATCH(req: NextRequest) {
   try {
-    const ctx = getCtx(req)
-    const body = await req.json()
-    const { id, type, action, reason } = body // action: 'accept' | 'reject'
+    const session = await getSessionFromRequest(req)
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    if (!id || !type || !action) {
+    const body = await req.json()
+    const { id, action } = body // action: 'accept' | 'reject'
+
+    if (!id || !action) {
       return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 })
     }
 
-    const accessibleOrgs = getAccessibleOrgs(ctx.userRole)
+    const reg = await prisma.registration.findUnique({
+      where: { id },
+      include: { organization: true }
+    })
 
-    if (type === 'eskul') {
-      const reg = await prisma.registrationEskul.findUnique({
-        where: { id },
-        include: { organization: true }
-      })
+    if (!reg) return NextResponse.json({ error: 'Data pendaftaran tidak ditemukan' }, { status: 404 })
 
-      if (!reg) return NextResponse.json({ error: 'Data pendaftaran tidak ditemukan' }, { status: 404 })
-      if (!reg.organization.tipe || !accessibleOrgs.includes(reg.organization.tipe)) {
-        return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
-      }
+    // RBAC Check
+    if (!isSuperAdmin(session.role as string) && !session.orgIds.includes(reg.organization_id)) {
+      return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+    }
 
-      if (action === 'accept') {
-        // Transaction to update registration and create student
-        await prisma.$transaction(async (tx) => {
-          await tx.registrationEskul.update({
-            where: { id },
-            data: {
-              status: 'DITERIMA',
-              accepted_by: ctx.userId,
-              accepted_at: new Date(),
-              accept_reason: reason
-            }
-          })
-
-          // Create student record
-          await tx.siswa.create({
-            data: {
-              nama: reg.nama_peserta,
-              kelas: reg.kelas,
-              email: reg.email_gmail,
-              ekskul: reg.organization.tipe as any,
-              created_by: ctx.userId,
-              nis: reg.nisn
-            }
-          })
-        })
-      } else {
-        await prisma.registrationEskul.update({
+    if (action === 'accept') {
+      await prisma.$transaction(async (tx) => {
+        await tx.registration.update({
           where: { id },
+          data: { status: 'DITERIMA' }
+        })
+
+        // Create member record
+        await tx.member.create({
           data: {
-            status: 'DITOLAK',
-            rejected_by: ctx.userId,
-            rejected_at: new Date(),
-            reject_reason: reason
+            name: reg.name,
+            class: reg.class,
+            email: reg.email,
+            nis: reg.nisn,
+            organization_id: reg.organization_id,
+            jabatan: 'Anggota'
           }
         })
-      }
-    } else if (type === 'osis-mpk') {
-      const reg = await prisma.registrationOsisMpk.findUnique({
-        where: { id },
-        include: { organization: true }
       })
-
-      if (!reg) return NextResponse.json({ error: 'Data pendaftaran tidak ditemukan' }, { status: 404 })
-      if (!reg.organization.tipe || !accessibleOrgs.includes(reg.organization.tipe)) {
-        return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
-      }
-
-      if (action === 'accept') {
-        await prisma.$transaction(async (tx) => {
-          await tx.registrationOsisMpk.update({
-            where: { id },
-            data: {
-              status: 'DITERIMA',
-              accepted_by: ctx.userId,
-              accepted_at: new Date(),
-              accept_reason: reason
-            }
-          })
-
-          if (reg.organization.tipe === 'osis') {
-            await tx.anggotaOsis.create({
-              data: {
-                nama: reg.nama_peserta,
-                kelas: reg.kelas,
-                email: reg.email_gmail,
-                nis: reg.nisn
-              }
-            })
-          } else {
-            await tx.anggotaMpk.create({
-              data: {
-                nama: reg.nama_peserta,
-                kelas: reg.kelas,
-                email: reg.email_gmail,
-                nis: reg.nisn
-              }
-            })
-          }
-        })
-      } else {
-        await prisma.registrationOsisMpk.update({
-          where: { id },
-          data: {
-            status: 'DITOLAK',
-            rejected_by: ctx.userId,
-            rejected_at: new Date(),
-            reject_reason: reason
-          }
-        })
-      }
+    } else {
+      await prisma.registration.update({
+        where: { id },
+        data: { status: 'DITOLAK' }
+      })
     }
 
     await createLog({
-      userId: ctx.userId,
-      userNama: ctx.userNama,
+      userId: session.id,
+      userNama: session.nama,
       aksi: 'UPDATE',
-      tabel: type === 'eskul' ? 'registration_eskul' : 'registration_osis_mpk',
+      organizationId: reg.organization_id,
+      tabel: 'registrations',
       recordId: id.toString(),
-      deskripsi: `${ctx.userNama} ${action === 'accept' ? 'menerima' : 'menolak'} pendaftaran ID ${id}`,
+      deskripsi: `${session.nama} ${action === 'accept' ? 'menerima' : 'menolak'} pendaftaran "${reg.name}" untuk ${reg.organization.nama}`,
       ipAddress: getIp(req)
     })
 

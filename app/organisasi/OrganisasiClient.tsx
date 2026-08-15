@@ -23,12 +23,19 @@ interface PencapaianItem { id: number; tanggal: string; pencapaian: { nama: stri
 const STATUS_OPTIONS = [
   { value: 'hadir', label: 'Hadir', icon: CheckCircle2, color: 'bg-green-500/10 text-green-400 border-white/20 hover:bg-green-100' },
   { value: 'tidak_hadir', label: 'Tidak', icon: XCircle, color: 'bg-red-500/10 text-red-400 border-red-300 hover:bg-red-100' },
-  { value: 'izin', label: 'Izin', icon: Clock, color: 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100' },
-  { value: 'sakit', label: 'Sakit', icon: Heart, color: 'bg-sky-500/10 text-sky-400 border-white/20 hover:bg-sky-100' },
+  { value: 'izin', label: 'Izin', icon: Clock, color: 'bg-yellow-bright-50 text-yellow-bright-700 border-yellow-bright-300 hover:bg-yellow-bright-100' },
+  { value: 'sakit', label: 'Sakit', icon: Heart, color: 'bg-royal-500/10 text-royal-400 border-white/20 hover:bg-cream-100' },
 ]
 
 interface Props {
-  user: { id: number; nama: string; email: string; role: string }
+  user: { 
+    id: number; 
+    nama: string; 
+    email: string; 
+    role: string;
+    activeOrgId?: number;
+    orgIds: number[];
+  }
   defaultOrg: 'osis' | 'mpk' | ''
 }
 
@@ -237,34 +244,34 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
   }
 
   const orgLabel = activeOrg === 'osis' ? 'OSIS' : 'MPK'
-  const orgBgClass = activeOrg === 'osis' ? 'bg-unit-osis/10 border-unit-osis/20 text-blue-300' : 'bg-unit-mpk/10 border-unit-mpk/20 text-red-400'
+  const orgBgClass = activeOrg === 'osis' ? 'bg-unit-osis/10 border-unit-osis/20 text-royal-300' : 'bg-unit-mpk/10 border-unit-mpk/20 text-red-400'
   const hadirCount = bulkRows.filter(r => r.status === 'hadir').length
   const totalKasBulk = bulkRows.reduce((s, r) => s + r.uang_kas, 0)
 
   const anggotaCols = [
-    { key: 'no', label: 'No', render: (a: Anggota) => <span className="text-slate-400 font-mono text-xs">{anggota.indexOf(a) + 1 + (page-1)*PAGE_SIZE}</span> },
-    { key: 'nis', label: 'NIS', render: (a: Anggota) => <span className="font-mono text-xs text-slate-400">{a.nis || '-'}</span> },
+    { key: 'no', label: 'No', render: (a: Anggota) => <span className="text-royal-400 font-mono text-xs">{anggota.indexOf(a) + 1 + (page-1)*PAGE_SIZE}</span> },
+    { key: 'nis', label: 'NIS', render: (a: Anggota) => <span className="font-mono text-xs text-royal-400">{a.nis || '-'}</span> },
     { key: 'nama', label: 'Nama', render: (a: Anggota) => (
       <button onClick={() => openProfile(a)} className="flex items-center gap-2 text-left">
         {a.foto_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={a.foto_url} alt={a.nama} className="w-8 h-8 rounded-full object-cover border border-white/10" />
+          <img src={a.foto_url} alt={a.nama} className="w-8 h-8 rounded-full object-cover border border-royal-800/30" />
         ) : (
-          <span className="w-8 h-8 rounded-full bg-persian-blue/10 text-blue-300 border border-persian-blue/20 flex items-center justify-center text-xs font-bold">{a.nama.charAt(0).toUpperCase()}</span>
+          <span className="w-8 h-8 rounded-full bg-royal-600/10 text-royal-300 border-royal-500/20 flex items-center justify-center text-xs font-bold">{a.nama.charAt(0).toUpperCase()}</span>
         )}
         <span>
           <span className="block font-semibold text-white">{a.nama}</span>
-          {a.email && <span className="block text-[10px] text-slate-400">{a.email}</span>}
+          {a.email && <span className="block text-[10px] text-royal-400">{a.email}</span>}
         </span>
       </button>
     ) },
-    { key: 'organisasi', label: 'Organisasi', render: () => <span className="badge border bg-white/5 text-slate-400 uppercase text-[10px] font-bold">{activeOrg}</span> },
-    { key: 'kelas', label: 'Kelas', render: (a: Anggota) => <span className="text-xs text-slate-400">{a.kelas || '-'}</span> },
-    { key: 'jabatan', label: 'Jabatan', render: (a: Anggota) => <span className="text-xs font-medium text-slate-300">{a.jabatan || '-'}</span> },
+    { key: 'organisasi', label: 'Organisasi', render: () => <span className="badge border bg-cream-50/5 text-royal-400 uppercase text-[10px] font-bold">{activeOrg}</span> },
+    { key: 'kelas', label: 'Kelas', render: (a: Anggota) => <span className="text-xs text-royal-400">{a.kelas || '-'}</span> },
+    { key: 'jabatan', label: 'Jabatan', render: (a: Anggota) => <span className="text-xs font-medium text-royal-300">{a.jabatan || '-'}</span> },
     { key: 'actions', label: '', render: (a: Anggota) => (
       <div className="flex gap-1">
         <button onClick={() => openProfile(a)} className="btn-icon text-emerald-500 hover:bg-emerald-500/10"><Award className="w-3.5 h-3.5" /></button>
-        <button onClick={() => openEdit(a)} className="btn-icon text-blue-400 hover:bg-persian-blue/10"><Pencil className="w-3.5 h-3.5" /></button>
+        <button onClick={() => openEdit(a)} className="btn-icon text-royal-400 hover:bg-royal-600/10"><Pencil className="w-3.5 h-3.5" /></button>
         <button onClick={() => setDeleteTarget(a)} className="btn-icon text-red-400 hover:bg-red-500/10"><Trash2 className="w-3.5 h-3.5" /></button>
       </div>
     )},
@@ -278,7 +285,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
       <div className="page-header">
         <div className="flex-1">
           <div className="flex items-center gap-2.5">
-            <Building2 className="w-5 h-5 text-persian-blue/100" />
+            <Building2 className="w-5 h-5 text-royal-400" />
             <h2 className="page-title">{orgLabel}</h2>
             <span className={`badge border ${orgBgClass}`}>{orgLabel}</span>
           </div>
@@ -292,11 +299,11 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
       </div>
 
       {/* Sub tabs */}
-      <div className="flex gap-1 border-b border-white/10">
+      <div className="flex gap-1 border-b border-royal-800/30">
         {[{ key: 'anggota', label: 'Anggota', icon: Building2 }, { key: 'absensi', label: 'Absensi & Kas', icon: ClipboardList }].map(t => (
           <button key={t.key} onClick={() => setSubTab(t.key as 'anggota' | 'absensi')}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors -mb-px ${
-              subTab === t.key ? 'border-persian-blue text-persian-blue' : 'border-transparent text-slate-400 hover:text-slate-200'
+              subTab === t.key ? 'border-royal-600 text-royal-400' : 'border-transparent text-royal-400 hover:text-royal-200'
             }`}>
             <t.icon className="w-4 h-4" />{t.label}
           </button>
@@ -308,7 +315,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
           <div className="flex justify-end gap-2">
             {/* <button 
               onClick={() => window.location.href = `/admin/registration/acceptance?type=osis-mpk&org=${activeOrg}`}
-              className="btn-secondary border-indigo-200 bg-indigo-50/50 hover:bg-indigo-100 text-indigo-600 font-bold"
+              className="btn-secondary border-royal-200 bg-royal-50/50 hover:bg-cream-100 text-royal-600 font-bold"
             >
               <UserCheck className="w-4 h-4" />
               Lihat Calon Pendaftaran
@@ -335,7 +342,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
               <div className="form-group">
                 <label className="label">NIS</label>
                 <div className="relative">
-                  <Contact className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Contact className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-400" />
                   <input 
                     value={fNis} 
                     onChange={e => {
@@ -355,7 +362,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
               <div className="form-group">
                 <label className="label">Email Anggota</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-400" />
                   <input
                     type="email"
                     value={fEmail}
@@ -368,7 +375,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
               <div className="form-group">
                 <label className="label">URL Foto</label>
                 <div className="relative">
-                  <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-400" />
                   <input
                     value={fFotoUrl}
                     onChange={e => setFFotoUrl(e.target.value)}
@@ -380,13 +387,13 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
               <div className="form-group">
                 <label className="label">Tingkat & Kejuruan</label>
                 <div className="flex gap-3">
-                  <select value={fTingkat} onChange={e => setFTingkat(e.target.value)} className="input sm:w-32 w-28 cursor-pointer font-medium text-slate-200">
+                  <select value={fTingkat} onChange={e => setFTingkat(e.target.value)} className="input sm:w-32 w-28 cursor-pointer font-medium text-royal-200">
                     <option value="" disabled>Tingkat</option>
                     <option value="X">Kelas X</option>
                     <option value="XI">Kelas XI</option>
                     <option value="XII">Kelas XII</option>
                   </select>
-                  <select value={fJurusan} onChange={e => setFJurusan(e.target.value)} className="input flex-1 cursor-pointer font-medium text-slate-200">
+                  <select value={fJurusan} onChange={e => setFJurusan(e.target.value)} className="input flex-1 cursor-pointer font-medium text-royal-200">
                     <option value="" disabled>Pilih Kejuruan...</option>
                     <option value="AKL">AKL</option>
                     <option value="PPLG">PPLG</option>
@@ -408,7 +415,7 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
               </div>
               <div className="form-group">
                 <label className="label">Jabatan</label>
-                <select value={fJabatan} onChange={e => setFJabatan(e.target.value)} className="input cursor-pointer font-medium text-slate-200">
+                <select value={fJabatan} onChange={e => setFJabatan(e.target.value)} className="input cursor-pointer font-medium text-royal-200">
                   <option value="Anggota">Anggota</option>
                   <option value="Ketua">Ketua</option>
                   <option value="Wakil">Wakil</option>
@@ -430,48 +437,48 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
               <div className="flex items-center gap-4">
                 {profileTarget?.foto_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={profileTarget.foto_url} alt={profileTarget.nama} className="w-16 h-16 rounded-2xl object-cover border border-white/10" />
+                  <img src={profileTarget.foto_url} alt={profileTarget.nama} className="w-16 h-16 rounded-2xl object-cover border border-royal-800/30" />
                 ) : (
-                  <div className="w-16 h-16 rounded-2xl bg-persian-blue/10 text-blue-300 border border-persian-blue/20 flex items-center justify-center text-2xl font-black">
+                  <div className="w-16 h-16 rounded-2xl bg-royal-600/10 text-royal-300 border-royal-500/20 flex items-center justify-center text-2xl font-black">
                     {profileTarget?.nama.charAt(0).toUpperCase()}
                   </div>
                 )}
                 <div>
                   <h3 className="text-base font-bold text-white">{profileTarget?.nama}</h3>
-                  <p className="text-xs text-slate-400">{profileTarget?.kelas || '-'} · {profileTarget?.jabatan || '-'}</p>
-                  <p className="text-xs text-slate-400">{profileTarget?.email || 'Email belum diisi'}</p>
+                  <p className="text-xs text-royal-400">{profileTarget?.kelas || '-'} · {profileTarget?.jabatan || '-'}</p>
+                  <p className="text-xs text-royal-400">{profileTarget?.email || 'Email belum diisi'}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                  <p className="text-[10px] uppercase font-bold text-slate-400">EXP</p>
+                <div className="rounded-xl border border-royal-800/30 bg-cream-50/5 p-3">
+                  <p className="text-[10px] uppercase font-bold text-royal-400">EXP</p>
                   <p className="text-lg font-black text-white">{profileTarget?.xp || 0}</p>
                 </div>
-                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                  <p className="text-[10px] uppercase font-bold text-slate-400">Level</p>
+                <div className="rounded-xl border border-royal-800/30 bg-cream-50/5 p-3">
+                  <p className="text-[10px] uppercase font-bold text-royal-400">Level</p>
                   <p className="text-lg font-black text-white">Lv {profileTarget?.level || 1}</p>
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Award className="w-4 h-4 text-amber-500" />
+                  <Award className="w-4 h-4 text-yellow-bright-500" />
                   <h4 className="text-sm font-bold text-white">Pencapaian</h4>
                 </div>
                 {profileLoading ? (
-                  <div className="text-sm text-slate-400 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" />Memuat...</div>
+                  <div className="text-sm text-royal-400 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" />Memuat...</div>
                 ) : profileAchievements.length === 0 ? (
-                  <p className="text-sm text-slate-400">Belum ada pencapaian.</p>
+                  <p className="text-sm text-royal-400">Belum ada pencapaian.</p>
                 ) : (
                   <div className="space-y-2">
                     {profileAchievements.map(item => (
-                      <div key={item.id} className="rounded-xl border border-amber-100 bg-amber-500/10/60 p-3">
+                      <div key={item.id} className="rounded-xl border border-yellow-bright-100 bg-yellow-bright-500/60 p-3">
                         <div className="flex items-center justify-between gap-3">
                           <p className="text-sm font-bold text-white">{item.pencapaian.nama}</p>
-                          <span className="text-xs font-bold text-amber-400">+{item.pencapaian.exp_reward} EXP</span>
+                          <span className="text-xs font-bold text-yellow-bright-400">+{item.pencapaian.exp_reward} EXP</span>
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">{item.pencapaian.deskripsi}</p>
+                        <p className="text-xs text-royal-400 mt-0.5">{item.pencapaian.deskripsi}</p>
                       </div>
                     ))}
                   </div>
@@ -490,12 +497,12 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
           {absensiMode === 'input' ? (
             <div className="space-y-3">
               <div className="card p-4 flex gap-3">
-                <div className="relative flex-1"><Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><input type="date" value={bulkDate} onChange={e => setBulkDate(e.target.value)} className="input pl-10" /></div>
+                <div className="relative flex-1"><Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-400" /><input type="date" value={bulkDate} onChange={e => setBulkDate(e.target.value)} className="input pl-10" /></div>
               </div>
               {loadingBulk ? (
-                <div className="card p-16 flex items-center justify-center gap-3 text-slate-400"><Loader2 className="w-5 h-5 animate-spin"/><span className="text-sm">Memuat...</span></div>
+                <div className="card p-16 flex items-center justify-center gap-3 text-royal-400"><Loader2 className="w-5 h-5 animate-spin"/><span className="text-sm">Memuat...</span></div>
               ) : bulkRows.length === 0 ? (
-                <div className="card p-16 text-center text-slate-400 text-sm">Belum ada anggota {orgLabel}</div>
+                <div className="card p-16 text-center text-royal-400 text-sm">Belum ada anggota {orgLabel}</div>
               ) : (
                 <div className="card overflow-hidden">
                   <div className={cn(
@@ -507,41 +514,41 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
                       activeOrg === 'osis' ? "text-unit-osis" : "text-unit-mpk"
                     )}>{orgLabel} — {formatDate(bulkDate)}</span>
                     <div className="flex gap-1 flex-wrap">
-                      <span className="text-xs text-slate-400 self-center">Tandai semua:</span>
+                      <span className="text-xs text-royal-400 self-center">Tandai semua:</span>
                       {STATUS_OPTIONS.map(s => <button key={s.value} onClick={() => setAllStatus(s.value)} className={`text-xs font-semibold px-2 py-1 rounded-lg border ${s.color}`}>{s.label}</button>)}
                     </div>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full">
-                      <thead><tr className="bg-white/5 border-b border-white/10"><th className="th">#</th><th className="th">Nama</th><th className="th">Jabatan</th><th className="th w-48">Status</th><th className="th w-32">Kas (Rp)</th><th className="th w-36">Keterangan</th></tr></thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <thead><tr className="bg-cream-50/5 border-b border-royal-800/30"><th className="th">#</th><th className="th">Nama</th><th className="th">Jabatan</th><th className="th w-48">Status</th><th className="th w-32">Kas (Rp)</th><th className="th w-36">Keterangan</th></tr></thead>
+                      <tbody className="divide-y divide-royal-100">
                         {bulkRows.map((row, i) => (
-                          <tr key={row.anggota_id} className="hover:bg-white/10">
-                            <td className="td text-slate-400 font-mono text-xs">{i+1}</td>
+                          <tr key={row.anggota_id} className="hover:bg-cream-50/10">
+                            <td className="td text-royal-400 font-mono text-xs">{i+1}</td>
                             <td className="td font-semibold text-white text-sm">{row.nama}</td>
-                            <td className="td text-xs text-slate-400">{row.jabatan || '-'}</td>
+                            <td className="td text-xs text-royal-400">{row.jabatan || '-'}</td>
                             <td className="td">
                               <div className="flex gap-1">
                                 {STATUS_OPTIONS.map(s => { const Icon=s.icon; return (
                                   <button key={s.value} onClick={() => updateRow(i,'status',s.value)} title={s.label}
-                                    className={`flex items-center gap-1 px-1.5 py-1 rounded-lg border text-xs font-semibold transition-all ${row.status===s.value?s.color+' ring-1 ring-current':'border-white/10 text-slate-300 hover:border-slate-300'}`}>
+                                    className={`flex items-center gap-1 px-1.5 py-1 rounded-lg border text-xs font-semibold transition-all ${row.status===s.value?s.color+' ring-1 ring-current':'border-royal-800/30 text-royal-300 hover:border-royal-300'}`}>
                                     <Icon className="w-3 h-3"/><span className="hidden sm:inline">{s.label}</span>
                                   </button>
                                 )})}
                               </div>
                             </td>
-                            <td className="td"><div className="relative"><Banknote className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400"/><input type="number" min={0} step={500} value={row.uang_kas} onChange={e => updateRow(i,'uang_kas',parseInt(e.target.value)||0)} className="input pl-7 py-1.5 font-mono text-sm" placeholder="0"/></div></td>
+                            <td className="td"><div className="relative"><Banknote className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-royal-400"/><input type="number" min={0} step={500} value={row.uang_kas} onChange={e => updateRow(i,'uang_kas',parseInt(e.target.value)||0)} className="input pl-7 py-1.5 font-mono text-sm" placeholder="0"/></div></td>
                             <td className="td"><input type="text" value={row.keterangan} onChange={e => updateRow(i,'keterangan',e.target.value)} className="input py-1.5 text-xs" placeholder="Opsional..."/></td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
-                  <div className="px-5 py-3 bg-white/5 border-t flex items-center justify-between gap-3 flex-wrap">
+                  <div className="px-5 py-3 bg-cream-50/5 border-t flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex gap-4 text-xs font-semibold">
                       <span className="text-green-400">✓ Hadir: {hadirCount}</span>
-                      <span className="text-slate-400">Total: {bulkRows.length}</span>
-                      <span className="text-amber-400">Kas: {formatCurrency(totalKasBulk)}</span>
+                      <span className="text-royal-400">Total: {bulkRows.length}</span>
+                      <span className="text-yellow-bright-400">Kas: {formatCurrency(totalKasBulk)}</span>
                     </div>
                     <button onClick={handleSaveAbsensi} disabled={savingAbsensi} className="btn-primary">
                       {savingAbsensi ? <><Loader2 className="w-4 h-4 animate-spin"/>Menyimpan...</> : <><Save className="w-4 h-4"/>Simpan Absensi</>}
@@ -552,27 +559,27 @@ export default function OrganisasiClient({ user, defaultOrg }: Props) {
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="card p-4 flex gap-3"><div className="relative flex-1"><Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/><input type="date" value={filterTanggal} onChange={e => setFilterTanggal(e.target.value)} className="input pl-10"/></div></div>
+              <div className="card p-4 flex gap-3"><div className="relative flex-1"><Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-400"/><input type="date" value={filterTanggal} onChange={e => setFilterTanggal(e.target.value)} className="input pl-10"/></div></div>
               {loadingRiwayat ? (
-                <div className="card p-16 flex items-center justify-center gap-3 text-slate-400"><Loader2 className="w-5 h-5 animate-spin"/><span className="text-sm">Memuat...</span></div>
+                <div className="card p-16 flex items-center justify-center gap-3 text-royal-400"><Loader2 className="w-5 h-5 animate-spin"/><span className="text-sm">Memuat...</span></div>
               ) : riwayat.length === 0 ? (
-                <div className="card p-16 text-center text-slate-400 text-sm">Tidak ada data absensi</div>
+                <div className="card p-16 text-center text-royal-400 text-sm">Tidak ada data absensi</div>
               ) : (
                 <div className="card overflow-hidden overflow-x-auto">
                   <table className="w-full">
-                    <thead><tr className="bg-white/5 border-b border-white/10"><th className="th">Nama</th><th className="th">Organisasi</th><th className="th">Jabatan</th><th className="th">Tanggal</th><th className="th">Status</th><th className="th">Uang Kas</th><th className="th">Keterangan</th></tr></thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <thead><tr className="bg-cream-50/5 border-b border-royal-800/30"><th className="th">Nama</th><th className="th">Organisasi</th><th className="th">Jabatan</th><th className="th">Tanggal</th><th className="th">Status</th><th className="th">Uang Kas</th><th className="th">Keterangan</th></tr></thead>
+                    <tbody className="divide-y divide-royal-100">
                       {riwayat.map(a => {
                         const angg = activeOrg === 'osis' ? a.anggota_osis : a.anggota_mpk
                         return (
-                          <tr key={a.id} className="hover:bg-white/5">
+                          <tr key={a.id} className="hover:bg-cream-50/5">
                             <td className="td font-semibold text-white">{angg?.nama || '-'}</td>
-                            <td className="td text-[10px] font-bold text-slate-400 uppercase">{activeOrg}</td>
-                            <td className="td text-xs text-slate-400">{angg?.jabatan || '-'}</td>
-                            <td className="td text-xs font-mono text-slate-400">{formatDate(a.tanggal)}</td>
+                            <td className="td text-[10px] font-bold text-royal-400 uppercase">{activeOrg}</td>
+                            <td className="td text-xs text-royal-400">{angg?.jabatan || '-'}</td>
+                            <td className="td text-xs font-mono text-royal-400">{formatDate(a.tanggal)}</td>
                             <td className="td"><StatusBadge status={a.status}/></td>
-                            <td className="td font-mono text-sm font-semibold text-green-600">{a.uang_kas > 0 ? formatCurrency(a.uang_kas) : '-'}</td>
-                            <td className="td text-xs text-slate-400">{a.keterangan || '-'}</td>
+                            <td className="td font-mono text-sm font-semibold text-green-400">{a.uang_kas > 0 ? formatCurrency(a.uang_kas) : '-'}</td>
+                            <td className="td text-xs text-royal-400">{a.keterangan || '-'}</td>
                           </tr>
                         )
                       })}

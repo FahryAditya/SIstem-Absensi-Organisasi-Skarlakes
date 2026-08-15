@@ -22,23 +22,35 @@ interface RekapData {
 
 const STATUS_COLORS: Record<string, string> = {
   hadir: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-  tidak_hadir: 'bg-red-500/100/20 text-red-400 border-red-500/30',
-  izin: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  sakit: 'bg-white/50/20 text-blue-400 border-blue-500/30',
-  kas_saja: 'bg-white/50/20 text-slate-400 border-slate-500/30',
+  tidak_hadir: 'bg-red-500/20 text-red-400 border-red-500/30',
+  izin: 'bg-yellow-bright-500/20 text-yellow-bright-400 border-yellow-bright-500/30',
+  sakit: 'bg-cream-50/20 text-royal-400 border-royal-500/30',
+  kas_saja: 'bg-cream-50/20 text-royal-400 border-royal-500/30',
 }
 
-const ORG_TABS = [
+const ORG_TABS_DEFAULT = [
   { key: 'siswa', ekskul: 'programming', label: 'Programming', color: 'from-blue-500 to-cyan-500' },
   { key: 'siswa', ekskul: 'english', label: 'English Club', color: 'from-emerald-500 to-teal-500' },
-  { key: 'osis', ekskul: 'osis', label: 'OSIS', color: 'from-purple-500 to-persian-blue/100' },
+  { key: 'osis', ekskul: 'osis', label: 'OSIS', color: 'from-royal-500 to-royal-600' },
   { key: 'mpk', ekskul: 'mpk', label: 'MPK', color: 'from-orange-500 to-amber-500' },
+]
+
+const ORG_COLORS = [
+  'from-blue-500 to-cyan-500',
+  'from-emerald-500 to-teal-500',
+  'from-purple-500 to-pink-500',
+  'from-orange-500 to-amber-500',
+  'from-rose-500 to-red-500',
+  'from-indigo-500 to-violet-500',
+  'from-teal-500 to-green-500',
+  'from-cyan-500 to-blue-500',
 ]
 
 export default function RekapAbsensiPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [accessibleOrgs, setAccessibleOrgs] = useState<string[]>([])
+  const [orgTabs, setOrgTabs] = useState(ORG_TABS_DEFAULT)
   const [activeTab, setActiveTab] = useState(0)
   const [members, setMembers] = useState<{ id: number; nama: string; kelas?: string | null }[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
@@ -57,9 +69,33 @@ export default function RekapAbsensiPage() {
           setUser(json.user)
           const orgs = getAccessibleOrgs(json.user.role)
           setAccessibleOrgs(orgs)
-          // Find first tab that is accessible
-          const firstIdx = ORG_TABS.findIndex(t => orgs.includes(t.ekskul))
-          if (firstIdx !== -1) setActiveTab(firstIdx)
+          
+          // Fetch all active organizations to build dynamic tabs
+          const orgsRes = await fetch('/api/organizations')
+          const orgsJson = await orgsRes.json()
+          const allOrgs = orgsJson.data || []
+          
+          // Build tabs from all organizations
+          const dynamicTabs = allOrgs.map((org: any, idx: number) => {
+            // For OSIS and MPK, use their specific keys
+            if (org.slug === 'osis') return { key: 'osis', ekskul: 'osis', label: 'OSIS', color: ORG_COLORS[idx % ORG_COLORS.length] }
+            if (org.slug === 'mpk') return { key: 'mpk', ekskul: 'mpk', label: 'MPK', color: ORG_COLORS[idx % ORG_COLORS.length] }
+            // For other ekskul, use 'siswa' key
+            return { key: 'siswa', ekskul: org.slug, label: org.nama, color: ORG_COLORS[idx % ORG_COLORS.length] }
+          })
+          
+          // Filter tabs based on accessible orgs
+          const filteredDynamicTabs = dynamicTabs.filter((t: any) => orgs.includes(t.ekskul))
+          
+          // If no dynamic tabs, fallback to default
+          if (filteredDynamicTabs.length > 0) {
+            setOrgTabs(filteredDynamicTabs)
+            setActiveTab(0)
+          } else {
+            // Fallback: find first tab from default that is accessible
+            const firstIdx = ORG_TABS_DEFAULT.findIndex(t => orgs.includes(t.ekskul))
+            if (firstIdx !== -1) setActiveTab(firstIdx)
+          }
         } else {
           router.push('/login')
         }
@@ -72,8 +108,8 @@ export default function RekapAbsensiPage() {
     fetchUser()
   }, [router])
 
-  const filteredTabs = ORG_TABS.filter(t => accessibleOrgs.includes(t.ekskul))
-  const tab = ORG_TABS[activeTab]
+  const filteredTabs = orgTabs.filter((t: any) => accessibleOrgs.includes(t.ekskul))
+  const tab = orgTabs[activeTab]
 
   // Fetch list anggota
   const fetchMembers = useCallback(async () => {
@@ -110,34 +146,34 @@ export default function RekapAbsensiPage() {
 
   if (authLoading) return (
     <div className="min-h-screen bg-[#0f1117] flex items-center justify-center">
-      <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      <Loader2 className="w-8 h-8 animate-spin text-royal-500" />
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-[#0f1117] text-white p-4 md:p-8">
+    <div className="min-h-screen bg-royal-950 text-white p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-4">
-          <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-royal-400 hover:text-white text-sm transition-colors">
             <ArrowLeft className="w-4 h-4" /> Kembali
           </button>
         </div>
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-1">
-            <BarChart3 className="w-5 h-5 text-blue-400" />
+            <BarChart3 className="w-5 h-5 text-royal-400" />
             <h1 className="text-2xl font-bold">Rekap Absensi</h1>
           </div>
-          <p className="text-slate-400 text-sm">Statistik kehadiran, streak, dan grafik per anggota</p>
+          <p className="text-royal-400 text-sm">Statistik kehadiran, streak, dan grafik per anggota</p>
         </div>
 
         {/* Tabs */}
         <div className="flex gap-2 flex-wrap mb-6">
-          {filteredTabs.map((t) => {
-            const idx = ORG_TABS.indexOf(t)
+          {filteredTabs.map((t: any, mapIdx: number) => {
+            const idx = orgTabs.indexOf(t)
             return (
-              <button key={idx} onClick={() => setActiveTab(idx)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${activeTab === idx ? `bg-gradient-to-r ${t.color} text-white border-transparent` : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}>
+              <button key={mapIdx} onClick={() => setActiveTab(idx)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${activeTab === idx ? `bg-gradient-to-r ${t.color} text-white border-transparent` : 'bg-cream-50/5 border-royal-800/30 text-royal-400 hover:bg-cream-50/10'}`}>
                 {t.label}
               </button>
             )
@@ -146,20 +182,20 @@ export default function RekapAbsensiPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Member List */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+          <div className="bg-cream-50/5 border border-royal-800/30 rounded-2xl overflow-hidden">
             <div className="p-3 border-b border-white/5">
-              <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Pilih Anggota</p>
+              <p className="text-xs text-royal-400 font-medium uppercase tracking-wider">Pilih Anggota</p>
             </div>
             <div className="overflow-y-auto max-h-[500px]">
               {loadingMembers ? (
-                <div className="space-y-2 p-3">{[...Array(6)].map((_, i) => <div key={i} className="h-10 bg-white/5 rounded-xl animate-pulse" />)}</div>
+                <div className="space-y-2 p-3">{[...Array(6)].map((_, i) => <div key={i} className="h-10 bg-cream-50/5 rounded-xl animate-pulse" />)}</div>
               ) : members.length === 0 ? (
-                <p className="text-center text-slate-400 text-sm py-8">Tidak ada anggota</p>
+                <p className="text-center text-royal-400 text-sm py-8">Tidak ada anggota</p>
               ) : (
                 <div className="p-2 space-y-1">
                   {members.map((m) => (
                     <button key={m.id} onClick={() => fetchRekap(m.id)}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all ${selectedId === m.id ? `bg-gradient-to-r ${tab.color} text-white` : 'text-slate-300 hover:bg-white/5'}`}>
+                      className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all ${selectedId === m.id ? `bg-gradient-to-r ${tab.color} text-white` : 'text-royal-300 hover:bg-cream-50/5'}`}>
                       <div className="font-medium truncate">{m.nama}</div>
                       {m.kelas && <div className="text-xs opacity-70">{m.kelas}</div>}
                     </button>
@@ -172,18 +208,18 @@ export default function RekapAbsensiPage() {
           {/* Rekap Detail */}
           <div className="md:col-span-2 space-y-4">
             {!selectedId ? (
-              <div className="h-full flex items-center justify-center text-slate-400 bg-white/5 border border-white/10 rounded-2xl py-20">
+              <div className="h-full flex items-center justify-center text-royal-400 bg-cream-50/5 border border-royal-800/30 rounded-2xl py-20">
                 <div className="text-center">
                   <BarChart3 className="w-10 h-10 mx-auto mb-3 opacity-30" />
                   <p className="text-sm">Pilih anggota untuk melihat rekap</p>
                 </div>
               </div>
             ) : loading ? (
-              <div className="space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="h-28 bg-white/5 rounded-2xl animate-pulse" />)}</div>
+              <div className="space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="h-28 bg-cream-50/5 rounded-2xl animate-pulse" />)}</div>
             ) : rekap ? (
               <>
                 {/* Nama & Level */}
-                <div className={`rounded-2xl p-5 bg-gradient-to-br ${tab.color} bg-opacity-10 border border-white/10`}>
+                <div className={`rounded-2xl p-5 bg-gradient-to-br ${tab.color} bg-opacity-10 border border-royal-800/30`}>
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-xl font-bold">{rekap.nama}</h2>
@@ -198,58 +234,58 @@ export default function RekapAbsensiPage() {
 
                 {/* Stat Cards */}
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                  <div className="bg-cream-50/5 border border-royal-800/30 rounded-xl p-4 text-center">
                     <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
                     <div className="text-2xl font-bold text-emerald-400">{rekap.hadirBulanIni}</div>
-                    <div className="text-xs text-slate-400">Hadir Bulan Ini</div>
+                    <div className="text-xs text-royal-400">Hadir Bulan Ini</div>
                   </div>
-                  <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
-                    <TrendingUp className="w-5 h-5 text-blue-400 mx-auto mb-1" />
-                    <div className="text-2xl font-bold text-blue-400">{rekap.persentaseKehadiran}%</div>
-                    <div className="text-xs text-slate-400">Persentase</div>
+                  <div className="bg-cream-50/5 border border-royal-800/30 rounded-xl p-4 text-center">
+                    <TrendingUp className="w-5 h-5 text-royal-400 mx-auto mb-1" />
+                    <div className="text-2xl font-bold text-royal-400">{rekap.persentaseKehadiran}%</div>
+                    <div className="text-xs text-royal-400">Persentase</div>
                   </div>
-                  <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                  <div className="bg-cream-50/5 border border-royal-800/30 rounded-xl p-4 text-center">
                     <Flame className="w-5 h-5 text-orange-400 mx-auto mb-1" />
                     <div className="text-2xl font-bold text-orange-400">{rekap.streak}</div>
-                    <div className="text-xs text-slate-400">Streak 🔥</div>
+                    <div className="text-xs text-royal-400">Streak 🔥</div>
                   </div>
                 </div>
 
                 {/* Grafik 6 Bulan */}
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
-                  <h3 className="text-sm font-semibold text-slate-300 mb-4">Kehadiran 6 Bulan Terakhir</h3>
+                <div className="bg-cream-50/5 border border-royal-800/30 rounded-2xl p-4">
+                  <h3 className="text-sm font-semibold text-royal-300 mb-4">Kehadiran 6 Bulan Terakhir</h3>
                   <div className="flex items-end gap-2 h-28">
                     {rekap.grafik.map((g) => (
                       <div key={g.bulan} className="flex-1 flex flex-col items-center gap-1">
-                        <span className="text-[10px] text-slate-400">{g.persen}%</span>
-                        <div className="w-full rounded-t-md relative bg-white/5" style={{ height: '80px' }}>
+                        <span className="text-[10px] text-royal-400">{g.persen}%</span>
+                        <div className="w-full rounded-t-md relative bg-cream-50/5" style={{ height: '80px' }}>
                           <div
                             className={`absolute bottom-0 w-full rounded-t-md bg-gradient-to-t ${tab.color} transition-all duration-700`}
                             style={{ height: `${Math.max(4, g.persen)}%` }}
                           />
                         </div>
-                        <span className="text-[10px] text-slate-400">{g.bulan.slice(5)}</span>
+                        <span className="text-[10px] text-royal-400">{g.bulan.slice(5)}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 {/* Riwayat Absensi */}
-                <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+                <div className="bg-cream-50/5 border border-royal-800/30 rounded-2xl overflow-hidden">
                   <button onClick={() => setShowRiwayat(v => !v)}
-                    className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 transition">
+                    className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-royal-300 hover:bg-cream-50/5 transition">
                     <span className="flex items-center gap-2"><Calendar className="w-4 h-4" /> Riwayat Absensi ({rekap.riwayat.length})</span>
                     {showRiwayat ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </button>
                   {showRiwayat && (
                     <div className="border-t border-white/5 max-h-64 overflow-y-auto">
                       {rekap.riwayat.length === 0 ? (
-                        <p className="text-center text-slate-400 py-6 text-sm">Belum ada riwayat</p>
+                        <p className="text-center text-royal-400 py-6 text-sm">Belum ada riwayat</p>
                       ) : (
                         <div className="divide-y divide-white/5">
                           {[...rekap.riwayat].reverse().map((r, i) => (
                             <div key={i} className="flex items-center justify-between px-4 py-2.5">
-                              <span className="text-sm text-slate-300">{new Date(r.tanggal).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                              <span className="text-sm text-royal-300">{new Date(r.tanggal).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</span>
                               <span className={`text-xs px-2 py-0.5 rounded-full border capitalize ${STATUS_COLORS[r.status] ?? STATUS_COLORS['hadir']}`}>{r.status.replace('_', ' ')}</span>
                             </div>
                           ))}
@@ -260,7 +296,7 @@ export default function RekapAbsensiPage() {
                 </div>
               </>
             ) : (
-              <div className="text-center py-20 text-slate-400 bg-white/5 border border-white/10 rounded-2xl">
+              <div className="text-center py-20 text-royal-400 bg-cream-50/5 border border-royal-800/30 rounded-2xl">
                 Gagal memuat data rekap
               </div>
             )}

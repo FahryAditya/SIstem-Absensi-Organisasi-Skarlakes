@@ -49,13 +49,17 @@ export async function POST(req: NextRequest) {
     })
 
     // 4. Run ANALYZE to refresh indices statistics
-    const tables = ['users', 'siswa', 'absensi', 'anggota_osis', 'anggota_mpk', 'absensi_organisasi', 'log_aktivitas', 'pengeluaran_kas', 'sesi_wawancara', 'antrian_wawancara', 'qr_wawancara', 'hasil_wawancara', 'chat_wawancara', 'system_updates']
+    const tables: { table_name: string }[] = await prisma.$queryRawUnsafe(`
+      SELECT tablename AS table_name FROM pg_tables 
+      WHERE schemaname = 'public' 
+      ORDER BY tablename
+    `)
     
-    for (const table of tables) {
+    for (const { table_name } of tables) {
       try {
-        await prisma.$executeRawUnsafe(`ANALYZE "${table}";`)
+        await prisma.$executeRawUnsafe(`ANALYZE "${table_name}";`)
       } catch (tableErr) {
-        console.warn(`[WARN] Gagal menganalisis tabel ${table}:`, tableErr)
+        console.warn(`[WARN] Gagal menganalisis tabel ${table_name}:`, tableErr)
       }
     }
 

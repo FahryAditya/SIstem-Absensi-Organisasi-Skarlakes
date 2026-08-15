@@ -7,8 +7,8 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(req: Request) {
   try {
-    const user = await getServerUser('administrator')
-    if (!user) {
+    const user = await getServerUser()
+    if (!user || (user.role !== 'SUPER_ADMIN' && (user.role as string) !== 'administrator')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

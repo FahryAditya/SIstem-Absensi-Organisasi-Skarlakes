@@ -1,0 +1,190 @@
+'use client'
+
+import React, { memo, useEffect, useState } from 'react'
+import { cn } from '@/lib/utils'
+import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react'
+
+function SkeletonRows({ selectable, columns }: { selectable?: boolean; columns: Column<any>[] }) {
+  const [widths] = useState(() =>
+    Array.from({ length: 6 }, () => `${50 + Math.random() * 40}%`)
+  )
+  return (
+    <>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <tr key={i} className="border-b border-royal-800/30">
+          {selectable && <td className="td w-10"></td>}
+          {columns.map(col => (
+            <td key={col.key} className="td">
+              <div className="h-4 bg-cream-50/10 rounded animate-pulse" style={{ width: widths[i] }} />
+            </td>
+          ))}
+        </tr>
+      ))}
+    </>
+  )
+}
+
+export interface Column<T> {
+  key: string
+  label: string
+  render?: (item: T, index: number) => React.ReactNode
+  className?: string
+  headerClass?: string
+}
+
+interface TableProps<T> {
+  columns: Column<T>[]
+  data: T[]
+  loading?: boolean
+  emptyMessage?: string
+  emptyIcon?: React.ReactNode
+  page?: number
+  totalPages?: number
+  total?: number
+  onPageChange?: (page: number) => void
+  rowKey?: (item: T) => string | number
+  selectable?: boolean
+  selectedKeys?: (string | number)[]
+  onSelectionChange?: (keys: (string | number)[]) => void
+}
+
+const TableRow = memo(function TableRow<T>({ 
+  item, index, columns, selectable, isSelected, onSelect, itemKey 
+}: { 
+  item: T, 
+  index: number,
+  columns: Column<any>[], 
+  selectable?: boolean, 
+  isSelected?: boolean, 
+  onSelect?: (checked: boolean, key: string | number) => void,
+  itemKey: string | number
+}) {
+  return (
+    <tr className={cn('tr', isSelected && 'bg-royal-600/10')}>
+      {selectable && (
+        <td className="td w-10 text-center px-4" onClick={(e) => e.stopPropagation()}>
+          <input type="checkbox"
+            className="w-4 h-4 rounded border-royal-800/30 text-royal-600 focus:ring-royal-500/50 cursor-pointer"
+            checked={isSelected || false}
+            onChange={(e) => onSelect?.(e.target.checked, itemKey)}
+          />
+        </td>
+      )}
+      {columns.map(col => (
+        <td key={col.key} className={cn('td', col.className)}>
+          {col.render ? col.render(item, index) : String((item as Record<string, unknown>)[col.key] ?? '')}
+        </td>
+      ))}
+    </tr>
+  )
+})
+
+export default function Table<T>({
+  columns, data, loading, emptyMessage = 'Belum ada data',
+  emptyIcon, page = 1, totalPages = 1, total, onPageChange, rowKey,
+  selectable, selectedKeys, onSelectionChange
+}: TableProps<T>) {
+  const getKey = (item: T, i: number) => rowKey ? rowKey(item) : i
+
+  const handleSelect = (checked: boolean, key: string | number) => {
+    if (onSelectionChange && selectedKeys) {
+      onSelectionChange(
+        checked ? [...selectedKeys, key] : selectedKeys.filter(k => k !== key)
+      )
+    }
+  }
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-royal-800/30 bg-royal-950/40 backdrop-blur-xl">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-cream-50/5 border-b border-royal-800/30">
+              {selectable && (
+                <th className="th w-10 text-center px-4">
+                  <input type="checkbox" 
+                    className="w-4 h-4 rounded border-royal-800/30 text-royal-600 focus:ring-royal-500/50 cursor-pointer"
+                    checked={data.length > 0 && selectedKeys?.length === data.length}
+                    onChange={(e) => {
+                      if (onSelectionChange) {
+                        onSelectionChange(e.target.checked ? data.map((item, i) => getKey(item, i)) : [])
+                      }
+                    }}
+                  />
+                </th>
+              )}
+              {columns.map(col => (
+                <th key={col.key} className={cn('th', col.headerClass)}>{col.label}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <SkeletonRows selectable={selectable} columns={columns} />
+            ) : data.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length + (selectable ? 1 : 0)}>
+                  <div className="empty-state">
+                    {emptyIcon ?? <Inbox className="w-12 h-12 opacity-30" />}
+                    <span className="text-sm font-medium">{emptyMessage}</span>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              data.map((item, i) => {
+                const key = getKey(item, i)
+                return (
+                  <TableRow 
+                    key={key}
+                    item={item}
+                    index={i}
+                    itemKey={key}
+                    columns={columns}
+                    selectable={selectable}
+                    isSelected={selectedKeys?.includes(key)}
+                    onSelect={handleSelect}
+                  />
+                )
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      {(totalPages > 1 || total !== undefined) && onPageChange && (
+        <div className="flex items-center justify-between px-4 py-3 border-t border-royal-800/30 bg-cream-50/5">
+          <span className="text-xs text-royal-400">
+            {total !== undefined ? `${total} data` : ''} — Halaman {page} dari {totalPages}
+          </span>
+          <div className="flex items-center gap-1">
+            <button onClick={() => onPageChange(page - 1)} disabled={page <= 1}
+              className="btn-icon disabled:opacity-30 disabled:cursor-not-allowed">
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+              let p: number
+              if (totalPages <= 7) p = i + 1
+              else if (page <= 4) p = i + 1
+              else if (page >= totalPages - 3) p = totalPages - 6 + i
+              else p = page - 3 + i
+              return (
+                <button key={p} onClick={() => onPageChange(p)}
+                  className={cn(
+                    'w-7 h-7 text-xs rounded-lg font-medium transition-colors',
+                    p === page ? 'bg-royal-600 text-white' : 'text-royal-400 hover:bg-royal-800/50 hover:text-royal-100'
+                  )}>
+                  {p}
+                </button>
+              )
+            })}
+            <button onClick={() => onPageChange(page + 1)} disabled={page >= totalPages}
+              className="btn-icon disabled:opacity-30 disabled:cursor-not-allowed">
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

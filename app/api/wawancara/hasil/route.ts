@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Sesi sudah terkunci permanen' }, { status: 400 })
   }
 
-  const result = await prisma.hasilWawancaraTable.upsert({
+  const result = await prisma.hasilWawancara.upsert({
     where: { antrian_id: parsed.data.antrian_id },
     create: {
       antrian_id: parsed.data.antrian_id,

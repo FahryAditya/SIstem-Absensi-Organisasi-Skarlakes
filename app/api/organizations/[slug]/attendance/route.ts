@@ -2,16 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/auth'
 
-export async function GET(req: NextRequest, { params }: { params: { slug: string } }) {
+
+export const dynamic = 'force-dynamic'
+
+export async function GET(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
+    const { slug } = await params
     const org = await prisma.organization.findUnique({
-      where: { slug: params.slug }
+      where: { slug }
     })
     if (!org) return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
 
     const date = req.nextUrl.searchParams.get('date') || new Date().toISOString().split('T')[0]
 
-    const attendance = await prisma.attendanceV2.findMany({
+    const attendance = await prisma.attendance.findMany({
       where: { 
         organization_id: org.id,
         date: new Date(date)
@@ -24,20 +28,21 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { slug: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const session = await getSessionFromRequest(req)
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    const { slug } = await params
     const org = await prisma.organization.findUnique({
-      where: { slug: params.slug }
+      where: { slug }
     })
     if (!org) return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
 
     const { date, member_id, status, cash_amount, notes } = await req.json()
 
     const attendance = await prisma.$transaction(async (tx) => {
-      const att = await tx.attendanceV2.upsert({
+      const att = await tx.attendance.upsert({
         where: {
           member_id_date: {
             member_id,
@@ -48,12 +53,12 @@ export async function POST(req: NextRequest, { params }: { params: { slug: strin
           organization_id: org.id,
           member_id,
           date: new Date(date),
-          attendance_status: status,
+          status: status,
           cash_amount: cash_amount || 0,
           notes
         },
         update: {
-          attendance_status: status,
+          status: status,
           cash_amount: cash_amount || 0,
           notes
         }
@@ -66,6 +71,7 @@ export async function POST(req: NextRequest, { params }: { params: { slug: strin
             organization_id: org.id,
             member_id,
             amount: cash_amount,
+            type: 'INCOME',
             description: `Iuran Kas via Absensi (${date})`
           }
         })

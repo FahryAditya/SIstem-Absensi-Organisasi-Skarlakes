@@ -20,7 +20,7 @@ interface Member {
 }
 
 interface Props {
-  user: { id: number; nama: string; email: string; role: string }
+  user: { id: number; nama: string; email: string; role: string; activeOrgId?: number; orgIds: number[] }
 }
 
 const ORG_LABELS: Record<string, string> = {
@@ -50,9 +50,9 @@ const ORG_THEMES: Record<string, { border: string; bg: string; text: string; rin
   english: {
     border: 'border-unit-english/30 hover:border-unit-english',
     bg: 'bg-unit-english/5',
-    text: 'text-blue-400',
+    text: 'text-royal-400',
     ring: 'focus:ring-unit-english',
-    badge: 'bg-unit-english/10 text-blue-400 border-unit-english/20',
+    badge: 'bg-unit-english/10 text-royal-400 border-unit-english/20',
     iconBg: 'bg-unit-english text-white',
   },
   programming: {
@@ -433,12 +433,12 @@ export default function AmbilSiswaClient({ user }: Props) {
 
   // Combined theme used when multiple organizations are chosen
   const COMBINED_THEME = {
-    border: 'border-persian-blue/20 hover:border-persian-blue/40',
-    bg: 'bg-persian-blue/5',
-    text: 'text-persian-blue',
-    ring: 'focus:ring-persian-blue',
-    badge: 'bg-persian-blue/10 text-persian-blue border-persian-blue/20',
-    iconBg: 'bg-persian-blue text-white',
+    border: 'border-royal-500/20 hover:border-royal-500/40',
+    bg: 'bg-royal-600/5',
+    text: 'text-royal-400',
+    ring: 'focus:ring-royal-500',
+    badge: 'bg-royal-600/10 text-royal-400 border-royal-500/20',
+    iconBg: 'bg-royal-600 text-white',
   }
 
   const activeTheme = useMemo(() => {
@@ -456,30 +456,30 @@ export default function AmbilSiswaClient({ user }: Props) {
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-10">
       {/* Dynamic Header */}
-      <div className="page-header bg-deep-navy border border-white/10 p-5 rounded-2xl shadow-sm flex items-center justify-between gap-4 flex-wrap">
+      <div className="page-header bg-royal-950 border border-royal-800/30 p-5 rounded-2xl shadow-sm flex items-center justify-between gap-4 flex-wrap">
         <div>
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-persian-blue animate-pulse" />
+            <Sparkles className="w-5 h-5 text-royal-400 animate-pulse" />
             <h2 className="page-title text-white font-extrabold tracking-tight">Ambil Anggota / Siswa Kegiatan</h2>
           </div>
-          <p className="page-sub text-slate-400 text-xs font-semibold mt-1">Cetak lembar daftar hadir kegiatan ekskul atau organisasi sekolah secara instan.</p>
+          <p className="page-sub text-royal-400 text-xs font-semibold mt-1">Cetak lembar daftar hadir kegiatan ekskul atau organisasi sekolah secara instan.</p>
         </div>
 
         {/* Wizard Steps Indicator */}
-        <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
+        <div className="flex items-center gap-2 text-xs font-bold text-royal-400">
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all ${
             step === 1 
-              ? 'bg-persian-blue/10 border-persian-blue/30 text-white' 
-              : 'bg-green-500/100/10 border-green-500/20 text-green-400'
+              ? 'bg-royal-600/10 border-royal-500/30 text-white' 
+              : 'bg-green-500/10 border-green-500/20 text-green-400'
           }`}>
             <span className="w-4 h-4 rounded-full bg-current text-white flex items-center justify-center text-[10px]">1</span>
             Informasi
           </div>
-          <ChevronRight className="w-3.5 h-3.5 opacity-40 text-slate-400" />
+          <ChevronRight className="w-3.5 h-3.5 opacity-40 text-royal-400" />
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all ${
             step === 2 
-              ? 'bg-persian-blue/10 border-persian-blue/30 text-white' 
-              : 'bg-white/5 border-white/10 text-slate-400'
+              ? 'bg-royal-600/10 border-royal-500/30 text-white' 
+              : 'bg-cream-50/5 border-royal-800/30 text-royal-400'
           }`}>
             <span className="w-4 h-4 rounded-full bg-current text-white flex items-center justify-center text-[10px]">2</span>
             Pilih Siswa
@@ -489,17 +489,17 @@ export default function AmbilSiswaClient({ user }: Props) {
 
       {/* Step 1: Info Form */}
       {step === 1 && (
-        <div className="card p-6 bg-deep-navy border border-white/10 rounded-2xl shadow-sm space-y-6">
-          <div className="border-b border-white/10 pb-4">
+        <div className="card p-6 bg-royal-950 border border-royal-800/30 rounded-2xl shadow-sm space-y-6">
+          <div className="border-b border-royal-800/30 pb-4">
             <h3 className="text-sm font-black text-white flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-persian-blue" /> Langkah 1: Keterangan & Tujuan Kegiatan
+              <Sparkles className="w-4 h-4 text-royal-400" /> Langkah 1: Keterangan & Tujuan Kegiatan
             </h3>
-            <p className="text-xs text-slate-400 font-semibold uppercase mt-0.5">Silakan isi detail dasar kegiatan Anda di bawah.</p>
+            <p className="text-xs text-royal-400 font-semibold uppercase mt-0.5">Silakan isi detail dasar kegiatan Anda di bawah.</p>
           </div>
 
           {/* Org Selector Grid */}
           <div className="space-y-3">
-            <label className="label text-white font-bold">Pilih Organisasi / Ekskul Kegiatan * <span className="text-xs font-semibold text-slate-400 font-normal">(bisa pilih 2 atau lebih sekaligus)</span></label>
+            <label className="label text-white font-bold">Pilih Organisasi / Ekskul Kegiatan * <span className="text-xs font-semibold text-royal-400 font-normal">(bisa pilih 2 atau lebih sekaligus)</span></label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               {accessibleOrgs.map((orgKey) => {
                 const theme = ORG_THEMES[orgKey]
@@ -514,11 +514,11 @@ export default function AmbilSiswaClient({ user }: Props) {
                     className={`p-4 rounded-xl border-2 text-left flex items-start gap-4 transition-all duration-200 ${
                       isSelected 
                         ? `${theme.border} ${theme.bg} ring-2 ring-offset-1 ${theme.text}` 
-                        : 'border-white/10 hover:border-white/10 bg-deep-navy hover:bg-white/10'
+                        : 'border-royal-800/30 hover:border-royal-800/30 bg-royal-950 hover:bg-cream-50/10'
                     }`}
                   >
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 relative ${
-                      isSelected ? theme.iconBg : 'bg-white/5 text-slate-400'
+                      isSelected ? theme.iconBg : 'bg-cream-50/5 text-royal-400'
                     }`}>
                       <Icon className="w-5 h-5" />
                       {isSelected && (
@@ -529,7 +529,7 @@ export default function AmbilSiswaClient({ user }: Props) {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-extrabold truncate text-white">{orgKey.toUpperCase()}</div>
-                      <div className="text-xs font-semibold text-slate-400 mt-0.5 truncate">{ORG_LABELS[orgKey]}</div>
+                      <div className="text-xs font-semibold text-royal-400 mt-0.5 truncate">{ORG_LABELS[orgKey]}</div>
                     </div>
                   </button>
                 )
@@ -546,20 +546,20 @@ export default function AmbilSiswaClient({ user }: Props) {
                 <button
                   type="button"
                   onClick={() => setIsOpen(!isOpen)}
-                  className={`w-full flex items-center justify-between input pl-10 pr-4 py-2.5 bg-deep-navy border border-white/10 rounded-xl text-sm font-semibold transition-all duration-200 text-left select-none cursor-pointer ${
+                  className={`w-full flex items-center justify-between input pl-10 pr-4 py-2.5 bg-royal-950 border border-royal-800/30 rounded-xl text-sm font-semibold transition-all duration-200 text-left select-none cursor-pointer ${
                     isOpen 
-                      ? 'border-persian-blue/100 ring-2 ring-persian-blue/100/20' 
-                      : 'hover:border-slate-300'
+                      ? 'border-royal-600 ring-2 ring-royal-500/20' 
+                      : 'hover:border-royal-300'
                   }`}
                 >
-                  <ScrollText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                  <span className={judulKegiatan ? 'text-white' : 'text-slate-400'}>
+                  <ScrollText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-400 pointer-events-none" />
+                  <span className={judulKegiatan ? 'text-white' : 'text-royal-400'}>
                     {PREDEFINED_ACTIVITIES.includes(judulKegiatan) 
                       ? judulKegiatan 
                       : (judulKegiatan ? 'Lainnya (Ketik Manual...)' : 'Pilih Judul Kegiatan...')}
                   </span>
-                  <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
-                    isOpen ? 'rotate-90 text-persian-blue/100' : ''
+                  <ChevronRight className={`w-4 h-4 text-royal-400 transition-transform duration-200 ${
+                    isOpen ? 'rotate-90 text-royal-400' : ''
                   }`} />
                 </button>
 
@@ -570,8 +570,8 @@ export default function AmbilSiswaClient({ user }: Props) {
                       className="fixed inset-0 z-10" 
                       onClick={() => setIsOpen(false)} 
                     />
-                    <div className="absolute left-0 right-0 mt-2 bg-deep-navy/95 backdrop-blur-md border border-white/10 rounded-xl shadow-xl z-20 overflow-hidden py-1.5 animate-fadeIn max-h-60 overflow-y-auto">
-                      <div className="px-3 py-1.5 text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                    <div className="absolute left-0 right-0 mt-2 bg-royal-950/95 backdrop-blur-md border border-royal-800/30 rounded-xl shadow-xl z-20 overflow-hidden py-1.5 animate-fadeIn max-h-60 overflow-y-auto">
+                      <div className="px-3 py-1.5 text-[10px] font-black uppercase text-royal-400 tracking-wider">
                         Kegiatan Sekolah Default
                       </div>
                       {PREDEFINED_ACTIVITIES.map((act) => {
@@ -586,16 +586,16 @@ export default function AmbilSiswaClient({ user }: Props) {
                             }}
                             className={`w-full text-left px-4 py-2.5 text-xs font-bold transition-all duration-150 flex items-center justify-between cursor-pointer ${
                               isChosen 
-                                ? 'bg-persian-blue/10 text-persian-blue' 
-                                : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                                ? 'bg-royal-600/10 text-royal-400' 
+                                : 'text-royal-300 hover:bg-cream-50/5 hover:text-white'
                             }`}
                           >
                             <span>{act}</span>
-                            {isChosen && <CheckCircle2 className="w-3.5 h-3.5 text-persian-blue/100" />}
+                            {isChosen && <CheckCircle2 className="w-3.5 h-3.5 text-royal-400" />}
                           </button>
                         )
                       })}
-                      <div className="border-t border-white/10 my-1" />
+                      <div className="border-t border-royal-800/30 my-1" />
                       <button
                         type="button"
                         onClick={() => {
@@ -604,13 +604,13 @@ export default function AmbilSiswaClient({ user }: Props) {
                         }}
                         className={`w-full text-left px-4 py-2.5 text-xs font-black transition-all duration-150 flex items-center justify-between cursor-pointer ${
                           !PREDEFINED_ACTIVITIES.includes(judulKegiatan) && judulKegiatan !== ''
-                            ? 'bg-persian-blue/10 text-persian-blue' 
-                            : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                            ? 'bg-royal-600/10 text-royal-400' 
+                            : 'text-royal-400 hover:bg-cream-50/5 hover:text-white'
                         }`}
                       >
                         <span>Lainnya (Ketik Manual...)</span>
                         {!PREDEFINED_ACTIVITIES.includes(judulKegiatan) && judulKegiatan !== '' && (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-persian-blue/100" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-royal-400" />
                         )}
                       </button>
                     </div>
@@ -622,9 +622,9 @@ export default function AmbilSiswaClient({ user }: Props) {
               {(!PREDEFINED_ACTIVITIES.includes(judulKegiatan) || judulKegiatan === '') && (
                 <div className="relative animate-fadeIn space-y-1">
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] text-slate-400">Judul Kegiatan Kustom</span>
+                    <span className="text-[10px] text-royal-400">Judul Kegiatan Kustom</span>
                     {judulKegiatan.length > 0 && (
-                      <span className={`text-[10px] font-bold ${judulKegiatan.length >= 100 ? 'text-red-500' : 'text-slate-400'}`}>
+                      <span className={`text-[10px] font-bold ${judulKegiatan.length >= 100 ? 'text-red-500' : 'text-royal-400'}`}>
                         {judulKegiatan.length}/100
                       </span>
                     )}
@@ -636,7 +636,7 @@ export default function AmbilSiswaClient({ user }: Props) {
                     placeholder="Ketik judul kegiatan kustom Anda di sini..."
                     maxLength={100}
                     className={`input focus:ring-2 focus:ring-offset-1 transition-all ${
-                      judulKegiatan.length >= 100 ? 'border-red-400 focus:ring-red-500/20' : (activeTheme ? activeTheme.ring : 'focus:ring-persian-blue/100')
+                      judulKegiatan.length >= 100 ? 'border-red-400 focus:ring-red-500/20' : (activeTheme ? activeTheme.ring : 'focus:ring-royal-500/50')
                     }`}
                   />
                   {judulKegiatan.length >= 100 && (
@@ -645,7 +645,7 @@ export default function AmbilSiswaClient({ user }: Props) {
                 </div>
               )}
             </div>
-            <p className="text-[10px] text-slate-400 font-semibold">Pilih salah satu kegiatan default atau pilih "Lainnya" untuk menulis nama kegiatan kustom secara bebas.</p>
+            <p className="text-[10px] text-royal-400 font-semibold">Pilih salah satu kegiatan default atau pilih "Lainnya" untuk menulis nama kegiatan kustom secara bebas.</p>
           </div>
 
           {/* Actions */}
@@ -655,7 +655,7 @@ export default function AmbilSiswaClient({ user }: Props) {
               disabled={selectedOrgs.length === 0 || !judulKegiatan.trim()}
               className={`btn-primary flex items-center gap-2 shadow-sm font-bold transition-all px-6 py-2.5 rounded-xl ${
                 (selectedOrgs.length === 0 || !judulKegiatan.trim()) 
-                  ? 'opacity-50 cursor-not-allowed bg-slate-300 border-slate-300 text-slate-400' 
+                  ? 'opacity-50 cursor-not-allowed bg-royal-300 border-royal-300 text-royal-400' 
                   : activeTheme ? `${activeTheme.iconBg} border-transparent text-white hover:opacity-90` : 'btn-primary'
               }`}
             >
@@ -667,30 +667,30 @@ export default function AmbilSiswaClient({ user }: Props) {
 
       {/* Step 2: Student List Checkbox */}
       {step === 2 && activeTheme && (
-        <div className="card p-6 bg-deep-navy border border-white/10 rounded-2xl shadow-sm space-y-6">
-          <div className="flex items-center justify-between border-b border-white/10 pb-4 gap-4 flex-wrap">
+        <div className="card p-6 bg-royal-950 border border-royal-800/30 rounded-2xl shadow-sm space-y-6">
+          <div className="flex items-center justify-between border-b border-royal-800/30 pb-4 gap-4 flex-wrap">
             <div>
               <h3 className="text-sm font-black text-white flex items-center gap-2">
-                <Users className="w-4 h-4 text-persian-blue/100" /> Langkah 2: Pilih Siswa / Anggota
+                <Users className="w-4 h-4 text-royal-400" /> Langkah 2: Pilih Siswa / Anggota
               </h3>
-              <p className="text-xs text-slate-400 font-semibold uppercase mt-0.5">Silakan pilih/centang siswa yang hadir dalam kegiatan ini.</p>
+              <p className="text-xs text-royal-400 font-semibold uppercase mt-0.5">Silakan pilih/centang siswa yang hadir dalam kegiatan ini.</p>
             </div>
             {/* Quick Context Card */}
             <div className={`p-2.5 rounded-xl border flex items-center gap-3 text-xs ${activeTheme.bg} ${activeTheme.border}`}>
               <div>
                 <span className="font-extrabold text-white">{orgDisplayText}</span>
-                <span className="mx-1 text-slate-300">•</span>
-                <span className="font-semibold text-slate-400 truncate max-w-[200px] inline-block align-bottom">{judulKegiatan}</span>
+                <span className="mx-1 text-royal-300">•</span>
+                <span className="font-semibold text-royal-400 truncate max-w-[200px] inline-block align-bottom">{judulKegiatan}</span>
               </div>
             </div>
           </div>
 
           {/* Group Management UI */}
           {isGrouped && (
-            <div className="space-y-4 bg-white/5 p-4 rounded-xl border border-white/10">
+            <div className="space-y-4 bg-cream-50/5 p-4 rounded-xl border border-royal-800/30">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
-                  <LayoutGrid className="w-4 h-4 text-persian-blue" /> Daftar Kelompok / Bagian
+                  <LayoutGrid className="w-4 h-4 text-royal-400" /> Daftar Kelompok / Bagian
                 </h4>
                 {judulKegiatan === 'Panitia Costume' && groups.length < 5 && (
                   <button onClick={addGroup} className="btn-secondary text-[10px] py-1 px-3">
@@ -706,8 +706,8 @@ export default function AmbilSiswaClient({ user }: Props) {
                       onClick={() => setActiveGroupId(group.id)}
                       className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2 ${
                         activeGroupId === group.id 
-                          ? 'bg-persian-blue/10 border-persian-blue text-white ring-2 ring-persian-blue/20' 
-                          : 'bg-deep-navy border-white/10 text-slate-400 hover:border-white/20'
+                          ? 'bg-royal-600/10 border-royal-600 text-white ring-2 ring-royal-500/20' 
+                          : 'bg-royal-950 border-royal-800/30 text-royal-400 hover:border-royal-500/40'
                       }`}
                     >
                       {activeGroupId === group.id ? (
@@ -716,14 +716,14 @@ export default function AmbilSiswaClient({ user }: Props) {
                           value={group.name}
                           onChange={(e) => updateGroupName(group.id, e.target.value)}
                           placeholder="Nama Kelompok..."
-                          className="bg-transparent border-none p-0 focus:ring-0 w-32 placeholder:text-slate-500"
+                          className="bg-transparent border-none p-0 focus:ring-0 w-32 placeholder:text-royal-500"
                           readOnly={judulKegiatan === 'Piket Kebersihan & Penyambutan'}
                           onClick={(e) => e.stopPropagation()}
                         />
                       ) : (
                         <span>{group.name || '(Tanpa Nama)'}</span>
                       )}
-                      <span className="bg-white/10 px-1.5 py-0.5 rounded text-[10px]">{group.studentKeys.length}</span>
+                      <span className="bg-cream-50/10 px-1.5 py-0.5 rounded text-[10px]">{group.studentKeys.length}</span>
                     </button>
                     {judulKegiatan === 'Panitia Costume' && groups.length > 1 && (
                       <button 
@@ -741,7 +741,7 @@ export default function AmbilSiswaClient({ user }: Props) {
               {activeGroupId && (
                 <div className="mt-4 border-t border-white/5 pt-4 animate-in fade-in slide-in-from-top-2">
                   <div className="flex items-center justify-between mb-2">
-                    <h5 className="text-[10px] font-black text-slate-400 uppercase">
+                    <h5 className="text-[10px] font-black text-royal-400 uppercase">
                       Anggota Terpilih di Kelompok: {groups.find(g => g.id === activeGroupId)?.name || '...'}
                     </h5>
                   </div>
@@ -750,10 +750,10 @@ export default function AmbilSiswaClient({ user }: Props) {
                       const s = students.find(item => `${item.org}-${item.id}` === key)
                       if (!s) return null
                       return (
-                        <div key={key} className="flex items-center justify-between bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 text-[10px]">
+                        <div key={key} className="flex items-center justify-between bg-cream-50/5 px-3 py-1.5 rounded-lg border border-royal-800/30 text-[10px]">
                           <div className="truncate pr-2">
                             <span className="font-bold text-white block truncate">{s.nama}</span>
-                            <span className="text-slate-500 block truncate">{s.kelas || '-'} • {s.org?.toUpperCase()}</span>
+                            <span className="text-royal-500 block truncate">{s.kelas || '-'} • {s.org?.toUpperCase()}</span>
                           </div>
                           <button 
                             onClick={() => handleToggleSiswa(key)}
@@ -765,7 +765,7 @@ export default function AmbilSiswaClient({ user }: Props) {
                       )
                     })}
                     {groups.find(g => g.id === activeGroupId)?.studentKeys.length === 0 && (
-                      <div className="col-span-full py-4 text-center text-slate-500 font-medium text-[10px] border border-dashed border-white/10 rounded-xl">
+                      <div className="col-span-full py-4 text-center text-royal-500 font-medium text-[10px] border border-dashed border-royal-800/30 rounded-xl">
                         Belum ada anggota yang dipilih untuk kelompok ini.
                       </div>
                     )}
@@ -773,23 +773,23 @@ export default function AmbilSiswaClient({ user }: Props) {
                 </div>
               )}
 
-              <p className="text-[10px] text-slate-400 font-medium italic">
+              <p className="text-[10px] text-royal-400 font-medium italic">
                 * Pilih kelompok di atas, lalu centang siswa di tabel bawah. Siswa yang sudah dipilih di kelompok lain tidak akan muncul kembali.
               </p>
             </div>
           )}
 
           {/* Search bar + select all indicator */}
-          <div className="flex items-center justify-between gap-3 flex-wrap bg-white/5 p-3 rounded-xl border border-white/10">
+          <div className="flex items-center justify-between gap-3 flex-wrap bg-cream-50/5 p-3 rounded-xl border border-royal-800/30">
             <div className="relative flex-1 min-w-[220px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-royal-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari berdasarkan nama atau kelas..."
                 maxLength={50}
-                className="input pl-9 pr-4 py-1.5 text-sm bg-deep-navy"
+                className="input pl-9 pr-4 py-1.5 text-sm bg-royal-950"
               />
             </div>
             
@@ -800,7 +800,7 @@ export default function AmbilSiswaClient({ user }: Props) {
               </span>
               <button 
                 onClick={handleToggleSelectAll} 
-                className="text-xs font-extrabold text-persian-blue hover:text-blue-300 transition-colors"
+                className="text-xs font-extrabold text-royal-400 hover:text-royal-300 transition-colors"
               >
                 {isAllFilteredSelected ? 'Deselect All' : 'Select All'}
               </button>
@@ -809,36 +809,36 @@ export default function AmbilSiswaClient({ user }: Props) {
 
           {/* Dynamic Checklist table */}
           {loadingStudents ? (
-            <div className="p-16 flex flex-col items-center justify-center gap-3 text-slate-400">
-              <Loader2 className="w-8 h-8 animate-spin text-persian-blue/100" />
+            <div className="p-16 flex flex-col items-center justify-center gap-3 text-royal-400">
+              <Loader2 className="w-8 h-8 animate-spin text-royal-400" />
               <span className="text-sm font-semibold">Menghubungkan & Memuat Anggota...</span>
             </div>
           ) : filteredStudents.length === 0 ? (
-            <div className="p-16 text-center border-2 border-dashed border-white/10 rounded-xl space-y-2">
-              <AlertCircle className="w-8 h-8 text-slate-300 mx-auto" />
-              <p className="text-sm font-bold text-slate-400">Tidak ada anggota yang cocok dengan kata kunci pencarian.</p>
+            <div className="p-16 text-center border-2 border-dashed border-royal-800/30 rounded-xl space-y-2">
+              <AlertCircle className="w-8 h-8 text-royal-300 mx-auto" />
+              <p className="text-sm font-bold text-royal-400">Tidak ada anggota yang cocok dengan kata kunci pencarian.</p>
               <button 
                 onClick={() => setSearchQuery('')} 
-                className="text-xs font-extrabold text-persian-blue hover:underline"
+                className="text-xs font-extrabold text-royal-400 hover:underline"
               >
                 Reset Pencarian
               </button>
             </div>
           ) : (
-            <div className="border border-white/10 rounded-xl overflow-hidden shadow-sm">
+            <div className="border border-royal-800/30 rounded-xl overflow-hidden shadow-sm">
               <div className="overflow-x-auto max-h-[400px]">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="bg-white/5 border-b border-white/10">
+                    <tr className="bg-cream-50/5 border-b border-royal-800/30">
                       <th className="th py-3 px-4 w-12 text-center">
                         <input
                            type="checkbox"
                            checked={isAllFilteredSelected}
                            onChange={handleToggleSelectAll}
-                           className="rounded border-slate-300 text-persian-blue focus:ring-persian-blue/100 cursor-pointer"
+                           className="rounded border-royal-300 text-royal-400 focus:ring-royal-500/50 cursor-pointer"
                         />
                       </th>
-                      <th className="th py-3 px-2 w-10 text-center text-slate-400">No</th>
+                      <th className="th py-3 px-2 w-10 text-center text-royal-400">No</th>
                       <th className="th py-3 px-3">Nama Lengkap</th>
                       <th className="th py-3 px-3 w-32">Kelas</th>
                       <th className="th py-3 px-3 w-44">NIS</th>
@@ -855,7 +855,7 @@ export default function AmbilSiswaClient({ user }: Props) {
                         <tr 
                           key={key} 
                           onClick={() => handleToggleSiswa(key)}
-                          className={`hover:bg-white/10 cursor-pointer transition-colors ${
+                          className={`hover:bg-cream-50/10 cursor-pointer transition-colors ${
                             isSelected ? (
                               siswa.org === 'osis' ? 'bg-[#3D3DB8]/5' :
                               siswa.org === 'mpk' ? 'bg-[#DC143C]/5' :
@@ -869,24 +869,24 @@ export default function AmbilSiswaClient({ user }: Props) {
                               type="checkbox"
                               checked={isSelected}
                               onChange={() => handleToggleSiswa(key)}
-                              className="rounded border-slate-300 text-persian-blue focus:ring-persian-blue/100 cursor-pointer"
+                              className="rounded border-royal-300 text-royal-400 focus:ring-royal-500/50 cursor-pointer"
                             />
                           </td>
-                          <td className="td py-3 px-2 text-center text-slate-400 font-mono text-xs">{itemNo}</td>
+                          <td className="td py-3 px-2 text-center text-royal-400 font-mono text-xs">{itemNo}</td>
                           <td className="td py-3 px-3 font-semibold text-white text-sm">{siswa.nama}</td>
-                          <td className="td py-3 px-3 text-xs text-slate-400 font-medium">{siswa.kelas || '-'}</td>
-                          <td className="td py-3 px-3 text-xs text-slate-400 font-mono">{siswa.nis || '-'}</td>
-                          <td className="td py-3 px-3 text-xs text-slate-300 font-medium">
+                          <td className="td py-3 px-3 text-xs text-royal-400 font-medium">{siswa.kelas || '-'}</td>
+                          <td className="td py-3 px-3 text-xs text-royal-400 font-mono">{siswa.nis || '-'}</td>
+                          <td className="td py-3 px-3 text-xs text-royal-300 font-medium">
                             <span className={`inline-block px-2.5 py-0.5 rounded-full border text-[10px] font-extrabold uppercase ${
                               siswa.org === 'osis' ? 'bg-[#3D3DB8]/10 text-[#3D3DB8] border-[#3D3DB8]/20' :
                               siswa.org === 'mpk' ? 'bg-[#DC143C]/10 text-[#DC143C] border-[#DC143C]/20' :
-                              siswa.org === 'english' ? 'bg-[#0F52BA]/10 text-blue-400 border-[#0F52BA]/20' :
+                              siswa.org === 'english' ? 'bg-[#0F52BA]/10 text-royal-400 border-[#0F52BA]/20' :
                               'bg-[#FFB81C]/10 text-[#FFB81C] border-[#FFB81C]/20'
                             }`}>
                               {siswa.org?.toUpperCase()}
                             </span>
                             {siswa.org === 'osis' || siswa.org === 'mpk' ? (
-                              <span className="text-[11px] text-slate-400 ml-1.5 font-bold">({siswa.jabatan || 'Anggota'})</span>
+                              <span className="text-[11px] text-royal-400 ml-1.5 font-bold">({siswa.jabatan || 'Anggota'})</span>
                             ) : null}
                           </td>
                         </tr>
@@ -899,7 +899,7 @@ export default function AmbilSiswaClient({ user }: Props) {
           )}
 
           {/* Footer actions */}
-          <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/10 flex-wrap">
+          <div className="flex items-center justify-between gap-3 pt-3 border-t border-royal-800/30 flex-wrap">
             <button
               onClick={() => setStep(1)}
               className="btn-secondary flex items-center gap-2 font-bold px-4 py-2"
@@ -912,7 +912,7 @@ export default function AmbilSiswaClient({ user }: Props) {
               disabled={downloading || totalSelected === 0}
               className={`btn-primary flex items-center gap-2 shadow-sm font-bold transition-all px-6 py-2.5 rounded-xl ${
                 downloading || totalSelected === 0
-                  ? 'opacity-50 cursor-not-allowed bg-slate-300 border-slate-300 text-slate-400'
+                  ? 'opacity-50 cursor-not-allowed bg-royal-300 border-royal-300 text-royal-400'
                   : `${activeTheme.iconBg} border-transparent text-white hover:opacity-90`
               }`}
             >

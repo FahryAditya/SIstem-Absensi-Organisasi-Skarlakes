@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       data: setting
-        ? { id: setting.id, email: setting.email, appPassword: maskPassword(setting.appPassword) }
+        ? { id: setting.id, email: setting.email, appPassword: maskPassword(setting.app_password) }
         : null,
     })
   } catch (error: any) {
@@ -59,11 +59,11 @@ export async function POST(req: NextRequest) {
     if (existing) {
       setting = await prisma.emailSetting.update({
         where: { id: existing.id },
-        data: { email, appPassword },
+        data: { email, app_password: appPassword },
       })
     } else {
       setting = await prisma.emailSetting.create({
-        data: { email, appPassword },
+        data: { email, app_password: appPassword },
       })
     }
 

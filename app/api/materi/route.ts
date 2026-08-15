@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createLog, getIp } from '@/lib/log'
-import { getAccessibleOrgs } from '@/lib/auth'
+import { getAccessibleOrganizations } from '@/lib/services/organization-service'
 import { z } from 'zod'
 
 function getCtx(req: NextRequest) {
@@ -16,7 +16,7 @@ const createSchema = z.object({
   judul: z.string().min(1).max(255),
   deskripsi: z.string().min(1),
   tanggal: z.string().min(1),
-  organisasi: z.enum(['programming', 'english', 'osis', 'mpk']),
+  organisasi: z.string().min(1),
   notulen: z.string().optional().nullable(),
   lokasi: z.string().max(200).optional().nullable(),
 })
@@ -26,13 +26,15 @@ const updateSchema = createSchema.extend({
 })
 
 export async function GET(req: NextRequest) {
-  const { userRole } = getCtx(req)
+  const { userId, userRole } = getCtx(req)
   const { searchParams } = new URL(req.url)
   const organisasi = searchParams.get('organisasi')
   const page = parseInt(searchParams.get('page') || '1')
   const limit = parseInt(searchParams.get('limit') || '20')
 
-  const accessible = getAccessibleOrgs(userRole)
+  const accessibleOrgs = await getAccessibleOrganizations(userId, userRole)
+  const accessible = accessibleOrgs.map(o => o.slug)
+
   if (accessible.length === 0) {
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
   }
@@ -43,13 +45,13 @@ export async function GET(req: NextRequest) {
   }
 
   const [data, total] = await Promise.all([
-    prisma.materiHariIni.findMany({
+    (prisma as any).materiHariIni.findMany({
       where,
       orderBy: [{ tanggal: 'desc' }, { created_at: 'desc' }],
       skip: (page - 1) * limit,
       take: limit,
     }),
-    prisma.materiHariIni.count({ where }),
+    (prisma as any).materiHariIni.count({ where }),
   ])
 
   return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / limit) })
@@ -57,7 +59,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const ctx = getCtx(req)
-  const accessible = getAccessibleOrgs(ctx.userRole)
+  const accessibleOrgs = await getAccessibleOrganizations(ctx.userId, ctx.userRole)
+  const accessible = accessibleOrgs.map(o => o.slug)
 
   try {
     const body = await req.json()
@@ -70,11 +73,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 
-    const materi = await prisma.materiHariIni.create({
+    const materi = await (prisma as any).materiHariIni.create({
       data: {
         ...parsed.data,
         tanggal: new Date(parsed.data.tanggal),
         created_by: ctx.userId,
+        organisasi: parsed.data.organisasi as any,
       },
     })
 
@@ -98,7 +102,8 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   const ctx = getCtx(req)
-  const accessible = getAccessibleOrgs(ctx.userRole)
+  const accessibleOrgs = await getAccessibleOrganizations(ctx.userId, ctx.userRole)
+  const accessible = accessibleOrgs.map(o => o.slug)
 
   try {
     const body = await req.json()
@@ -108,7 +113,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const { id, ...data } = parsed.data
-    const existing = await prisma.materiHariIni.findUnique({ where: { id } })
+    const existing = await (prisma as any).materiHariIni.findUnique({ where: { id } })
     if (!existing) {
       return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
     }
@@ -117,11 +122,12 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
     }
 
-    const updated = await prisma.materiHariIni.update({
+    const updated = await (prisma as any).materiHariIni.update({
       where: { id },
       data: {
         ...data,
         tanggal: new Date(data.tanggal),
+        organisasi: data.organisasi as any,
       },
     })
 
@@ -146,7 +152,9 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   const ctx = getCtx(req)
-  const accessible = getAccessibleOrgs(ctx.userRole)
+  const accessibleOrgs = await getAccessibleOrganizations(ctx.userId, ctx.userRole)
+  const accessible = accessibleOrgs.map(o => o.slug)
+
   const { searchParams } = new URL(req.url)
   const idStr = searchParams.get('id')
   if (!idStr) {
@@ -154,7 +162,7 @@ export async function DELETE(req: NextRequest) {
   }
 
   const id = parseInt(idStr)
-  const existing = await prisma.materiHariIni.findUnique({ where: { id } })
+  const existing = await (prisma as any).materiHariIni.findUnique({ where: { id } })
   if (!existing) {
     return NextResponse.json({ error: 'Data tidak ditemukan' }, { status: 404 })
   }
@@ -162,7 +170,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
   }
 
-  await prisma.materiHariIni.delete({ where: { id } })
+  await (prisma as any).materiHariIni.delete({ where: { id } })
 
   await createLog({
     userId: ctx.userId,

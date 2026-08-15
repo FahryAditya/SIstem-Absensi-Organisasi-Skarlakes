@@ -18,7 +18,7 @@ interface PengeluaranData {
 }
 
 interface Props {
-  user: { id: number; nama: string; email: string; role: string }
+  user: { id: number; nama: string; email: string; role: string; activeOrgId?: number; orgIds: number[] }
 }
 
 export default function PengeluaranClient({ user }: Props) {
@@ -129,9 +129,9 @@ export default function PengeluaranClient({ user }: Props) {
         <div>
           <div className="flex items-center gap-2.5">
             <HandCoins className="w-6 h-6 text-red-500" />
-            <h1 className="text-2xl font-black text-white tracking-tight">Pengeluaran Kas</h1>
+            <h1 className="text-2xl font-black text-royal-900 tracking-tight">Pengeluaran Kas</h1>
           </div>
-          <p className="text-sm text-slate-400 mt-1">Catat dan pantau penarikan dana kas organisasi.</p>
+          <p className="text-sm text-royal-400 mt-1">Catat dan pantau penarikan dana kas organisasi.</p>
         </div>
         <button onClick={openModal} className="btn-primary whitespace-nowrap self-start sm:self-auto shadow-sm">
           <Plus className="w-4 h-4 mr-1.5" />
@@ -157,7 +157,7 @@ export default function PengeluaranClient({ user }: Props) {
         {/* Filter Card */}
         <div className="card p-5 md:col-span-2 flex flex-col justify-center">
           <div className="flex items-center gap-2 mb-3">
-            <h3 className="text-sm font-bold text-slate-200">Filter Unit / Organisasi</h3>
+            <h3 className="text-sm font-bold text-royal-200">Filter Unit / Organisasi</h3>
           </div>
           {orgs.length > 1 && (
             <Select
@@ -173,11 +173,11 @@ export default function PengeluaranClient({ user }: Props) {
 
       <div className="card p-5">
         <div className="flex items-center gap-2 mb-4">
-          <h3 className="text-sm font-bold text-slate-200">Riwayat Pengeluaran</h3>
+          <h3 className="text-sm font-bold text-royal-200">Riwayat Pengeluaran</h3>
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto rounded-xl border border-white/10">
+        <div className="overflow-x-auto rounded-xl border border-royal-200">
           <table className="table">
             <thead>
               <tr>
@@ -193,30 +193,30 @@ export default function PengeluaranClient({ user }: Props) {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="h-32 text-center text-slate-400">
+                  <td colSpan={6} className="h-32 text-center text-royal-400">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
                     Memuat data pengeluaran...
                   </td>
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="h-32 text-center text-slate-400">
+                  <td colSpan={7} className="h-32 text-center text-royal-400">
                     Belum ada riwayat pengeluaran kas.
                   </td>
                 </tr>
               ) : (
                 data.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-white/5 transition-colors">
-                    <td className="font-medium text-slate-400">{idx + 1}</td>
-                    <td className="text-slate-300 text-sm">{formatDateTime(new Date(item.tanggal))}</td>
+                  <tr key={item.id} className="hover:bg-cream-100 transition-colors">
+                    <td className="font-medium text-royal-400">{idx + 1}</td>
+                    <td className="text-royal-300 text-sm">{formatDateTime(new Date(item.tanggal))}</td>
                     <td>
-                      <span className="text-xs font-bold px-2 py-1 bg-white/10 text-slate-300 rounded-md">
+                      <span className="text-xs font-bold px-2 py-1 bg-cream-100 text-royal-300 rounded-md">
                         {ORG_LABELS[item.organisasi_type as OrgType] || item.organisasi_type}
                       </span>
                     </td>
-                    <td className="font-medium text-white">{item.keterangan}</td>
-                    <td className="text-slate-300 text-sm">{item.creator_nama}</td>
-                    <td className="text-right font-mono font-bold text-red-600 bg-red-500/10/30">
+                    <td className="font-medium text-royal-900">{item.keterangan}</td>
+                    <td className="text-royal-300 text-sm">{item.creator_nama}</td>
+                    <td className="text-right font-mono font-bold text-red-400 bg-red-500/30">
                       - {formatCurrency(item.nominal)}
                     </td>
                     <td className="text-center">
@@ -234,8 +234,8 @@ export default function PengeluaranClient({ user }: Props) {
 
       {/* Modal Transaksi */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm slide-up">
-          <div className="bg-deep-navy rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-royal-950/50 backdrop-blur-sm slide-up">
+          <div className="bg-royal-900 rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
             <div className="p-4 border-b flex items-center justify-between text-white bg-red-600">
               <h3 className="font-bold flex items-center gap-2">
                 <HandCoins className="w-5 h-5" />
@@ -259,7 +259,7 @@ export default function PengeluaranClient({ user }: Props) {
               <div className="form-group">
                 <label className="label">Nominal Tarik (Rp)</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400">Rp</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-royal-400">Rp</span>
                   <input 
                     type="text" 
                     value={txNominal} 
@@ -267,7 +267,7 @@ export default function PengeluaranClient({ user }: Props) {
                       const val = e.target.value.replace(/\D/g, '')
                       setTxNominal(val ? parseInt(val).toLocaleString('id-ID') : '')
                     }}
-                    className="input pl-10 font-mono font-bold text-lg text-red-600" 
+                    className="input pl-10 font-mono font-bold text-lg text-red-400"
                     placeholder="50.000" 
                     required 
                   />

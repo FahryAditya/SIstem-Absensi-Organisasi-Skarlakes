@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
     where.organisasi = organisasi
   }
 
-  const data = await prisma.pencapaian.findMany({
+  const data = await (prisma as any).pencapaian.findMany({
     where,
     orderBy: { created_at: 'desc' },
     include: withPenerima ? { penerima: true } : undefined,
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
     }
 
-    const pencapaian = await prisma.pencapaian.create({ data: parsed.data })
+    const pencapaian = await (prisma as any).pencapaian.create({ data: parsed.data })
 
     await createLog({
       userId: ctx.userId, userNama: ctx.userNama, aksi: 'CREATE',
@@ -96,10 +96,10 @@ export async function PUT(req: NextRequest) {
     }
 
     const { id, ...data } = parsed.data
-    const existing = await prisma.pencapaian.findUnique({ where: { id } })
+    const existing = await (prisma as any).pencapaian.findUnique({ where: { id } })
     if (!existing) return NextResponse.json({ error: 'Pencapaian tidak ditemukan' }, { status: 404 })
 
-    const updated = await prisma.pencapaian.update({ where: { id }, data })
+    const updated = await (prisma as any).pencapaian.update({ where: { id }, data })
 
     await createLog({
       userId: ctx.userId, userNama: ctx.userNama, aksi: 'UPDATE',
@@ -128,10 +128,10 @@ export async function DELETE(req: NextRequest) {
   if (!idStr) return NextResponse.json({ error: 'ID required' }, { status: 400 })
 
   const id = parseInt(idStr)
-  const existing = await prisma.pencapaian.findUnique({ where: { id } })
+  const existing = await (prisma as any).pencapaian.findUnique({ where: { id } })
   if (!existing) return NextResponse.json({ error: 'Pencapaian tidak ditemukan' }, { status: 404 })
 
-  await prisma.pencapaian.delete({ where: { id } })
+  await (prisma as any).pencapaian.delete({ where: { id } })
 
   await createLog({
     userId: ctx.userId, userNama: ctx.userNama, aksi: 'DELETE',

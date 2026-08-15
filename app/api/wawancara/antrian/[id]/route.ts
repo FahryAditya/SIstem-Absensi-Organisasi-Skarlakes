@@ -23,14 +23,15 @@ async function getCtx(req: NextRequest) {
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const ctx = await getCtx(req)
+  const { id: paramId } = await params
 
   if (!isAdministrator(ctx.userRole)) {
     return NextResponse.json({ error: 'Hanya Administrator yang dapat menghapus peserta wawancara' }, { status: 403 })
   }
 
-  const id = parseInt(params.id)
+  const id = parseInt(paramId)
   if (isNaN(id)) {
     return NextResponse.json({ error: 'ID peserta tidak valid' }, { status: 400 })
   }
